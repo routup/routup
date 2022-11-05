@@ -14,7 +14,7 @@ import { Next, Request, Response } from '../type';
 export class Route {
     readonly '@instanceof' = Symbol.for('Route');
 
-    public path : string | undefined;
+    public path : string;
 
     protected regexp : RegExp;
 
@@ -45,6 +45,13 @@ export class Route {
         res: Response,
         done: Next,
     ) : void {
+        // todo: iterate first over layers than method handlers :)
+
+        if (!req.method) {
+            done();
+            return;
+        }
+
         const name = req.method.toLowerCase();
         const layer = this.layers[name];
 

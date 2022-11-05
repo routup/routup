@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import etag from 'etag';
-import { ServerResponse } from 'http';
 import { HeaderName } from '../../constants';
+import { Response } from '../../type';
 import { appendResponseHeaderDirective } from './header';
 import { setResponseHeaderContentType } from './header-content-type';
 
-export function send(res: ServerResponse, chunk?: any) {
+export function send(res: Response, chunk?: any) {
     switch (typeof chunk) {
         case 'string': {
             setResponseHeaderContentType(res, 'html', true);
@@ -32,7 +32,7 @@ export function send(res: ServerResponse, chunk?: any) {
         }
     }
 
-    let encoding : BufferEncoding | null = null;
+    let encoding : BufferEncoding | undefined;
 
     if (typeof chunk === 'string') {
         res.setHeader(HeaderName.CONTENT_ENCODING, 'utf-8');
@@ -99,5 +99,10 @@ export function send(res: ServerResponse, chunk?: any) {
         return;
     }
 
-    res.end(chunk, encoding);
+    if (typeof encoding !== 'undefined') {
+        res.end(chunk, encoding);
+        return;
+    }
+
+    res.end(chunk);
 }

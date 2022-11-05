@@ -18,6 +18,7 @@ export function setResponseHeaderContentType(res: ServerResponse, input: string,
     }
 
     const contentType = getMimeType(input);
-
-    res.setHeader(HeaderName.CONTENT_TYPE, contentType);
+    if (contentType) {
+        res.setHeader(HeaderName.CONTENT_TYPE, contentType);
+    }
 }

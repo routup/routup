@@ -29,10 +29,23 @@ export function useRequestAccepts(req: IncomingMessage, input?: string | string[
         return items[0];
     }
 
-    const mimeTypes = items.map((item) => getMimeType(item));
+    let polluted = false;
+    const mimeTypes : string[] = [];
+    for (let i = 0; i < items.length; i++) {
+        const mimeType = getMimeType(items[i]);
+        if (mimeType) {
+            mimeTypes.push(mimeType);
+        } else {
+            polluted = true;
+        }
+    }
 
     const matches = negotiator.mediaTypes(mimeTypes);
     if (matches.length > 0) {
+        if (polluted) {
+            return items[0];
+        }
+
         return items[mimeTypes.indexOf(matches[0])];
     }
 

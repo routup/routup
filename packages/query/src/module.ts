@@ -4,6 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
+
 import { IncomingMessage } from 'http';
 import qs from 'qs';
 
@@ -16,6 +17,10 @@ export function useRequestQuery(req: IncomingMessage) : Record<string, any> {
 
     if (QuerySymbol in req) {
         return (req as any)[QuerySymbol];
+    }
+
+    if (typeof req.url === 'undefined') {
+        return {};
     }
 
     const url = new URL(req.url, 'http://localhost/');

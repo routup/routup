@@ -16,4 +16,3 @@ export * from './header-content-type';
 export * from './negotiator';
 export * from './params';
 export * from './path';
-export * from './query';

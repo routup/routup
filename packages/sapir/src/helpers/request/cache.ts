@@ -17,5 +17,5 @@ export function isRequestCacheable(req: Request, modifiedTime: string | Date) : 
         new Date(modifiedTime) :
         modifiedTime;
 
-    return new Date(req.headers['if-modified-since']) >= modifiedTime;
+    return new Date(modifiedSince) >= modifiedTime;
 }

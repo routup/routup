@@ -42,8 +42,7 @@ export class Router {
         options.root = options.root ?? true;
 
         this.options = options;
-
-        this.setOption('mountPath', options.mountPath);
+        this.regexp = pathToRegexp(options.mountPath, [], { end: false });
     }
 
     // --------------------------------------------------
@@ -67,6 +66,8 @@ export class Router {
     // --------------------------------------------------
 
     createListener() : RequestListener {
+        this.setOption('root', true);
+
         return (req, res) => {
             this.dispatch(req, res);
         };
@@ -98,8 +99,8 @@ export class Router {
 
         if (this.options.root) {
             timeout = setTimeout(() => {
-                res.statusCode = GatewayTimeoutErrorOptions.statusCode;
-                res.statusMessage = GatewayTimeoutErrorOptions.message;
+                res.statusCode = GatewayTimeoutErrorOptions.statusCode || 500;
+                res.statusMessage = GatewayTimeoutErrorOptions.message || '';
 
                 res.end();
             }, this.options.timeout);
@@ -145,8 +146,8 @@ export class Router {
                 return;
             }
 
-            res.statusCode = NotImplementedErrorOptions.statusCode;
-            res.statusMessage = NotImplementedErrorOptions.message;
+            res.statusCode = NotImplementedErrorOptions.statusCode || 500;
+            res.statusMessage = NotImplementedErrorOptions.message || '';
 
             res.end();
         };
@@ -160,12 +161,12 @@ export class Router {
 
             const relativePath = this.withoutMountPath(path);
             setRequestRelativePath(req, relativePath);
-            setRequestMountPath(req, this.options.mountPath);
+            setRequestMountPath(req, this.options.mountPath || '/');
 
-            let layer : Route | Router | Layer;
+            let layer : Route | Router | Layer | undefined;
             let match = false;
 
-            while (match !== true && index < this.stack.length) {
+            while (!match && index < this.stack.length) {
                 index++;
                 layer = this.stack[index];
 
@@ -178,11 +179,18 @@ export class Router {
                 }
 
                 if (isRouteInstance(layer)) {
-                    match = layer.matchPath(relativePath) && layer.matchMethod(req.method);
+                    match = layer.matchPath(relativePath);
+
+                    if (
+                        req.method &&
+                        !layer.matchMethod(req.method)
+                    ) {
+                        match = false;
+                    }
                 }
             }
 
-            if (!match) {
+            if (!match || !layer) {
                 fn(err);
                 return;
             }

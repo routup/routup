@@ -8,5 +8,6 @@
 export * from './constants';
 export * from './helpers';
 export * from './layer';
+export * from './module';
 export * from './route';
 export * from './type';

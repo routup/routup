@@ -117,7 +117,7 @@ export class Layer {
     // --------------------------------------------------
 
     exec(path: string | null) : boolean {
-        let match : RegExpExecArray;
+        let match : RegExpExecArray | null = null;
 
         // set fast path flags
         const fastStar = this.pathRaw === '*';

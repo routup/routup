@@ -8,7 +8,7 @@
         "dist/"
     ],
     "scripts": {
-        "build": "rimraf ./dist && tsc",
+        "build": "rimraf ./dist && tsc -p tsconfig.build.json",
         "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
         "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage",
         "lint": "eslint --ext .js,.ts ./src",
@@ -22,6 +22,9 @@
     },
     "license": "MIT",
     "keywords": [
+        "cookie",
+        "cookie-serialize",
+        "cookie-parse",
         "api",
         "rest",
         "http",

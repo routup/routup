@@ -5,8 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { CookieParseOptions, parse } from 'cookie';
+import {
+    CookieParseOptions, CookieSerializeOptions, parse, serialize,
+} from 'cookie';
 import { IncomingMessage } from 'http';
+import { HeaderName, Response, appendResponseHeaderDirective } from 'sapir';
 
 const CookieSymbol = Symbol.for('ReqCookie');
 
@@ -24,4 +27,18 @@ export function useRequestCookies(req: IncomingMessage, options?: CookieParseOpt
 
 export function useRequestCookie(req: IncomingMessage, name: string) : string | undefined {
     return useRequestCookies(req)[name];
+}
+
+export function setResponseCookie(res: Response, name: string, value: string, options?: CookieSerializeOptions) {
+    appendResponseHeaderDirective(res, HeaderName.COOKIE, serialize(name, value, {
+        path: '/',
+        ...(options || {}),
+    }));
+}
+
+export function unsetResponseCookie(res: Response, name: string, options?: CookieSerializeOptions) {
+    setResponseCookie(res, name, '', {
+        ...(options || {}),
+        maxAge: 0,
+    });
 }

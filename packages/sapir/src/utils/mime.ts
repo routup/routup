@@ -12,7 +12,5 @@ export function getMimeType(type: string) : string | undefined {
         return type;
     }
 
-    type = mime.getType(type);
-
-    return type || undefined;
+    return mime.getType(type) || undefined;
 }

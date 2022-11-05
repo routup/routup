@@ -6,7 +6,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/sapir/badge.svg)](https://snyk.io/test/github/Tada5hi/sapir)
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
-Sapir (**S**imple **Api** **R**outer) is a http based routing framework.
+Sapir (**S**imple **Api** **R**outer) is a minimalistic http based routing framework.
 It uses node's vanilla request and response interfaces, which are injected into route- & middleware-handlers as function argument.
 Helpers provide additional functionalities to transform and interact with the request and manipulate the response upstream.
 
@@ -19,6 +19,8 @@ Helpers provide additional functionalities to transform and interact with the re
 - [Installation](#installation)
 - [Features](#features)
 - [Usage](#usage)
+- [Plugins](#plugins)
+- [Middlewares](#middlewares)
 - [License](#license)
 
 ## Installation
@@ -31,11 +33,13 @@ npm install sapir --save
 
 - 🚀 high performance routing
 - 🧰 response & request helpers/utilities
+- 💼 extendable & compact
 - 🛫 named route parameters
 - 📁 nestable routers
 - 😌 define one or many (error-) middlewares
 - ✨ promise support for route- & middleware-handlers
 - 👕 TypeScript fully supported
+- 🤏 Minimalistic to fit into any solution with minimum overhead
 - & much more
 
 ## Usage
@@ -95,6 +99,37 @@ router.use((req, res, next) => {
 
 router.listen(3000);
 ```
+
+## Plugins
+
+Due the fact that SAPIR is a minimalistic framework, it depends on plugins to cover some 
+typically http framework functions, which are not integrated in the main package.
+
+| Name                      | Description                                    |
+|---------------------------|------------------------------------------------|
+| [cookie](packages/cookie) | Read and use cookies set in the request header |
+| [query](packages/query)   | Parse and use url query string                 |
+
+
+## Middlewares
+
+Middlewares can be injected by using the `use()` method of a router instance.
+
+```typescript
+import { Router } from 'sapir';
+
+const router = new Router();
+
+const middleware = (req, res, next) => {
+    console.log('My amazing middleware 🥳');
+    next();
+};
+
+router.use(middleware);
+```
+
+> **Note**
+> Express middleware libraries (like body-parser, multer, ...) should work out of the box 🔥.
 
 ## License
 

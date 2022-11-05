@@ -12,6 +12,10 @@ export function useRequestPath(req: IncomingMessage) : string {
         return (req as any).path;
     }
 
+    if (typeof req.url === 'undefined') {
+        return '/';
+    }
+
     const parsed = new URL(req.url, 'http://localhost/');
 
     return parsed.pathname;
