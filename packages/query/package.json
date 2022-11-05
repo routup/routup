@@ -49,5 +49,8 @@
     },
     "dependencies": {
         "qs": "^6.11.0"
+    },
+    "peerDependencies": {
+        "sapir": "^0.x"
     }
 }

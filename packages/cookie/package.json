@@ -48,5 +48,8 @@
     },
     "dependencies": {
         "cookie": "^0.5.0"
+    },
+    "peerDependencies": {
+        "sapir": "^0.x"
     }
 }
