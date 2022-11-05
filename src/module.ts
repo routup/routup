@@ -8,7 +8,9 @@
 import { GatewayTimeoutErrorOptions, NotImplementedErrorOptions } from '@ebec/http';
 import { RequestListener } from 'http';
 import { pathToRegexp } from 'path-to-regexp';
-import {cleanDoubleSlashes, isInstance, withLeadingSlash, withoutTrailingSlash} from './utils';
+import {
+    cleanDoubleSlashes, isInstance, withLeadingSlash, withoutTrailingSlash,
+} from './utils';
 import { Layer, isLayerInstance } from './layer';
 import { Route, isRouteInstance } from './route';
 import {
@@ -16,7 +18,7 @@ import {
     Next,
     Request, Response, RouteHandler, RouterOptions,
 } from './type';
-import {setRequestMountPath, setRequestRelativePath, useRequestPath} from './helpers';
+import { setRequestMountPath, setRequestRelativePath, useRequestPath } from './helpers';
 
 export function isRouterInstance(input: unknown) : input is Router {
     return isInstance(input, 'Router');
@@ -47,8 +49,8 @@ export class Router {
     // --------------------------------------------------
 
     setOption<T extends keyof RouterOptions>(key: T, value: RouterOptions[T]) {
-        if(key === 'mountPath') {
-            if(value === '/') {
+        if (key === 'mountPath') {
+            if (value === '/') {
                 this.options.mountPath = '/';
             } else {
                 this.options.mountPath = withLeadingSlash(withoutTrailingSlash(`${value}`));
@@ -229,20 +231,20 @@ export class Router {
                 key.setOption('root', false);
                 this.stack.push(key);
             } else if (typeof key !== 'string') {
-                this.stack.push(new Layer('/', { strict: false, end: false}, key));
+                this.stack.push(new Layer('/', { strict: false, end: false }, key));
             }
 
             return this;
         }
 
-        if(typeof key === 'string') {
+        if (typeof key === 'string') {
             if (isRouterInstance(value)) {
                 value.setOption('mountPath', key);
                 value.setOption('root', false);
 
                 this.stack.push(value);
             } else {
-                const layer = new Layer(key, {strict: false, end: false}, value);
+                const layer = new Layer(key, { strict: false, end: false }, value);
                 this.stack.push(layer);
             }
         }
@@ -306,11 +308,11 @@ export class Router {
     // --------------------------------------------------
 
     private withoutMountPath(path: string) {
-        if(typeof this.options.mountPath === 'undefined') {
+        if (typeof this.options.mountPath === 'undefined') {
             return path;
         }
 
-        if(path.startsWith(this.options.mountPath)) {
+        if (path.startsWith(this.options.mountPath)) {
             path = path.substring(this.options.mountPath.length);
         }
 

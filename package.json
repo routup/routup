@@ -27,19 +27,13 @@
     },
     "license": "MIT",
     "keywords": [
-        "query",
-        "json",
-        "json-api",
         "api",
         "rest",
-        "api-utils",
-        "include",
-        "pagination",
-        "sort",
-        "fields",
-        "filter",
-        "relations",
-        "typescript"
+        "http",
+        "router",
+        "api-router",
+        "route",
+        "routing"
     ],
     "repository": {
         "type": "git",
