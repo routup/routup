@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "sourceMap": true,
+        "strict": true,
+
+        "declaration": true,
+        "declarationMap": true,
+
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+
+        "skipLibCheck": true,
+
+        "esModuleInterop": true,
+        "lib": ["ESNext"],
+        "target": "ES6",
+
+        "moduleResolution": "Node",
+        "module": "CommonJS"
+    },
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}

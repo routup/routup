@@ -6,11 +6,11 @@
  */
 
 import { CookieParseOptions, parse } from 'cookie';
-import { Request } from '../../type';
+import { IncomingMessage } from 'http';
 
 const CookieSymbol = Symbol.for('ReqCookie');
 
-export function useRequestCookies(req: Request, options?: CookieParseOptions) {
+export function useRequestCookies(req: IncomingMessage, options?: CookieParseOptions) {
     if (CookieSymbol in req) {
         return (req as any)[CookieSymbol];
     }
@@ -22,6 +22,6 @@ export function useRequestCookies(req: Request, options?: CookieParseOptions) {
     return output;
 }
 
-export function useRequestCookie(req: Request, name: string) : string | undefined {
+export function useRequestCookie(req: IncomingMessage, name: string) : string | undefined {
     return useRequestCookies(req)[name];
 }

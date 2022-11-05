@@ -6,9 +6,7 @@
  */
 
 import { CookieSerializeOptions, serialize } from 'cookie';
-import { HeaderName } from '../../constants';
-import { Response } from '../../type';
-import { appendResponseHeaderDirective } from './header';
+import { HeaderName, Response, appendResponseHeaderDirective } from 'sapir';
 
 export function setResponseCookie(res: Response, name: string, value: string, options?: CookieSerializeOptions) {
     appendResponseHeaderDirective(res, HeaderName.COOKIE, serialize(name, value, {

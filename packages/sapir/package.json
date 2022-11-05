@@ -1,0 +1,59 @@
+{
+    "name": "sapir",
+    "version": "0.0.0",
+    "description": "A simple callback based api router.",
+    "main": "./dist/index.js",
+    "typings": "dist/index.d.ts",
+    "files": [
+        "dist/"
+    ],
+    "scripts": {
+        "build": "rimraf ./dist && tsc",
+        "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
+        "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage",
+        "lint": "eslint --ext .js,.ts ./src",
+        "lint:fix": "npm run lint -- --fix",
+        "prepublishOnly": "npm run build"
+    },
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "license": "MIT",
+    "keywords": [
+        "api",
+        "rest",
+        "http",
+        "router",
+        "api-router",
+        "route",
+        "routing"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Tada5hi/sapir.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Tada5hi/sapir/issues"
+    },
+    "homepage": "https://github.com/Tada5hi/sapir#readme",
+    "devDependencies": {
+        "@types/cookie": "^0.5.1",
+        "@types/etag": "^1.8.1",
+        "@types/mime": "^3.0.1",
+        "@types/minimatch": "^5.1.2",
+        "@types/negotiator": "^0.6.1",
+        "@types/qs": "^6.9.7"
+    },
+    "dependencies": {
+        "@ebec/http": "^0.0.4",
+        "cookie": "^0.5.0",
+        "etag": "^1.8.1",
+        "mime": "^3.0.0",
+        "negotiator": "^0.6.3",
+        "path-to-regexp": "^6.2.1",
+        "qs": "^6.11.0",
+        "smob": "^0.0.6"
+    }
+}

@@ -1,0 +1,49 @@
+{
+    "name": "@sapir/cookie",
+    "version": "0.0.0",
+    "description": "Cookie plugin for sapir.",
+    "main": "./dist/index.js",
+    "typings": "dist/index.d.ts",
+    "files": [
+        "dist/"
+    ],
+    "scripts": {
+        "build": "rimraf ./dist && tsc",
+        "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
+        "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage",
+        "lint": "eslint --ext .js,.ts ./src",
+        "lint:fix": "npm run lint -- --fix",
+        "prepublishOnly": "npm run build"
+    },
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "license": "MIT",
+    "keywords": [
+        "api",
+        "rest",
+        "http",
+        "router",
+        "api-router",
+        "route",
+        "routing"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Tada5hi/sapir.git",
+        "directory": "packages/cookie"
+    },
+    "bugs": {
+        "url": "https://github.com/Tada5hi/sapir/issues"
+    },
+    "homepage": "https://github.com/Tada5hi/sapir#readme",
+    "devDependencies": {
+        "@types/cookie": "^0.5.1",
+        "sapir": "^0.0.0"
+    },
+    "dependencies": {
+        "cookie": "^0.5.0"
+    }
+}

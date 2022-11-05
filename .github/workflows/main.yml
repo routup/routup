@@ -103,10 +103,10 @@ jobs:
 
             -   name: Coverage
                 run: |
-                    npm run test:coverage
+                    npm run test:coverage --workspace=packages/sapir
 
             -   name: Upload report
                 uses: codecov/codecov-action@v3.1.1
                 with:
                     token: ${{ secrets.codecov }}
-                    directory: ./coverage/
+                    directory: ./packages/sapir/coverage/
