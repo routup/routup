@@ -15,7 +15,7 @@ describe('src/helpers/request/mount-path', () => {
 
         router.get('/',  (req, res) => send(res, useRequestMountPath(req)));
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/');
@@ -31,7 +31,7 @@ describe('src/helpers/request/mount-path', () => {
 
         router.get('',  (req, res) => send(res, useRequestMountPath(req)));
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/foo');
@@ -47,7 +47,7 @@ describe('src/helpers/request/mount-path', () => {
         const router = new Router();
         router.use('/foo', child);
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/foo/bar');

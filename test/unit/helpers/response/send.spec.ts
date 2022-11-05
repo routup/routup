@@ -27,7 +27,7 @@ describe('src/helpers/response/send', () => {
             sendFile(res, filePath);
         });
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/');
@@ -50,7 +50,7 @@ describe('src/helpers/response/send', () => {
             sendRedirect(res, 'https://google.de');
         });
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/');

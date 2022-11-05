@@ -26,7 +26,7 @@ describe('src/module', () => {
             send(res, 'bar');
         })
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/async');
@@ -50,7 +50,7 @@ describe('src/module', () => {
             send(res, params.id);
         });
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/param/abc');
@@ -66,7 +66,7 @@ describe('src/module', () => {
             send(res, 'foo');
         });
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/foo');
@@ -81,7 +81,7 @@ describe('src/module', () => {
 
         router.get('/', async () => {});
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/');
@@ -104,7 +104,7 @@ describe('src/module', () => {
             });
         })
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/');

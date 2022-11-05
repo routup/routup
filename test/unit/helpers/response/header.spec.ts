@@ -31,7 +31,7 @@ describe('src/helpers/response/header', function () {
             send(res)
         })
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/');
@@ -82,7 +82,7 @@ describe('src/helpers/response/header', function () {
             send(res);
         });
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/');
@@ -126,7 +126,7 @@ describe('src/helpers/response/header', function () {
             send(res);
         });
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/');

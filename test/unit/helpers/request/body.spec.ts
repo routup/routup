@@ -23,7 +23,7 @@ describe('src/helpers/request/body', () => {
             send(res, useRequestBody(req));
         })
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/');

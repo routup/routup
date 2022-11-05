@@ -6,7 +6,7 @@
  */
 
 import { GatewayTimeoutErrorOptions, NotImplementedErrorOptions } from '@ebec/http';
-import { RequestListener } from 'http';
+import { RequestListener, createServer } from 'http';
 import { pathToRegexp } from 'path-to-regexp';
 import {
     cleanDoubleSlashes, isInstance, withLeadingSlash, withoutTrailingSlash,
@@ -66,10 +66,15 @@ export class Router {
 
     // --------------------------------------------------
 
-    listener() : RequestListener {
+    createListener() : RequestListener {
         return (req, res) => {
             this.dispatch(req, res);
         };
+    }
+
+    listen(port: number) {
+        const server = createServer(this.createListener);
+        return server.listen(port);
     }
 
     matchPath(path: string) : boolean {

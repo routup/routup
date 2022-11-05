@@ -26,7 +26,7 @@ describe('src/helpers/request/header', () => {
             send(res, getRequestHeader(req, 'accept-language'));
         });
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/');
@@ -56,7 +56,7 @@ describe('src/helpers/request/header', () => {
             send(res, accepts);
         })
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/')
@@ -111,7 +111,7 @@ describe('src/helpers/request/header', () => {
             send(res, accepts);
         })
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/')
@@ -155,7 +155,7 @@ describe('src/helpers/request/header', () => {
             send(res, accepts);
         })
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/')
@@ -199,7 +199,7 @@ describe('src/helpers/request/header', () => {
             send(res, accepts);
         })
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/')
@@ -247,7 +247,7 @@ describe('src/helpers/request/header', () => {
             }
         });
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         let response = await server
             .get('/')

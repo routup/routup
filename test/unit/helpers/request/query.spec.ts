@@ -18,7 +18,7 @@ describe('src/helpers/request/query', () => {
             send(res, useRequestQuery(req));
         });
 
-        const server = supertest(router.listener());
+        const server = supertest(router.createListener());
 
         const query = {page: {limit: '10', offset: '0'}, sort: '-name'}
 
