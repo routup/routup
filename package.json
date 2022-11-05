@@ -1,0 +1,96 @@
+{
+    "name": "sapir",
+    "version": "0.0.0",
+    "description": "A simple callback based api router.",
+    "main": "./dist/index.js",
+    "typings": "dist/index.d.ts",
+    "files": [
+        "dist/"
+    ],
+    "scripts": {
+        "build": "rimraf ./dist && tsc",
+        "commit": "npx git-cz",
+        "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
+        "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage",
+        "lint": "eslint --ext .js,.ts ./src",
+        "lint:fix": "npm run lint -- --fix",
+        "docs:dev": "vitepress dev docs --temp .temp",
+        "docs:build": "vitepress build docs --temp .temp",
+        "docs:help": "vitepress --help",
+        "prepare": "npx husky install",
+        "prepublishOnly": "npm run build"
+    },
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "license": "MIT",
+    "keywords": [
+        "query",
+        "json",
+        "json-api",
+        "api",
+        "rest",
+        "api-utils",
+        "include",
+        "pagination",
+        "sort",
+        "fields",
+        "filter",
+        "relations",
+        "typescript"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Tada5hi/sapir.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Tada5hi/sapir/issues"
+    },
+    "homepage": "https://github.com/Tada5hi/sapir#readme",
+    "devDependencies": {
+        "@commitlint/cli": "^17.1.2",
+        "@commitlint/config-angular": "^17.1.0",
+        "@commitlint/config-conventional": "^17.1.0",
+        "@commitlint/cz-commitlint": "^17.1.2",
+        "@semantic-release/changelog": "^6.0.1",
+        "@semantic-release/commit-analyzer": "^9.0.2",
+        "@semantic-release/git": "^10.0.1",
+        "@semantic-release/github": "^8.0.6",
+        "@semantic-release/npm": "^9.0.1",
+        "@semantic-release/release-notes-generator": "^10.0.3",
+        "@tada5hi/eslint-config-typescript": "^1.0.9",
+        "@types/jest": "^27.5.0",
+        "@types/mime": "^3.0.1",
+        "@types/minimatch": "^5.1.2",
+        "@types/negotiator": "^0.6.1",
+        "@types/node": "^18.11.7",
+        "@types/qs": "^6.9.7",
+        "@types/supertest": "^2.0.12",
+        "cross-env": "^7.0.3",
+        "eslint": "^8.26.0",
+        "husky": "^8.0.1",
+        "jest": "^27.5.1",
+        "rimraf": "^3.0.2",
+        "semantic-release": "^19.0.5",
+        "supertest": "^6.3.1",
+        "ts-jest": "^27.1.4",
+        "typescript": "^4.8.4",
+        "vitepress": "^1.0.0-alpha.26",
+        "vue": "^3.2.41"
+    },
+    "config": {
+        "commitizen": {
+            "path": "@commitlint/cz-commitlint"
+        }
+    },
+    "dependencies": {
+        "@ebec/http": "^0.0.4",
+        "mime": "^3.0.0",
+        "negotiator": "^0.6.3",
+        "path-to-regexp": "^6.2.1",
+        "qs": "^6.11.0",
+        "smob": "^0.0.6"
+    }
+}
