@@ -7,7 +7,7 @@
 
 import path from "path";
 import supertest from "supertest";
-import {RPCHeader, sendFile} from "../../../../src";
+import {HeaderName, sendFile} from "../../../../src";
 import {sendRedirect} from "../../../../src/helpers/response/send-redirect";
 import {Router} from "../../../../src/module";
 
@@ -33,8 +33,8 @@ describe('src/helpers/response/send', () => {
             .get('/');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers[RPCHeader.CONTENT_TYPE]).toEqual('application/json');
-        expect(response.headers[RPCHeader.CONTENT_DISPOSITION]).toEqual('attachment; filename="dummy.json"');
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json');
+        expect(response.headers[HeaderName.CONTENT_DISPOSITION]).toEqual('attachment; filename="dummy.json"');
         expect(response.body).toEqual({id: 1, name: 'tada5hi'});
 
         response = await server

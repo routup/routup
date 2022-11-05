@@ -6,6 +6,8 @@
  */
 
 export * from './body';
+export * from './cache';
+export * from './cookie';
 export * from './header';
 export * from './header-attachment';
 export * from './header-content-type';

@@ -6,12 +6,12 @@
  */
 
 import { IncomingMessage } from 'http';
-import { RPCHeader } from '../../constants';
+import { HeaderName } from '../../constants';
 import { getMimeType } from '../../utils';
 import { getRequestHeader } from './header';
 
 export function matchRequestContentType(req: IncomingMessage, contentType: string) : boolean {
-    const header = getRequestHeader(req, RPCHeader.CONTENT_TYPE);
+    const header = getRequestHeader(req, HeaderName.CONTENT_TYPE);
     if (!header) {
         return true;
     }

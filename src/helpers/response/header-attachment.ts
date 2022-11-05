@@ -7,7 +7,7 @@
 
 import { ServerResponse } from 'http';
 import path from 'path';
-import { RPCHeader } from '../../constants';
+import { HeaderName } from '../../constants';
 import { getMimeType } from '../../utils';
 
 export function setResponseHeaderAttachment(res: ServerResponse, filename?: string) {
@@ -16,13 +16,13 @@ export function setResponseHeaderAttachment(res: ServerResponse, filename?: stri
         if (ext) {
             const type = getMimeType(ext.substring(1));
             if (type) {
-                res.setHeader(RPCHeader.CONTENT_TYPE, type);
+                res.setHeader(HeaderName.CONTENT_TYPE, type);
             }
         }
     }
 
     res.setHeader(
-        RPCHeader.CONTENT_DISPOSITION,
+        HeaderName.CONTENT_DISPOSITION,
         `attachment${filename ? `; filename="${filename}"` : ''}`,
     );
 }

@@ -13,7 +13,7 @@ export enum Method {
     DELETE = 'delete',
 }
 
-export enum RPCHeader {
+export enum HeaderName {
     METHOD = 'method',
     URL = 'url',
     STATUS_CODE = 'staus-code',

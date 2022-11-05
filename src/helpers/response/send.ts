@@ -4,8 +4,9 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
+import etag from 'etag';
 import { ServerResponse } from 'http';
-import { RPCHeader } from '../../constants';
+import { HeaderName } from '../../constants';
 import { appendResponseHeaderDirective } from './header';
 import { setResponseHeaderContentType } from './header-content-type';
 
@@ -34,9 +35,9 @@ export function send(res: ServerResponse, chunk?: any) {
     let encoding : BufferEncoding | null = null;
 
     if (typeof chunk === 'string') {
-        res.setHeader(RPCHeader.CONTENT_ENCODING, 'utf-8');
+        res.setHeader(HeaderName.CONTENT_ENCODING, 'utf-8');
 
-        appendResponseHeaderDirective(res, RPCHeader.CONTENT_TYPE, 'charset=utf-8');
+        appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, 'charset=utf-8');
 
         encoding = 'utf-8';
     }
@@ -57,7 +58,23 @@ export function send(res: ServerResponse, chunk?: any) {
             len = chunk.length;
         }
 
-        res.setHeader(RPCHeader.CONTENT_LENGTH, len);
+        res.setHeader(HeaderName.CONTENT_LENGTH, len);
+    }
+
+    // set etag for buffers > 10kb
+    if (
+        typeof len !== 'undefined' &&
+        len > 10_000
+    ) {
+        const chunkHash = etag(chunk, {
+            weak: true,
+        });
+
+        res.setHeader('ETag', chunkHash);
+
+        if (res.req.headers['if-none-match'] === chunkHash) {
+            res.statusCode = 304;
+        }
     }
 
     // strip irrelevant headers

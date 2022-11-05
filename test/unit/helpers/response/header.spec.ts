@@ -8,7 +8,7 @@
 import supertest from "supertest";
 import {
     appendResponseHeaderDirective,
-    RPCHeader,
+    HeaderName,
     send,
     setResponseHeaderAttachment,
     setResponseHeaderContentType
@@ -37,27 +37,27 @@ describe('src/helpers/response/header', function () {
             .get('/');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers[RPCHeader.CONTENT_DISPOSITION]).toEqual('attachment');
+        expect(response.headers[HeaderName.CONTENT_DISPOSITION]).toEqual('attachment');
 
         response = await server
             .get('/file');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers[RPCHeader.CONTENT_TYPE]).toEqual('application/json');
-        expect(response.headers[RPCHeader.CONTENT_DISPOSITION]).toEqual('attachment; filename="dummy.json"');
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json');
+        expect(response.headers[HeaderName.CONTENT_DISPOSITION]).toEqual('attachment; filename="dummy.json"');
     });
 
     it('should append header value', async () => {
         const router = new Router();
 
         router.get('/',  (req, res) => {
-            appendResponseHeaderDirective(res, RPCHeader.CONTENT_TYPE, 'boundary=something')
+            appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, 'boundary=something')
 
             send(res);
         });
 
         router.get('/multiple',  (req, res) => {
-            appendResponseHeaderDirective(res, RPCHeader.CONTENT_TYPE, [
+            appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, [
                 'application/json',
                 'boundary=something'
             ])
@@ -67,14 +67,14 @@ describe('src/helpers/response/header', function () {
 
         router.get('/append',  (req, res) => {
             setResponseHeaderAttachment(res, 'dummy.json');
-            appendResponseHeaderDirective(res, RPCHeader.CONTENT_TYPE, 'boundary=something')
+            appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, 'boundary=something')
 
             send(res);
         });
 
         router.get('/append-multiple',  (req, res) => {
             setResponseHeaderAttachment(res, 'dummy.json');
-            appendResponseHeaderDirective(res, RPCHeader.CONTENT_TYPE, [
+            appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, [
                 'charset=utf-8',
                 'boundary=something'
             ])
@@ -88,25 +88,25 @@ describe('src/helpers/response/header', function () {
             .get('/');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers[RPCHeader.CONTENT_TYPE]).toEqual('boundary=something');
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('boundary=something');
 
         response = await server
             .get('/multiple');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers[RPCHeader.CONTENT_TYPE]).toEqual('application/json; boundary=something');
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; boundary=something');
 
         response = await server
             .get('/append');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers[RPCHeader.CONTENT_TYPE]).toEqual('application/json; boundary=something');
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; boundary=something');
 
         response = await server
             .get('/append-multiple');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers[RPCHeader.CONTENT_TYPE]).toEqual('application/json; charset=utf-8; boundary=something');
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8; boundary=something');
     })
 
     it('should set response content type', async () => {
@@ -132,12 +132,12 @@ describe('src/helpers/response/header', function () {
             .get('/');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers[RPCHeader.CONTENT_TYPE]).toEqual('application/json');
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json');
 
         response = await server
             .get('/overwrite');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers[RPCHeader.CONTENT_TYPE]).toEqual('text/html');
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('text/html');
     });
 });

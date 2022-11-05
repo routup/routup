@@ -6,7 +6,7 @@
  */
 
 import { ServerResponse } from 'http';
-import { RPCHeader } from '../../constants';
+import { HeaderName } from '../../constants';
 
 const BodySymbol = Symbol.for('ResBody');
 
@@ -29,7 +29,7 @@ export function useResponseBodyFormatted(res: ServerResponse) : unknown {
         return undefined;
     }
 
-    let contentType = res.getHeader(RPCHeader.CONTENT_TYPE);
+    let contentType = res.getHeader(HeaderName.CONTENT_TYPE);
     if (!contentType) {
         return contentType;
     }

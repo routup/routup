@@ -8,13 +8,13 @@
 import { createReadStream } from 'fs';
 import { ServerResponse } from 'http';
 import path from 'path';
-import { RPCHeader } from '../../constants';
+import { HeaderName } from '../../constants';
 import { Next } from '../../type';
 import { setResponseHeaderAttachment } from './header-attachment';
 import { sendStream } from './send-stream';
 
 export function sendFile(res: ServerResponse, filePath: string, fn?: Next) {
-    const dispositionHeader = res.getHeader(RPCHeader.CONTENT_DISPOSITION);
+    const dispositionHeader = res.getHeader(HeaderName.CONTENT_DISPOSITION);
     if (!dispositionHeader) {
         setResponseHeaderAttachment(res, path.basename(filePath));
     }

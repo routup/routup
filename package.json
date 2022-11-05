@@ -55,6 +55,8 @@
         "@semantic-release/npm": "^9.0.1",
         "@semantic-release/release-notes-generator": "^10.0.3",
         "@tada5hi/eslint-config-typescript": "^1.0.9",
+        "@types/cookie": "^0.5.1",
+        "@types/etag": "^1.8.1",
         "@types/jest": "^27.5.0",
         "@types/mime": "^3.0.1",
         "@types/minimatch": "^5.1.2",
@@ -81,6 +83,8 @@
     },
     "dependencies": {
         "@ebec/http": "^0.0.4",
+        "cookie": "^0.5.0",
+        "etag": "^1.8.1",
         "mime": "^3.0.0",
         "negotiator": "^0.6.3",
         "path-to-regexp": "^6.2.1",
