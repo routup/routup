@@ -11,6 +11,7 @@ import qs from 'qs';
 const QuerySymbol = Symbol.for('ReqQuery');
 
 export function useRequestQuery(req: IncomingMessage) : Record<string, any> {
+    /* istanbul ignore if  */
     if ('query' in req) {
         return (req as any).query;
     }
@@ -19,6 +20,7 @@ export function useRequestQuery(req: IncomingMessage) : Record<string, any> {
         return (req as any)[QuerySymbol];
     }
 
+    /* istanbul ignore if  */
     if (typeof req.url === 'undefined') {
         return {};
     }

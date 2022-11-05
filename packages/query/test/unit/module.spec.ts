@@ -18,6 +18,12 @@ describe('src/module', () => {
             send(res, useRequestQuery(req));
         });
 
+        router.get('/reuse',  (req, res) => {
+            useRequestQuery(req);
+
+            send(res, useRequestQuery(req));
+        });
+
         const server = supertest(router.createListener());
 
         const query = {page: {limit: '10', offset: '0'}, sort: '-name'}
@@ -33,5 +39,11 @@ describe('src/module', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual({});
+
+        response = await server
+            .get('/reuse?'+ qs.stringify(query));
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.body).toEqual(query);
     })
 })
