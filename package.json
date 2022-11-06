@@ -22,12 +22,12 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Tada5hi/urf.git"
+        "url": "git+https://github.com/Tada5hi/routup.git"
     },
     "bugs": {
-        "url": "https://github.com/Tada5hi/urf/issues"
+        "url": "https://github.com/Tada5hi/routup/issues"
     },
-    "homepage": "https://github.com/Tada5hi/urf#readme",
+    "homepage": "https://github.com/Tada5hi/routup#readme",
     "engines": {
         "node": ">=16.0.0"
     },
