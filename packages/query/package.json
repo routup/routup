@@ -45,7 +45,7 @@
     "homepage": "https://github.com/Tada5hi/routup#readme",
     "devDependencies": {
         "@types/qs": "^6.9.7",
-        "routup": "^0.0.0"
+        "routup": "^0.0.1"
     },
     "dependencies": {
         "qs": "^6.11.0"

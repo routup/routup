@@ -1,4 +1,4 @@
-# routup 🛣
+# routup 👑
 
 [![npm version](https://badge.fury.io/js/routup.svg)](https://badge.fury.io/js/routup)
 [![main](https://github.com/Tada5hi/routup/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/routup/actions/workflows/main.yml)
