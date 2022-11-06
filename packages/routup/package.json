@@ -1,6 +1,6 @@
 {
     "name": "routup",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "description": "Routup is a minimalistic http based routing framework.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",

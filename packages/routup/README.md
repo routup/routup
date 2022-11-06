@@ -61,10 +61,10 @@ router.listen(3000);
 According to the fact that routup is a minimalistic framework, it depends on plugins to cover some 
 typically http framework functions, which are not integrated in the main package.
 
-| Name                      | Description                                    |
-|---------------------------|------------------------------------------------|
-| [cookie](packages/cookie) | Read and use cookies set in the request header |
-| [query](packages/query)   | Parse and use url query string                 |
+| Name                                                                        | Description                                    |
+|-----------------------------------------------------------------------------|------------------------------------------------|
+| [cookie](https://www.npmjs.com/package/@routup/tree/master/packages/cookie) | Read and use cookies set in the request header |
+| [query](https://www.npmjs.com/package/@routup/tree/master/packages/query)   | Parse and use url query string                 |
 
 
 ## License
