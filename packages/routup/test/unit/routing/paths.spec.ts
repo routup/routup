@@ -71,4 +71,25 @@ describe('routing/paths', () => {
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('/foo/bar/baz');
     })
+
+    it('should handle regexp paths', async () => {
+        const router = new Router();
+
+        router.get(/.*fly$/, async (req, res) => {
+            send(res, '/foo');
+        });
+
+        const server = supertest(router.createListener());
+
+        let response = await server
+            .get('/butterfly');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.text).toEqual('/foo');
+
+        response = await server
+            .get('/dragonflyman');
+
+        expect(response.statusCode).toEqual(404);
+    })
 });

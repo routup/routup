@@ -11,13 +11,13 @@ import { Layer } from '../layer';
 import { PathMatcher } from '../path';
 import {
     DispatcherMeta,
-    Handler, Next, Request, Response,
+    Handler, Next, Path, Request, Response,
 } from '../type';
 
 export class Route {
     readonly '@instanceof' = Symbol.for('Route');
 
-    public path : string;
+    public path : Path;
 
     protected pathMatcher : PathMatcher;
 
@@ -25,7 +25,7 @@ export class Route {
 
     // --------------------------------------------------
 
-    constructor(path: string) {
+    constructor(path: Path) {
         this.path = path;
 
         this.pathMatcher = new PathMatcher(path);

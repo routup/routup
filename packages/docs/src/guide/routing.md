@@ -12,7 +12,7 @@ router.METHOD(PATH, HANDLER)
 ```
 Where: 
 - **router** represents a router instance
-- **METHOD** the HTTP method (get, post, ...) in lowercase or a special method like `use` or `all`
+- **METHOD** the HTTP method (get, post, ...) in lowercase or the `use` method to respond to any HTTP method.
 - **PATH** defines the endpoint and the mount path of the handler
 - **HANDLER** is a function, which is executed when the route matches
 

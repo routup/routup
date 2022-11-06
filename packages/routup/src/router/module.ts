@@ -6,11 +6,12 @@
  */
 
 import { RequestListener, createServer } from 'http';
+import { it } from 'node:test';
 import { merge } from 'smob';
 import { PathMatcher } from '../path';
 import {
     createResponseTimeout,
-    isInstance,
+    isInstance, isPath,
     withLeadingSlash,
     withoutTrailingSlash,
 } from '../utils';
@@ -20,7 +21,7 @@ import {
     DispatcherMeta,
     ErrorHandler,
     Handler,
-    Next,
+    Next, Path,
     Request,
     Response,
 
@@ -67,12 +68,17 @@ export class Router {
 
     setOption<T extends keyof RouterOptions>(key: T, value: RouterOptions[T]) {
         if (key === 'mountPath') {
-            if (value === '/') {
+            if (value === '/' || !isPath(value)) {
                 this.options.mountPath = '/';
                 return;
             }
 
-            this.options.mountPath = withLeadingSlash(withoutTrailingSlash(`${value}`));
+            if (typeof value === 'string') {
+                this.options.mountPath = withLeadingSlash(withoutTrailingSlash(`${value}`));
+            } else {
+                this.options.mountPath = value;
+            }
+
             this.pathMatcher = new PathMatcher(this.options.mountPath, { end: false });
 
             return;
@@ -259,31 +265,35 @@ export class Router {
 
     use(handler: ErrorHandler) : this;
 
-    use(path: string, router: Router) : this;
+    use(path: Path, router: Router) : this;
 
-    use(path: string, handler: Handler) : this;
+    use(path: Path, handler: Handler) : this;
 
-    use(path: string, handler: ErrorHandler) : this;
+    use(path: Path, handler: ErrorHandler) : this;
 
-    use(key: string | Router | Handler | ErrorHandler, value?: Router | Handler | ErrorHandler) : this {
-        if (typeof value === 'undefined') {
-            if (isRouterInstance(key)) {
-                this.stack.push(key);
-            } else if (typeof key !== 'string') {
-                this.stack.push(new Layer('/', { strict: false, end: false }, key));
-            }
-
+    use(...input: unknown[]) : this {
+        if (input.length === 0) {
             return this;
         }
 
-        if (typeof key === 'string') {
-            if (isRouterInstance(value)) {
-                value.setOption('mountPath', key);
+        let path : Path | undefined;
 
-                this.stack.push(value);
-            } else {
-                const layer = new Layer(key, { strict: false, end: false }, value);
-                this.stack.push(layer);
+        if (isPath(input[0])) {
+            path = input.shift() as Path;
+        }
+
+        for (let i = 0; i < input.length; i++) {
+            const item = input[i];
+            if (isRouterInstance(item)) {
+                if (path) {
+                    item.setOption('mountPath', path);
+                }
+                this.stack.push(item);
+                continue;
+            }
+
+            if (typeof item === 'function') {
+                this.stack.push(new Layer(path || '/', { strict: false, end: false }, item));
             }
         }
 
@@ -293,7 +303,7 @@ export class Router {
     // --------------------------------------------------
 
     route(
-        path: string,
+        path: Path,
     ) : Route {
         const index = this.stack.findIndex(
             (item) => isRouteInstance(item) && item.path === path,
@@ -309,35 +319,35 @@ export class Router {
         return route;
     }
 
-    delete(path: string, ...handlers: Handler[]) : this {
+    delete(path: Path, ...handlers: Handler[]) : this {
         const route = this.route(path);
         route.delete(...handlers);
 
         return this;
     }
 
-    get(path: string, ...handlers: Handler[]) : this {
+    get(path: Path, ...handlers: Handler[]) : this {
         const route = this.route(path);
         route.get(...handlers);
 
         return this;
     }
 
-    post(path: string, ...handlers: Handler[]) : this {
+    post(path: Path, ...handlers: Handler[]) : this {
         const route = this.route(path);
         route.post(...handlers);
 
         return this;
     }
 
-    put(path: string, ...handlers: Handler[]) : this {
+    put(path: Path, ...handlers: Handler[]) : this {
         const route = this.route(path);
         route.put(...handlers);
 
         return this;
     }
 
-    patch(path: string, ...handlers: Handler[]) : this {
+    patch(path: Path, ...handlers: Handler[]) : this {
         const route = this.route(path);
         route.patch(...handlers);
 

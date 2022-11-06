@@ -9,7 +9,7 @@ import {
     CookieParseOptions, CookieSerializeOptions, parse, serialize,
 } from 'cookie';
 import { IncomingMessage } from 'http';
-import { HeaderName, Response, appendResponseHeaderDirective } from 'sapir';
+import { HeaderName, Response, appendResponseHeaderDirective } from 'routup';
 
 const CookieSymbol = Symbol.for('ReqCookie');
 

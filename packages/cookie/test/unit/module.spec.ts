@@ -6,7 +6,7 @@
  */
 
 import supertest from "supertest";
-import { send, Router } from "sapir";
+import { send, Router } from "routup";
 import { setResponseCookie, useRequestCookie } from "../../src";
 
 describe('src/module', () => {

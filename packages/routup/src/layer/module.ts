@@ -12,7 +12,7 @@ import {
 import { setRequestParams } from '../helpers';
 import { PathMatcher } from '../path';
 import {
-    DispatcherMeta, Next, Request, Response,
+    DispatcherMeta, Next, Path, Request, Response,
 } from '../type';
 
 export class Layer {
@@ -25,7 +25,7 @@ export class Layer {
     // --------------------------------------------------
 
     constructor(
-        path: string,
+        path: Path,
         options: TokensToRegexpOptions & ParseOptions,
         fn: CallableFunction,
     ) {

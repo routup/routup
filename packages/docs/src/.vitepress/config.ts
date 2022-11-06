@@ -1,14 +1,14 @@
 import { defineConfig } from 'vitepress';
 
 export default defineConfig({
-    title: 'SAPIR',
+    title: 'Routup',
     base: '/',
     themeConfig: {
         socialLinks: [
-            { icon: 'github', link: 'https://github.com/tada5hi/sapir' },
+            { icon: 'github', link: 'https://github.com/tada5hi/routup' },
         ],
         editLink: {
-            pattern: 'https://github.com/tada5hi/sapir/edit/master/docs/:path',
+            pattern: 'https://github.com/tada5hi/routup/edit/master/docs/:path',
             text: 'Edit this page on GitHub'
         },
         nav: [
@@ -37,7 +37,7 @@ export default defineConfig({
                     text: 'Introduction',
                     collapsible: false,
                     items: [
-                        {text: 'What is SAPIR?', link: '/guide/'},
+                        {text: 'What is it?', link: '/guide/'},
                         {text: 'Installation', link: '/guide/installation'},
                     ]
                 },

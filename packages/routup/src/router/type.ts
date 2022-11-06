@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Path } from '../type';
+
 export type RouterOptions = {
     /**
      * Milliseconds (ms) until request should time out.
@@ -20,5 +22,5 @@ export type RouterOptions = {
      * @type string
      * @default '/'
      */
-    mountPath?: string
+    mountPath?: Path
 };

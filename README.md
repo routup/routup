@@ -1,18 +1,14 @@
-# SAPIR 🚌
+# routup 🚌
 
-[![npm version](https://badge.fury.io/js/sapir.svg)](https://badge.fury.io/js/sapir)
-[![main](https://github.com/Tada5hi/sapir/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/sapir/actions/workflows/main.yml)
-[![codecov](https://codecov.io/gh/tada5hi/sapir/branch/master/graph/badge.svg?token=QFGCsHRUax)](https://codecov.io/gh/tada5hi/sapir)
-[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/sapir/badge.svg)](https://snyk.io/test/github/Tada5hi/sapir)
+[![npm version](https://badge.fury.io/js/routup.svg)](https://badge.fury.io/js/routup)
+[![main](https://github.com/Tada5hi/routup/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/routup/actions/workflows/main.yml)
+[![codecov](https://codecov.io/gh/tada5hi/routup/branch/master/graph/badge.svg?token=QFGCsHRUax)](https://codecov.io/gh/tada5hi/routup)
+[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/routup/badge.svg)](https://snyk.io/test/github/Tada5hi/routup)
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
-SAPIR (**S**imple **API** **R**outer) is a minimalistic http based routing framework.
+Routup is a minimalistic & extendable http interface based routing framework.
 It uses node's vanilla request and response interfaces, which are injected into route- & middleware-handlers as function argument.
 Helpers provide additional functionalities to transform and interact with the request and manipulate the response upstream.
-
-> **Note**
-> The package is still in heavy development and is therefore not production ready.
-> Besides, the README.md is missing important parts, which are not covered yet. 
 
 **Table of Contents**
 
@@ -26,7 +22,7 @@ Helpers provide additional functionalities to transform and interact with the re
 ## Installation
 
 ```bash
-npm install sapir --save
+npm install routup --save
 ```
 
 ## Features
@@ -44,12 +40,12 @@ npm install sapir --save
 
 ## Documentation
 
-To read the docs, visit [https://sapir.tada5hi.net](https://sapir.tada5hi.net)
+To read the docs, visit [https://routup.tada5hi.net](https://routup.tada5hi.net)
 
 ## Usage
 
 ```typescript
-import { Router, send } from 'sapir';
+import { Router, send } from 'routup';
 
 const router = new Router();
 
@@ -62,7 +58,7 @@ router.listen(3000);
 
 ## Plugins
 
-According to the fact that SAPIR is a minimalistic framework, it depends on plugins to cover some 
+According to the fact that routup is a minimalistic framework, it depends on plugins to cover some 
 typically http framework functions, which are not integrated in the main package.
 
 | Name                      | Description                                    |

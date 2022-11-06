@@ -103,7 +103,7 @@ jobs:
 
             -   name: Coverage
                 run: |
-                    npm run test:coverage --workspace=packages/sapir
+                    npm run test:coverage --workspace=packages/routup
 
             -   name: Upload report
                 uses: codecov/codecov-action@v3.1.1

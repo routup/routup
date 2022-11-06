@@ -1,7 +1,7 @@
 {
-    "name": "@sapir/cookie",
+    "name": "@routup/cookie",
     "version": "0.0.0",
-    "description": "Cookie plugin for sapir.",
+    "description": "Cookie plugin for routup.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
     "files": [
@@ -35,21 +35,21 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Tada5hi/sapir.git",
+        "url": "git+https://github.com/Tada5hi/routup.git",
         "directory": "packages/cookie"
     },
     "bugs": {
-        "url": "https://github.com/Tada5hi/sapir/issues"
+        "url": "https://github.com/Tada5hi/routup/issues"
     },
-    "homepage": "https://github.com/Tada5hi/sapir#readme",
+    "homepage": "https://github.com/Tada5hi/routup#readme",
     "devDependencies": {
         "@types/cookie": "^0.5.1",
-        "sapir": "^0.0.0"
+        "routup": "^0.0.0"
     },
     "dependencies": {
         "cookie": "^0.5.0"
     },
     "peerDependencies": {
-        "sapir": "^0.x"
+        "routup": "^0.x"
     }
 }

@@ -7,5 +7,6 @@
 
 export * from './is-instance';
 export * from './mime';
+export * from './path';
 export * from './response';
 export * from './url';

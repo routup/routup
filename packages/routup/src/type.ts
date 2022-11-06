@@ -22,6 +22,8 @@ export interface Request extends IncomingMessage {
 
 export type Next = (err?: Error) => void;
 
+export type Path = string | RegExp;
+
 // --------------------------------------------------
 
 export type ErrorHandler = (

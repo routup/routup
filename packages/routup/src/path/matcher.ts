@@ -8,6 +8,7 @@
 import {
     Key, ParseOptions, TokensToRegexpOptions, pathToRegexp,
 } from 'path-to-regexp';
+import { Path } from '../type';
 import { PathMatcherExecResult } from './type';
 
 function decodeParam(val: unknown) {
@@ -19,7 +20,7 @@ function decodeParam(val: unknown) {
 }
 
 export class PathMatcher {
-    path: string;
+    path: Path;
 
     regexp : RegExp;
 
@@ -27,10 +28,15 @@ export class PathMatcher {
 
     regexpOptions: TokensToRegexpOptions & ParseOptions;
 
-    constructor(path: string, options?: TokensToRegexpOptions & ParseOptions) {
+    constructor(path: Path, options?: TokensToRegexpOptions & ParseOptions) {
         this.path = path;
         this.regexpOptions = options || {};
-        this.regexp = pathToRegexp(path, this.regexpKeys, options);
+
+        if (path instanceof RegExp) {
+            this.regexp = path;
+        } else {
+            this.regexp = pathToRegexp(path, this.regexpKeys, options);
+        }
     }
 
     test(path: string) {
@@ -57,6 +63,15 @@ export class PathMatcher {
 
         if (!match) {
             return undefined;
+        }
+
+        if (this.path instanceof RegExp) {
+            return {
+                path,
+                params: {
+                    0: decodeParam(match[0]),
+                },
+            };
         }
 
         const output : Record<string, unknown> = {};

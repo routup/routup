@@ -6,10 +6,11 @@
  */
 
 import { IncomingMessage } from 'http';
+import { Path } from '../../type';
 
 const ReqMountPathSymbol = Symbol.for('ReqMountPath');
 
-export function useRequestMountPath(req: IncomingMessage) : string {
+export function useRequestMountPath(req: IncomingMessage) : Path {
     if (ReqMountPathSymbol in req) {
         return (req as any)[ReqMountPathSymbol];
     }
@@ -17,6 +18,6 @@ export function useRequestMountPath(req: IncomingMessage) : string {
     return '/';
 }
 
-export function setRequestMountPath(req: IncomingMessage, basePath: string) {
+export function setRequestMountPath(req: IncomingMessage, basePath: Path) {
     (req as any)[ReqMountPathSymbol] = basePath;
 }

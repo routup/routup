@@ -22,12 +22,12 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Tada5hi/sapir.git"
+        "url": "git+https://github.com/Tada5hi/urf.git"
     },
     "bugs": {
-        "url": "https://github.com/Tada5hi/sapir/issues"
+        "url": "https://github.com/Tada5hi/urf/issues"
     },
-    "homepage": "https://github.com/Tada5hi/sapir#readme",
+    "homepage": "https://github.com/Tada5hi/urf#readme",
     "engines": {
         "node": ">=16.0.0"
     },

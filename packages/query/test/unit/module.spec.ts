@@ -7,7 +7,7 @@
 
 import qs from "qs";
 import supertest from "supertest";
-import {send, Router} from "sapir";
+import {send, Router} from "routup";
 import {useRequestQuery} from "../../src";
 
 describe('src/module', () => {

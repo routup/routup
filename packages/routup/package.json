@@ -1,7 +1,7 @@
 {
-    "name": "sapir",
+    "name": "routup",
     "version": "0.0.0",
-    "description": "Sapir is a minimalistic http based routing framework.",
+    "description": "Routup is a minimalistic http based routing framework.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
     "files": [
@@ -32,12 +32,12 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Tada5hi/sapir.git"
+        "url": "git+https://github.com/Tada5hi/routup.git"
     },
     "bugs": {
-        "url": "https://github.com/Tada5hi/sapir/issues"
+        "url": "https://github.com/Tada5hi/routup/issues"
     },
-    "homepage": "https://github.com/Tada5hi/sapir#readme",
+    "homepage": "https://github.com/Tada5hi/routup#readme",
     "devDependencies": {
         "@types/etag": "^1.8.1",
         "@types/mime": "^3.0.1",

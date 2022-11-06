@@ -1,7 +1,7 @@
 # Routing Paths
 
-Route paths define endpoints for which a request can finally be handled.
-Besides, defining **simple** paths, **patterns** and **regular expressions** can be used as well.
+Routing paths define endpoints (URIs) for which a request can be handled.
+Besides, defining **simple** paths, **regular expressions** can be used as well.
 
 Route handlers should in most cases, use a [helper]() (e.g. `send()`) to send a final response and terminate the request.
 This does not apply, if the request should be handled by another handler in the callback chain.
@@ -58,24 +58,6 @@ Respond to a **delete** request on the `buz` path.
 ```typescript
 router.delete('/buz', (req, res) => {
     send(res, 'Received a DELETE request.');
-})
-```
-
-## Patterns
-
-Respond to a **get** request on the following paths: **acd** and **abcd**
-
-```typescript
-router.get('/ab?cd', (req, res) => {
-    send(res, 'ab?cd');
-})
-```
-
-Respond to a **get** request on the following paths: **abcd**, **abbcd**, ...
-
-```typescript
-router.get('/ab+cd', (req, res) => {
-    send(res, 'ab+cd');
 })
 ```
 

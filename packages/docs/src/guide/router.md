@@ -1,23 +1,18 @@
 # Router
 
-A router is an object containing handler instances, which are composed and executed
+A router is an object containing other routers & (error-) handlers, which are composed and executed
 in a stack-like manner upon request.
-
-There are **three** kind of handlers, which can be mounted on a routing instance.
-- Route
-- Middleware
-- Router
 
 ## Mounting 
 
 ::: warning **Note**
 
-Route handlers can also be mounted for a specific http method.
+Handlers can also be restricted to a specific http method.
 [Read more](./routing.md)
 
 :::
 
-To mount a handler to the current router instance, use the `use()` class method.
+To mount a router- or handler-instance to the current router, use the `use()` class method.
 
 ```typescript
 router.use((req, res, ...) => {
@@ -25,8 +20,8 @@ router.use((req, res, ...) => {
 })
 ```
 
-The **use** method also accepts two argument. In that case the
-first argument must be a specific [routing](./routing.md) path and the second argument the actual handler.
+It is also possible, to pass **two** arguments. In that case the
+first argument must be a path (string or Regexp) and the second argument the actual router- or handler-instance.
 
 ```typescript
 router.use('/', (req, res, ...) => {
@@ -36,12 +31,12 @@ router.use('/', (req, res, ...) => {
 
 ## Listener
 
-To create a http server and listen for incoming requests, there are two variants to do so:
+To create a http server and listen for incoming requests, there are two possibilities to do so:
 
-**`Variant #1`**
+**`#1`**
 
 ```typescript
-import { Router, send } from 'sapir';
+import { Router, send } from 'routup';
 
 const router = new Router();
 
@@ -52,11 +47,11 @@ router.get('/', (req, res) => {
 router.listen(3000);
 ```
 
-**`Variant #2`**
+**`#2`**
 
 ```typescript
 import { createServer } from 'http';
-import { Router, send } from 'sapir';
+import { Router, send } from 'routup';
 
 const router = new Router();
 

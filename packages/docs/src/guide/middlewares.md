@@ -9,7 +9,7 @@ Express middleware libraries (like body-parser, multer, ...) should work out of 
 :::
 
 ```typescript
-import { Router } from 'sapir';
+import { Router } from 'routup';
 
 const router = new Router();
 

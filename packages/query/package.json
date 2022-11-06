@@ -1,7 +1,7 @@
 {
-    "name": "@sapir/query",
+    "name": "@routup/query",
     "version": "0.0.0",
-    "description": "Query plugin for sapir.",
+    "description": "Query plugin for routup.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
     "files": [
@@ -36,21 +36,21 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Tada5hi/sapir.git",
+        "url": "git+https://github.com/Tada5hi/routup.git",
         "directory": "packages/query"
     },
     "bugs": {
-        "url": "https://github.com/Tada5hi/sapir/issues"
+        "url": "https://github.com/Tada5hi/routup/issues"
     },
-    "homepage": "https://github.com/Tada5hi/sapir#readme",
+    "homepage": "https://github.com/Tada5hi/routup#readme",
     "devDependencies": {
         "@types/qs": "^6.9.7",
-        "sapir": "^0.0.0"
+        "routup": "^0.0.0"
     },
     "dependencies": {
         "qs": "^6.11.0"
     },
     "peerDependencies": {
-        "sapir": "^0.x"
+        "routup": "^0.x"
     }
 }

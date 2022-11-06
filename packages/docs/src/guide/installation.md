@@ -3,5 +3,5 @@
 Add the package as a dependency to the project.
 
 ```sh
-npm install sapir --save
+npm install routup --save
 ```
