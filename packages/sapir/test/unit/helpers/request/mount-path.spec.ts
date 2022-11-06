@@ -7,7 +7,7 @@
 
 import supertest from "supertest";
 import {send, useRequestMountPath} from "../../../../src";
-import {Router} from "../../../../src/module";
+import {Router} from "../../../../src/router/module";
 
 describe('src/helpers/request/mount-path', () => {
     it('should get base-url', async () => {

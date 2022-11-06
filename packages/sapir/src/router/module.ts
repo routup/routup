@@ -5,20 +5,31 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { GatewayTimeoutErrorOptions, NotImplementedErrorOptions } from '@ebec/http';
 import { RequestListener, createServer } from 'http';
-import { pathToRegexp } from 'path-to-regexp';
+import { merge } from 'smob';
+import { PathMatcher } from '../path';
 import {
-    cleanDoubleSlashes, isInstance, withLeadingSlash, withoutTrailingSlash,
-} from './utils';
-import { Layer, isLayerInstance } from './layer';
-import { Route, isRouteInstance } from './route';
+    createResponseTimeout,
+    isInstance,
+    withLeadingSlash,
+    withoutTrailingSlash,
+} from '../utils';
+import { Layer, isLayerInstance } from '../layer';
+import { Route, isRouteInstance } from '../route';
 import {
+    DispatcherMeta,
     ErrorHandler,
+    Handler,
     Next,
-    Request, Response, RouteHandler, RouterOptions,
-} from './type';
-import { setRequestMountPath, setRequestRelativePath, useRequestPath } from './helpers';
+    Request,
+    Response,
+
+} from '../type';
+import {
+    setRequestMountPath,
+    useRequestPath,
+} from '../helpers';
+import { RouterOptions } from './type';
 
 export function isRouterInstance(input: unknown) : input is Router {
     return isInstance(input, 'Router');
@@ -31,7 +42,14 @@ export class Router {
 
     protected stack : (Router | Route | Layer)[] = [];
 
-    protected regexp : RegExp;
+    protected pathMatcher : PathMatcher | undefined;
+
+    /**
+     * Is root router instance?
+     *
+     * @protected
+     */
+    protected isRoot : boolean | undefined;
 
     // --------------------------------------------------
 
@@ -39,10 +57,10 @@ export class Router {
         options = options || {};
         options.timeout = options.timeout || 60_000;
         options.mountPath = options.mountPath || '/';
-        options.root = options.root ?? true;
 
         this.options = options;
-        this.regexp = pathToRegexp(options.mountPath, [], { end: false });
+
+        this.setOption('mountPath', this.options.mountPath);
     }
 
     // --------------------------------------------------
@@ -51,11 +69,11 @@ export class Router {
         if (key === 'mountPath') {
             if (value === '/') {
                 this.options.mountPath = '/';
-            } else {
-                this.options.mountPath = withLeadingSlash(withoutTrailingSlash(`${value}`));
+                return;
             }
 
-            this.regexp = pathToRegexp(this.options.mountPath, [], { end: false });
+            this.options.mountPath = withLeadingSlash(withoutTrailingSlash(`${value}`));
+            this.pathMatcher = new PathMatcher(this.options.mountPath, { end: false });
 
             return;
         }
@@ -66,24 +84,27 @@ export class Router {
     // --------------------------------------------------
 
     createListener() : RequestListener {
-        this.setOption('root', true);
+        this.isRoot = true;
 
         return (req, res) => {
             this.dispatch(req, res);
         };
     }
 
+    /* istanbul ignore next */
     listen(port: number) {
         const server = createServer(this.createListener);
         return server.listen(port);
     }
 
+    // --------------------------------------------------
+
     matchPath(path: string) : boolean {
-        if (path === '/') {
-            return true;
+        if (this.pathMatcher) {
+            return this.pathMatcher.test(path);
         }
 
-        return this.regexp.test(path);
+        return true;
     }
 
     // --------------------------------------------------
@@ -91,45 +112,20 @@ export class Router {
     dispatch(
         req: Request,
         res: Response,
+        meta?: DispatcherMeta,
         done?: Next,
     ) : void {
         let index = -1;
 
-        let timeout : ReturnType<typeof setTimeout> | undefined;
+        meta = meta || {};
 
-        if (this.options.root) {
-            timeout = setTimeout(() => {
-                res.statusCode = GatewayTimeoutErrorOptions.statusCode || 500;
-                res.statusMessage = GatewayTimeoutErrorOptions.message || '';
-
-                res.end();
-            }, this.options.timeout);
-
-            res.once('close', () => {
-                clearTimeout(timeout);
-
-                if (
-                    this.options.root &&
-                    typeof done === 'function'
-                ) {
-                    done();
-                }
-            });
-
-            res.once('error', (e) => {
-                clearTimeout(timeout);
-
-                if (
-                    this.options.root &&
-                    typeof done === 'function'
-                ) {
-                    done(e);
-                }
-            });
+        if (this.isRoot) {
+            createResponseTimeout(res, this.options.timeout || 60_000, done);
         }
 
         const fn = (err?: Error) => {
-            if (!this.options.root) {
+            /* istanbul ignore if */
+            if (!this.isRoot) {
                 if (typeof done !== 'undefined') {
                     done(err);
                 }
@@ -146,21 +142,31 @@ export class Router {
                 return;
             }
 
-            res.statusCode = NotImplementedErrorOptions.statusCode || 500;
-            res.statusMessage = NotImplementedErrorOptions.message || '';
-
+            res.statusCode = 404;
             res.end();
         };
 
-        const path = useRequestPath(req);
+        let path = meta.path || useRequestPath(req);
+
+        if (this.pathMatcher) {
+            const output = this.pathMatcher.exec(path);
+            if (typeof output !== 'undefined') {
+                if (path === output.path) {
+                    path = '/';
+                } else {
+                    path = withLeadingSlash(path.substring(output.path.length));
+                }
+
+                meta.params = merge(meta.params || {}, output.params);
+            }
+        }
 
         const next = (err?: Error) : void => {
-            if (index >= this.stack.length) {
-                setImmediate(() => fn(err));
+            if (index >= this.stack.length - 1) {
+                fn(err);
+                return;
             }
 
-            const relativePath = this.withoutMountPath(path);
-            setRequestRelativePath(req, relativePath);
             setRequestMountPath(req, this.options.mountPath || '/');
 
             let layer : Route | Router | Layer | undefined;
@@ -168,18 +174,19 @@ export class Router {
 
             while (!match && index < this.stack.length) {
                 index++;
+
                 layer = this.stack[index];
 
                 if (isLayerInstance(layer)) {
-                    match = layer.exec(relativePath);
+                    match = layer.matchPath(path);
                 }
 
                 if (isRouterInstance(layer)) {
-                    match = layer.matchPath(relativePath);
+                    match = layer.matchPath(path);
                 }
 
                 if (isRouteInstance(layer)) {
-                    match = layer.matchPath(relativePath);
+                    match = layer.matchPath(path);
 
                     if (
                         req.method &&
@@ -195,33 +202,45 @@ export class Router {
                 return;
             }
 
-            if (err) {
-                if (
-                    isLayerInstance(layer) &&
-                    layer.isError()
-                ) {
-                    layer.dispatch(req, res, next, err);
+            let layerMeta : DispatcherMeta = {
+                ...meta,
+                path,
+            };
 
+            if (isLayerInstance(layer)) {
+                const output = layer.exec(path);
+
+                if (output) {
+                    layerMeta = {
+                        params: output.params,
+                    };
+                }
+            }
+
+            if (err) {
+                if (isLayerInstance(layer) && layer.isError()) {
+                    layer.dispatch(req, res, layerMeta, next, err);
                     return;
                 }
 
+                /* istanbul ignore next */
                 next(err);
-
                 return;
             }
 
-            layer.dispatch(req, res, next);
+            layer.dispatch(req, res, layerMeta, next);
         };
 
         next();
     }
 
+    /* istanbul ignore next */
     dispatchAsync(
         req: Request,
         res: Response,
     ) : Promise<void> {
         return new Promise((resolve, reject) => {
-            this.dispatch(req, res, (err?: Error) => {
+            this.dispatch(req, res, {}, (err?: Error) => {
                 if (err) {
                     reject(err);
                     return;
@@ -234,14 +253,21 @@ export class Router {
 
     // --------------------------------------------------
 
-    use(router: Router | RouteHandler | ErrorHandler) : this;
+    use(router: Router) : this;
 
-    use(path: string, router: Router | RouteHandler | ErrorHandler) : this;
+    use(handler: Handler) : this;
 
-    use(key: Router | RouteHandler | ErrorHandler | string, value?: Router | RouteHandler | ErrorHandler) : this {
+    use(handler: ErrorHandler) : this;
+
+    use(path: string, router: Router) : this;
+
+    use(path: string, handler: Handler) : this;
+
+    use(path: string, handler: ErrorHandler) : this;
+
+    use(key: string | Router | Handler | ErrorHandler, value?: Router | Handler | ErrorHandler) : this {
         if (typeof value === 'undefined') {
             if (isRouterInstance(key)) {
-                key.setOption('root', false);
                 this.stack.push(key);
             } else if (typeof key !== 'string') {
                 this.stack.push(new Layer('/', { strict: false, end: false }, key));
@@ -253,7 +279,6 @@ export class Router {
         if (typeof key === 'string') {
             if (isRouterInstance(value)) {
                 value.setOption('mountPath', key);
-                value.setOption('root', false);
 
                 this.stack.push(value);
             } else {
@@ -267,12 +292,13 @@ export class Router {
 
     // --------------------------------------------------
 
-    protected route(
+    route(
         path: string,
     ) : Route {
         const index = this.stack.findIndex(
             (item) => isRouteInstance(item) && item.path === path,
         );
+
         if (index !== -1) {
             return this.stack[index] as Route;
         }
@@ -283,52 +309,38 @@ export class Router {
         return route;
     }
 
-    delete(path: string, fn: RouteHandler) : this {
+    delete(path: string, ...handlers: Handler[]) : this {
         const route = this.route(path);
-        route.delete(fn);
+        route.delete(...handlers);
 
         return this;
     }
 
-    get(path: string, fn: RouteHandler) : this {
+    get(path: string, ...handlers: Handler[]) : this {
         const route = this.route(path);
-        route.get(fn);
+        route.get(...handlers);
 
         return this;
     }
 
-    post(path: string, fn: RouteHandler) : this {
+    post(path: string, ...handlers: Handler[]) : this {
         const route = this.route(path);
-        route.post(fn);
+        route.post(...handlers);
 
         return this;
     }
 
-    put(path: string, fn: RouteHandler) : this {
+    put(path: string, ...handlers: Handler[]) : this {
         const route = this.route(path);
-        route.put(fn);
+        route.put(...handlers);
 
         return this;
     }
 
-    patch(path: string, fn: RouteHandler) : this {
+    patch(path: string, ...handlers: Handler[]) : this {
         const route = this.route(path);
-        route.patch(fn);
+        route.patch(...handlers);
 
         return this;
-    }
-
-    // --------------------------------------------------
-
-    private withoutMountPath(path: string) {
-        if (typeof this.options.mountPath === 'undefined') {
-            return path;
-        }
-
-        if (path.startsWith(this.options.mountPath)) {
-            path = path.substring(this.options.mountPath.length);
-        }
-
-        return cleanDoubleSlashes(withLeadingSlash(path));
     }
 }

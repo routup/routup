@@ -7,4 +7,5 @@
 
 export * from './is-instance';
 export * from './mime';
+export * from './response';
 export * from './url';

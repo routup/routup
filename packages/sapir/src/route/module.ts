@@ -5,33 +5,36 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { pathToRegexp } from 'path-to-regexp';
+import { merge } from 'smob';
 import { Method } from '../constants';
 import { Layer } from '../layer';
-import { useRequestRelativePath } from '../helpers';
-import { Next, Request, Response } from '../type';
+import { PathMatcher } from '../path';
+import {
+    DispatcherMeta,
+    Handler, Next, Request, Response,
+} from '../type';
 
 export class Route {
     readonly '@instanceof' = Symbol.for('Route');
 
     public path : string;
 
-    protected regexp : RegExp;
+    protected pathMatcher : PathMatcher;
 
-    protected layers : Record<string, Layer> = {};
+    protected layers : Record<string, Layer[]> = {};
 
     // --------------------------------------------------
 
     constructor(path: string) {
         this.path = path;
 
-        this.regexp = pathToRegexp(path);
+        this.pathMatcher = new PathMatcher(path);
     }
 
     // --------------------------------------------------
 
     matchPath(path: string) : boolean {
-        return this.regexp.test(path);
+        return this.pathMatcher.test(path);
     }
 
     matchMethod(method: string) : boolean {
@@ -43,58 +46,88 @@ export class Route {
     dispatch(
         req: Request,
         res: Response,
+        meta: DispatcherMeta,
         done: Next,
     ) : void {
-        // todo: iterate first over layers than method handlers :)
-
         if (!req.method) {
             done();
             return;
         }
 
         const name = req.method.toLowerCase();
-        const layer = this.layers[name];
+        const layers = this.layers[name];
 
-        if (typeof layer === 'undefined') {
+        if (
+            typeof layers === 'undefined' ||
+            layers.length === 0 ||
+            typeof meta.path === 'undefined'
+        ) {
             done();
 
             return;
         }
 
-        layer.exec(useRequestRelativePath(req));
+        const layerMeta : DispatcherMeta = {
+            ...meta,
+        };
 
-        layer.dispatch(req, res, done);
+        const output = this.pathMatcher.exec(meta.path);
+        if (output) {
+            layerMeta.params = merge({}, (meta.params || {}), output.params);
+        }
+
+        let index = -1;
+
+        const next = (err?: Error) : void => {
+            index++;
+
+            if (index >= layers.length) {
+                setImmediate(() => done(err));
+                return;
+            }
+
+            const layer = layers[index];
+            layer.dispatch(req, res, { ...layerMeta }, next);
+        };
+
+        next();
     }
 
     // --------------------------------------------------
 
-    register(method: `${Method}`, fn: CallableFunction) {
-        this.layers[method] = new Layer(
-            this.path,
-            {
-                end: true,
-            },
-            fn,
-        );
+    register(method: `${Method}`, ...handlers: Handler[]) {
+        this.layers[method] = [];
+
+        for (let i = 0; i < handlers.length; i++) {
+            const layer = new Layer(
+                this.path,
+                {
+                    end: true,
+                },
+                handlers[i],
+            );
+
+            this.layers[method].push(layer);
+        }
     }
 
-    get(fn: CallableFunction) {
-        return this.register(Method.GET, fn);
+    get(...handlers: Handler[]) {
+        return this.register(Method.GET, ...handlers);
     }
 
-    post(fn: CallableFunction) {
-        return this.register(Method.POST, fn);
+    post(...handlers: Handler[]) {
+        return this.register(Method.POST, ...handlers);
     }
 
-    put(fn: CallableFunction) {
-        return this.register(Method.PUT, fn);
+    put(...handlers: Handler[]) {
+        return this.register(Method.PUT, ...handlers);
     }
 
-    patch(fn: CallableFunction) {
-        return this.register(Method.PATCH, fn);
+    patch(...handlers: Handler[]) {
+        return this.register(Method.PATCH, ...handlers);
     }
 
-    delete(fn: CallableFunction) {
-        return this.register(Method.DELETE, fn);
+    delete(...handlers: Handler[]) {
+        return this.register(Method.DELETE, ...handlers);
     }
 }

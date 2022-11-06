@@ -9,7 +9,7 @@ import path from "path";
 import supertest from "supertest";
 import {HeaderName, sendFile} from "../../../../src";
 import {sendRedirect} from "../../../../src/helpers/response/send-redirect";
-import {Router} from "../../../../src/module";
+import {Router} from "../../../../src/router/module";
 
 describe('src/helpers/response/send', () => {
     it('should send file', async () => {

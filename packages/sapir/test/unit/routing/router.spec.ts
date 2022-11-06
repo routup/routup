@@ -1,14 +1,13 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2022.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {GatewayTimeoutErrorOptions, NotImplementedErrorOptions} from "@ebec/http";
+import {GatewayTimeoutErrorOptions, NotFoundErrorOptions } from "@ebec/http";
 import supertest from 'supertest';
-import {send, useRequestParams} from "../../src";
-import {Router} from "../../src/module";
+import {Router, send, useRequestParams} from "../../../src";
 
 describe('src/module', () => {
     it('should process async & sync handler', async () => {
@@ -71,7 +70,7 @@ describe('src/module', () => {
         let response = await server
             .get('/foo');
 
-        expect(response.statusCode).toEqual(NotImplementedErrorOptions.statusCode);
+        expect(response.statusCode).toEqual(NotFoundErrorOptions.statusCode);
     })
 
     it('should process with missing response',  async () => {

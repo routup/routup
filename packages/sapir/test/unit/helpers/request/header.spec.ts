@@ -14,7 +14,7 @@ import {
     useRequestAcceptsCharsets, useRequestAcceptsEncodings,
     useRequestAcceptsLanguages
 } from "../../../../src";
-import {Router} from "../../../../src/module";
+import {Router} from "../../../../src/router/module";
 
 describe('src/helpers/request/header', () => {
     it('should set and get request header', async () => {

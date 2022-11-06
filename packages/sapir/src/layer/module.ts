@@ -7,36 +7,20 @@
 
 import { InternalServerError } from '@ebec/http';
 import {
-    Key, ParseOptions, TokensToRegexpOptions, pathToRegexp,
+    ParseOptions, TokensToRegexpOptions,
 } from 'path-to-regexp';
-import { merge } from 'smob';
-import { setRequestParams, useRequestParams } from '../helpers';
-import { Next, Request, Response } from '../type';
-
-function decodeParam(val: unknown) {
-    if (typeof val !== 'string' || val.length === 0) {
-        return val;
-    }
-
-    return decodeURIComponent(val);
-}
+import { setRequestParams } from '../helpers';
+import { PathMatcher } from '../path';
+import {
+    DispatcherMeta, Next, Request, Response,
+} from '../type';
 
 export class Layer {
     readonly '@instanceof' = Symbol.for('Layer');
 
-    public path : string | undefined;
-
-    protected pathRaw : string;
-
-    protected params: Record<string, any> | undefined;
-
     protected fn : CallableFunction;
 
-    protected regexp : RegExp;
-
-    protected regexpOptions : TokensToRegexpOptions & ParseOptions;
-
-    protected keys : Key[] = [];
+    protected pathMatcher : PathMatcher;
 
     // --------------------------------------------------
 
@@ -45,10 +29,8 @@ export class Layer {
         options: TokensToRegexpOptions & ParseOptions,
         fn: CallableFunction,
     ) {
-        this.pathRaw = path;
+        this.pathMatcher = new PathMatcher(path, options);
         this.fn = fn;
-        this.regexpOptions = options;
-        this.regexp = pathToRegexp(path, this.keys, options);
     }
 
     // --------------------------------------------------
@@ -62,12 +44,14 @@ export class Layer {
     dispatch(
         req: Request,
         res: Response,
+        meta: DispatcherMeta,
         next: CallableFunction
     ) : void;
 
     dispatch(
         req: Request,
         res: Response,
+        meta: DispatcherMeta,
         next: CallableFunction,
         err: Error,
     ) : void;
@@ -75,26 +59,31 @@ export class Layer {
     dispatch(
         req: Request,
         res: Response,
+        meta: DispatcherMeta,
         next: Next,
         err?: Error,
     ) : void {
-        setRequestParams(req, merge(this.params || {}, useRequestParams(req) || {}));
+        setRequestParams(req, meta.params || {});
 
         if (typeof err !== 'undefined') {
             if (this.fn.length === 4) {
                 try {
                     this.fn(err, req, res, next);
                 } catch (e) {
+                    /* istanbul ignore next */
                     next(err);
                 }
 
                 return;
             }
 
+            /* istanbul ignore next */
             next(err);
+            /* istanbul ignore next */
             return;
         }
 
+        /* istanbul ignore next */
         if (this.fn.length > 3) {
             next();
             return;
@@ -106,6 +95,7 @@ export class Layer {
                 output.catch((e) => next(e));
             }
         } catch (e) {
+            /* istanbul ignore next */
             if (e instanceof Error) {
                 next(e);
             } else {
@@ -116,48 +106,11 @@ export class Layer {
 
     // --------------------------------------------------
 
-    exec(path: string | null) : boolean {
-        let match : RegExpExecArray | null = null;
+    matchPath(path: string) : boolean {
+        return this.pathMatcher.test(path);
+    }
 
-        // set fast path flags
-        const fastStar = this.pathRaw === '*';
-        const fastSlash = this.pathRaw === '/' && this.regexpOptions.end === false;
-
-        if (path !== null) {
-            if (fastSlash) {
-                this.params = {};
-                this.path = '';
-
-                return true;
-            }
-
-            if (fastStar) {
-                this.params = { 0: decodeParam(path) };
-                this.path = path;
-            }
-
-            match = this.regexp.exec(path);
-        }
-
-        if (!match) {
-            this.params = undefined;
-            this.path = undefined;
-            return false;
-        }
-
-        this.params = {};
-        this.path = match[0] as string;
-
-        for (let i = 1; i < match.length; i++) {
-            const key = this.keys[i - 1];
-            const prop = key.name;
-            const val = decodeParam(match[i]);
-
-            if (val !== undefined || !(Object.prototype.hasOwnProperty.call(this.params, prop))) {
-                this.params[prop] = val;
-            }
-        }
-
-        return true;
+    exec(path: string) {
+        return this.pathMatcher.exec(path);
     }
 }

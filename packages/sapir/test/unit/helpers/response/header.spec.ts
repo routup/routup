@@ -13,7 +13,7 @@ import {
     setResponseHeaderAttachment,
     setResponseHeaderContentType
 } from "../../../../src";
-import {Router} from "../../../../src/module";
+import {Router} from "../../../../src/router/module";
 
 describe('src/helpers/response/header', function () {
     it('should set header attachment', async () => {

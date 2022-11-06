@@ -7,7 +7,7 @@
 
 import supertest from "supertest";
 import {send, setResponseBody, setResponseHeaderContentType, useResponseBody} from "../../../../src";
-import {Router} from "../../../../src/module";
+import {Router} from "../../../../src/router/module";
 
 describe('src/helpers/response/body', () => {
     it('should set & get response body', async () => {

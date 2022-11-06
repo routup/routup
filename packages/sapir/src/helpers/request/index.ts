@@ -7,6 +7,7 @@
 
 export * from './mount-path';
 export * from './body';
+export * from './env';
 export * from './header';
 export * from './header-accept';
 export * from './header-accept-charset';

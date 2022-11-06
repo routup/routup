@@ -16,6 +16,7 @@ export function matchRequestContentType(req: IncomingMessage, contentType: strin
         return true;
     }
 
+    /* istanbul ignore next */
     if (Array.isArray(header)) {
         if (header.length === 0) {
             return true;

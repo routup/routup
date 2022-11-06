@@ -20,17 +20,3 @@ export function useRequestPath(req: IncomingMessage) : string {
 
     return parsed.pathname;
 }
-
-const RelativePathSymbol = Symbol.for('ReqRelativePath');
-
-export function setRequestRelativePath(req: IncomingMessage, path: string) {
-    (req as any)[RelativePathSymbol] = path;
-}
-
-export function useRequestRelativePath(req: IncomingMessage) {
-    if (RelativePathSymbol in req) {
-        return (req as any)[RelativePathSymbol];
-    }
-
-    return '/';
-}

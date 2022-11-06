@@ -12,8 +12,6 @@ export type ResponseFormat = {
     default: () => void
 };
 
-export type Next = (err?: Error) => void;
-
 export interface Response extends ServerResponse {
 
 }
@@ -22,41 +20,32 @@ export interface Request extends IncomingMessage {
 
 }
 
+export type Next = (err?: Error) => void;
+
+// --------------------------------------------------
+
 export type ErrorHandler = (
     err: Error,
     req: Request,
     res: Response,
-    next: CallableFunction
+    next: Next
 ) => unknown;
 
-export type RouteHandler = (
+export type Handler = (
     req: Request,
     res: Response,
-    next: CallableFunction
+    next: Next
 ) => unknown;
 
-export type RouterOptions = {
-    /**
-     * Milliseconds (ms) until request should time out.
-     *
-     * @type number
-     * @default 60_000
-     */
-    timeout?: number,
+// --------------------------------------------------
 
+export type DispatcherMeta = {
     /**
-     * Is this the root router ?
-     *
-     * @type boolean
-     * @default false
+     * Params collected on path.
      */
-    root?: boolean
-
+    params?: Record<string, any>,
     /**
-     * Mount path.
-     *
-     * @type string
-     * @default '/'
+     * Path to check for the current instance.
      */
-    mountPath?: string
+    path?: string
 };
