@@ -9,7 +9,7 @@ import { Request } from '../../type';
 
 const envSymbol = Symbol.for('ReqEnv');
 
-export function setRequestEnv(req: Request, key: string, value: unknown) {
+export function setRequestEnv(req: Request, key: string, value: unknown) : void {
     if (envSymbol in req) {
         (req as any)[envSymbol][key] = value;
     }

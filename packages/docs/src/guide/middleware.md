@@ -5,7 +5,8 @@ Instead, it calls the `next()` callback function, to execute the next handler in
 
 ::: warning **Note**
 
-Express middleware libraries (like body-parser, multer, ...) should work out of the box 🔥.
+Express middleware libraries (like body-parser, multer, ...) should work in most cases
+out of the box 🔥.
 
 :::
 
@@ -20,4 +21,25 @@ const middleware = (req, res, next) => {
 };
 
 router.use(middleware);
+```
+
+To share data between middlewares or handlers in general, it is recommended
+to use the helpers [setRequestEnv](./api-reference-request-helpers.md#setrequestenv)
+and [useRequestEnv](./api-reference-request-helpers.md#userequestenv).
+
+```typescript
+import { Router, setRequestEnv, useRequestEnv } from 'routup';
+
+const router = new Router();
+
+router.use((req, res, next) => {
+    setRequestEnv(req, 'foo', 'bar');
+    next();
+});
+
+router.use((req, res, next) => {
+    const foo = useRequestEnv(req, 'foo');
+    console.log(foo);
+    // bar
+})
 ```

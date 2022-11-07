@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ServerResponse } from 'http';
 import { HeaderName } from '../../constants';
+import { Response } from '../../type';
 import { getMimeType } from '../../utils';
 
-export function setResponseHeaderContentType(res: ServerResponse, input: string, ifNotExists?: boolean) {
+export function setResponseHeaderContentType(res: Response, input: string, ifNotExists?: boolean) {
     if (ifNotExists) {
         const header = res.getHeader(HeaderName.CONTENT_TYPE);
         if (header) {
