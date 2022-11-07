@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IncomingMessage } from 'http';
 import { HeaderName } from '../../constants';
+import { Request } from '../../type';
 import { getMimeType } from '../../utils';
 import { getRequestHeader } from './header';
 
-export function matchRequestContentType(req: IncomingMessage, contentType: string) : boolean {
+export function matchRequestContentType(req: Request, contentType: string) : boolean {
     const header = getRequestHeader(req, HeaderName.CONTENT_TYPE);
     if (!header) {
         return true;

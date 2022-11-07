@@ -7,14 +7,20 @@
 
 import supertest from "supertest";
 import {
-    getRequestHeader, matchRequestContentType,
+    getRequestAcceptableCharset,
+    getRequestAcceptableCharsets,
+    getRequestAcceptableContentType,
+    getRequestAcceptableContentTypes,
+    getRequestAcceptableEncoding,
+    getRequestAcceptableEncodings,
+    getRequestAcceptableLanguage,
+    getRequestAcceptableLanguages,
+    getRequestHeader,
+    matchRequestContentType,
     send,
-    setRequestHeader,
-    useRequestAccepts,
-    useRequestAcceptsCharsets, useRequestAcceptsEncodings,
-    useRequestAcceptsLanguages
+    setRequestHeader
 } from "../../../../src";
-import {Router} from "../../../../src/router/module";
+import {Router} from "../../../../src";
 
 describe('src/helpers/request/header', () => {
     it('should set and get request header', async () => {
@@ -39,19 +45,19 @@ describe('src/helpers/request/header', () => {
         const router = new Router();
 
         router.get('/',  (req, res) => {
-            const accepts = useRequestAccepts(req);
+            const accepts = getRequestAcceptableContentTypes(req);
 
             send(res, accepts);
         });
 
         router.get('/json', (req, res) => {
-            const accepts = useRequestAccepts(req, 'json');
+            const accepts = getRequestAcceptableContentType(req, 'json');
 
             send(res, accepts);
         })
 
         router.get('/multiple', (req, res) => {
-            const accepts = useRequestAccepts(req, ['text', 'json']);
+            const accepts = getRequestAcceptableContentType(req, ['text', 'json']);
 
             send(res, accepts);
         })
@@ -100,13 +106,13 @@ describe('src/helpers/request/header', () => {
         const router = new Router();
 
         router.get('/', (req, res) => {
-            const accepts = useRequestAcceptsCharsets(req);
+            const accepts = getRequestAcceptableCharsets(req);
 
             send(res, accepts);
         });
 
         router.get('/utf-8', (req,res) => {
-            const accepts = useRequestAcceptsCharsets(req, 'utf-8');
+            const accepts = getRequestAcceptableCharset(req, 'utf-8');
 
             send(res, accepts);
         })
@@ -144,13 +150,13 @@ describe('src/helpers/request/header', () => {
         const router = new Router();
 
         router.get('/', (req, res) => {
-            const accepts = useRequestAcceptsEncodings(req);
+            const accepts = getRequestAcceptableEncodings(req);
 
             send(res, accepts);
         });
 
         router.get('/gzip', (req, res) => {
-            const accepts = useRequestAcceptsEncodings(req, 'gzip');
+            const accepts = getRequestAcceptableEncoding(req, 'gzip');
 
             send(res, accepts);
         })
@@ -182,19 +188,19 @@ describe('src/helpers/request/header', () => {
         const router = new Router();
 
         router.get('/', (req, res) => {
-            const accepts = useRequestAcceptsLanguages(req);
+            const accepts = getRequestAcceptableLanguages(req);
 
             send(res, accepts);
         });
 
         router.get('/de', (req, res) => {
-            const accepts = useRequestAcceptsLanguages(req, 'de');
+            const accepts = getRequestAcceptableLanguage(req, 'de');
 
             send(res, accepts);
         });
 
         router.get('/multiple', (req, res) => {
-            const accepts = useRequestAcceptsLanguages(req, ['de', 'en']);
+            const accepts = getRequestAcceptableLanguage(req, ['de', 'en']);
 
             send(res, accepts);
         })
@@ -262,5 +268,11 @@ describe('src/helpers/request/header', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('false');
+
+        response = await server
+            .get('/');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.text).toEqual('true');
     });
 })

@@ -8,19 +8,21 @@
 import { IncomingMessage } from 'http';
 import { useRequestNegotiator } from './negotiator';
 
-export function useRequestAcceptsCharsets(req: IncomingMessage) : string[];
-export function useRequestAcceptsCharsets(req: IncomingMessage, input: string) : string | undefined;
-export function useRequestAcceptsCharsets(req: IncomingMessage, input: string[]) : string | undefined;
-export function useRequestAcceptsCharsets(req: IncomingMessage, ...input: string[]) : string | undefined;
-export function useRequestAcceptsCharsets(req: IncomingMessage, input?: string | string[]) : string | string[] | undefined {
-    input = input || [];
-    const items = Array.isArray(input) ? input : [input];
-
+export function getRequestAcceptableCharsets(req: IncomingMessage) : string[] {
     const negotiator = useRequestNegotiator(req);
 
+    return negotiator.charsets();
+}
+
+export function getRequestAcceptableCharset(req: IncomingMessage, input: string | string[]) : string | undefined {
+    input = input || [];
+
+    const items = Array.isArray(input) ? input : [input];
+
     if (items.length === 0) {
-        return negotiator.charsets();
+        return getRequestAcceptableCharsets(req).shift();
     }
 
+    const negotiator = useRequestNegotiator(req);
     return negotiator.charsets(items).shift() || undefined;
 }
