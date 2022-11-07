@@ -138,4 +138,4 @@ jobs:
                 uses: codecov/codecov-action@v3.1.1
                 with:
                     token: ${{ secrets.codecov }}
-                    directory: ./packages/sapir/coverage/
+                    directory: ./packages/routup/coverage/
