@@ -42,22 +42,23 @@ export default defineConfig({
                     ]
                 },
                 {
-                    text: 'Getting started',
+                    text: 'Getting Started',
                     items: [
                         {text: 'Router', link: '/guide/router'},
-                        {text: 'Routing', link: '/guide/routing'},
-                        {text: 'Routing Paths', link: '/guide/routing-paths'},
-                        {text: 'Routing Parameters', link: '/guide/routing-parameters'},
-                        {text: 'Middlewares', link: '/guide/middlewares'},
+                        {text: 'Handler', link: '/guide/handler'},
+                        {text: 'Middleware', link: '/guide/middleware'},
+                        {text: 'Helpers', link: '/guide/helpers'},
+                        {text: 'Mounting', link: '/guide/mounting'},
+                        {text: 'Mounting Methods', link: '/guide/mounting-methods'},
+                        {text: 'Mounting Paths', link: '/guide/mounting-paths'},
                     ]
                 },
                 {
                     text: 'API Reference',
                     collapsible: false,
                     items: [
-                        {text: 'Request Helpers', link: '/packages/common/api-reference-request'},
-                        {text: 'Response Helpers', link: '/packages/common/api-reference-response'},
-                        {text: 'Router', link: '/packages/common/api-reference-router'},
+                        {text: 'Request Helpers', link: '/guide/api-reference-request-helpers'},
+                        {text: 'Response Helpers', link: '/guide/api-reference-response-helpers'}
                     ]
                 },
             ],

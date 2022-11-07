@@ -1,8 +1,9 @@
 # Middlewares
 
-Middlewares can be injected by using the `use()` method of a router instance.
+A middleware is a [handlers](./handler.md) which does not finally process the request. 
+Instead, it calls the `next()` callback function, to execute the next handler in the chain.
 
-::: info **Note**
+::: warning **Note**
 
 Express middleware libraries (like body-parser, multer, ...) should work out of the box 🔥.
 

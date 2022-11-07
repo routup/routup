@@ -1,9 +1,9 @@
 ---
 layout: home
 hero:
-    name: Routup
+    name: Routup 🧙‍
     text: Routing Framework
-    tagline: A minimalistic & extendable http interface based routing framework
+    tagline: A lightweight and extendable http interface based routing framework
     actions:
        - theme: brand
          text: Get Started

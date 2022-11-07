@@ -1,4 +1,4 @@
-# routup 👑
+# routup 🧙‍
 
 [![npm version](https://badge.fury.io/js/routup.svg)](https://badge.fury.io/js/routup)
 [![main](https://github.com/Tada5hi/routup/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/routup/actions/workflows/main.yml)
@@ -6,8 +6,9 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/routup/badge.svg)](https://snyk.io/test/github/Tada5hi/routup)
 [![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
-Routup is a minimalistic & extendable http interface based routing framework.
-It uses node's vanilla request and response interfaces, which are injected into route- & middleware-handlers as function argument.
+Routup is a lightweight and extendable http interface based routing framework.
+It uses node's vanilla request and response interfaces, which are injected into route handlers aka middlewares as function argument.
+
 Helpers provide additional functionalities to transform and interact with the request and manipulate the response upstream.
 
 **Table of Contents**

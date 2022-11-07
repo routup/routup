@@ -1,7 +1,8 @@
 # What is it?
 
-Routup is a minimalistic & extendable http interface based routing framework.
-It uses node's vanilla request and response interfaces, which are injected into route- & middleware-handlers as function argument.
+**Routup** is a lightweight and extendable http interface based routing framework.
+It uses node's vanilla request and response interfaces, which are injected into route handlers aka middlewares as function argument.
+
 Helpers provide additional functionalities to transform and interact with the request and manipulate the response upstream.
 
 ## Features
