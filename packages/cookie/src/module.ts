@@ -13,7 +13,10 @@ import { HeaderName, Response, appendResponseHeaderDirective } from 'routup';
 
 const CookieSymbol = Symbol.for('ReqCookie');
 
-export function useRequestCookies(req: IncomingMessage, options?: CookieParseOptions) {
+export function useRequestCookies(
+    req: IncomingMessage,
+    options?: CookieParseOptions,
+) : Record<string, string> {
     if (CookieSymbol in req) {
         return (req as any)[CookieSymbol];
     }
