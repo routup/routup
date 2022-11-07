@@ -52,5 +52,6 @@
         "negotiator": "^0.6.3",
         "path-to-regexp": "^6.2.1",
         "smob": "^0.0.6"
-    }
+    },
+    "gitHead": "11dd52c006ffe5041bba0f57dfc33527ee57d6c1"
 }

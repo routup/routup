@@ -51,5 +51,9 @@
     },
     "peerDependencies": {
         "routup": "^0.x"
+    },
+    "gitHead": "11dd52c006ffe5041bba0f57dfc33527ee57d6c1",
+    "publishConfig": {
+        "access": "public"
     }
 }
