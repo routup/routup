@@ -6,7 +6,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/routup/badge.svg)](https://snyk.io/test/github/Tada5hi/routup)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
-It is a plugin for reading and parsing request cookies, as well serializing cookies for the
+This is a plugin for reading and parsing request cookies, as well serializing cookies for the
 response.
 
 **Table of Contents**

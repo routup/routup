@@ -6,7 +6,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/routup/badge.svg)](https://snyk.io/test/github/Tada5hi/routup)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
-It is a plugin for reading and parsing the query string of the request url.
+This is a plugin for reading and parsing the query string of the request url.
 
 **Table of Contents**
 
