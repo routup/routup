@@ -140,7 +140,7 @@ export class Router {
             }
 
             if (typeof err !== 'undefined') {
-                res.statusCode = 500;
+                res.statusCode = 400;
                 res.statusMessage = err.message;
 
                 res.end();

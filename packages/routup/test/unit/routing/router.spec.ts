@@ -108,11 +108,11 @@ describe('src/module', () => {
         let response = await server
             .get('/');
 
-        expect(response.statusCode).toEqual(500);
+        expect(response.statusCode).toEqual(400);
 
         response = await server
             .get('/async');
 
-        expect(response.statusCode).toEqual(500);
+        expect(response.statusCode).toEqual(400);
     })
 })
