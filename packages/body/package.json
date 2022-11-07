@@ -1,0 +1,56 @@
+{
+    "name": "@routup/body",
+    "version": "0.0.0",
+    "description": "Body plugin for routup.",
+    "main": "./dist/index.js",
+    "typings": "dist/index.d.ts",
+    "files": [
+        "dist/"
+    ],
+    "scripts": {
+        "build": "rimraf ./dist && tsc -p tsconfig.build.json",
+        "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
+        "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage",
+        "lint": "eslint --ext .js,.ts ./src",
+        "lint:fix": "npm run lint -- --fix",
+        "prepublishOnly": "npm run build"
+    },
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "license": "MIT",
+    "keywords": [
+        "body",
+        "api",
+        "rest",
+        "http",
+        "router",
+        "api-router",
+        "route",
+        "routing"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Tada5hi/routup.git",
+        "directory": "packages/cookie"
+    },
+    "bugs": {
+        "url": "https://github.com/Tada5hi/routup/issues"
+    },
+    "homepage": "https://github.com/Tada5hi/routup#readme",
+    "devDependencies": {
+        "@types/body-parser": "^1.19.2",
+        "routup": "^0.1.0"
+    },
+    "dependencies": {
+        "body-parser": "^1.20.1"
+    },
+    "peerDependencies": {
+        "routup": "^0.x"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

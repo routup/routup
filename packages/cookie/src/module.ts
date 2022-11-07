@@ -6,7 +6,10 @@
  */
 
 import {
-    CookieParseOptions, CookieSerializeOptions, parse, serialize,
+    CookieParseOptions,
+    CookieSerializeOptions,
+    parse,
+    serialize,
 } from 'cookie';
 import { IncomingMessage } from 'http';
 import { HeaderName, Response, appendResponseHeaderDirective } from 'routup';
