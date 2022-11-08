@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.3](https://github.com/Tada5hi/routup/compare/routup@0.1.2...routup@0.1.3) (2022-11-08)
+
+
+### Bug Fixes
+
+* **routup:** set 400 (instead 500) status-code if handler throws error ([9d8d509](https://github.com/Tada5hi/routup/commit/9d8d509f3cfc0333525efb57d8721a2f0883d3e9))
+
+
+
+
+
 ## [0.1.2](https://github.com/Tada5hi/routup/compare/routup@0.1.1...routup@0.1.2) (2022-11-07)
 
 
