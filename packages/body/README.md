@@ -13,7 +13,7 @@ This is a plugin for reading and parsing the request payload.
 - [Installation](#installation)
 - [Documentation](#documentation)
 - [Usage](#usage)
-- [Parser](#parser)
+- [Handler](#handler)
   - [Json](#json)
   - [UrlEncoded](#urlencoded)
   - [Raw](#raw)
@@ -35,13 +35,13 @@ To read the docs, visit [https://routup.tada5hi.net](https://routup.tada5hi.net)
 
 ```typescript
 import { Router, send, useRequestBody } from 'routup';
-import { createRequestParser } from '@routup/body';
+import { createRequestHandler } from '@routup/body';
 
 const router = new Router();
 // This will parse requests with Content-Type:
 // application/json
 // application/x-www-form-urlencoded
-router.use(createRequestParser());
+router.use(createRequestHandler());
 
 router.get('/', (req, res) => {
     const body = useRequestBody(req);
@@ -54,21 +54,21 @@ router.get('/', (req, res) => {
 router.listen(3000);
 ```
 
-## Parser
+## Handler
 
-Besides using the `createRequestParser` method, it is also possible to register a specific parser
+Besides using the `createRequestHandler` method, it is also possible to register a specific handler
 as middleware.
 
 ### Json
 
-To parse `application/json` input data, mount the json parser to the router instance.
+To parse `application/json` input data, mount the json handler to the router instance.
 
 ```typescript
 import { Router, send, useRequestBody } from 'routup';
-import { createRequestJsonParser } from '@routup/body';
+import { createRequestJsonHandler } from '@routup/body';
 
 const router = new Router();
-router.use(createRequestJsonParser());
+router.use(createRequestJsonHandler());
 
 router.get('/', (req, res) => {
     const body = useRequestBody(req);
@@ -83,14 +83,14 @@ router.listen(3000);
 
 ### UrlEncoded
 
-To parse `application/x-www-form-urlencoded` input data, mount the url-encoded parser to the router instance.
+To parse `application/x-www-form-urlencoded` input data, mount the url-encoded handler to the router instance.
 
 ```typescript
 import { Router, send, useRequestBody } from 'routup';
-import { createRequestUrlEncodedParser } from '@routup/body';
+import { createRequestUrlEncodedHandler } from '@routup/body';
 
 const router = new Router();
-router.use(createRequestUrlEncodedParser({ extended: false }));
+router.use(createRequestUrlEncodedHandler({ extended: false }));
 
 router.get('/', (req, res) => {
     const body = useRequestBody(req);
@@ -105,14 +105,14 @@ router.listen(3000);
 
 ### Raw
 
-To parse `any` input data as Buffer, mount the raw parser to the router instance.
+To parse `any` input data as Buffer, mount the raw handler to the router instance.
 
 ```typescript
 import { Router, send, useRequestBody } from 'routup';
-import { createRequestRawParser } from '@routup/body';
+import { createRequestRawHandler } from '@routup/body';
 
 const router = new Router();
-router.use(createRequestRawParser());
+router.use(createRequestRawHandler());
 
 router.get('/', (req, res) => {
     const body = useRequestBody(req);
@@ -127,14 +127,14 @@ router.listen(3000);
 
 ### Text
 
-To parse `any` input data as string, mount the text parser to the router instance.
+To parse `any` input data as string, mount the text handler to the router instance.
 
 ```typescript
 import { Router, send, useRequestBody } from 'routup';
-import { createRequestTextParser } from '@routup/body';
+import { createRequestTextHandler } from '@routup/body';
 
 const router = new Router();
-router.use(createRequestTextParser({ type: 'text/html' }));
+router.use(createRequestTextHandler({ type: 'text/html' }));
 
 router.get('/', (req, res) => {
     const body = useRequestBody(req);
