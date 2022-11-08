@@ -8,6 +8,6 @@
 import { OptionsUrlencoded, urlencoded } from 'body-parser';
 import { Handler } from 'routup';
 
-export function createRequestUrlEncodedParser(options?: OptionsUrlencoded) : Handler {
+export function createRequestUrlEncodedHandler(options?: OptionsUrlencoded) : Handler {
     return urlencoded(options);
 }

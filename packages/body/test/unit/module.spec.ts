@@ -8,17 +8,18 @@
 import supertest from "supertest";
 import { send, Router, useRequestBody } from "routup";
 import {
-    createRequestJsonParser,
-    createRequestRawParser,
-    createRequestTextParser,
-    createRequestUrlEncodedParser
+    createRequestHandler,
+    createRequestJsonHandler,
+    createRequestRawHandler,
+    createRequestTextHandler,
+    createRequestUrlEncodedHandler
 } from "../../src";
 
 describe('src/**', () => {
-    it('should parse application/json', async () => {
+    it('should handle application/json', async () => {
         const router = new Router();
 
-        router.use(createRequestJsonParser());
+        router.use(createRequestJsonHandler());
 
         router.post('/',  (req, res) => {
             const foo = useRequestBody(req);
@@ -38,10 +39,10 @@ describe('src/**', () => {
         expect(response.body).toEqual({foo: 'bar'});
     });
 
-    it('should parse application/x-www-form-urlencoded', async () => {
+    it('should handle application/x-www-form-urlencoded', async () => {
         const router = new Router();
 
-        router.use(createRequestUrlEncodedParser({extended: false}));
+        router.use(createRequestUrlEncodedHandler({extended: false}));
 
         router.post('/',  (req, res) => {
             const foo = useRequestBody(req);
@@ -59,10 +60,10 @@ describe('src/**', () => {
         expect(response.body).toEqual({foo: 'bar'});
     });
 
-    it('should parse raw to buffer', async () => {
+    it('should handle raw to buffer', async () => {
         const router = new Router();
 
-        router.use(createRequestRawParser());
+        router.use(createRequestRawHandler());
 
         router.post('/',  (req, res) => {
             const foo = useRequestBody(req);
@@ -81,10 +82,10 @@ describe('src/**', () => {
         expect(response.body).toEqual(true);
     });
 
-    it('should parse text/html to text', async () => {
+    it('should handle text/html to text', async () => {
         const router = new Router();
 
-        router.use(createRequestTextParser({type: 'text/html'}));
+        router.use(createRequestTextHandler({type: 'text/html'}));
 
         router.post('/',  (req, res) => {
             const foo = useRequestBody(req);
@@ -101,5 +102,35 @@ describe('src/**', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('<div>foo</div>');
+    });
+
+    it('should parse application/json & application/x-www-form-urlencoded', async () => {
+        const router = new Router();
+
+        router.use(createRequestHandler());
+
+        router.post('/multiple',  (req, res) => {
+            const foo = useRequestBody(req);
+
+            send(res, foo);
+        });
+
+        const server = supertest(router.createListener());
+
+        let response = await server
+            .post('/multiple')
+            .send({
+                foo: 'bar'
+            })
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.body).toEqual({foo: 'bar'});
+
+        response = await server
+            .post('/multiple')
+            .send('foo=bar');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.body).toEqual({foo: 'bar'});
     });
 })

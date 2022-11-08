@@ -8,6 +8,6 @@
 import { OptionsText, text } from 'body-parser';
 import { Handler } from 'routup';
 
-export function createRequestTextParser(options?: OptionsText) : Handler {
+export function createRequestTextHandler(options?: OptionsText) : Handler {
     return text(options);
 }

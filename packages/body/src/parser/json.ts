@@ -8,6 +8,6 @@
 import { OptionsJson, json } from 'body-parser';
 import { Handler } from 'routup';
 
-export function createRequestJsonParser(options?: OptionsJson) : Handler {
+export function createRequestJsonHandler(options?: OptionsJson) : Handler {
     return json(options);
 }

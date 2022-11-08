@@ -7,15 +7,15 @@
 
 import { Options } from 'body-parser';
 import { Handler } from 'routup';
-import { createRequestJsonParser, createRequestUrlEncodedParser } from './parser';
+import { createRequestJsonHandler, createRequestUrlEncodedHandler } from './parser';
 
 export {
     useRequestBody,
 } from 'routup';
 
-export function createRequestParser(options?: Options) : Handler {
-    const jsonParser = createRequestJsonParser(options);
-    const urlEncodedParser = createRequestUrlEncodedParser(options);
+export function createRequestHandler(options?: Options) : Handler {
+    const jsonParser = createRequestJsonHandler(options);
+    const urlEncodedParser = createRequestUrlEncodedHandler(options);
 
     return (req, res, next) => {
         jsonParser(req, res, (err) => {

@@ -8,6 +8,6 @@
 import { Options, raw } from 'body-parser';
 import { Handler } from 'routup';
 
-export function createRequestRawParser(options?: Options) : Handler {
+export function createRequestRawHandler(options?: Options) : Handler {
     return raw(options);
 }
