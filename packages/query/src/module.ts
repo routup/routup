@@ -10,13 +10,23 @@ import qs from 'qs';
 
 const QuerySymbol = Symbol.for('ReqQuery');
 
-export function useRequestQuery(req: IncomingMessage) : Record<string, any> {
+export function useRequestQuery(req: IncomingMessage) : Record<string, any>;
+export function useRequestQuery(req: IncomingMessage, key: string) : any;
+export function useRequestQuery(req: IncomingMessage, key?: string) {
     /* istanbul ignore if  */
     if ('query' in req) {
+        if (typeof key === 'string') {
+            return (req as any).query[key];
+        }
+
         return (req as any).query;
     }
 
     if (QuerySymbol in req) {
+        if (typeof key === 'string') {
+            return (req as any)[QuerySymbol][key];
+        }
+
         return (req as any)[QuerySymbol];
     }
 
@@ -34,5 +44,10 @@ export function useRequestQuery(req: IncomingMessage) : Record<string, any> {
 
     const data = qs.parse(search);
     (req as any)[QuerySymbol] = data;
+
+    if (typeof key === 'string') {
+        return data[key];
+    }
+
     return data;
 }

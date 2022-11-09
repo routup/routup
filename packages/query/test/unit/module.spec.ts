@@ -18,6 +18,12 @@ describe('src/module', () => {
             send(res, useRequestQuery(req));
         });
 
+        router.get('/key',  (req, res) => {
+            useRequestQuery(req, 'sort');
+
+            send(res, useRequestQuery(req, 'sort'));
+        });
+
         router.get('/reuse',  (req, res) => {
             useRequestQuery(req);
 
@@ -39,6 +45,12 @@ describe('src/module', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual({});
+
+        response = await server
+            .get('/key?'+ qs.stringify(query));
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.text).toEqual('-name');
 
         response = await server
             .get('/reuse?'+ qs.stringify(query));
