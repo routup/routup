@@ -8,8 +8,8 @@ as middleware.
 To parse `application/json` input data, mount the json parser to the router instance.
 
 ```typescript
-import { Router, send, useRequestBody } from 'routup';
-import { createRequestJsonParser } from '@routup/body';
+import { Router, send } from 'routup';
+import { createRequestJsonParser, useRequestBody } from '@routup/body';
 
 const router = new Router();
 router.use(createRequestJsonParser());
@@ -30,8 +30,8 @@ router.listen(3000);
 To parse `application/x-www-form-urlencoded` input data, mount the url-encoded parser to the router instance.
 
 ```typescript
-import { Router, send, useRequestBody } from 'routup';
-import { createRequestUrlEncodedParser } from '@routup/body';
+import { Router, send } from 'routup';
+import { createRequestUrlEncodedParser, useRequestBody } from '@routup/body';
 
 const router = new Router();
 router.use(createRequestUrlEncodedParser({ extended: false }));
@@ -52,8 +52,8 @@ router.listen(3000);
 To parse `any` input data as Buffer, mount the raw parser to the router instance.
 
 ```typescript
-import { Router, send, useRequestBody } from 'routup';
-import { createRequestRawParser } from '@routup/body';
+import { Router, send } from 'routup';
+import { createRequestRawParser, useRequestBody } from '@routup/body';
 
 const router = new Router();
 router.use(createRequestRawParser());
@@ -74,8 +74,8 @@ router.listen(3000);
 To parse `any` input data as string, mount the text parser to the router instance.
 
 ```typescript
-import { Router, send, useRequestBody } from 'routup';
-import { createRequestTextParser } from '@routup/body';
+import { Router, send } from 'routup';
+import { createRequestTextParser, useRequestBody } from '@routup/body';
 
 const router = new Router();
 router.use(createRequestTextParser({ type: 'text/html' }));

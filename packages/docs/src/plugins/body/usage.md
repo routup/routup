@@ -1,8 +1,8 @@
 # Usage
 
 ```typescript
-import { Router, send, useRequestBody } from 'routup';
-import { createRequestParser } from '@routup/body';
+import { Router, send } from 'routup';
+import { createRequestParser, useRequestBody } from '@routup/body';
 
 const router = new Router();
 // This will parse requests with Content-Type:
