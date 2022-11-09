@@ -5,7 +5,9 @@
     "command": {
         "publish": {
             "ignoreChanges": [
-                "*.md"
+                "*.md",
+                "*.spec.js",
+                "*.spec.ts"
             ]
         },
         "version": {
