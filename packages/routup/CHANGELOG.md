@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.4](https://github.com/Tada5hi/routup/compare/routup@0.1.3...routup@0.1.4) (2022-11-09)
+
+
+### Bug Fixes
+
+* **routup:** add tiny acepted & created response send helpers ([afa4297](https://github.com/Tada5hi/routup/commit/afa429757602a42991f7061c28ceabb4260dc1d6))
+
+
+
+
+
 ## [0.1.3](https://github.com/Tada5hi/routup/compare/routup@0.1.2...routup@0.1.3) (2022-11-08)
 
 
