@@ -6,13 +6,14 @@
  */
 
 import supertest from "supertest";
-import { send, Router, useRequestBody } from "routup";
+import {send, Router} from "routup";
 import {
     createRequestHandler,
     createRequestJsonHandler,
     createRequestRawHandler,
     createRequestTextHandler,
-    createRequestUrlEncodedHandler
+    createRequestUrlEncodedHandler,
+    useRequestBody
 } from "../../src";
 
 describe('src/**', () => {
