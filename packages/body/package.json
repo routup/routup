@@ -45,7 +45,8 @@
     },
     "dependencies": {
         "@types/body-parser": "^1.19.2",
-        "body-parser": "^1.20.1"
+        "body-parser": "^1.20.1",
+        "smob": "^0.0.6"
     },
     "peerDependencies": {
         "routup": "^0.x"

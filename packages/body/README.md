@@ -34,8 +34,8 @@ To read the docs, visit [https://routup.tada5hi.net](https://routup.tada5hi.net)
 ## Usage
 
 ```typescript
-import { Router, send, useRequestBody } from 'routup';
-import { createRequestHandler } from '@routup/body';
+import { Router, send } from 'routup';
+import { createRequestHandler, useRequestBody } from '@routup/body';
 
 const router = new Router();
 // This will parse requests with Content-Type:
@@ -64,8 +64,8 @@ as middleware.
 To parse `application/json` input data, mount the json handler to the router instance.
 
 ```typescript
-import { Router, send, useRequestBody } from 'routup';
-import { createRequestJsonHandler } from '@routup/body';
+import { Router, send } from 'routup';
+import { createRequestJsonHandler, useRequestBody } from '@routup/body';
 
 const router = new Router();
 router.use(createRequestJsonHandler());
@@ -86,8 +86,8 @@ router.listen(3000);
 To parse `application/x-www-form-urlencoded` input data, mount the url-encoded handler to the router instance.
 
 ```typescript
-import { Router, send, useRequestBody } from 'routup';
-import { createRequestUrlEncodedHandler } from '@routup/body';
+import { Router, send } from 'routup';
+import { createRequestUrlEncodedHandler, useRequestBody } from '@routup/body';
 
 const router = new Router();
 router.use(createRequestUrlEncodedHandler({ extended: false }));
@@ -108,8 +108,8 @@ router.listen(3000);
 To parse `any` input data as Buffer, mount the raw handler to the router instance.
 
 ```typescript
-import { Router, send, useRequestBody } from 'routup';
-import { createRequestRawHandler } from '@routup/body';
+import { Router, send } from 'routup';
+import { createRequestRawHandler, useRequestBody } from '@routup/body';
 
 const router = new Router();
 router.use(createRequestRawHandler());
@@ -130,8 +130,8 @@ router.listen(3000);
 To parse `any` input data as string, mount the text handler to the router instance.
 
 ```typescript
-import { Router, send, useRequestBody } from 'routup';
-import { createRequestTextHandler } from '@routup/body';
+import { Router, send } from 'routup';
+import { createRequestTextHandler, useRequestBody } from '@routup/body';
 
 const router = new Router();
 router.use(createRequestTextHandler({ type: 'text/html' }));

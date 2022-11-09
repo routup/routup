@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './module';
 export * from './json';
 export * from './raw';
 export * from './text';
