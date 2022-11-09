@@ -13,6 +13,7 @@ describe('src/helpers/request/env', () => {
         const router = new Router();
 
         router.get('/', (req, res) => {
+            setRequestEnv(req, 'bar', 'baz');
             setRequestEnv(req, 'foo', 'bar');
 
             send(res, useRequestEnv(req, 'foo'));
@@ -127,5 +128,21 @@ describe('src/helpers/request/env', () => {
         expect(response.body).toEqual({
             bar: 'baz'
         });
+    });
+
+    it('should use request env', async () => {
+        const router = new Router();
+
+        router.get('/', (req, res) => {
+            send(res, useRequestEnv(req));
+        })
+
+        const server = supertest(router.createListener());
+
+        let response = await server
+            .get('/');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.body).toEqual({});
     });
 });

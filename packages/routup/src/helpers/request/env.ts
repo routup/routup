@@ -51,6 +51,7 @@ export function useRequestEnv(req: Request, key?: string) {
     if (typeof key === 'string') {
         return undefined;
     }
+
     return {};
 }
 

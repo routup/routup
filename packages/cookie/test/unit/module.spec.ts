@@ -7,13 +7,15 @@
 
 import supertest from "supertest";
 import { send, Router } from "routup";
-import { setResponseCookie, useRequestCookie } from "../../src";
+import {setResponseCookie, useRequestCookie, useRequestCookies} from "../../src";
 
 describe('src/module', () => {
     it('should parse cookie', async () => {
         const router = new Router();
 
         router.get('/',  (req, res) => {
+            useRequestCookies(req);
+
             const foo = useRequestCookie(req, 'foo');
             send(res, foo);
         });

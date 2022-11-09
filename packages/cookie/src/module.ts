@@ -42,6 +42,7 @@ export function setResponseCookie(res: Response, name: string, value: string, op
     }));
 }
 
+/* istanbul ignore next */
 export function unsetResponseCookie(res: Response, name: string, options?: CookieSerializeOptions) {
     setResponseCookie(res, name, '', {
         ...(options || {}),

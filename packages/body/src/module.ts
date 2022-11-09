@@ -19,6 +19,7 @@ export function createRequestHandler(options?: Options) : Handler {
 
     return (req, res, next) => {
         jsonParser(req, res, (err) => {
+            /* istanbul ignore next */
             if (err) {
                 next(err);
             } else {
