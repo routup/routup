@@ -6,7 +6,6 @@
  */
 
 import { RequestListener, createServer } from 'http';
-import { it } from 'node:test';
 import { merge } from 'smob';
 import { PathMatcher } from '../path';
 import {
@@ -265,11 +264,15 @@ export class Router {
 
     use(handler: ErrorHandler) : this;
 
+    use(...input: (Router | Handler | ErrorHandler)[]) : this;
+
     use(path: Path, router: Router) : this;
 
     use(path: Path, handler: Handler) : this;
 
     use(path: Path, handler: ErrorHandler) : this;
+
+    use(path: Path, ...input: (Router | Handler | ErrorHandler)[]) : this;
 
     use(...input: unknown[]) : this {
         if (input.length === 0) {
