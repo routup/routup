@@ -7,7 +7,7 @@
 
 import supertest from "supertest";
 import {Router, send} from "../../../../src";
-import {isRequestCacheable} from "../../../../src/helpers/request/cache";
+import {isRequestCacheable} from "../../../../src";
 
 describe('src/helpers/request/cache', () => {
     it('should determine if request is cacheable', async () => {
