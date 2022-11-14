@@ -5,9 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ServerResponse } from 'http';
-import { ResponseFormat } from '../../type';
+import { Request } from '../../type';
 
-export function sendFormat(res: ServerResponse, format: ResponseFormat) {
+export type ResponseFormat = {
+    [key: string]: () => void,
+    default: () => void
+};
+
+export function sendFormat(res: Request, format: ResponseFormat) {
 
 }

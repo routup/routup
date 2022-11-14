@@ -7,11 +7,6 @@
 
 import { IncomingMessage, ServerResponse } from 'http';
 
-export type ResponseFormat = {
-    [key: string]: () => void,
-    default: () => void
-};
-
 export interface Response extends ServerResponse {
 
 }
@@ -26,21 +21,6 @@ export type Path = string | RegExp;
 
 // --------------------------------------------------
 
-export type ErrorHandler = (
-    err: Error,
-    req: Request,
-    res: Response,
-    next: Next
-) => unknown;
-
-export type Handler = (
-    req: Request,
-    res: Response,
-    next: Next
-) => unknown;
-
-// --------------------------------------------------
-
 export type DispatcherMeta = {
     /**
      * Params collected on path.
@@ -51,3 +31,9 @@ export type DispatcherMeta = {
      */
     path?: string
 };
+
+// --------------------------------------------------
+
+export interface ClassType extends Function {
+    new(...args: any[]): any;
+}

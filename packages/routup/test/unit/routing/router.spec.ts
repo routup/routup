@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {GatewayTimeoutErrorOptions, NotFoundErrorOptions } from "@ebec/http";
+import { GatewayTimeoutErrorOptions, NotFoundErrorOptions } from '@ebec/http';
 import supertest from 'supertest';
-import {Router, send, useRequestParams} from "../../../src";
+import { Router, send, useRequestParams } from '../../../src';
 
 describe('src/module', () => {
     it('should process async & sync handler', async () => {
@@ -23,7 +23,7 @@ describe('src/module', () => {
 
         router.get('/sync', async (req, res) => {
             send(res, 'bar');
-        })
+        });
 
         const server = supertest(router.createListener());
 
@@ -40,7 +40,7 @@ describe('src/module', () => {
         expect(response.text).toEqual('bar');
     });
 
-    it('should process dynamic path',  async () => {
+    it('should process dynamic path', async () => {
         const router = new Router();
 
         router.get('/param/:id', async (req, res) => {
@@ -51,14 +51,14 @@ describe('src/module', () => {
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .get('/param/abc');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('abc');
     });
 
-    it('should process with no matching route',  async () => {
+    it('should process with no matching route', async () => {
         const router = new Router();
 
         router.get('/param/:id', async (req, res) => {
@@ -67,41 +67,41 @@ describe('src/module', () => {
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .get('/foo');
 
         expect(response.statusCode).toEqual(NotFoundErrorOptions.statusCode);
-    })
+    });
 
-    it('should process with missing response',  async () => {
+    it('should process with missing response', async () => {
         const router = new Router({
-            timeout: 100
+            timeout: 100,
         });
 
         router.get('/', async () => {});
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .get('/');
 
         expect(response.statusCode).toEqual(GatewayTimeoutErrorOptions.statusCode);
-    })
+    });
 
-    it('should process with error thrown',  async () => {
+    it('should process with error thrown', async () => {
         const router = new Router();
 
-        router.get('/',  () => {
+        router.get('/', () => {
             throw new Error('foo');
-        })
+        });
 
-        router.get('/async',  async () => {
+        router.get('/async', async () => {
             await new Promise((resolve, reject) => {
                 setTimeout(() => {
                     reject(new Error('bar'));
                 }, 0);
             });
-        })
+        });
 
         const server = supertest(router.createListener());
 
@@ -114,5 +114,5 @@ describe('src/module', () => {
             .get('/async');
 
         expect(response.statusCode).toEqual(400);
-    })
-})
+    });
+});

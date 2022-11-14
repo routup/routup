@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import supertest from "supertest";
-import {Router, send, useRequestParams} from "../../../src";
+import supertest from 'supertest';
+import { Router, send, useRequestParams } from '../../../src';
 
 describe('routing/parameters', () => {
     it('should capture parameters', async () => {
@@ -18,16 +18,16 @@ describe('routing/parameters', () => {
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .get('/123/run');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({id: '123', action: 'run'});
+        expect(response.body).toEqual({ id: '123', action: 'run' });
     });
 
     it('should pass on captured parameters', async () => {
         const router = new Router({
-            mountPath: '/:id'
+            mountPath: '/:id',
         });
 
         router.get('/:action', async (req, res) => {
@@ -36,10 +36,10 @@ describe('routing/parameters', () => {
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .get('/123/run');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({id: '123', action: 'run'});
+        expect(response.body).toEqual({ id: '123', action: 'run' });
     });
-})
+});

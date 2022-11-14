@@ -6,8 +6,10 @@
  */
 
 import { RequestListener, createServer } from 'http';
-import { it } from 'node:test';
-import { merge } from 'smob';
+import { isObject, merge } from 'smob';
+import { buildDecoratorMethodArguments } from '../decorators';
+import { useDecoratorMeta } from '../decorators/utils';
+import { ErrorHandler, Handler, createHandlerForClassType } from '../handler';
 import { PathMatcher } from '../path';
 import {
     createResponseTimeout,
@@ -18,9 +20,8 @@ import {
 import { Layer, isLayerInstance } from '../layer';
 import { Route, isRouteInstance } from '../route';
 import {
+    ClassType,
     DispatcherMeta,
-    ErrorHandler,
-    Handler,
     Next, Path,
     Request,
     Response,
@@ -259,49 +260,6 @@ export class Router {
 
     // --------------------------------------------------
 
-    use(router: Router) : this;
-
-    use(handler: Handler) : this;
-
-    use(handler: ErrorHandler) : this;
-
-    use(path: Path, router: Router) : this;
-
-    use(path: Path, handler: Handler) : this;
-
-    use(path: Path, handler: ErrorHandler) : this;
-
-    use(...input: unknown[]) : this {
-        if (input.length === 0) {
-            return this;
-        }
-
-        let path : Path | undefined;
-
-        if (isPath(input[0])) {
-            path = input.shift() as Path;
-        }
-
-        for (let i = 0; i < input.length; i++) {
-            const item = input[i];
-            if (isRouterInstance(item)) {
-                if (path) {
-                    item.setOption('mountPath', path);
-                }
-                this.stack.push(item);
-                continue;
-            }
-
-            if (typeof item === 'function') {
-                this.stack.push(new Layer(path || '/', { strict: false, end: false }, item));
-            }
-        }
-
-        return this;
-    }
-
-    // --------------------------------------------------
-
     route(
         path: Path,
     ) : Route {
@@ -352,5 +310,105 @@ export class Router {
         route.patch(...handlers);
 
         return this;
+    }
+
+    // --------------------------------------------------
+
+    use(router: Router) : this;
+
+    use(handler: Handler) : this;
+
+    use(handler: ErrorHandler) : this;
+
+    use(path: Path, router: Router) : this;
+
+    use(path: Path, handler: Handler) : this;
+
+    use(path: Path, handler: ErrorHandler) : this;
+
+    use(...input: unknown[]) : this {
+        if (input.length === 0) {
+            return this;
+        }
+
+        let path : Path | undefined;
+
+        if (isPath(input[0])) {
+            path = input.shift() as Path;
+        }
+
+        for (let i = 0; i < input.length; i++) {
+            const item = input[i];
+            if (isRouterInstance(item)) {
+                if (path) {
+                    item.setOption('mountPath', path);
+                }
+                this.stack.push(item);
+                continue;
+            }
+
+            if (typeof item === 'function') {
+                this.stack.push(new Layer(path || '/', { strict: false, end: false }, item));
+            }
+        }
+
+        return this;
+    }
+
+    // --------------------------------------------------
+
+    useController(input: (ClassType | Record<string, any>)) {
+        let controller : Record<string, any>;
+
+        if (isObject(input)) {
+            controller = input;
+        } else {
+            controller = new (input as ClassType)();
+        }
+
+        const meta = useDecoratorMeta(controller);
+
+        const router = new Router();
+
+        for (let i = 0; i < meta.middlewares.length; i++) {
+            const handler = createHandlerForClassType(meta.middlewares[i]);
+
+            router.use(handler);
+        }
+
+        const propertyKeys = Object.keys(meta.methods);
+        for (let i = 0; i < propertyKeys.length; i++) {
+            const handler : Handler = (req, res, next) => {
+                const method = controller[propertyKeys[i]].apply(controller, [
+                    ...buildDecoratorMethodArguments(req, res, next, meta.parameters[propertyKeys[i]]),
+                ]);
+
+                if (method instanceof Promise) {
+                    method.catch(next);
+                }
+            };
+
+            const method = meta.methods[propertyKeys[i]];
+            const middlewareHandlers : Handler[] = [];
+            if (method.middlewares) {
+                for (let i = 0; i < method.middlewares.length; i++) {
+                    middlewareHandlers.push(createHandlerForClassType(method.middlewares[i]));
+                }
+            }
+
+            (router as any)[method.method].apply(router, [
+                method.url,
+                ...middlewareHandlers,
+                handler,
+            ]);
+        }
+
+        this.use(meta.url, router);
+    }
+
+    useControllers(input: (ClassType | Record<string, any>)[]) {
+        for (let i = 0; i < input.length; i++) {
+            this.useController(input[i]);
+        }
     }
 }

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import supertest from "supertest";
-import {Router, send, setResponseCacheHeaders} from "../../../../src";
+import supertest from 'supertest';
+import { Router, send, setResponseCacheHeaders } from '../../../../src';
 
 describe('src/helpers/response/cache', () => {
     it('should determine if request is cacheable', async () => {
@@ -19,20 +19,20 @@ describe('src/helpers/response/cache', () => {
                 maxAge: 3600,
                 modifiedTime: date,
                 cacheControls: [
-                    'must-revalidate'
-                ]
-            })
+                    'must-revalidate',
+                ],
+            });
 
             send(res);
         });
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .get('/');
 
         expect(response.statusCode).toEqual(200);
         expect(response.headers['cache-control']).toEqual('public, must-revalidate, max-age=3600, s-maxage=3600');
         expect(response.headers['last-modified']).toEqual(date.toUTCString());
-    })
-})
+    });
+});

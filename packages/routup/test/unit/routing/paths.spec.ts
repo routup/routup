@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import supertest from "supertest";
-import {Router, send} from "../../../src";
+import supertest from 'supertest';
+import { Router, send } from '../../../src';
 
 describe('routing/paths', () => {
     it('should handle path', async () => {
@@ -18,7 +18,7 @@ describe('routing/paths', () => {
 
         router.get('/foo/bar/baz', async (req, res) => {
             send(res, '/foo/bar/baz');
-        })
+        });
 
         const server = supertest(router.createListener());
 
@@ -33,11 +33,11 @@ describe('routing/paths', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('/foo/bar/baz');
-    })
+    });
 
     it('should handle path by mount path', async () => {
         const router = new Router({
-            mountPath: '/foo'
+            mountPath: '/foo',
         });
 
         router.get('/bar', async (req, res) => {
@@ -46,7 +46,7 @@ describe('routing/paths', () => {
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .get('/foo/bar');
 
         expect(response.statusCode).toEqual(200);
@@ -54,23 +54,23 @@ describe('routing/paths', () => {
     });
 
     it('should handle path for nested routers', async () => {
-        const child = new Router({mountPath: '/bar'});
+        const child = new Router({ mountPath: '/bar' });
 
         child.get('/baz', async (req, res) => {
             send(res, '/foo/bar/baz');
         });
 
-        const router = new Router({mountPath: '/foo'});
+        const router = new Router({ mountPath: '/foo' });
         router.use(child);
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .get('/foo/bar/baz');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('/foo/bar/baz');
-    })
+    });
 
     it('should handle regexp paths', async () => {
         const router = new Router();
@@ -91,5 +91,5 @@ describe('routing/paths', () => {
             .get('/dragonflyman');
 
         expect(response.statusCode).toEqual(404);
-    })
+    });
 });

@@ -5,21 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import supertest from "supertest";
+import supertest from 'supertest';
 import {
-    appendResponseHeaderDirective,
     HeaderName,
+    appendResponseHeaderDirective,
     send,
     setResponseHeaderAttachment,
-    setResponseHeaderContentType
-} from "../../../../src";
-import {Router} from "../../../../src/router/module";
+    setResponseHeaderContentType,
+} from '../../../../src';
+import { Router } from '../../../../src/router/module';
 
-describe('src/helpers/response/header', function () {
+describe('src/helpers/response/header', () => {
     it('should set header attachment', async () => {
         const router = new Router();
 
-        router.get('/',  (req, res) => {
+        router.get('/', (req, res) => {
             setResponseHeaderAttachment(res);
 
             send(res);
@@ -28,8 +28,8 @@ describe('src/helpers/response/header', function () {
         router.get('/file', (req, res) => {
             setResponseHeaderAttachment(res, 'dummy.json');
 
-            send(res)
-        })
+            send(res);
+        });
 
         const server = supertest(router.createListener());
 
@@ -50,34 +50,34 @@ describe('src/helpers/response/header', function () {
     it('should append header value', async () => {
         const router = new Router();
 
-        router.get('/',  (req, res) => {
-            appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, 'boundary=something')
+        router.get('/', (req, res) => {
+            appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, 'boundary=something');
 
             send(res);
         });
 
-        router.get('/multiple',  (req, res) => {
+        router.get('/multiple', (req, res) => {
             appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, [
                 'application/json',
-                'boundary=something'
-            ])
+                'boundary=something',
+            ]);
 
             send(res);
         });
 
-        router.get('/append',  (req, res) => {
+        router.get('/append', (req, res) => {
             setResponseHeaderAttachment(res, 'dummy.json');
-            appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, 'boundary=something')
+            appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, 'boundary=something');
 
             send(res);
         });
 
-        router.get('/append-multiple',  (req, res) => {
+        router.get('/append-multiple', (req, res) => {
             setResponseHeaderAttachment(res, 'dummy.json');
             appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, [
                 'charset=utf-8',
-                'boundary=something'
-            ])
+                'boundary=something',
+            ]);
 
             send(res);
         });
@@ -107,7 +107,7 @@ describe('src/helpers/response/header', function () {
 
         expect(response.statusCode).toEqual(200);
         expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8; boundary=something');
-    })
+    });
 
     it('should set response content type', async () => {
         const router = new Router();

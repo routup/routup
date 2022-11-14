@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IncomingMessage } from 'http';
+import { Request } from '../../type';
 
 const ParamsSymbol = Symbol.for('ReqParams');
 
-export function useRequestParams(req: IncomingMessage) : Record<string, any> {
+export function useRequestParams(req: Request) : Record<string, any> {
     if ('params' in req) {
         return (req as any).params;
     }
@@ -21,6 +21,24 @@ export function useRequestParams(req: IncomingMessage) : Record<string, any> {
     return {};
 }
 
-export function setRequestParams(req: IncomingMessage, data: Record<string, any>) {
+export function useRequestParam(req: Request, key: string) : any {
+    return useRequestParams(req)[key];
+}
+
+export function setRequestParams(
+    req: Request,
+    data: Record<string, any>,
+) {
     (req as any)[ParamsSymbol] = data;
+}
+
+export function setRequestParam(
+    req: Request,
+    key: string,
+    value: any,
+) {
+    const params = useRequestParams(req);
+    params[key] = value;
+
+    setRequestParams(req, params);
 }
