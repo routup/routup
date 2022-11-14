@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1](https://github.com/Tada5hi/routup/compare/routup@0.3.0...routup@0.3.1) (2022-11-14)
+
+
+### Bug Fixes
+
+* **routup:** add missing res helper exports ([b78e4af](https://github.com/Tada5hi/routup/commit/b78e4af3ef228f893b44c8e68d2cfd2d6722ff4f))
+
+
+
+
+
 # [0.3.0](https://github.com/Tada5hi/routup/compare/routup@0.3.0-alpha.0...routup@0.3.0) (2022-11-14)
 
 
