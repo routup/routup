@@ -8,10 +8,12 @@
 import { createParameterDecorator } from 'routup';
 import { useRequestQuery } from './module';
 
-export const DQuery = createParameterDecorator((req, res, next, key) => {
-    if (typeof key === 'string') {
-        return useRequestQuery(req, key);
-    }
+export function DQuery(property?: string) : ParameterDecorator {
+    return createParameterDecorator((req, res, next, key) => {
+        if (typeof key === 'string') {
+            return useRequestQuery(req, key);
+        }
 
-    return useRequestQuery(req);
-});
+        return useRequestQuery(req);
+    })(property);
+}

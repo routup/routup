@@ -10,6 +10,8 @@ import {
     DController,
     DDelete,
     DGet,
+    DNext,
+    DParam,
     DParams,
     DPatch,
     DPost,
@@ -42,8 +44,9 @@ export class DeleteMiddleware implements HandlerInterface {
 export class UserController {
     @DGet('')
     async getMany(
-    @DRequest() req: Request,
+        @DRequest() req: Request,
         @DResponse() res: Response,
+        @DNext() next: Next
     ) {
         send(res, 'many');
     }
@@ -52,7 +55,7 @@ export class UserController {
     async getOne(
     @DRequest() req: Request,
         @DResponse() res: Response,
-        @DParams('id') id: string,
+        @DParam('id') id: string,
     ) {
         send(res, id);
     }

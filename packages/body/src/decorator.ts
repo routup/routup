@@ -8,10 +8,12 @@
 import { createParameterDecorator } from 'routup';
 import { useRequestBody } from './module';
 
-export const DBody = createParameterDecorator((req, res, next, key) => {
-    if (typeof key === 'string') {
-        return useRequestBody(req, key);
-    }
+export function DBody(property?: string) : ParameterDecorator {
+    return createParameterDecorator((req, res, next, key) => {
+        if (typeof key === 'string') {
+            return useRequestBody(req, key);
+        }
 
-    return useRequestBody(req);
-});
+        return useRequestBody(req);
+    })(property);
+}

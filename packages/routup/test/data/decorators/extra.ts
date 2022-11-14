@@ -8,7 +8,7 @@
 // eslint-disable-next-line max-classes-per-file
 import {
     DController,
-    DGet,
+    DGet, DHeader,
     DHeaders,
     DRequest,
     DResponse,
@@ -44,7 +44,7 @@ export class DummyController {
     async header(
     @DRequest() req: Request,
         @DResponse() res: Response,
-        @DHeaders('connection') header: string,
+        @DHeader('connection') header: string,
     ) {
         send(res, header);
     }

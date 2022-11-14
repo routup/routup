@@ -1,7 +1,7 @@
 import {
     DController, DGet, DResponse, Response, send,
 } from 'routup';
-import { DCookies } from '../../src';
+import {DCookie, DCookies} from '../../src';
 
 @DController('/')
 export class CookieController {
@@ -16,7 +16,7 @@ export class CookieController {
     @DGet('single')
     get(
     @DResponse() res: Response,
-        @DCookies('foo') foo: string,
+        @DCookie('foo') foo: string,
     ) {
         send(res, foo);
     }

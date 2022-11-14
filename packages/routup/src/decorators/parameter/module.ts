@@ -35,24 +35,30 @@ export function createParameterDecorator(
     };
 }
 
-export const DRequest = createParameterDecorator((req) => req);
+export function DRequest() : ParameterDecorator {
+    return createParameterDecorator((req) => req)();
+}
 
-export const DResponse = createParameterDecorator((req, res) => res);
+export function DResponse() : ParameterDecorator {
+    return createParameterDecorator((req, res) => res)();
+}
 
-export const DNext = createParameterDecorator((req, res, next) => next);
+export function DNext() : ParameterDecorator {
+    return createParameterDecorator((req, res, next) => next)();
+}
 
-export const DParams = createParameterDecorator((req, res, next, key) => {
-    if (typeof key === 'string') {
-        return useRequestParam(req, key);
-    }
+export function DParams() : ParameterDecorator {
+    return createParameterDecorator((req, res, next) => useRequestParams(req))();
+}
 
-    return useRequestParams(req);
-});
+export function DParam(property: string) : ParameterDecorator {
+    return createParameterDecorator((req, res, next) => useRequestParam(req, property))(property);
+}
 
-export const DHeaders = createParameterDecorator((req, res, next, key) => {
-    if (typeof key === 'string') {
-        return req.headers[key.toLowerCase()];
-    }
+export function DHeaders() : ParameterDecorator {
+    return createParameterDecorator((req, res, next) => req.headers)();
+}
 
-    return req.headers;
-});
+export function DHeader(property: string) : ParameterDecorator {
+    return createParameterDecorator((req, res, next) => req.headers[property])(property);
+}

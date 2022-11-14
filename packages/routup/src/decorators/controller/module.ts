@@ -8,10 +8,10 @@
 import { ClassType } from '../../type';
 import { useDecoratorMeta } from '../utils';
 
-function createClassDecorator(
+export function createClassDecorator(
     url: string,
     middlewares?: ClassType[],
-) {
+) : ClassDecorator {
     return (target: any) : void => {
         const meta = useDecoratorMeta(target.prototype);
 

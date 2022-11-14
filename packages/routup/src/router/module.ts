@@ -396,16 +396,16 @@ export class Router {
             };
 
             const method = meta.methods[propertyKeys[i]];
-            const middlewareHandlers : Handler[] = [];
+            const handlers : Handler[] = [];
             if (method.middlewares) {
                 for (let i = 0; i < method.middlewares.length; i++) {
-                    middlewareHandlers.push(createHandlerForClassType(method.middlewares[i]));
+                    handlers.push(createHandlerForClassType(method.middlewares[i]));
                 }
             }
 
             (router as any)[method.method].apply(router, [
                 method.url,
-                ...middlewareHandlers,
+                ...handlers,
                 handler,
             ]);
         }

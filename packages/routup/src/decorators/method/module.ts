@@ -33,22 +33,22 @@ export function createMethodDecorator(
     };
 }
 
-export function DDelete(url: string, handlers?: ClassType[]) {
+export function DDelete(url: string, handlers?: ClassType[]) : MethodDecorator {
     return createMethodDecorator('delete', url, handlers);
 }
 
-export function DGet(url: string, handlers?: ClassType[]) {
+export function DGet(url: string, handlers?: ClassType[]) : MethodDecorator {
     return createMethodDecorator('get', url, handlers);
 }
 
-export function DPost(url: string, handlers?: ClassType[]) {
+export function DPost(url: string, handlers?: ClassType[]) : MethodDecorator {
     return createMethodDecorator('post', url, handlers);
 }
 
-export function DPut(url: string, handlers?: ClassType[]) {
+export function DPut(url: string, handlers?: ClassType[]) : MethodDecorator {
     return createMethodDecorator('put', url, handlers);
 }
 
-export function DPatch(url: string, handlers?: ClassType[]) {
+export function DPatch(url: string, handlers?: ClassType[]) : MethodDecorator {
     return createMethodDecorator('patch', url, handlers);
 }

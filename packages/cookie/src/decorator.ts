@@ -8,10 +8,10 @@
 import { createParameterDecorator } from 'routup';
 import { useRequestCookie, useRequestCookies } from './module';
 
-export const DCookies = createParameterDecorator((req, res, next, key) => {
-    if (typeof key === 'string') {
-        return useRequestCookie(req, key);
-    }
+export function DCookies() : ParameterDecorator {
+    return createParameterDecorator((req) => useRequestCookies(req))();
+}
 
-    return useRequestCookies(req);
-});
+export function DCookie(name: string) : ParameterDecorator {
+    return createParameterDecorator((req) => useRequestCookie(req, name))(name);
+}
