@@ -263,6 +263,13 @@ export class Router {
     route(
         path: Path,
     ) : Route {
+        if (
+            typeof path === 'string' &&
+            path.length > 0
+        ) {
+            path = withLeadingSlash(path);
+        }
+
         const index = this.stack.findIndex(
             (item) => isRouteInstance(item) && item.path === path,
         );
