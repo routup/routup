@@ -1,6 +1,6 @@
 {
     "name": "@routup/body",
-    "version": "0.2.0-alpha.0",
+    "version": "0.2.0",
     "description": "Body plugin for routup.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
@@ -41,7 +41,7 @@
     },
     "homepage": "https://github.com/Tada5hi/routup#readme",
     "devDependencies": {
-        "routup": "^0.3.0-alpha.0"
+        "routup": "^0.3.0"
     },
     "dependencies": {
         "@types/body-parser": "^1.19.2",
