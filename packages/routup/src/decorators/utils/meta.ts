@@ -9,17 +9,17 @@ import { DecoratorMeta } from '../type';
 
 const symbol = Symbol.for('DecoratorMeta');
 
-export function useDecoratorMeta(clazz: Record<string, any>) : DecoratorMeta {
-    if (symbol in clazz) {
-        return (clazz as any)[symbol];
+export function useDecoratorMeta(target: Record<string, any>) : DecoratorMeta {
+    if (symbol in target) {
+        return (target as any)[symbol];
     }
 
-    (clazz as any)[symbol] = {
+    (target as any)[symbol] = {
         url: '',
         middlewares: [],
         methods: {},
         parameters: {},
     } as DecoratorMeta;
 
-    return (clazz as any)[symbol];
+    return (target as any)[symbol];
 }
