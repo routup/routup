@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-alpha.0](https://github.com/Tada5hi/routup/compare/@routup/query@0.0.6...@routup/query@0.1.0-alpha.0) (2022-11-14)
+
+
+### Features
+
+* **query:** add expermintal decorator support ([776c78a](https://github.com/Tada5hi/routup/commit/776c78acc2e7166747bd4e4eb6a78b825dd798f1))
+
+
+
+
+
 ## [0.0.6](https://github.com/Tada5hi/routup/compare/@routup/query@0.0.5...@routup/query@0.0.6) (2022-11-09)
 
 **Note:** Version bump only for package @routup/query

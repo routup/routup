@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0-alpha.0](https://github.com/Tada5hi/routup/compare/routup@0.2.0...routup@0.3.0-alpha.0) (2022-11-14)
+
+
+### Bug Fixes
+
+* **routup:** add missing handler export ([596b76c](https://github.com/Tada5hi/routup/commit/596b76c1c318acf9a5dc1b52410b3eaffe27776b))
+
+
+### Features
+
+* **body:** add expermintal decorator support ([accf1fd](https://github.com/Tada5hi/routup/commit/accf1fd518fd301705175545070c7a2a185b2b99))
+* **routup:** add experimental decroator support ([6c00303](https://github.com/Tada5hi/routup/commit/6c00303c25dd06248057d9b98bee7b3e855c1c94))
+
+
+
+
+
 # [0.2.0](https://github.com/Tada5hi/routup/compare/routup@0.1.4...routup@0.2.0) (2022-11-09)
 
 

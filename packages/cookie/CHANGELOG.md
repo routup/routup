@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-alpha.0](https://github.com/Tada5hi/routup/compare/@routup/cookie@0.0.6...@routup/cookie@0.1.0-alpha.0) (2022-11-14)
+
+
+### Features
+
+* **cookie:** add expermintal decorator support ([5af6a50](https://github.com/Tada5hi/routup/commit/5af6a5015cd743dff5cabe3f10f7fdcfe1dd4a58))
+
+
+
+
+
 ## [0.0.6](https://github.com/Tada5hi/routup/compare/@routup/cookie@0.0.5...@routup/cookie@0.0.6) (2022-11-09)
 
 **Note:** Version bump only for package @routup/cookie
