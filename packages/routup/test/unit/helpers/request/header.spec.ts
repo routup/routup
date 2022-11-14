@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import supertest from "supertest";
+import supertest from 'supertest';
 import {
+    Router,
     getRequestAcceptableCharset,
     getRequestAcceptableCharsets,
     getRequestAcceptableContentType,
@@ -18,15 +19,14 @@ import {
     getRequestHeader,
     matchRequestContentType,
     send,
-    setRequestHeader
-} from "../../../../src";
-import {Router} from "../../../../src";
+    setRequestHeader,
+} from '../../../../src';
 
 describe('src/helpers/request/header', () => {
     it('should set and get request header', async () => {
         const router = new Router();
 
-        router.get('/',  (req, res) => {
+        router.get('/', (req, res) => {
             setRequestHeader(req, 'accept-language', 'de');
 
             send(res, getRequestHeader(req, 'accept-language'));
@@ -34,7 +34,7 @@ describe('src/helpers/request/header', () => {
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .get('/');
 
         expect(response.statusCode).toEqual(200);
@@ -44,7 +44,7 @@ describe('src/helpers/request/header', () => {
     it('should handle accept header', async () => {
         const router = new Router();
 
-        router.get('/',  (req, res) => {
+        router.get('/', (req, res) => {
             const accepts = getRequestAcceptableContentTypes(req);
 
             send(res, accepts);
@@ -54,26 +54,26 @@ describe('src/helpers/request/header', () => {
             const accepts = getRequestAcceptableContentType(req, 'json');
 
             send(res, accepts);
-        })
+        });
 
         router.get('/multiple', (req, res) => {
             const accepts = getRequestAcceptableContentType(req, ['text', 'json']);
 
             send(res, accepts);
-        })
+        });
 
         const server = supertest(router.createListener());
 
         let response = await server
             .get('/')
-            .set('Accept', 'application/json, text/html')
+            .set('Accept', 'application/json, text/html');
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(['application/json', 'text/html']);
 
         response = await server
             .get('/json')
-            .set('Accept', 'application/json, text/html')
+            .set('Accept', 'application/json, text/html');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('json');
@@ -88,7 +88,7 @@ describe('src/helpers/request/header', () => {
         // accept header do not match options
         response = await server
             .get('/json')
-            .set('Accept', 'image/png')
+            .set('Accept', 'image/png');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toBeFalsy();
@@ -96,11 +96,11 @@ describe('src/helpers/request/header', () => {
         // accept header match one of available options
         response = await server
             .get('/multiple')
-            .set('Accept', 'application/json')
+            .set('Accept', 'application/json');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('json');
-    })
+    });
 
     it('should handle accept charset header', async () => {
         const router = new Router();
@@ -111,29 +111,29 @@ describe('src/helpers/request/header', () => {
             send(res, accepts);
         });
 
-        router.get('/utf-8', (req,res) => {
+        router.get('/utf-8', (req, res) => {
             const accepts = getRequestAcceptableCharset(req, 'utf-8');
 
             send(res, accepts);
-        })
+        });
 
         const server = supertest(router.createListener());
 
         let response = await server
-            .get('/')
+            .get('/');
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(['*']);
 
         response = await server
             .get('/')
-            .set('Accept-Charset', 'utf-8')
+            .set('Accept-Charset', 'utf-8');
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(['utf-8']);
 
         response = await server
-            .get('/utf-8')
+            .get('/utf-8');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('utf-8');
@@ -159,12 +159,12 @@ describe('src/helpers/request/header', () => {
             const accepts = getRequestAcceptableEncoding(req, 'gzip');
 
             send(res, accepts);
-        })
+        });
 
         const server = supertest(router.createListener());
 
         let response = await server
-            .get('/')
+            .get('/');
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(['gzip', 'deflate', 'identity']);
@@ -182,7 +182,7 @@ describe('src/helpers/request/header', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toBeFalsy();
-    })
+    });
 
     it('should handle accept language header', async () => {
         const router = new Router();
@@ -203,12 +203,12 @@ describe('src/helpers/request/header', () => {
             const accepts = getRequestAcceptableLanguage(req, ['de', 'en']);
 
             send(res, accepts);
-        })
+        });
 
         const server = supertest(router.createListener());
 
         let response = await server
-            .get('/')
+            .get('/');
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(['*']);
@@ -222,21 +222,21 @@ describe('src/helpers/request/header', () => {
 
         response = await server
             .get('/de')
-            .set('Accept-Language', 'de')
+            .set('Accept-Language', 'de');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('de');
 
         response = await server
             .get('/de')
-            .set('Accept-Language', 'en')
+            .set('Accept-Language', 'en');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toBeFalsy();
 
         response = await server
             .get('/multiple')
-            .set('Accept-Language', 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5')
+            .set('Accept-Language', 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('en');
@@ -246,7 +246,7 @@ describe('src/helpers/request/header', () => {
         const router = new Router();
 
         router.get('/', (req, res) => {
-            if(matchRequestContentType(req, 'json')) {
+            if (matchRequestContentType(req, 'json')) {
                 send(res, 'true');
             } else {
                 send(res, 'false');
@@ -257,14 +257,14 @@ describe('src/helpers/request/header', () => {
 
         let response = await server
             .get('/')
-            .set('Content-Type', 'application/json; charset=utf-8')
+            .set('Content-Type', 'application/json; charset=utf-8');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('true');
 
         response = await server
             .get('/')
-            .set('Content-Type', 'text/html; charset=utf-8')
+            .set('Content-Type', 'text/html; charset=utf-8');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('false');
@@ -275,4 +275,4 @@ describe('src/helpers/request/header', () => {
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('true');
     });
-})
+});

@@ -5,8 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import supertest from "supertest";
-import {Router, send, setRequestEnv, unsetRequestEnv, useRequestEnv} from "../../../../src";
+import supertest from 'supertest';
+import {
+    Router, send, setRequestEnv, unsetRequestEnv, useRequestEnv,
+} from '../../../../src';
 
 describe('src/helpers/request/env', () => {
     it('set request env', async () => {
@@ -17,16 +19,16 @@ describe('src/helpers/request/env', () => {
             setRequestEnv(req, 'foo', 'bar');
 
             send(res, useRequestEnv(req, 'foo'));
-        })
+        });
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .get('/');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('bar');
-    })
+    });
 
     it('set request env object', async () => {
         const router = new Router();
@@ -34,30 +36,30 @@ describe('src/helpers/request/env', () => {
         router.get('/', (req, res) => {
             setRequestEnv(req, {
                 foo: 'bar',
-                bar: 'baz'
+                bar: 'baz',
             });
 
             send(res, useRequestEnv(req));
-        })
+        });
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .get('/');
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual({
             foo: 'bar',
-            bar: 'baz'
+            bar: 'baz',
         });
-    })
+    });
 
     it('should append env to request', async () => {
         const router = new Router();
 
         router.get('/', (req, res) => {
             setRequestEnv(req, {
-                foo: 'bar'
+                foo: 'bar',
             });
 
             setRequestEnv(req, {
@@ -65,26 +67,26 @@ describe('src/helpers/request/env', () => {
             }, true);
 
             send(res, useRequestEnv(req));
-        })
+        });
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .get('/');
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual({
             foo: 'bar',
-            bar: 'baz'
+            bar: 'baz',
         });
-    })
+    });
 
     it('should overwrite env of request', async () => {
         const router = new Router();
 
         router.get('/', (req, res) => {
             setRequestEnv(req, {
-                foo: 'bar'
+                foo: 'bar',
             });
 
             setRequestEnv(req, {
@@ -92,18 +94,18 @@ describe('src/helpers/request/env', () => {
             });
 
             send(res, useRequestEnv(req));
-        })
+        });
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .get('/');
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual({
-            bar: 'baz'
+            bar: 'baz',
         });
-    })
+    });
 
     it('should unset env of request', async () => {
         const router = new Router();
@@ -111,22 +113,22 @@ describe('src/helpers/request/env', () => {
         router.get('/', (req, res) => {
             setRequestEnv(req, {
                 foo: 'bar',
-                bar: 'baz'
+                bar: 'baz',
             });
 
             unsetRequestEnv(req, 'foo');
 
             send(res, useRequestEnv(req));
-        })
+        });
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .get('/');
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual({
-            bar: 'baz'
+            bar: 'baz',
         });
     });
 
@@ -135,11 +137,11 @@ describe('src/helpers/request/env', () => {
 
         router.get('/', (req, res) => {
             send(res, useRequestEnv(req));
-        })
+        });
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .get('/');
 
         expect(response.statusCode).toEqual(200);

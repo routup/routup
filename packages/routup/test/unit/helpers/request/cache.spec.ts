@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import supertest from "supertest";
-import {Router, send} from "../../../../src";
-import {isRequestCacheable} from "../../../../src";
+import supertest from 'supertest';
+import { Router, isRequestCacheable, send } from '../../../../src';
 
 describe('src/helpers/request/cache', () => {
     it('should determine if request is cacheable', async () => {
@@ -31,5 +30,5 @@ describe('src/helpers/request/cache', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('true');
-    })
-})
+    });
+});

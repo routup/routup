@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import supertest from "supertest";
-import {Route, Router, send} from "../../../src";
+import supertest from 'supertest';
+import { Route, Router, send } from '../../../src';
 
 describe('routing/methods', () => {
     it('should handle different methods', async () => {
@@ -22,15 +22,15 @@ describe('routing/methods', () => {
 
         router.patch('/patch', async (req, res) => {
             send(res, 'patch');
-        })
+        });
 
         router.post('/post', async (req, res) => {
             send(res, 'post');
-        })
+        });
 
         router.put('/put', async (req, res) => {
             send(res, 'put');
-        })
+        });
 
         const server = supertest(router.createListener());
 
@@ -78,15 +78,15 @@ describe('routing/methods', () => {
 
         router.patch('/', async (req, res) => {
             send(res, 'patch');
-        })
+        });
 
         router.post('/', async (req, res) => {
             send(res, 'post');
-        })
+        });
 
         router.put('/', async (req, res) => {
             send(res, 'put');
-        })
+        });
 
         const server = supertest(router.createListener());
 
@@ -126,7 +126,7 @@ describe('routing/methods', () => {
 
         const route = router.route('/foo');
 
-        route.delete( async (req, res) => {
+        route.delete(async (req, res) => {
             send(res, 'delete');
         });
 
@@ -136,15 +136,15 @@ describe('routing/methods', () => {
 
         route.patch(async (req, res) => {
             send(res, 'patch');
-        })
+        });
 
         route.post(async (req, res) => {
             send(res, 'post');
-        })
+        });
 
         route.put(async (req, res) => {
             send(res, 'put');
-        })
+        });
 
         const server = supertest(router.createListener());
 

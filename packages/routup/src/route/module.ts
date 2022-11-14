@@ -7,11 +7,12 @@
 
 import { merge } from 'smob';
 import { Method } from '../constants';
+import { Handler } from '../handler';
 import { Layer } from '../layer';
 import { PathMatcher } from '../path';
 import {
     DispatcherMeta,
-    Handler, Next, Path, Request, Response,
+    Next, Path, Request, Response,
 } from '../type';
 
 export class Route {

@@ -5,6 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './decorator';
-export * from './module';
-export * from './parser';
+import { ClassType } from '../../type';
+
+export type DecoratorMethodOptions = {
+    method: string;
+    url: string;
+    middlewares: ClassType[];
+};
