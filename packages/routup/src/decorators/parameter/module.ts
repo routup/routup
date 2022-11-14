@@ -49,10 +49,6 @@ export const DParams = createParameterDecorator((req, res, next, key) => {
     return useRequestParams(req);
 });
 
-// export const Query = createParameterDecorator(ParameterType.QUERY);
-
-// export const Body = createParameterDecorator(ParameterType.BODY);
-
 export const DHeaders = createParameterDecorator((req, res, next, key) => {
     if (typeof key === 'string') {
         return req.headers[key.toLowerCase()];
@@ -60,5 +56,3 @@ export const DHeaders = createParameterDecorator((req, res, next, key) => {
 
     return req.headers;
 });
-
-// export const Cookies = createParameterDecorator(ParameterType.COOKIES);
