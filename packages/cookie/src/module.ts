@@ -6,19 +6,18 @@
  */
 
 import {
-    CookieParseOptions,
-    CookieSerializeOptions,
     parse,
     serialize,
 } from 'cookie';
 import { IncomingMessage } from 'http';
 import { HeaderName, Response, appendResponseHeaderDirective } from 'routup';
+import { ParseOptions, SerializeOptions } from './type';
 
 const CookieSymbol = Symbol.for('ReqCookie');
 
 export function useRequestCookies(
     req: IncomingMessage,
-    options?: CookieParseOptions,
+    options?: ParseOptions,
 ) : Record<string, string> {
     if (CookieSymbol in req) {
         return (req as any)[CookieSymbol];
@@ -35,7 +34,7 @@ export function useRequestCookie(req: IncomingMessage, name: string) : string | 
     return useRequestCookies(req)[name];
 }
 
-export function setResponseCookie(res: Response, name: string, value: string, options?: CookieSerializeOptions) {
+export function setResponseCookie(res: Response, name: string, value: string, options?: SerializeOptions) {
     appendResponseHeaderDirective(res, HeaderName.COOKIE, serialize(name, value, {
         path: '/',
         ...(options || {}),
@@ -43,7 +42,7 @@ export function setResponseCookie(res: Response, name: string, value: string, op
 }
 
 /* istanbul ignore next */
-export function unsetResponseCookie(res: Response, name: string, options?: CookieSerializeOptions) {
+export function unsetResponseCookie(res: Response, name: string, options?: SerializeOptions) {
     setResponseCookie(res, name, '', {
         ...(options || {}),
         maxAge: 0,
