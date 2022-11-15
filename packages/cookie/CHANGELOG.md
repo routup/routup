@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.2](https://github.com/Tada5hi/routup/compare/@routup/cookie@0.1.1...@routup/cookie@0.1.2) (2022-11-15)
+
+
+### Bug Fixes
+
+* **cookie:** expose parse- & serialize-options type ([1481e84](https://github.com/Tada5hi/routup/commit/1481e84f3ffea52a74884fc7b2a25c5ea181ff1f))
+
+
+
+
+
 ## [0.1.1](https://github.com/Tada5hi/routup/compare/@routup/cookie@0.1.0...@routup/cookie@0.1.1) (2022-11-14)
 
 **Note:** Version bump only for package @routup/cookie
