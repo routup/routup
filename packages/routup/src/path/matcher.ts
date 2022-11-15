@@ -6,10 +6,10 @@
  */
 
 import {
-    Key, ParseOptions, TokensToRegexpOptions, pathToRegexp,
+    Key, pathToRegexp,
 } from 'path-to-regexp';
 import { Path } from '../type';
-import { PathMatcherExecResult } from './type';
+import { PathMatcherExecResult, PathMatcherOptions } from './type';
 
 function decodeParam(val: unknown) {
     if (typeof val !== 'string' || val.length === 0) {
@@ -26,9 +26,9 @@ export class PathMatcher {
 
     regexpKeys : Key[] = [];
 
-    regexpOptions: TokensToRegexpOptions & ParseOptions;
+    regexpOptions: PathMatcherOptions;
 
-    constructor(path: Path, options?: TokensToRegexpOptions & ParseOptions) {
+    constructor(path: Path, options?: PathMatcherOptions) {
         this.path = path;
         this.regexpOptions = options || {};
 

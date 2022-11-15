@@ -9,7 +9,7 @@ import { merge } from 'smob';
 import { Method } from '../constants';
 import { Handler } from '../handler';
 import { Layer } from '../layer';
-import { PathMatcher } from '../path';
+import { PathMatcher, PathMatcherOptions } from '../path';
 import {
     DispatcherMeta,
     Next, Path, Request, Response,
@@ -22,6 +22,8 @@ export class Route {
 
     protected pathMatcher : PathMatcher;
 
+    protected pathMatcherOptions : PathMatcherOptions;
+
     protected layers : Record<string, Layer[]> = {};
 
     // --------------------------------------------------
@@ -29,7 +31,8 @@ export class Route {
     constructor(path: Path) {
         this.path = path;
 
-        this.pathMatcher = new PathMatcher(path);
+        this.pathMatcherOptions = { end: true, strict: this.isStrictPath() };
+        this.pathMatcher = new PathMatcher(path, this.pathMatcherOptions);
     }
 
     // --------------------------------------------------
@@ -102,9 +105,7 @@ export class Route {
         for (let i = 0; i < handlers.length; i++) {
             const layer = new Layer(
                 this.path,
-                {
-                    end: true,
-                },
+                this.pathMatcherOptions,
                 handlers[i],
             );
 
@@ -130,5 +131,12 @@ export class Route {
 
     delete(...handlers: Handler[]) {
         return this.register(Method.DELETE, ...handlers);
+    }
+
+    // --------------------------------------------------
+
+    private isStrictPath() {
+        return typeof this.path !== 'string' ||
+            (this.path !== '/' && this.path.length !== 0);
     }
 }
