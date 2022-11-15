@@ -8,6 +8,7 @@
 import { isObject } from 'smob';
 import { send } from '../helpers';
 import { ClassType, Next, Response } from '../type';
+import { isPromise } from '../utils';
 import { Handler, HandlerInterface } from './type';
 
 export function isHandlerClassInstance(input: unknown) : input is HandlerInterface {
@@ -36,7 +37,7 @@ export function createHandlerForClassType(item: ClassType) : Handler {
 }
 
 export function processHandlerExecutionOutput(res: Response, next: Next, output?: unknown) {
-    if (output instanceof Promise) {
+    if (isPromise(output)) {
         output
             .then((r) => {
                 if (typeof r !== 'undefined') {
@@ -46,7 +47,10 @@ export function processHandlerExecutionOutput(res: Response, next: Next, output?
                 return r;
             })
             .catch(next);
-    } else if (typeof output !== 'undefined') {
+        return;
+    }
+
+    if (typeof output !== 'undefined') {
         send(res, output);
     }
 }
