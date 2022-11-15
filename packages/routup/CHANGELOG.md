@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.2](https://github.com/Tada5hi/routup/compare/routup@0.3.1...routup@0.3.2) (2022-11-15)
+
+
+### Bug Fixes
+
+* **routup:** enhance patch matching for route methods ([188e07a](https://github.com/Tada5hi/routup/commit/188e07ab00eb65ee69a97391e436cee017925f25))
+
+
+
+
+
 ## [0.3.1](https://github.com/Tada5hi/routup/compare/routup@0.3.0...routup@0.3.1) (2022-11-14)
 
 
