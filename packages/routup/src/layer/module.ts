@@ -9,6 +9,7 @@ import { InternalServerError } from '@ebec/http';
 import {
     ParseOptions, TokensToRegexpOptions,
 } from 'path-to-regexp';
+import { processHandlerExecutionOutput } from '../handler';
 import { setRequestParams } from '../helpers';
 import { PathMatcher } from '../path';
 import {
@@ -91,9 +92,8 @@ export class Layer {
 
         try {
             const output = this.fn(req, res, next);
-            if (output instanceof Promise) {
-                output.catch((e) => next(e));
-            }
+
+            processHandlerExecutionOutput(res, next, output);
         } catch (e) {
             /* istanbul ignore next */
             if (e instanceof Error) {

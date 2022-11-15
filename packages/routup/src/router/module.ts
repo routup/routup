@@ -9,11 +9,14 @@ import { RequestListener, createServer } from 'http';
 import { isObject, merge } from 'smob';
 import { buildDecoratorMethodArguments } from '../decorators';
 import { useDecoratorMeta } from '../decorators/utils';
-import { ErrorHandler, Handler, createHandlerForClassType } from '../handler';
+import {
+    ErrorHandler, Handler, createHandlerForClassType, processHandlerExecutionOutput,
+} from '../handler';
 import { PathMatcher } from '../path';
 import {
     createResponseTimeout,
-    isInstance, isPath,
+    isInstance,
+    isPath,
     withLeadingSlash,
     withoutTrailingSlash,
 } from '../utils';
@@ -22,10 +25,10 @@ import { Route, isRouteInstance } from '../route';
 import {
     ClassType,
     DispatcherMeta,
-    Next, Path,
+    Next,
+    Path,
     Request,
     Response,
-
 } from '../type';
 import {
     setRequestMountPath,
@@ -336,6 +339,7 @@ export class Router {
     use(path: Path, handler: ErrorHandler) : this;
 
     use(...input: unknown[]) : this {
+        /* istanbul ignore next */
         if (input.length === 0) {
             return this;
         }
@@ -388,13 +392,11 @@ export class Router {
         const propertyKeys = Object.keys(meta.methods);
         for (let i = 0; i < propertyKeys.length; i++) {
             const handler : Handler = (req, res, next) => {
-                const method = controller[propertyKeys[i]].apply(controller, [
+                const output = controller[propertyKeys[i]].apply(controller, [
                     ...buildDecoratorMethodArguments(req, res, next, meta.parameters[propertyKeys[i]]),
                 ]);
 
-                if (method instanceof Promise) {
-                    method.catch(next);
-                }
+                processHandlerExecutionOutput(res, next, output);
             };
 
             const method = meta.methods[propertyKeys[i]];
