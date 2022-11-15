@@ -47,7 +47,7 @@ export class Router {
     protected pathMatcher : PathMatcher | undefined;
 
     /**
-     * Is root router instance?
+     * Is root instance?
      *
      * @protected
      */
@@ -57,7 +57,6 @@ export class Router {
 
     constructor(options?: RouterOptions) {
         options = options || {};
-        options.timeout = options.timeout || 60_000;
         options.mountPath = options.mountPath || '/';
 
         this.options = options;
@@ -126,8 +125,11 @@ export class Router {
 
         meta = meta || {};
 
-        if (this.isRoot) {
-            createResponseTimeout(res, this.options.timeout || 60_000, done);
+        if (
+            this.isRoot &&
+            this.options.timeout
+        ) {
+            createResponseTimeout(res, this.options.timeout, done);
         }
 
         const fn = (err?: Error) => {

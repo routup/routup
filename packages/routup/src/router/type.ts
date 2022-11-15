@@ -9,10 +9,10 @@ import { Path } from '../type';
 
 export type RouterOptions = {
     /**
-     * Milliseconds (ms) until request should time out.
+     * Milliseconds (ms) until the request should be canceled.
      *
      * @type number
-     * @default 60_000
+     * @default undefined
      */
     timeout?: number,
 
