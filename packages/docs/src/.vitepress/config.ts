@@ -29,6 +29,7 @@ export default defineConfig({
                     { text: 'Body', link: '/plugins/body/' },
                     { text: 'Cookie', link: '/plugins/cookie/' },
                     { text: 'Query', link: '/plugins/query/' },
+                    { text: 'Swagger', link: '/plugins/swagger/' },
                 ]
             }
         ],
@@ -95,6 +96,17 @@ export default defineConfig({
                         {text: 'Introduction', link: '/plugins/query/'},
                         {text: 'Installation', link: '/plugins/query/installation.md'},
                         {text: 'Usage', link: '/plugins/query/usage.md'}
+                    ]
+                },
+            ],
+            '/plugins/swagger/': [
+                {
+                    text: '@routup/swagger',
+                    collapsible: false,
+                    items: [
+                        {text: 'Introduction', link: '/plugins/swagger/'},
+                        {text: 'Installation', link: '/plugins/swagger/installation.md'},
+                        {text: 'Usage', link: '/plugins/swagger/usage.md'}
                     ]
                 },
             ],
