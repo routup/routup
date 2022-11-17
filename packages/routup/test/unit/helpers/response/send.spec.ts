@@ -8,10 +8,10 @@
 import path from 'path';
 import supertest from 'supertest';
 import { HeaderName, sendFile } from '../../../../src';
-import { sendAccepted } from '../../../../src/helpers/response/send-accepted';
-import { sendCreated } from '../../../../src/helpers/response/send-created';
-import { sendRedirect } from '../../../../src/helpers/response/send-redirect';
-import { Router } from '../../../../src/router/module';
+import { sendAccepted } from '../../../../src';
+import { sendCreated } from '../../../../src';
+import { sendRedirect } from '../../../../src';
+import { Router } from '../../../../src';
 
 describe('src/helpers/response/send', () => {
     it('should send file', async () => {
@@ -58,7 +58,7 @@ describe('src/helpers/response/send', () => {
             .get('/');
 
         expect(response.statusCode).toEqual(302);
-        expect(response.headers.location).toEqual('https://google.de');
+        expect(response.headers[HeaderName.LOCATION]).toEqual('https://google.de');
         expect(response.text).toEqual('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://google.de"></head></html>');
     });
 

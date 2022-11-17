@@ -19,7 +19,7 @@ import {
     getRequestHeader,
     matchRequestContentType,
     send,
-    setRequestHeader,
+    setRequestHeader, HeaderName,
 } from '../../../../src';
 
 describe('src/helpers/request/header', () => {
@@ -66,14 +66,14 @@ describe('src/helpers/request/header', () => {
 
         let response = await server
             .get('/')
-            .set('Accept', 'application/json, text/html');
+            .set(HeaderName.ACCEPT, 'application/json, text/html');
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(['application/json', 'text/html']);
 
         response = await server
             .get('/json')
-            .set('Accept', 'application/json, text/html');
+            .set(HeaderName.ACCEPT, 'application/json, text/html');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('json');
@@ -88,7 +88,7 @@ describe('src/helpers/request/header', () => {
         // accept header do not match options
         response = await server
             .get('/json')
-            .set('Accept', 'image/png');
+            .set(HeaderName.ACCEPT, 'image/png');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toBeFalsy();
@@ -96,7 +96,7 @@ describe('src/helpers/request/header', () => {
         // accept header match one of available options
         response = await server
             .get('/multiple')
-            .set('Accept', 'application/json');
+            .set(HeaderName.ACCEPT, 'application/json');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('json');
@@ -127,7 +127,7 @@ describe('src/helpers/request/header', () => {
 
         response = await server
             .get('/')
-            .set('Accept-Charset', 'utf-8');
+            .set(HeaderName.ACCEPT_CHARSET, 'utf-8');
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(['utf-8']);
@@ -140,7 +140,7 @@ describe('src/helpers/request/header', () => {
 
         response = await server
             .get('/utf-8')
-            .set('Accept-Charset', 'binary');
+            .set(HeaderName.ACCEPT_CHARSET, 'binary');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toBeFalsy();
@@ -171,14 +171,14 @@ describe('src/helpers/request/header', () => {
 
         response = await server
             .get('/gzip')
-            .set('Accept-Encoding', 'gzip');
+            .set(HeaderName.ACCEPT_ENCODING, 'gzip');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('gzip');
 
         response = await server
             .get('/gzip')
-            .set('Accept-Encoding', 'deflate');
+            .set(HeaderName.ACCEPT_ENCODING, 'deflate');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toBeFalsy();
@@ -215,28 +215,28 @@ describe('src/helpers/request/header', () => {
 
         response = await server
             .get('/')
-            .set('Accept-Language', 'en');
+            .set(HeaderName.ACCEPT_LANGUAGE, 'en');
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(['en']);
 
         response = await server
             .get('/de')
-            .set('Accept-Language', 'de');
+            .set(HeaderName.ACCEPT_LANGUAGE, 'de');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('de');
 
         response = await server
             .get('/de')
-            .set('Accept-Language', 'en');
+            .set(HeaderName.ACCEPT_LANGUAGE, 'en');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toBeFalsy();
 
         response = await server
             .get('/multiple')
-            .set('Accept-Language', 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5');
+            .set(HeaderName.ACCEPT_LANGUAGE, 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('en');
@@ -257,14 +257,14 @@ describe('src/helpers/request/header', () => {
 
         let response = await server
             .get('/')
-            .set('Content-Type', 'application/json; charset=utf-8');
+            .set(HeaderName.CONTENT_TYPE, 'application/json; charset=utf-8');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('true');
 
         response = await server
             .get('/')
-            .set('Content-Type', 'text/html; charset=utf-8');
+            .set(HeaderName.CONTENT_TYPE, 'text/html; charset=utf-8');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('false');

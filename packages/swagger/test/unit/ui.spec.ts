@@ -7,8 +7,8 @@
 
 import path from "path";
 import supertest from "supertest";
-import { send, Router } from "routup";
-import {createUIHandler} from "../../src";
+import { Router, HeaderName } from "routup";
+import { createUIHandler} from "../../src";
 
 describe('src/ui', () => {
     it('should serve ui files', async () => {
@@ -23,13 +23,13 @@ describe('src/ui', () => {
             .get('/docs');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers['content-type']).toEqual('text/html; charset=utf-8');
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('text/html; charset=utf-8');
 
         response = await server
             .get('/docs/swagger-ui-bundle.js');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers['content-type']).toEqual('application/javascript; charset=UTF-8');
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/javascript; charset=UTF-8');
 
         response = await server
             .get('/docs/package.json');

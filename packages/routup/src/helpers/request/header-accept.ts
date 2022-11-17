@@ -5,18 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IncomingMessage } from 'http';
+import { HeaderName } from '../../constants';
+import { Request } from '../../type';
 import { getMimeType } from '../../utils';
 import { getRequestHeader } from './header';
 import { useRequestNegotiator } from './negotiator';
 
-export function getRequestAcceptableContentTypes(req: IncomingMessage) : string[] {
+export function getRequestAcceptableContentTypes(req: Request) : string[] {
     const negotiator = useRequestNegotiator(req);
 
     return negotiator.mediaTypes();
 }
 
-export function getRequestAcceptableContentType(req: IncomingMessage, input?: string | string[]) : string | undefined {
+export function getRequestAcceptableContentType(req: Request, input?: string | string[]) : string | undefined {
     input = input || [];
 
     const items = Array.isArray(input) ? input : [input];
@@ -25,7 +26,7 @@ export function getRequestAcceptableContentType(req: IncomingMessage, input?: st
         return getRequestAcceptableContentTypes(req).shift();
     }
 
-    const header = getRequestHeader(req, 'accept');
+    const header = getRequestHeader(req, HeaderName.ACCEPT);
     if (!header) {
         return items[0];
     }

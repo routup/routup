@@ -14,15 +14,17 @@ export enum Method {
 }
 
 export enum HeaderName {
-    METHOD = 'method',
-    URL = 'url',
-    STATUS_CODE = 'staus-code',
-    STATUS_MESSAGE = 'status-message',
-
     ACCEPT = 'accept',
+    ACCEPT_CHARSET = 'accept-charset',
+    ACCEPT_ENCODING = 'accept-encoding',
+    ACCEPT_LANGUAGE = 'accept-language',
+    CACHE_CONTROL = 'cache-control',
     CONTENT_DISPOSITION = 'content-disposition',
     CONTENT_ENCODING = 'content-encoding',
     CONTENT_LENGTH = 'content-length',
     CONTENT_TYPE = 'content-type',
     COOKIE = 'cookie',
+    LAST_MODIFIED = 'last-modified',
+    LOCATION = 'location',
+    SET_COOKIE = 'set-cookie',
 }

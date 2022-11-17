@@ -6,7 +6,7 @@
  */
 
 import supertest from 'supertest';
-import { Router, send, setResponseCacheHeaders } from '../../../../src';
+import {HeaderName, Router, send, setResponseCacheHeaders} from '../../../../src';
 
 describe('src/helpers/response/cache', () => {
     it('should determine if request is cacheable', async () => {
@@ -32,7 +32,7 @@ describe('src/helpers/response/cache', () => {
             .get('/');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers['cache-control']).toEqual('public, must-revalidate, max-age=3600, s-maxage=3600');
-        expect(response.headers['last-modified']).toEqual(date.toUTCString());
+        expect(response.headers[HeaderName.CACHE_CONTROL]).toEqual('public, must-revalidate, max-age=3600, s-maxage=3600');
+        expect(response.headers[HeaderName.LAST_MODIFIED]).toEqual(date.toUTCString());
     });
 });
