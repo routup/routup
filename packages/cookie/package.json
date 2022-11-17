@@ -1,6 +1,6 @@
 {
     "name": "@routup/cookie",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "description": "Cookie plugin for routup.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
