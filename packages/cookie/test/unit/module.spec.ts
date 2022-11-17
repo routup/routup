@@ -7,7 +7,7 @@
 
 import supertest from "supertest";
 import { send, Router } from "routup";
-import {setResponseCookie, useRequestCookie, useRequestCookies} from "../../src";
+import {setResponseCookie, unsetResponseCookie, useRequestCookie, useRequestCookies} from "../../src";
 
 describe('src/module', () => {
     it('should parse cookie', async () => {
@@ -46,6 +46,25 @@ describe('src/module', () => {
             .set('Cookie', ['foo=bar'])
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers['cookie']).toEqual('bar=baz; Path=/');
+        expect(response.headers['set-cookie']).toEqual(['bar=baz; Path=/']);
+    })
+
+    it('should unset cookie', async () => {
+        const router = new Router();
+
+        router.get('/',  (req, res) => {
+            unsetResponseCookie(res, 'foo');
+
+            send(res);
+        });
+
+        const server = supertest(router.createListener());
+
+        let response = await server
+            .get('/')
+            .set('Cookie', ['foo=bar'])
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.headers['set-cookie']).toEqual(['foo=; Max-Age=0; Path=/']);
     })
 })
