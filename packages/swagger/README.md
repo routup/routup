@@ -30,6 +30,8 @@ To read the docs, visit [https://routup.tada5hi.net](https://routup.tada5hi.net)
 
 ### UI
 
+Serve generated docs from URL or based on a JSON file with [swagger-ui](https://www.npmjs.com/package/swagger-ui-dist).
+
 ```typescript
 import fs from 'fs';
 import path from 'path';
