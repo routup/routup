@@ -5,10 +5,30 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OutgoingHttpHeader, ServerResponse } from 'http';
+import { OutgoingHttpHeader } from 'http';
+import { Response } from '../../type';
+
+export function appendResponseHeader(
+    res: Response,
+    name: string,
+    value: OutgoingHttpHeader,
+) {
+    let header = res.getHeader(name);
+    if (!header) {
+        res.setHeader(name, value);
+
+        return;
+    }
+
+    if (!Array.isArray(header)) {
+        header = [header.toString()];
+    }
+
+    res.setHeader(name, [...header, value] as readonly string[]);
+}
 
 export function appendResponseHeaderDirective(
-    res: ServerResponse,
+    res: Response,
     name: string,
     value: OutgoingHttpHeader,
 ) {

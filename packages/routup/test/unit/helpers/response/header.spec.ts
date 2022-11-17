@@ -9,11 +9,11 @@ import supertest from 'supertest';
 import {
     HeaderName,
     appendResponseHeaderDirective,
+    Router,
     send,
     setResponseHeaderAttachment,
-    setResponseHeaderContentType,
+    setResponseHeaderContentType, appendResponseHeader,
 } from '../../../../src';
-import { Router } from '../../../../src/router/module';
 
 describe('src/helpers/response/header', () => {
     it('should set header attachment', async () => {
@@ -47,7 +47,29 @@ describe('src/helpers/response/header', () => {
         expect(response.headers[HeaderName.CONTENT_DISPOSITION]).toEqual('attachment; filename="dummy.json"');
     });
 
-    it('should append header value', async () => {
+    it('should append value', async () => {
+        const router = new Router();
+
+        router.get('/', (req, res) => {
+            appendResponseHeader(res, HeaderName.SET_COOKIE, 'foo=bar; Path=/');
+            appendResponseHeader(res, HeaderName.SET_COOKIE, 'bar=baz; Path=/');
+
+            send(res);
+        });
+
+        const server = supertest(router.createListener());
+
+        let response = await server
+            .get('/');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.headers[HeaderName.SET_COOKIE]).toEqual([
+            'foo=bar; Path=/',
+            'bar=baz; Path=/'
+        ]);
+    })
+
+    it('should append directive value', async () => {
         const router = new Router();
 
         router.get('/', (req, res) => {

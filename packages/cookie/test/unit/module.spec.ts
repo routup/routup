@@ -6,7 +6,7 @@
  */
 
 import supertest from "supertest";
-import { send, Router } from "routup";
+import {send, Router, HeaderName} from "routup";
 import {setResponseCookie, unsetResponseCookie, useRequestCookie, useRequestCookies} from "../../src";
 
 describe('src/module', () => {
@@ -30,10 +30,17 @@ describe('src/module', () => {
         expect(response.text).toEqual('bar');
     });
 
-    it('should set cookie', async () => {
+    it('should set (multiple) cookie', async () => {
         const router = new Router();
 
         router.get('/',  (req, res) => {
+            setResponseCookie(res, 'bar', 'baz');
+
+            send(res);
+        });
+
+        router.get('/multiple',  (req, res) => {
+            setResponseCookie(res, 'foo', 'bar');
             setResponseCookie(res, 'bar', 'baz');
 
             send(res);
@@ -46,7 +53,16 @@ describe('src/module', () => {
             .set('Cookie', ['foo=bar'])
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers['set-cookie']).toEqual(['bar=baz; Path=/']);
+        expect(response.headers[HeaderName.SET_COOKIE]).toEqual(['bar=baz; Path=/']);
+
+        response = await server
+            .get('/multiple');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.headers[HeaderName.SET_COOKIE]).toEqual([
+            'foo=bar; Path=/',
+            'bar=baz; Path=/'
+        ]);
     })
 
     it('should unset cookie', async () => {
@@ -65,6 +81,6 @@ describe('src/module', () => {
             .set('Cookie', ['foo=bar'])
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers['set-cookie']).toEqual(['foo=; Max-Age=0; Path=/']);
+        expect(response.headers[HeaderName.SET_COOKIE]).toEqual(['foo=; Max-Age=0; Path=/']);
     })
 })

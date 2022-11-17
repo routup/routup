@@ -10,7 +10,7 @@ import {
     serialize,
 } from 'cookie';
 import { IncomingMessage } from 'http';
-import { HeaderName, Response, appendResponseHeaderDirective } from 'routup';
+import { HeaderName, Response, appendResponseHeader } from 'routup';
 import { ParseOptions, SerializeOptions } from './type';
 
 const CookieSymbol = Symbol.for('ReqCookie');
@@ -35,7 +35,7 @@ export function useRequestCookie(req: IncomingMessage, name: string) : string | 
 }
 
 export function setResponseCookie(res: Response, name: string, value: string, options?: SerializeOptions) {
-    appendResponseHeaderDirective(res, HeaderName.SET_COOKIE, serialize(name, value, {
+    appendResponseHeader(res, HeaderName.SET_COOKIE, serialize(name, value, {
         path: '/',
         ...(options || {}),
     }));
