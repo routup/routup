@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.4](https://github.com/Tada5hi/routup/compare/@routup/query@0.1.3...@routup/query@0.1.4) (2022-11-17)
+
+
+### Bug Fixes
+
+* add append-response-header helper ([dc0b501](https://github.com/Tada5hi/routup/commit/dc0b5016271d2e93f26ae644847b15795bc2cd00))
+
+
+
+
+
 ## [0.1.3](https://github.com/Tada5hi/routup/compare/@routup/query@0.1.2...@routup/query@0.1.3) (2022-11-17)
 
 **Note:** Version bump only for package @routup/query

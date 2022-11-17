@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.1](https://github.com/Tada5hi/routup/compare/routup@0.4.0...routup@0.4.1) (2022-11-17)
+
+
+### Bug Fixes
+
+* add append-response-header helper ([dc0b501](https://github.com/Tada5hi/routup/commit/dc0b5016271d2e93f26ae644847b15795bc2cd00))
+
+
+
+
+
 # [0.4.0](https://github.com/Tada5hi/routup/compare/routup@0.3.2...routup@0.4.0) (2022-11-17)
 
 
