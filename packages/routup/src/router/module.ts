@@ -14,6 +14,7 @@ import {
 } from '../handler';
 import { PathMatcher } from '../path';
 import {
+    cleanDoubleSlashes,
     createResponseTimeout,
     isInstance,
     isPath,
@@ -31,7 +32,6 @@ import {
     Response,
 } from '../type';
 import {
-    setRequestMountPath,
     useRequestPath,
 } from '../helpers';
 import { RouterOptions } from './type';
@@ -102,7 +102,7 @@ export class Router {
 
     /* istanbul ignore next */
     listen(port: number) {
-        const server = createServer(this.createListener);
+        const server = createServer(this.createListener());
         return server.listen(port);
     }
 
@@ -163,6 +163,8 @@ export class Router {
         if (this.pathMatcher) {
             const output = this.pathMatcher.exec(path);
             if (typeof output !== 'undefined') {
+                meta.mountPath = cleanDoubleSlashes(`${meta.mountPath || ''}/${output.path}`);
+
                 if (path === output.path) {
                     path = '/';
                 } else {
@@ -173,13 +175,15 @@ export class Router {
             }
         }
 
+        if (!meta.mountPath) {
+            meta.mountPath = '/';
+        }
+
         const next = (err?: Error) : void => {
             if (index >= this.stack.length - 1) {
                 fn(err);
                 return;
             }
-
-            setRequestMountPath(req, this.options.mountPath || '/');
 
             let layer : Route | Router | Layer | undefined;
             let match = false;
@@ -214,7 +218,7 @@ export class Router {
                 return;
             }
 
-            let layerMeta : DispatcherMeta = {
+            const layerMeta : DispatcherMeta = {
                 ...meta,
                 path,
             };
@@ -223,9 +227,8 @@ export class Router {
                 const output = layer.exec(path);
 
                 if (output) {
-                    layerMeta = {
-                        params: output.params,
-                    };
+                    layerMeta.params = merge(output.params, layerMeta.params || {});
+                    layerMeta.mountPath = cleanDoubleSlashes(`${layerMeta.mountPath || ''}/${output.path}`);
                 }
             }
 

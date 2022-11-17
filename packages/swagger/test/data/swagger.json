@@ -1,0 +1,4330 @@
+{
+	"basePath": "/",
+	"definitions": {
+		"OAuth2TokenGrantResponse": {
+			"properties": {
+				"scope": {
+					"type": "string"
+				},
+				"mac_algorithm": {
+					"type": "string"
+				},
+				"mac_key": {
+					"type": "string"
+				},
+				"id_token": {
+					"type": "string"
+				},
+				"token_type": {
+					"type": "string"
+				},
+				"expires_in": {
+					"type": "number",
+					"format": "double"
+				},
+				"refresh_token": {
+					"type": "string"
+				},
+				"access_token": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"token_type",
+				"expires_in",
+				"access_token"
+			],
+			"type": "object"
+		},
+		"OAuth2OpenIDProviderMetadata": {
+			"properties": {
+				"userinfo_endpoint": {
+					"type": "string",
+					"description": "The OpenID Connect UserInfo endpoint URL."
+				},
+				"service_documentation": {
+					"type": "string",
+					"description": "The service documentation URL."
+				},
+				"registration_endpoint": {
+					"type": "string",
+					"description": "The OAuth 2.0 / OpenID Connect URL of the OP's Dynamic Client Registration Endpoint OpenID.Registration."
+				},
+				"revocation_endpoint": {
+					"type": "string",
+					"description": "The fully qualified URL of the server’s revocation endpoint defined by OAuth 2.0 Authorization Server\r\nMetadata (and sort of in OAuth 2.0 Token Revocation)"
+				},
+				"introspection_endpoint": {
+					"type": "string",
+					"description": "The fully qualified URL of the server’s introspection_endpoint defined by OAuth 2.0 Token Introspection"
+				},
+				"token_endpoint": {
+					"type": "string",
+					"description": "The fully qualified URL of the server’s token endpoint defined by RFC 6749"
+				},
+				"id_token_signing_alg_values_supported": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"description": "e.g. \"HS256\", \"HS384\", \"HS512\", \"RS256\", \"RS384\", \"RS512\", \"none\""
+				},
+				"subject_types_supported": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"description": "List of the supported subject (end-user) identifier types."
+				},
+				"response_type_supported": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"enum": [
+							"none",
+							"code",
+							"token",
+							"id_token"
+						],
+						"x-nullable": false
+					},
+					"description": "List of the supported OAuth 2.0 response_type values."
+				},
+				"jwks_uri": {
+					"type": "string",
+					"description": "The fully qualified URI of the server’s public key in JSON Web Key Set (JWKS) format"
+				},
+				"authorization_endpoint": {
+					"type": "string",
+					"description": "The fully qualified URL of the server’s authorization endpoint defined by RFC 6749"
+				},
+				"issuer": {
+					"type": "string",
+					"description": "The fully qualified issuer URL of the server"
+				}
+			},
+			"required": [
+				"revocation_endpoint",
+				"introspection_endpoint",
+				"token_endpoint",
+				"id_token_signing_alg_values_supported",
+				"subject_types_supported",
+				"response_type_supported",
+				"jwks_uri",
+				"authorization_endpoint",
+				"issuer"
+			],
+			"type": "object"
+		},
+		"OAuth2JsonWebKey": {
+			"properties": {
+				"y": {
+					"type": "string"
+				},
+				"x": {
+					"type": "string"
+				},
+				"qi": {
+					"type": "string"
+				},
+				"q": {
+					"type": "string"
+				},
+				"p": {
+					"type": "string"
+				},
+				"n": {
+					"type": "string"
+				},
+				"kty": {
+					"type": "string"
+				},
+				"k": {
+					"type": "string"
+				},
+				"e": {
+					"type": "string"
+				},
+				"dq": {
+					"type": "string"
+				},
+				"dp": {
+					"type": "string"
+				},
+				"d": {
+					"type": "string"
+				},
+				"crv": {
+					"type": "string"
+				},
+				"kid": {
+					"type": "string"
+				},
+				"alg": {
+					"type": "string"
+				}
+			},
+			"additionalProperties": {
+				"additionalProperties": true
+			},
+			"type": "object"
+		},
+		"Realm": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"description": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"drop_able": {
+					"type": "boolean"
+				},
+				"created_at": {
+					"type": "string"
+				},
+				"updated_at": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"id",
+				"name",
+				"description",
+				"drop_able",
+				"created_at",
+				"updated_at"
+			],
+			"type": "object"
+		},
+		"User": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"name_locked": {
+					"type": "boolean"
+				},
+				"first_name": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"last_name": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"display_name": {
+					"type": "string"
+				},
+				"email": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"password": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"avatar": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"cover": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"reset_hash": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"reset_at": {
+					"type": "string",
+					"format": "date-time",
+					"x-nullable": true
+				},
+				"reset_expires": {
+					"type": "string",
+					"format": "date-time",
+					"x-nullable": true
+				},
+				"status": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"status_message": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"active": {
+					"type": "boolean"
+				},
+				"activate_hash": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"created_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"updated_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"realm_id": {
+					"type": "string"
+				},
+				"realm": {
+					"$ref": "#/definitions/Realm"
+				}
+			},
+			"required": [
+				"id",
+				"name",
+				"name_locked",
+				"first_name",
+				"last_name",
+				"display_name",
+				"email",
+				"password",
+				"avatar",
+				"cover",
+				"reset_hash",
+				"reset_at",
+				"reset_expires",
+				"status",
+				"status_message",
+				"active",
+				"activate_hash",
+				"created_at",
+				"updated_at",
+				"realm_id",
+				"realm"
+			],
+			"type": "object",
+			"additionalProperties": true
+		},
+		"Client": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"description": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"secret": {
+					"type": "string"
+				},
+				"redirect_uri": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"grant_types": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"scope": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"is_confidential": {
+					"type": "boolean"
+				},
+				"created_at": {
+					"type": "object"
+				},
+				"updated_at": {
+					"type": "object"
+				},
+				"realm_id": {
+					"type": "string"
+				},
+				"realm": {
+					"$ref": "#/definitions/Realm"
+				},
+				"user_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"user": {
+					"type": "object"
+				}
+			},
+			"required": [
+				"id",
+				"name",
+				"description",
+				"secret",
+				"redirect_uri",
+				"grant_types",
+				"scope",
+				"is_confidential",
+				"created_at",
+				"updated_at",
+				"realm_id",
+				"realm",
+				"user_id",
+				"user"
+			],
+			"type": "object"
+		},
+		"NonNullableClient": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"description": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"secret": {
+					"type": "string"
+				},
+				"redirect_uri": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"grant_types": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"scope": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"is_confidential": {
+					"type": "boolean"
+				},
+				"created_at": {
+					"type": "object"
+				},
+				"updated_at": {
+					"type": "object"
+				},
+				"realm_id": {
+					"type": "string"
+				},
+				"realm": {
+					"$ref": "#/definitions/Realm"
+				},
+				"user_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"user": {
+					"type": "object"
+				}
+			},
+			"required": [
+				"id",
+				"name",
+				"description",
+				"secret",
+				"redirect_uri",
+				"grant_types",
+				"scope",
+				"is_confidential",
+				"created_at",
+				"updated_at",
+				"realm_id",
+				"realm",
+				"user_id",
+				"user"
+			],
+			"type": "object"
+		},
+		"Role": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"target": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"description": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"realm": {
+					"type": "object"
+				},
+				"created_at": {
+					"type": "string"
+				},
+				"updated_at": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"id",
+				"name",
+				"target",
+				"description",
+				"realm_id",
+				"realm",
+				"created_at",
+				"updated_at"
+			],
+			"type": "object"
+		},
+		"IdentityProvider": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"slug": {
+					"type": "string"
+				},
+				"protocol": {
+					"type": "string",
+					"enum": [
+						"ldap",
+						"oauth2",
+						"oidc"
+					],
+					"x-nullable": false
+				},
+				"protocol_config": {
+					"type": "string",
+					"enum": [
+						"facebook",
+						"github",
+						"gitlab",
+						"google",
+						"paypal",
+						"stackoverflow",
+						"twitter",
+						null
+					],
+					"x-nullable": true
+				},
+				"enabled": {
+					"type": "boolean"
+				},
+				"created_at": {
+					"type": "object"
+				},
+				"updated_at": {
+					"type": "object"
+				},
+				"realm_id": {
+					"type": "string"
+				},
+				"realm": {
+					"$ref": "#/definitions/Realm"
+				}
+			},
+			"required": [
+				"id",
+				"name",
+				"slug",
+				"protocol",
+				"protocol_config",
+				"enabled",
+				"created_at",
+				"updated_at",
+				"realm_id",
+				"realm"
+			],
+			"type": "object"
+		},
+		"IdentityProviderRole": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"external_id": {
+					"type": "string"
+				},
+				"created_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"updated_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"role_id": {
+					"type": "string"
+				},
+				"role": {
+					"$ref": "#/definitions/Role"
+				},
+				"role_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"role_realm": {
+					"type": "object"
+				},
+				"provider_id": {
+					"type": "string"
+				},
+				"provider": {
+					"$ref": "#/definitions/IdentityProvider"
+				},
+				"provider_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"provider_realm": {
+					"type": "object"
+				}
+			},
+			"required": [
+				"id",
+				"external_id",
+				"created_at",
+				"updated_at",
+				"role_id",
+				"role",
+				"role_realm_id",
+				"role_realm",
+				"provider_id",
+				"provider",
+				"provider_realm_id",
+				"provider_realm"
+			],
+			"type": "object"
+		},
+		"NonNullableIdentityProviderRole": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"external_id": {
+					"type": "string"
+				},
+				"created_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"updated_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"role_id": {
+					"type": "string"
+				},
+				"role": {
+					"$ref": "#/definitions/Role"
+				},
+				"role_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"role_realm": {
+					"type": "object"
+				},
+				"provider_id": {
+					"type": "string"
+				},
+				"provider": {
+					"$ref": "#/definitions/IdentityProvider"
+				},
+				"provider_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"provider_realm": {
+					"type": "object"
+				}
+			},
+			"required": [
+				"id",
+				"external_id",
+				"created_at",
+				"updated_at",
+				"role_id",
+				"role",
+				"role_realm_id",
+				"role_realm",
+				"provider_id",
+				"provider",
+				"provider_realm_id",
+				"provider_realm"
+			],
+			"type": "object"
+		},
+		"NonNullableIdentityProvider": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"slug": {
+					"type": "string"
+				},
+				"protocol": {
+					"type": "string",
+					"enum": [
+						"ldap",
+						"oauth2",
+						"oidc"
+					],
+					"x-nullable": false
+				},
+				"protocol_config": {
+					"type": "string",
+					"enum": [
+						"facebook",
+						"github",
+						"gitlab",
+						"google",
+						"paypal",
+						"stackoverflow",
+						"twitter",
+						null
+					],
+					"x-nullable": true
+				},
+				"enabled": {
+					"type": "boolean"
+				},
+				"created_at": {
+					"type": "object"
+				},
+				"updated_at": {
+					"type": "object"
+				},
+				"realm_id": {
+					"type": "string"
+				},
+				"realm": {
+					"$ref": "#/definitions/Realm"
+				}
+			},
+			"required": [
+				"id",
+				"name",
+				"slug",
+				"protocol",
+				"protocol_config",
+				"enabled",
+				"created_at",
+				"updated_at",
+				"realm_id",
+				"realm"
+			],
+			"type": "object"
+		},
+		"Permission": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"target": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"created_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"updated_at": {
+					"type": "string",
+					"format": "date-time"
+				}
+			},
+			"required": [
+				"id",
+				"target",
+				"created_at",
+				"updated_at"
+			],
+			"type": "object"
+		},
+		"NonNullablePermission": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"target": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"created_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"updated_at": {
+					"type": "string",
+					"format": "date-time"
+				}
+			},
+			"required": [
+				"id",
+				"target",
+				"created_at",
+				"updated_at"
+			],
+			"type": "object"
+		},
+		"NonNullableRealm": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"description": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"drop_able": {
+					"type": "boolean"
+				},
+				"created_at": {
+					"type": "string"
+				},
+				"updated_at": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"id",
+				"name",
+				"description",
+				"drop_able",
+				"created_at",
+				"updated_at"
+			],
+			"type": "object"
+		},
+		"Robot": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"secret": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"description": {
+					"type": "string"
+				},
+				"active": {
+					"type": "boolean"
+				},
+				"created_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"updated_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"user_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"user": {
+					"type": "object"
+				},
+				"realm_id": {
+					"type": "string"
+				},
+				"realm": {
+					"$ref": "#/definitions/Realm"
+				}
+			},
+			"required": [
+				"id",
+				"secret",
+				"name",
+				"description",
+				"active",
+				"created_at",
+				"updated_at",
+				"user_id",
+				"user",
+				"realm_id",
+				"realm"
+			],
+			"type": "object"
+		},
+		"PickRobot.name": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"secret": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"description": {
+					"type": "string"
+				},
+				"active": {
+					"type": "boolean"
+				},
+				"created_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"updated_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"user_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"user": {
+					"type": "object"
+				},
+				"realm_id": {
+					"type": "string"
+				},
+				"realm": {
+					"$ref": "#/definitions/Realm"
+				}
+			},
+			"required": [
+				"id",
+				"secret",
+				"name",
+				"description",
+				"active",
+				"created_at",
+				"updated_at",
+				"user_id",
+				"user",
+				"realm_id",
+				"realm"
+			],
+			"type": "object"
+		},
+		"RobotPermission": {
+			"properties": {
+				"power": {
+					"type": "number",
+					"format": "double"
+				},
+				"condition": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"fields": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"negation": {
+					"type": "boolean"
+				},
+				"target": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"permission_id": {
+					"type": "string"
+				},
+				"permission": {
+					"$ref": "#/definitions/Permission"
+				},
+				"id": {
+					"type": "string"
+				},
+				"created_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"updated_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"robot_id": {
+					"type": "string"
+				},
+				"robot": {
+					"$ref": "#/definitions/Robot"
+				},
+				"robot_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"robot_realm": {
+					"type": "object"
+				}
+			},
+			"required": [
+				"power",
+				"condition",
+				"fields",
+				"negation",
+				"target",
+				"permission_id",
+				"permission",
+				"id",
+				"created_at",
+				"updated_at",
+				"robot_id",
+				"robot",
+				"robot_realm_id",
+				"robot_realm"
+			],
+			"type": "object"
+		},
+		"PickRobotPermission.robotidpermissionid": {
+			"properties": {
+				"permission_id": {
+					"type": "string"
+				},
+				"id": {
+					"type": "string"
+				},
+				"created_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"updated_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"robot_id": {
+					"type": "string"
+				},
+				"robot": {
+					"$ref": "#/definitions/Robot"
+				},
+				"robot_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"robot_realm": {
+					"type": "object"
+				}
+			},
+			"required": [
+				"permission_id",
+				"id",
+				"created_at",
+				"updated_at",
+				"robot_id",
+				"robot",
+				"robot_realm_id",
+				"robot_realm"
+			],
+			"type": "object"
+		},
+		"RobotRole": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"robot_id": {
+					"type": "string"
+				},
+				"role_id": {
+					"type": "string"
+				},
+				"role": {
+					"$ref": "#/definitions/Role"
+				},
+				"role_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"role_realm": {
+					"type": "object"
+				},
+				"robot": {
+					"$ref": "#/definitions/Robot"
+				},
+				"robot_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"robot_realm": {
+					"type": "object"
+				},
+				"created_at": {
+					"type": "string"
+				},
+				"updated_at": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"id",
+				"robot_id",
+				"role_id",
+				"role",
+				"role_realm_id",
+				"role_realm",
+				"robot",
+				"robot_realm_id",
+				"robot_realm",
+				"created_at",
+				"updated_at"
+			],
+			"type": "object"
+		},
+		"PickRobotRole.roleidrobotid": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"robot_id": {
+					"type": "string"
+				},
+				"role_id": {
+					"type": "string"
+				},
+				"role": {
+					"$ref": "#/definitions/Role"
+				},
+				"role_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"role_realm": {
+					"type": "object"
+				},
+				"robot": {
+					"$ref": "#/definitions/Robot"
+				},
+				"robot_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"robot_realm": {
+					"type": "object"
+				},
+				"created_at": {
+					"type": "string"
+				},
+				"updated_at": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"id",
+				"robot_id",
+				"role_id",
+				"role",
+				"role_realm_id",
+				"role_realm",
+				"robot",
+				"robot_realm_id",
+				"robot_realm",
+				"created_at",
+				"updated_at"
+			],
+			"type": "object"
+		},
+		"PickRole.name": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"target": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"description": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"realm": {
+					"type": "object"
+				},
+				"created_at": {
+					"type": "string"
+				},
+				"updated_at": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"id",
+				"name",
+				"target",
+				"description",
+				"realm_id",
+				"realm",
+				"created_at",
+				"updated_at"
+			],
+			"type": "object"
+		},
+		"RoleAttribute": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"value": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"role_id": {
+					"type": "string"
+				},
+				"role": {
+					"$ref": "#/definitions/Role"
+				},
+				"realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"realm": {
+					"type": "object"
+				},
+				"created_at": {
+					"type": "string"
+				},
+				"updated_at": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"id",
+				"name",
+				"value",
+				"role_id",
+				"role",
+				"realm_id",
+				"realm",
+				"created_at",
+				"updated_at"
+			],
+			"type": "object"
+		},
+		"NonNullableRoleAttribute": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"value": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"role_id": {
+					"type": "string"
+				},
+				"role": {
+					"$ref": "#/definitions/Role"
+				},
+				"realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"realm": {
+					"type": "object"
+				},
+				"created_at": {
+					"type": "string"
+				},
+				"updated_at": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"id",
+				"name",
+				"value",
+				"role_id",
+				"role",
+				"realm_id",
+				"realm",
+				"created_at",
+				"updated_at"
+			],
+			"type": "object"
+		},
+		"RolePermission": {
+			"properties": {
+				"power": {
+					"type": "number",
+					"format": "double"
+				},
+				"condition": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"fields": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"negation": {
+					"type": "boolean"
+				},
+				"target": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"permission_id": {
+					"type": "string"
+				},
+				"permission": {
+					"$ref": "#/definitions/Permission"
+				},
+				"id": {
+					"type": "string"
+				},
+				"created_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"updated_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"role_id": {
+					"type": "string"
+				},
+				"role": {
+					"$ref": "#/definitions/Role"
+				},
+				"role_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"role_realm": {
+					"type": "object"
+				}
+			},
+			"required": [
+				"power",
+				"condition",
+				"fields",
+				"negation",
+				"target",
+				"permission_id",
+				"permission",
+				"id",
+				"created_at",
+				"updated_at",
+				"role_id",
+				"role",
+				"role_realm_id",
+				"role_realm"
+			],
+			"type": "object"
+		},
+		"PickRolePermission.roleidpermissionid": {
+			"properties": {
+				"permission_id": {
+					"type": "string"
+				},
+				"id": {
+					"type": "string"
+				},
+				"created_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"updated_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"role_id": {
+					"type": "string"
+				},
+				"role": {
+					"$ref": "#/definitions/Role"
+				},
+				"role_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"role_realm": {
+					"type": "object"
+				}
+			},
+			"required": [
+				"permission_id",
+				"id",
+				"created_at",
+				"updated_at",
+				"role_id",
+				"role",
+				"role_realm_id",
+				"role_realm"
+			],
+			"type": "object"
+		},
+		"NonNullableUser": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"name_locked": {
+					"type": "boolean"
+				},
+				"first_name": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"last_name": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"display_name": {
+					"type": "string"
+				},
+				"email": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"password": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"avatar": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"cover": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"reset_hash": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"reset_at": {
+					"type": "string",
+					"format": "date-time",
+					"x-nullable": true
+				},
+				"reset_expires": {
+					"type": "string",
+					"format": "date-time",
+					"x-nullable": true
+				},
+				"status": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"status_message": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"active": {
+					"type": "boolean"
+				},
+				"activate_hash": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"created_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"updated_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"realm_id": {
+					"type": "string"
+				},
+				"realm": {
+					"$ref": "#/definitions/Realm"
+				}
+			},
+			"required": [
+				"id",
+				"name",
+				"name_locked",
+				"first_name",
+				"last_name",
+				"display_name",
+				"email",
+				"password",
+				"avatar",
+				"cover",
+				"reset_hash",
+				"reset_at",
+				"reset_expires",
+				"status",
+				"status_message",
+				"active",
+				"activate_hash",
+				"created_at",
+				"updated_at",
+				"realm_id",
+				"realm"
+			],
+			"type": "object",
+			"additionalProperties": true
+		},
+		"UserAttribute": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"value": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"user_id": {
+					"type": "string"
+				},
+				"user": {
+					"$ref": "#/definitions/User"
+				},
+				"realm_id": {
+					"type": "string"
+				},
+				"realm": {
+					"$ref": "#/definitions/Realm"
+				},
+				"created_at": {
+					"type": "string"
+				},
+				"updated_at": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"id",
+				"name",
+				"value",
+				"user_id",
+				"user",
+				"realm_id",
+				"realm",
+				"created_at",
+				"updated_at"
+			],
+			"type": "object"
+		},
+		"NonNullableUserAttribute": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"value": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"user_id": {
+					"type": "string"
+				},
+				"user": {
+					"$ref": "#/definitions/User"
+				},
+				"realm_id": {
+					"type": "string"
+				},
+				"realm": {
+					"$ref": "#/definitions/Realm"
+				},
+				"created_at": {
+					"type": "string"
+				},
+				"updated_at": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"id",
+				"name",
+				"value",
+				"user_id",
+				"user",
+				"realm_id",
+				"realm",
+				"created_at",
+				"updated_at"
+			],
+			"type": "object"
+		},
+		"UserPermission": {
+			"properties": {
+				"power": {
+					"type": "number",
+					"format": "double"
+				},
+				"condition": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"fields": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"negation": {
+					"type": "boolean"
+				},
+				"target": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"permission_id": {
+					"type": "string"
+				},
+				"permission": {
+					"$ref": "#/definitions/Permission"
+				},
+				"id": {
+					"type": "string"
+				},
+				"created_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"updated_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"user_id": {
+					"type": "string"
+				},
+				"user": {
+					"$ref": "#/definitions/User"
+				},
+				"user_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"user_realm": {
+					"type": "object"
+				}
+			},
+			"required": [
+				"power",
+				"condition",
+				"fields",
+				"negation",
+				"target",
+				"permission_id",
+				"permission",
+				"id",
+				"created_at",
+				"updated_at",
+				"user_id",
+				"user",
+				"user_realm_id",
+				"user_realm"
+			],
+			"type": "object"
+		},
+		"PickUserPermission.useridpermissionid": {
+			"properties": {
+				"permission_id": {
+					"type": "string"
+				},
+				"id": {
+					"type": "string"
+				},
+				"created_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"updated_at": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"user_id": {
+					"type": "string"
+				},
+				"user": {
+					"$ref": "#/definitions/User"
+				},
+				"user_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"user_realm": {
+					"type": "object"
+				}
+			},
+			"required": [
+				"permission_id",
+				"id",
+				"created_at",
+				"updated_at",
+				"user_id",
+				"user",
+				"user_realm_id",
+				"user_realm"
+			],
+			"type": "object"
+		},
+		"UserRole": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"role_id": {
+					"type": "string"
+				},
+				"role": {
+					"$ref": "#/definitions/Role"
+				},
+				"role_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"role_realm": {
+					"type": "object"
+				},
+				"user_id": {
+					"type": "string"
+				},
+				"user": {
+					"$ref": "#/definitions/User"
+				},
+				"user_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"user_realm": {
+					"type": "object"
+				},
+				"created_at": {
+					"type": "string"
+				},
+				"updated_at": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"id",
+				"role_id",
+				"role",
+				"role_realm_id",
+				"role_realm",
+				"user_id",
+				"user",
+				"user_realm_id",
+				"user_realm",
+				"created_at",
+				"updated_at"
+			],
+			"type": "object"
+		},
+		"PickUserRole.roleiduserid": {
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"role_id": {
+					"type": "string"
+				},
+				"role": {
+					"$ref": "#/definitions/Role"
+				},
+				"role_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"role_realm": {
+					"type": "object"
+				},
+				"user_id": {
+					"type": "string"
+				},
+				"user": {
+					"$ref": "#/definitions/User"
+				},
+				"user_realm_id": {
+					"type": "string",
+					"x-nullable": true
+				},
+				"user_realm": {
+					"type": "object"
+				},
+				"created_at": {
+					"type": "string"
+				},
+				"updated_at": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"id",
+				"role_id",
+				"role",
+				"role_realm_id",
+				"role_realm",
+				"user_id",
+				"user",
+				"user_realm_id",
+				"user_realm",
+				"created_at",
+				"updated_at"
+			],
+			"type": "object"
+		}
+	},
+	"info": {
+		"title": "@authelion/server - API Documentation",
+		"version": "0.3.23",
+		"description": "This is a simple standalone api application."
+	},
+	"paths": {
+		"/token/introspect": {
+			"get": {
+				"operationId": "GetIntrospectToken",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"properties": {},
+							"additionalProperties": {
+								"additionalProperties": true
+							},
+							"type": "object"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"auth"
+				],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "PostIntrospectToken",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"properties": {},
+							"additionalProperties": {
+								"additionalProperties": true
+							},
+							"type": "object"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"auth"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": []
+			}
+		},
+		"/token": {
+			"post": {
+				"operationId": "CreateToken",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/OAuth2TokenGrantResponse"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"auth"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": []
+			}
+		},
+		"/authorize": {
+			"post": {
+				"operationId": "ConfirmAuthorization",
+				"produces": [
+					"text/html"
+				],
+				"responses": {
+					"204": {
+						"description": "No content",
+						"schema": {},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"auth"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": []
+			}
+		},
+		"/.well-known/openid-configuration": {
+			"get": {
+				"operationId": "GetOpenIdConfiguration",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/OAuth2OpenIDProviderMetadata"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"auth"
+				],
+				"parameters": []
+			}
+		},
+		"/jwks": {
+			"get": {
+				"operationId": "GetManyJwks",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/OAuth2JsonWebKey"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"auth"
+				],
+				"parameters": []
+			}
+		},
+		"/jwks/{id}": {
+			"get": {
+				"operationId": "GetOneJwks",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/OAuth2JsonWebKey"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"auth"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		},
+		"/activate": {
+			"post": {
+				"operationId": "Activate",
+				"produces": [
+					"text/html"
+				],
+				"responses": {
+					"204": {
+						"description": "No content",
+						"schema": {},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"auth"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": []
+			}
+		},
+		"/register": {
+			"post": {
+				"operationId": "Register",
+				"produces": [
+					"text/html"
+				],
+				"responses": {
+					"204": {
+						"description": "No content",
+						"schema": {},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"auth"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": []
+			}
+		},
+		"/password-forgot": {
+			"post": {
+				"operationId": "ForgotPassword",
+				"produces": [
+					"text/html"
+				],
+				"responses": {
+					"204": {
+						"description": "No content",
+						"schema": {},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"auth"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": []
+			}
+		},
+		"/password-reset": {
+			"post": {
+				"operationId": "ResetPassword",
+				"produces": [
+					"text/html"
+				],
+				"responses": {
+					"204": {
+						"description": "No content",
+						"schema": {},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"auth"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": []
+			}
+		},
+		"/client": {
+			"get": {
+				"operationId": "GetClients",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/Client"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"oauth2"
+				],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "AddClient",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/Client"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"oauth2"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "body",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/NonNullableClient"
+						}
+					}
+				]
+			}
+		},
+		"/client/{id}": {
+			"get": {
+				"operationId": "GetClient",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/Client"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"oauth2"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			},
+			"post": {
+				"operationId": "EditClient",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/Client"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"oauth2"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "",
+						"in": "body",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/NonNullableClient"
+						}
+					}
+				]
+			},
+			"delete": {
+				"operationId": "DropClient",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/Client"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"oauth2"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		},
+		"/identity-provider-roles": {
+			"get": {
+				"operationId": "GetProviders",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/IdentityProviderRole"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"identity-provider"
+				],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "AddProvider",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/IdentityProviderRole"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"identity-provider"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "body",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/NonNullableIdentityProviderRole"
+						}
+					}
+				]
+			}
+		},
+		"/identity-provider-roles/{id}": {
+			"get": {
+				"operationId": "GetProvider",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/IdentityProviderRole"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"identity-provider"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			},
+			"post": {
+				"operationId": "EditProvider",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/IdentityProviderRole"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"identity-provider"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "",
+						"in": "body",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/NonNullableIdentityProviderRole"
+						}
+					}
+				]
+			},
+			"delete": {
+				"operationId": "DropProvider",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/IdentityProviderRole"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"identity-provider"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		},
+		"/identity-providers": {
+			"get": {
+				"operationId": "GetProviders",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/IdentityProvider"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"identity"
+				],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "AddProvider",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/IdentityProvider"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"identity"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "body",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/NonNullableIdentityProvider"
+						}
+					}
+				]
+			}
+		},
+		"/identity-providers/{id}": {
+			"get": {
+				"operationId": "GetProvider",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/IdentityProvider"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"identity"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			},
+			"post": {
+				"operationId": "EditProvider",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/IdentityProvider"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"identity"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "",
+						"in": "body",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/NonNullableIdentityProvider"
+						}
+					}
+				]
+			},
+			"delete": {
+				"operationId": "DropProvider",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/IdentityProvider"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"identity"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		},
+		"/permissions": {
+			"get": {
+				"operationId": "GetPermissions",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/Permission"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"permission"
+				],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "Add",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/Permission"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"permission"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "body",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/NonNullablePermission"
+						}
+					}
+				]
+			}
+		},
+		"/permissions/{id}": {
+			"get": {
+				"operationId": "GetPermission",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/Permission"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"permission"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		},
+		"/realms": {
+			"get": {
+				"operationId": "GetMany",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/Realm"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"realm"
+				],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "Add",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/Realm"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"realm"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "body",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/NonNullableRealm"
+						}
+					}
+				]
+			}
+		},
+		"/realms/{id}": {
+			"get": {
+				"operationId": "Get",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/Realm"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"realm"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			},
+			"post": {
+				"operationId": "Edit",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/Realm"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"realm"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "",
+						"in": "body",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/NonNullableRealm"
+						}
+					}
+				]
+			},
+			"delete": {
+				"operationId": "Drop",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/Realm"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"realm"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		},
+		"/realms/{id}/.well-known/openid-configuration": {
+			"get": {
+				"operationId": "GetOpenIdConfiguration",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/OAuth2OpenIDProviderMetadata"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"realm"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		},
+		"/realms/{id}/jwks": {
+			"get": {
+				"operationId": "GetCerts",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/OAuth2JsonWebKey"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"realm"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		},
+		"/robots": {
+			"get": {
+				"operationId": "GetMany",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/Robot"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"robot"
+				],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "Add",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/Robot"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"robot"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "body",
+						"name": "data",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/Robot"
+						}
+					}
+				]
+			}
+		},
+		"/robots/{id}": {
+			"get": {
+				"operationId": "GetOne",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/Robot"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"robot"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			},
+			"post": {
+				"operationId": "Edit",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/Robot"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"robot"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "",
+						"in": "body",
+						"name": "data",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/PickRobot.name"
+						}
+					}
+				]
+			},
+			"delete": {
+				"operationId": "Drop",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/Robot"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"robot"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		},
+		"/robot-permissions": {
+			"get": {
+				"operationId": "GetMany",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/RobotPermission"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"robot"
+				],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "Add",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/RobotPermission"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"robot"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "body",
+						"name": "data",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/PickRobotPermission.robotidpermissionid"
+						}
+					}
+				]
+			}
+		},
+		"/robot-permissions/{id}": {
+			"get": {
+				"operationId": "GetOne",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/RobotPermission"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"robot"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			},
+			"delete": {
+				"operationId": "Drop",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/RobotPermission"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"robot"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		},
+		"/robot-roles": {
+			"get": {
+				"operationId": "GetMany",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/RobotRole"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"robot"
+				],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "Add",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/RobotRole"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"robot"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "body",
+						"name": "data",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/PickRobotRole.roleidrobotid"
+						}
+					}
+				]
+			}
+		},
+		"/robot-roles/{id}": {
+			"get": {
+				"operationId": "GetOne",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/RobotRole"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"robot"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			},
+			"delete": {
+				"operationId": "Drop",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/RobotRole"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"robot"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		},
+		"/roles": {
+			"get": {
+				"operationId": "GetMany",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/Role"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"role"
+				],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "Add",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/Role"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"role"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "body",
+						"name": "data",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/PickRole.name"
+						}
+					}
+				]
+			}
+		},
+		"/roles/{id}": {
+			"get": {
+				"operationId": "GetOne",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/Role"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"role"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			},
+			"post": {
+				"operationId": "Edit",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/Role"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"role"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "",
+						"in": "body",
+						"name": "data",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/PickRole.name"
+						}
+					}
+				]
+			},
+			"delete": {
+				"operationId": "Drop",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/Role"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"role"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		},
+		"/role-attributes": {
+			"get": {
+				"operationId": "GetMany",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/RoleAttribute"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"role"
+				],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "Add",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/RoleAttribute"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"role"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "body",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/NonNullableRoleAttribute"
+						}
+					}
+				]
+			}
+		},
+		"/role-attributes/{id}": {
+			"get": {
+				"operationId": "Get",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/RoleAttribute"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"role"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			},
+			"post": {
+				"operationId": "Edit",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/RoleAttribute"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"role"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "",
+						"in": "body",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/NonNullableRoleAttribute"
+						}
+					}
+				]
+			},
+			"delete": {
+				"operationId": "Drop",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/RoleAttribute"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"role"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		},
+		"/role-permissions": {
+			"get": {
+				"operationId": "GetMany",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/RolePermission"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"role"
+				],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "Add",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/RolePermission"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"role"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "body",
+						"name": "data",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/PickRolePermission.roleidpermissionid"
+						}
+					}
+				]
+			}
+		},
+		"/role-permissions/{id}": {
+			"get": {
+				"operationId": "GetOne",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/RolePermission"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"role"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			},
+			"delete": {
+				"operationId": "Drop",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/RolePermission"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"role"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		},
+		"/users": {
+			"get": {
+				"operationId": "GetMany",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/User"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "Add",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/User"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "body",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/NonNullableUser"
+						}
+					}
+				]
+			}
+		},
+		"/users/{id}": {
+			"get": {
+				"operationId": "Get",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/User"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			},
+			"post": {
+				"operationId": "Edit",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/User"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "",
+						"in": "body",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/User"
+						}
+					}
+				]
+			},
+			"delete": {
+				"operationId": "Drop",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/User"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		},
+		"/user-attributes": {
+			"get": {
+				"operationId": "GetMany",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/UserAttribute"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "Add",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/UserAttribute"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "body",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/NonNullableUserAttribute"
+						}
+					}
+				]
+			}
+		},
+		"/user-attributes/{id}": {
+			"get": {
+				"operationId": "Get",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/UserAttribute"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			},
+			"post": {
+				"operationId": "Edit",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/UserAttribute"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"description": "",
+						"in": "body",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/NonNullableUserAttribute"
+						}
+					}
+				]
+			},
+			"delete": {
+				"operationId": "Drop",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/UserAttribute"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		},
+		"/user-permissions": {
+			"get": {
+				"operationId": "GetMany",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/UserPermission"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "Add",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/UserPermission"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "body",
+						"name": "data",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/PickUserPermission.useridpermissionid"
+						}
+					}
+				]
+			}
+		},
+		"/user-permissions/{id}": {
+			"get": {
+				"operationId": "GetOne",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/UserPermission"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			},
+			"delete": {
+				"operationId": "Drop",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/UserPermission"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		},
+		"/user-roles": {
+			"get": {
+				"operationId": "GetMany",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/UserRole"
+							}
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"parameters": []
+			},
+			"post": {
+				"operationId": "Add",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/UserRole"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"consumes": [
+					"application/json"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "body",
+						"name": "data",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/PickUserRole.roleiduserid"
+						}
+					}
+				]
+			}
+		},
+		"/user-roles/{id}": {
+			"get": {
+				"operationId": "GetOne",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/UserRole"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			},
+			"delete": {
+				"operationId": "Drop",
+				"produces": [
+					"application/json"
+				],
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"schema": {
+							"$ref": "#/definitions/UserRole"
+						},
+						"examples": {
+							"application/json": []
+						}
+					}
+				},
+				"tags": [
+					"user"
+				],
+				"parameters": [
+					{
+						"description": "",
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				]
+			}
+		}
+	},
+	"swagger": "2.0",
+	"securityDefinitions": {
+		"bearer": {
+			"name": "Bearer",
+			"type": "apiKey",
+			"in": "header"
+		},
+		"oauth2Implicit": {
+			"type": "oauth2",
+			"flow": "password",
+			"tokenUrl": "http://localhost:3010/token"
+		},
+		"basicAuth": {
+			"type": "basic"
+		}
+	},
+	"consumes": [
+		"application/json"
+	],
+	"produces": [
+		"application/json"
+	],
+	"host": "localhost:3010"
+}

@@ -29,7 +29,9 @@ export type DispatcherMeta = {
     /**
      * Path to check for the current instance.
      */
-    path?: string
+    path?: string,
+
+    mountPath?: string
 };
 
 // --------------------------------------------------

@@ -10,7 +10,7 @@ import {
     ParseOptions, TokensToRegexpOptions,
 } from 'path-to-regexp';
 import { processHandlerExecutionOutput } from '../handler';
-import { setRequestParams } from '../helpers';
+import { setRequestMountPath, setRequestParams } from '../helpers';
 import { PathMatcher } from '../path';
 import {
     DispatcherMeta, Next, Path, Request, Response,
@@ -65,6 +65,7 @@ export class Layer {
         err?: Error,
     ) : void {
         setRequestParams(req, meta.params || {});
+        setRequestMountPath(req, meta.mountPath || '/');
 
         if (typeof err !== 'undefined') {
             if (this.fn.length === 4) {
