@@ -1,6 +1,6 @@
 {
     "name": "@routup/swagger",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "description": "Swagger plugin for routup.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
@@ -44,13 +44,13 @@
     },
     "homepage": "https://github.com/Tada5hi/routup#readme",
     "devDependencies": {
-        "routup": "^0.3.2"
+        "routup": "^0.4.0"
     },
     "dependencies": {
-        "@types/swagger-ui-dist": "^3.30.1",
         "@types/serve-static": "^1.15.0",
-        "smob": "^0.0.6",
+        "@types/swagger-ui-dist": "^3.30.1",
         "serve-static": "^1.15.0",
+        "smob": "^0.0.6",
         "swagger-ui-dist": "^4.15.5"
     },
     "peerDependencies": {

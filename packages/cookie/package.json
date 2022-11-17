@@ -1,6 +1,6 @@
 {
     "name": "@routup/cookie",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "description": "Cookie plugin for routup.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
@@ -44,7 +44,7 @@
     "homepage": "https://github.com/Tada5hi/routup#readme",
     "devDependencies": {
         "@types/cookie": "^0.5.1",
-        "routup": "^0.3.2"
+        "routup": "^0.4.0"
     },
     "dependencies": {
         "cookie": "^0.5.0"

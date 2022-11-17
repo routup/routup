@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/Tada5hi/routup/compare/routup@0.3.2...routup@0.4.0) (2022-11-17)
+
+
+### Bug Fixes
+
+* **routup:** only timeout request if options is set ([e806d92](https://github.com/Tada5hi/routup/commit/e806d92f32c253490b6aeaa6f67bce321f663557))
+* **routup:** process handler execution output ([f6d14cb](https://github.com/Tada5hi/routup/commit/f6d14cb5e9a7f267a93e382d0b130c66ffca0db2))
+
+
+### Features
+
+* **swagger:** initialise project + ui submodule ([48c4944](https://github.com/Tada5hi/routup/commit/48c4944241a42a49f0ff2e530b5f875e09470ed9))
+
+
+
+
+
 ## [0.3.2](https://github.com/Tada5hi/routup/compare/routup@0.3.1...routup@0.3.2) (2022-11-15)
 
 
