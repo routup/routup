@@ -5,11 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ServerResponse } from 'http';
 import { Readable } from 'stream';
-import { Next } from '../../type';
+import { Next, Response } from '../../type';
 
-export function sendStream(res: ServerResponse, stream: Readable, fn?: Next) {
+export function sendStream(res: Response, stream: Readable, fn?: Next) {
     stream.on('open', () => {
         stream.pipe(res);
     });

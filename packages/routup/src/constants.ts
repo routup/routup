@@ -11,6 +11,8 @@ export enum Method {
     PUT = 'put',
     PATCH = 'patch',
     DELETE = 'delete',
+    OPTIONS = 'options',
+    HEAD = 'head',
 }
 
 export enum HeaderName {
@@ -18,6 +20,7 @@ export enum HeaderName {
     ACCEPT_CHARSET = 'accept-charset',
     ACCEPT_ENCODING = 'accept-encoding',
     ACCEPT_LANGUAGE = 'accept-language',
+    ALLOW = 'allow',
     CACHE_CONTROL = 'cache-control',
     CONTENT_DISPOSITION = 'content-disposition',
     CONTENT_ENCODING = 'content-encoding',

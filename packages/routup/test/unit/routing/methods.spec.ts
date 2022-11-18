@@ -6,7 +6,7 @@
  */
 
 import supertest from 'supertest';
-import { Route, Router, send } from '../../../src';
+import {HeaderName, Route, Router, send} from '../../../src';
 
 describe('routing/methods', () => {
     it('should handle different methods', async () => {
@@ -30,6 +30,14 @@ describe('routing/methods', () => {
 
         router.put('/put', async (req, res) => {
             send(res, 'put');
+        });
+
+        router.head('/head', async (req, res) => {
+            send(res);
+        });
+
+        router.options('/options', async (req, res) => {
+            send(res, 'options');
         });
 
         const server = supertest(router.createListener());
@@ -63,6 +71,17 @@ describe('routing/methods', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('put');
+
+        response = await server
+            .head('/head');
+
+        expect(response.statusCode).toEqual(200);
+
+        response = await server
+            .options('/options');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.text).toEqual('options');
     });
 
     it('should handle different methods on same path', async () => {
@@ -119,6 +138,18 @@ describe('routing/methods', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('put');
+
+        response = await server
+            .head('/');
+
+        expect(response.statusCode).toEqual(200);
+
+        response = await server
+            .options('/');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.headers[HeaderName.ALLOW]).toEqual('DELETE,GET,PATCH,POST,PUT,HEAD');
+        expect(response.text).toEqual('DELETE,GET,PATCH,POST,PUT,HEAD');
     });
 
     it('should handle different methods via route', async () => {

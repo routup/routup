@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { merge } from 'smob';
+import { hasOwnProperty, merge } from 'smob';
 import { Method } from '../constants';
 import { Handler } from '../handler';
 import { Layer } from '../layer';
@@ -42,7 +42,31 @@ export class Route {
     }
 
     matchMethod(method: string) : boolean {
-        return Object.prototype.hasOwnProperty.call(this.layers, method.toLowerCase());
+        let name = method.toLowerCase();
+
+        if (
+            name === Method.HEAD &&
+            !hasOwnProperty(this.layers, name)
+        ) {
+            name = Method.GET;
+        }
+
+        return Object.prototype.hasOwnProperty.call(this.layers, name);
+    }
+
+    // --------------------------------------------------
+
+    getMethods() : string[] {
+        const keys = Object.keys(this.layers);
+
+        if (
+            hasOwnProperty(this.layers, Method.GET) &&
+            !hasOwnProperty(this.layers, Method.HEAD)
+        ) {
+            keys.push(Method.HEAD);
+        }
+
+        return keys;
     }
 
     // --------------------------------------------------
@@ -58,7 +82,15 @@ export class Route {
             return;
         }
 
-        const name = req.method.toLowerCase();
+        let name = req.method.toLowerCase();
+
+        if (
+            name === Method.HEAD &&
+            !hasOwnProperty(this.layers, name)
+        ) {
+            name = Method.GET;
+        }
+
         const layers = this.layers[name];
 
         if (
@@ -131,6 +163,14 @@ export class Route {
 
     delete(...handlers: Handler[]) {
         return this.register(Method.DELETE, ...handlers);
+    }
+
+    head(...handlers: Handler[]) {
+        return this.register(Method.HEAD, ...handlers);
+    }
+
+    options(...handlers: Handler[]) {
+        return this.register(Method.OPTIONS, ...handlers);
     }
 
     // --------------------------------------------------

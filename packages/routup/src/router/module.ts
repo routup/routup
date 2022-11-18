@@ -6,7 +6,8 @@
  */
 
 import { RequestListener, createServer } from 'http';
-import { isObject, merge } from 'smob';
+import { isObject, merge, mergeArrays } from 'smob';
+import { HeaderName, Method } from '../constants';
 import { buildDecoratorMethodArguments } from '../decorators';
 import { useDecoratorMeta } from '../decorators/utils';
 import {
@@ -32,6 +33,7 @@ import {
     Response,
 } from '../type';
 import {
+    send,
     useRequestPath,
 } from '../helpers';
 import { RouterOptions } from './type';
@@ -43,7 +45,9 @@ export function isRouterInstance(input: unknown) : input is Router {
 export class Router {
     readonly '@instanceof' = Symbol.for('Router');
 
-    protected options: RouterOptions;
+    protected mountPath : Path | undefined;
+
+    protected timeout: number | undefined;
 
     protected stack : (Router | Route | Layer)[] = [];
 
@@ -60,34 +64,26 @@ export class Router {
 
     constructor(options?: RouterOptions) {
         options = options || {};
-        options.mountPath = options.mountPath || '/';
 
-        this.options = options;
-
-        this.setOption('mountPath', this.options.mountPath);
+        this.timeout = options.timeout;
+        this.setMountPath(options.mountPath || '/');
     }
 
     // --------------------------------------------------
 
-    setOption<T extends keyof RouterOptions>(key: T, value: RouterOptions[T]) {
-        if (key === 'mountPath') {
-            if (value === '/' || !isPath(value)) {
-                this.options.mountPath = '/';
-                return;
-            }
-
-            if (typeof value === 'string') {
-                this.options.mountPath = withLeadingSlash(withoutTrailingSlash(`${value}`));
-            } else {
-                this.options.mountPath = value;
-            }
-
-            this.pathMatcher = new PathMatcher(this.options.mountPath, { end: false });
-
+    setMountPath(value: Path) {
+        if (value === '/' || !isPath(value)) {
+            this.mountPath = '/';
             return;
         }
 
-        this.options[key] = value;
+        if (typeof value === 'string') {
+            this.mountPath = withLeadingSlash(withoutTrailingSlash(`${value}`));
+        } else {
+            this.mountPath = value;
+        }
+
+        this.pathMatcher = new PathMatcher(this.mountPath, { end: false });
     }
 
     // --------------------------------------------------
@@ -128,11 +124,13 @@ export class Router {
 
         meta = meta || {};
 
+        let allowedMethods : string[] = [];
+
         if (
             this.isRoot &&
-            this.options.timeout
+            this.timeout
         ) {
-            createResponseTimeout(res, this.options.timeout, done);
+            createResponseTimeout(res, this.timeout, done);
         }
 
         const fn = (err?: Error) => {
@@ -150,6 +148,20 @@ export class Router {
                 res.statusMessage = err.message;
 
                 res.end();
+
+                return;
+            }
+
+            if (
+                req.method &&
+                req.method.toLowerCase() === Method.OPTIONS
+            ) {
+                const options = allowedMethods
+                    .map((key) => key.toUpperCase())
+                    .join(',');
+
+                res.setHeader(HeaderName.ALLOW, options);
+                send(res, options);
 
                 return;
             }
@@ -209,6 +221,14 @@ export class Router {
                         !layer.matchMethod(req.method)
                     ) {
                         match = false;
+
+                        if (req.method.toLowerCase() === Method.OPTIONS) {
+                            allowedMethods = mergeArrays(
+                                allowedMethods,
+                                layer.getMethods(),
+                                true,
+                            );
+                        }
                     }
                 }
             }
@@ -327,6 +347,20 @@ export class Router {
         return this;
     }
 
+    head(path: Path, ...handlers: Handler[]) : this {
+        const route = this.route(path);
+        route.head(...handlers);
+
+        return this;
+    }
+
+    options(path: Path, ...handlers: Handler[]) : this {
+        const route = this.route(path);
+        route.options(...handlers);
+
+        return this;
+    }
+
     // --------------------------------------------------
 
     use(router: Router) : this;
@@ -357,7 +391,7 @@ export class Router {
             const item = input[i];
             if (isRouterInstance(item)) {
                 if (path) {
-                    item.setOption('mountPath', path);
+                    item.setMountPath(path);
                 }
                 this.stack.push(item);
                 continue;
