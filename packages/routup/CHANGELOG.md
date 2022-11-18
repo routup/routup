@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/Tada5hi/routup/compare/routup@0.4.1...routup@0.5.0) (2022-11-18)
+
+
+### Features
+
+* **routup:** add support for head & options requests ([9dd0010](https://github.com/Tada5hi/routup/commit/9dd001049f2b2861aa1c6764dcaca560db243d50))
+
+
+
+
+
 ## [0.4.1](https://github.com/Tada5hi/routup/compare/routup@0.4.0...routup@0.4.1) (2022-11-17)
 
 
