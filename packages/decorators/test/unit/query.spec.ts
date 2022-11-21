@@ -8,13 +8,13 @@
 import {Router} from "routup";
 import supertest from "supertest";
 import qs from "qs";
-import {registerController} from "../../src/module";
+import {mountController} from "../../src/module";
 import {QueryController} from "../data/query";
 
 describe('src/decorator', () => {
     it('should handle query decorator', async () => {
         const router = new Router();
-        registerController(router, QueryController);
+        mountController(router, QueryController);
 
         const server = supertest(router.createListener());
 

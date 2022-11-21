@@ -12,7 +12,7 @@ import { buildDecoratorMethodArguments } from './method';
 import { ClassType } from './type';
 import { createHandlerForClassType, useDecoratorMeta } from './utils';
 
-export function registerController(router: Router, input: (ClassType | Record<string, any>)) {
+export function mountController(router: Router, input: (ClassType | Record<string, any>)) {
     let controller : Record<string, any>;
 
     if (isObject(input)) {
@@ -59,8 +59,8 @@ export function registerController(router: Router, input: (ClassType | Record<st
     router.use(meta.url, childRouter);
 }
 
-export function registerControllers(router: Router, input: (ClassType | Record<string, any>)[]) {
+export function mountControllers(router: Router, input: (ClassType | Record<string, any>)[]) {
     for (let i = 0; i < input.length; i++) {
-        registerController(router, input[i]);
+        mountController(router, input[i]);
     }
 }

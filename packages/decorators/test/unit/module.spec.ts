@@ -7,7 +7,7 @@
 
 import supertest from 'supertest';
 import { Router } from 'routup';
-import {registerController, registerControllers} from "../../src/module";
+import {mountController, mountControllers} from "../../src/module";
 import { DummyController } from '../data/extra';
 import { UserController } from '../data/core';
 
@@ -15,7 +15,7 @@ describe('src/module', () => {
     it('should handle core decorators', async () => {
         const router = new Router();
 
-        registerControllers(router, [UserController]);
+        mountControllers(router, [UserController]);
 
         const server = supertest(router.createListener());
 
@@ -66,7 +66,7 @@ describe('src/module', () => {
 
         const controller = new DummyController();
 
-        registerController(router, controller);
+        mountController(router, controller);
 
         const server = supertest(router.createListener());
 

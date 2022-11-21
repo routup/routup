@@ -7,13 +7,13 @@
 
 import {Router} from "routup";
 import supertest from "supertest";
-import { registerController } from "../../src/module";
+import { mountController } from "../../src/module";
 import { CookieController } from "../data/cookie";
 
 describe('src/decorator', () => {
     it('should handle cookie decorator(s)', async () => {
         const router = new Router();
-        registerController(router, CookieController);
+        mountController(router, CookieController);
 
         const server = supertest(router.createListener());
 

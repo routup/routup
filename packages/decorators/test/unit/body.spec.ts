@@ -8,7 +8,7 @@
 import {setRequestBody} from "@routup/body";
 import {Router} from "routup";
 import supertest from "supertest";
-import {registerController} from "../../src/module";
+import {mountController} from "../../src/module";
 import {BodyController} from "../data/body";
 
 describe('src/module', () => {
@@ -22,7 +22,7 @@ describe('src/module', () => {
             next();
         });
 
-        registerController(router, BodyController);
+        mountController(router, BodyController);
 
         const server = supertest(router.createListener());
 

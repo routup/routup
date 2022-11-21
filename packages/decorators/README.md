@@ -7,7 +7,7 @@
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
 This is a plugin to create request handlers with class-, method- & parameter-decorators.
-Those, can than be bound/registered to an arbitrary router instance.  
+Those, can than be bound/mounted to an arbitrary router instance.  
 
 **Table of Contents**
 
@@ -55,9 +55,7 @@ import {
     DGet,
     DNext,
     DParam,
-    DPatch,
     DPost,
-    DPut,
     DRequest,
     DResponse,
 } from '@routup/decorators';
@@ -68,7 +66,6 @@ import {
     Response,
     send,
 } from 'routup';
-import {} from "./module";
 
 @DController('/users')
 export class UserController {
@@ -110,17 +107,19 @@ export class UserController {
 }
 ```
 
-### Registration
+### Mount
 
-The last step is to register the controller to a router instance.
+The last step is to mount the controller to a router instance, using the `mountController` function to mount a single controller,
+or the `mountControllers` function to mount a collection of controllers.
 
+`app.ts`
 ```typescript
-import { registerController } from "@routup/decorators";
+import { mountControllers } from "@routup/decorators";
 import { Router } from 'routup';
 
 const router = new Router();
 
-registerControllers(router, [
+mountControllers(router, [
     UserController
 ]);
 
