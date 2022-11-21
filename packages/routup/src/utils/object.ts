@@ -5,4 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './module';
+export function isObject(item: unknown) : item is Record<string, any> {
+    return (
+        !!item &&
+        typeof item === 'object' &&
+        !Array.isArray(item)
+    );
+}

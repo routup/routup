@@ -6,7 +6,6 @@
  */
 
 export * from './constants';
-export * from './decorators';
 export * from './handler';
 export * from './helpers';
 export * from './layer';
@@ -14,3 +13,4 @@ export * from './path';
 export * from './route';
 export * from './router';
 export * from './type';
+export * from './utils';

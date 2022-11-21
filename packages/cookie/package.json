@@ -42,15 +42,10 @@
         "url": "https://github.com/Tada5hi/routup/issues"
     },
     "homepage": "https://github.com/Tada5hi/routup#readme",
-    "devDependencies": {
-        "@types/cookie": "^0.5.1",
-        "routup": "^0.5.0"
-    },
     "dependencies": {
+        "@types/cookie": "^0.5.1",
+        "routup": "^0.5.0",
         "cookie": "^0.5.0"
-    },
-    "peerDependencies": {
-        "routup": "^0.x"
     },
     "gitHead": "11dd52c006ffe5041bba0f57dfc33527ee57d6c1",
     "publishConfig": {

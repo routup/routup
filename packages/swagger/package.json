@@ -43,18 +43,13 @@
         "url": "https://github.com/Tada5hi/routup/issues"
     },
     "homepage": "https://github.com/Tada5hi/routup#readme",
-    "devDependencies": {
-        "routup": "^0.5.0"
-    },
     "dependencies": {
         "@types/serve-static": "^1.15.0",
         "@types/swagger-ui-dist": "^3.30.1",
+        "routup": "^0.5.0",
         "serve-static": "^1.15.0",
         "smob": "^0.0.6",
         "swagger-ui-dist": "^4.15.5"
-    },
-    "peerDependencies": {
-        "routup": ">=0.4.1 <1.0.0"
     },
     "publishConfig": {
         "access": "public"

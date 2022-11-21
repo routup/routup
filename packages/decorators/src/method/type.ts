@@ -5,4 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './module';
+import { ClassType } from '../type';
+
+export type DecoratorMethodOptions = {
+    method: string;
+    url: string;
+    middlewares: ClassType[];
+};

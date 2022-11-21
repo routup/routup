@@ -6,12 +6,10 @@
  */
 
 import { RequestListener, createServer } from 'http';
-import { isObject, merge, mergeArrays } from 'smob';
+import { merge, mergeArrays } from 'smob';
 import { HeaderName, Method } from '../constants';
-import { buildDecoratorMethodArguments } from '../decorators';
-import { useDecoratorMeta } from '../decorators/utils';
 import {
-    ErrorHandler, Handler, createHandlerForClassType, processHandlerExecutionOutput,
+    ErrorHandler, Handler,
 } from '../handler';
 import { PathMatcher } from '../path';
 import {
@@ -25,7 +23,6 @@ import {
 import { Layer, isLayerInstance } from '../layer';
 import { Route, isRouteInstance } from '../route';
 import {
-    ClassType,
     DispatcherMeta,
     Next,
     Path,
@@ -187,6 +184,8 @@ export class Router {
             }
         }
 
+        meta.path = path;
+
         if (!meta.mountPath) {
             meta.mountPath = '/';
         }
@@ -238,10 +237,7 @@ export class Router {
                 return;
             }
 
-            const layerMeta : DispatcherMeta = {
-                ...meta,
-                path,
-            };
+            const layerMeta : DispatcherMeta = { ...meta };
 
             if (isLayerInstance(layer)) {
                 const output = layer.exec(path);
@@ -253,7 +249,10 @@ export class Router {
             }
 
             if (err) {
-                if (isLayerInstance(layer) && layer.isError()) {
+                if (
+                    isLayerInstance(layer) &&
+                    layer.isError()
+                ) {
                     layer.dispatch(req, res, layerMeta, next, err);
                     return;
                 }
@@ -403,60 +402,5 @@ export class Router {
         }
 
         return this;
-    }
-
-    // --------------------------------------------------
-
-    useController(input: (ClassType | Record<string, any>)) {
-        let controller : Record<string, any>;
-
-        if (isObject(input)) {
-            controller = input;
-        } else {
-            controller = new (input as ClassType)();
-        }
-
-        const meta = useDecoratorMeta(controller);
-
-        const router = new Router();
-
-        for (let i = 0; i < meta.middlewares.length; i++) {
-            const handler = createHandlerForClassType(meta.middlewares[i]);
-
-            router.use(handler);
-        }
-
-        const propertyKeys = Object.keys(meta.methods);
-        for (let i = 0; i < propertyKeys.length; i++) {
-            const handler : Handler = (req, res, next) => {
-                const output = controller[propertyKeys[i]].apply(controller, [
-                    ...buildDecoratorMethodArguments(req, res, next, meta.parameters[propertyKeys[i]]),
-                ]);
-
-                processHandlerExecutionOutput(res, next, output);
-            };
-
-            const method = meta.methods[propertyKeys[i]];
-            const handlers : Handler[] = [];
-            if (method.middlewares) {
-                for (let i = 0; i < method.middlewares.length; i++) {
-                    handlers.push(createHandlerForClassType(method.middlewares[i]));
-                }
-            }
-
-            (router as any)[method.method].apply(router, [
-                method.url,
-                ...handlers,
-                handler,
-            ]);
-        }
-
-        this.use(meta.url, router);
-    }
-
-    useControllers(input: (ClassType | Record<string, any>)[]) {
-        for (let i = 0; i < input.length; i++) {
-            this.useController(input[i]);
-        }
     }
 }

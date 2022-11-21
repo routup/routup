@@ -62,12 +62,13 @@ router.listen(3000);
 According to the fact that routup is a minimalistic framework, it depends on plugins to cover some 
 typically http framework functions, which are not integrated in the main package.
 
-| Name                        | Description                                                            |
-|-----------------------------|------------------------------------------------------------------------|
-| [body](packages/body)       | Read and parse the request body.                                       |
-| [cookie](packages/cookie)   | Read and parse request cookies and serialize cookies for the response. |
-| [query](packages/query)     | Read and parse the query string of the request url.                    |
-| [swagger](packages/swagger) | Serve generated docs from URL or based on a JSON file.                 |
+| Name                              | Description                                                            |
+|-----------------------------------|------------------------------------------------------------------------|
+| [body](packages/body)             | Read and parse the request body.                                       |
+| [cookie](packages/cookie)         | Read and parse request cookies and serialize cookies for the response. |
+| [decorators](packages/decorators) | Create request handlers with class-, method- & parameter-decorators.   |
+| [query](packages/query)           | Read and parse the query string of the request url.                    |
+| [swagger](packages/swagger)       | Serve generated docs from URL or based on a JSON file.                 |
 
 ## License
 

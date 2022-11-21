@@ -18,7 +18,3 @@ export type ErrorHandler = (
     res: Response,
     next: Next
 ) => unknown;
-
-export interface HandlerInterface {
-    run(request: Request, response: Response, next: Next): Promise<void> | void;
-}
