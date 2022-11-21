@@ -1,0 +1,16 @@
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+
+# 0.1.0 (2022-11-21)
+
+
+### Bug Fixes
+
+* **decorators:** better naming for bounding controller(s) to a router instance ([5ab435d](https://github.com/Tada5hi/routup/commit/5ab435d1f6b18fe3ed9e0c660df565f6907a900b))
+
+
+### Features
+
+* new decorator(s) package/plugin ([511524c](https://github.com/Tada5hi/routup/commit/511524c854f5cdb7222b4cdea2a252a57c2007d1))

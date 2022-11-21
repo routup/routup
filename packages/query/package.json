@@ -1,6 +1,6 @@
 {
     "name": "@routup/query",
-    "version": "0.1.5",
+    "version": "0.2.0",
     "description": "Query plugin for routup.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
@@ -45,8 +45,8 @@
     "homepage": "https://github.com/Tada5hi/routup#readme",
     "dependencies": {
         "@types/qs": "^6.9.7",
-        "routup": "^0.5.0",
-        "qs": "^6.11.0"
+        "qs": "^6.11.0",
+        "routup": "^0.6.0"
     },
     "gitHead": "11dd52c006ffe5041bba0f57dfc33527ee57d6c1",
     "publishConfig": {

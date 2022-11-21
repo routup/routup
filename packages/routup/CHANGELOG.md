@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/Tada5hi/routup/compare/routup@0.5.0...routup@0.6.0) (2022-11-21)
+
+
+### Features
+
+* new decorator(s) package/plugin ([511524c](https://github.com/Tada5hi/routup/commit/511524c854f5cdb7222b4cdea2a252a57c2007d1))
+
+
+
+
+
 # [0.5.0](https://github.com/Tada5hi/routup/compare/routup@0.4.1...routup@0.5.0) (2022-11-18)
 
 

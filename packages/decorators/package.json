@@ -1,6 +1,6 @@
 {
     "name": "@routup/decorators",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "description": "Decorators plugin for routup.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
@@ -43,10 +43,10 @@
     },
     "homepage": "https://github.com/Tada5hi/routup#readme",
     "dependencies": {
-        "@routup/body": "^0.2.5",
-        "@routup/cookie": "^0.1.7",
-        "@routup/query": "^0.1.5",
-        "routup": "^0.5.0"
+        "@routup/body": "^0.3.0",
+        "@routup/cookie": "^0.2.0",
+        "@routup/query": "^0.2.0",
+        "routup": "^0.6.0"
     },
     "publishConfig": {
         "access": "public"

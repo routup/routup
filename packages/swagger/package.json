@@ -1,6 +1,6 @@
 {
     "name": "@routup/swagger",
-    "version": "0.1.2",
+    "version": "0.2.0",
     "description": "Swagger plugin for routup.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
@@ -46,7 +46,7 @@
     "dependencies": {
         "@types/serve-static": "^1.15.0",
         "@types/swagger-ui-dist": "^3.30.1",
-        "routup": "^0.5.0",
+        "routup": "^0.6.0",
         "serve-static": "^1.15.0",
         "smob": "^0.0.6",
         "swagger-ui-dist": "^4.15.5"
