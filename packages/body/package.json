@@ -1,6 +1,6 @@
 {
     "name": "@routup/body",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "description": "Body plugin for routup.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",

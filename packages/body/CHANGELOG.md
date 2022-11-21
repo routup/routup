@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1](https://github.com/Tada5hi/routup/compare/@routup/body@0.3.0...@routup/body@0.3.1) (2022-11-21)
+
+**Note:** Version bump only for package @routup/body
+
+
+
+
+
 # [0.3.0](https://github.com/Tada5hi/routup/compare/@routup/body@0.2.5...@routup/body@0.3.0) (2022-11-21)
 
 
