@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1](https://github.com/Tada5hi/routup/compare/@routup/decorators@0.1.0...@routup/decorators@0.1.1) (2022-11-21)
+
+
+### Bug Fixes
+
+* **decorators:** add missing exports ([fe571e1](https://github.com/Tada5hi/routup/commit/fe571e10e229c4dd33060a446d7b20c60ed30901))
+
+
+
+
+
 # 0.1.0 (2022-11-21)
 
 
