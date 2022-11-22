@@ -5,6 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import {
+    BadRequestErrorOptions,
+    NotFoundErrorOptions,
+} from '@ebec/http';
 import { RequestListener, createServer } from 'http';
 import { merge, mergeArrays } from 'smob';
 import { HeaderName, Method } from '../constants';
@@ -14,7 +18,7 @@ import {
 import { PathMatcher } from '../path';
 import {
     cleanDoubleSlashes,
-    createResponseTimeout,
+    createRequestTimeout,
     isInstance,
     isPath,
     withLeadingSlash,
@@ -127,7 +131,7 @@ export class Router {
             this.isRoot &&
             this.timeout
         ) {
-            createResponseTimeout(res, this.timeout, done);
+            createRequestTimeout(res, this.timeout, done);
         }
 
         const fn = (err?: Error) => {
@@ -141,8 +145,8 @@ export class Router {
             }
 
             if (typeof err !== 'undefined') {
-                res.statusCode = 400;
-                res.statusMessage = err.message;
+                res.statusCode = BadRequestErrorOptions.statusCode;
+                res.statusMessage = BadRequestErrorOptions.message;
 
                 res.end();
 
@@ -163,7 +167,7 @@ export class Router {
                 return;
             }
 
-            res.statusCode = 404;
+            res.statusCode = NotFoundErrorOptions.statusCode;
             res.end();
         };
 

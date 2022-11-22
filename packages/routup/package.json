@@ -45,7 +45,7 @@
         "@types/negotiator": "^0.6.1"
     },
     "dependencies": {
-        "@ebec/http": "^0.0.4",
+        "@ebec/http": "^0.1.0",
         "etag": "^1.8.1",
         "mime": "^3.0.0",
         "negotiator": "^0.6.3",

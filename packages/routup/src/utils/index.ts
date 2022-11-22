@@ -10,5 +10,5 @@ export * from './mime';
 export * from './object';
 export * from './path';
 export * from './promise';
-export * from './response';
+export * from './request';
 export * from './url';

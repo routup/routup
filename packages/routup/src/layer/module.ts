@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { InternalServerError } from '@ebec/http';
+import { BadRequestError } from '@ebec/http';
 import {
     ParseOptions, TokensToRegexpOptions,
 } from 'path-to-regexp';
@@ -73,7 +73,14 @@ export class Layer {
                     this.fn(err, req, res, next);
                 } catch (e) {
                     /* istanbul ignore next */
-                    next(err);
+                    /* istanbul ignore next */
+                    if (e instanceof Error) {
+                        next(e);
+                    } else {
+                        next(new BadRequestError({
+                            message: 'The request could not be processed by the error handler.',
+                        }));
+                    }
                 }
 
                 return;
@@ -100,7 +107,9 @@ export class Layer {
             if (e instanceof Error) {
                 next(e);
             } else {
-                next(new InternalServerError());
+                next(new BadRequestError({
+                    message: 'The request could not be processed by the handler.',
+                }));
             }
         }
     }

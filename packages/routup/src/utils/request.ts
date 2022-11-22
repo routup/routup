@@ -5,13 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { GatewayTimeoutErrorOptions } from '@ebec/http';
 import { Next, Response } from '../type';
 
 /* istanbul ignore next */
-export function createResponseTimeout(res: Response, timeout: number, done?: Next) {
+export function createRequestTimeout(res: Response, timeout: number, done?: Next) {
     const instance = setTimeout(() => {
-        res.statusCode = 504;
-        res.statusMessage = 'Gateway Timeout';
+        res.statusCode = GatewayTimeoutErrorOptions.statusCode;
+        res.statusMessage = GatewayTimeoutErrorOptions.message;
 
         res.end();
     }, timeout);
