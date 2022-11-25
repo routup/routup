@@ -4,7 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import etag from 'etag';
+import { useConfig } from '../../config';
 import { HeaderName } from '../../constants';
 import { Response } from '../../type';
 import { appendResponseHeaderDirective } from './header';
@@ -43,7 +43,7 @@ export function send(res: Response, chunk?: any) {
     }
 
     // populate Content-Length
-    let len;
+    let len : number | undefined;
     if (chunk !== undefined) {
         if (Buffer.isBuffer(chunk)) {
             // get length of Buffer
@@ -58,22 +58,22 @@ export function send(res: Response, chunk?: any) {
             len = chunk.length;
         }
 
-        res.setHeader(HeaderName.CONTENT_LENGTH, len);
+        res.setHeader(HeaderName.CONTENT_LENGTH, `${len}`);
     }
 
-    // set etag for buffers > 10kb
+    const config = useConfig();
+    const etagFn = config.get('etag');
+
     if (
-        typeof len !== 'undefined' &&
-        len > 10_000
+        typeof len !== 'undefined'
     ) {
-        const chunkHash = etag(chunk, {
-            weak: true,
-        });
+        const chunkHash = etagFn(chunk, encoding, len);
+        if (typeof chunkHash === 'string') {
+            res.setHeader('ETag', chunkHash);
 
-        res.setHeader('ETag', chunkHash);
-
-        if (res.req.headers['if-none-match'] === chunkHash) {
-            res.statusCode = 304;
+            if (res.req.headers['if-none-match'] === chunkHash) {
+                res.statusCode = 304;
+            }
         }
     }
 

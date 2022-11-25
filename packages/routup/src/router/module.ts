@@ -195,7 +195,7 @@ export class Router {
         }
 
         const next = (err?: Error) : void => {
-            if (index >= this.stack.length - 1) {
+            if (index >= this.stack.length) {
                 fn(err);
                 return;
             }
@@ -209,6 +209,10 @@ export class Router {
                 layer = this.stack[index];
 
                 if (isLayerInstance(layer)) {
+                    if (!layer.isError() && err) {
+                        continue;
+                    }
+
                     match = layer.matchPath(path);
                 }
 

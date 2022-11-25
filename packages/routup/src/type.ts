@@ -7,6 +7,12 @@
 
 import { IncomingMessage, ServerResponse } from 'http';
 
+// --------------------------------------------------
+
+export type ObjectLiteral = Record<string, any>;
+
+// --------------------------------------------------
+
 export interface Response extends ServerResponse {
 
 }
