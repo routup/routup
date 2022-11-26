@@ -47,7 +47,7 @@ export type ConfigOptions = {
     proxyIpHeader: string,
 
     /**
-     * default: undefined
+     * default: 0
      */
     proxyIpMax?: number,
 

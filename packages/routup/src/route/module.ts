@@ -6,6 +6,7 @@
  */
 
 import { hasOwnProperty, merge } from 'smob';
+import { useConfig } from '../config';
 import { Method } from '../constants';
 import { Handler } from '../handler';
 import { Layer } from '../layer';
@@ -31,7 +32,9 @@ export class Route {
     constructor(path: Path) {
         this.path = path;
 
-        this.pathMatcherOptions = { end: true, strict: this.isStrictPath() };
+        const config = useConfig();
+
+        this.pathMatcherOptions = { end: true, strict: this.isStrictPath(), sensitive: config.get('caseSensitive') };
         this.pathMatcher = new PathMatcher(path, this.pathMatcherOptions);
     }
 

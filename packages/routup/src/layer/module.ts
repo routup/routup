@@ -9,6 +9,7 @@ import { BadRequestError } from '@ebec/http';
 import {
     ParseOptions, TokensToRegexpOptions,
 } from 'path-to-regexp';
+import { useConfig } from '../config';
 import { processHandlerExecutionOutput } from '../handler';
 import { setRequestMountPath, setRequestParams } from '../helpers';
 import { PathMatcher } from '../path';
@@ -30,6 +31,11 @@ export class Layer {
         options: TokensToRegexpOptions & ParseOptions,
         fn: CallableFunction,
     ) {
+        if (typeof options.sensitive === 'undefined') {
+            const config = useConfig();
+            options.sensitive = config.get('caseSensitive');
+        }
+
         this.pathMatcher = new PathMatcher(path, options);
         this.fn = fn;
     }

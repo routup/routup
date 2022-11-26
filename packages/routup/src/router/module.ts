@@ -11,6 +11,7 @@ import {
 } from '@ebec/http';
 import { RequestListener, createServer } from 'http';
 import { merge, mergeArrays } from 'smob';
+import { useConfig } from '../config';
 import { HeaderName, Method } from '../constants';
 import {
     ErrorHandler, Handler,
@@ -84,7 +85,8 @@ export class Router {
             this.mountPath = value;
         }
 
-        this.pathMatcher = new PathMatcher(this.mountPath, { end: false });
+        const config = useConfig();
+        this.pathMatcher = new PathMatcher(this.mountPath, { end: false, sensitive: config.get('caseSensitive') });
     }
 
     // --------------------------------------------------
