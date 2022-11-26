@@ -6,8 +6,7 @@
  */
 
 import supertest from "supertest";
-import {HeaderName, Router, send} from "../../../../src";
-import {getRequestHostName} from "../../../../src/helpers/request/hostname";
+import {getRequestHostName, HeaderName, Router, send} from "../../../../src";
 
 describe('src/helpers/request/hostname', () => {
     it('should determine hostname', async () => {

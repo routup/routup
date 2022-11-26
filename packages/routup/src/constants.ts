@@ -33,4 +33,5 @@ export enum HeaderName {
     SET_COOKIE = 'set-cookie',
     X_FORWARDED_HOST = 'x-forwarded-host',
     X_FORWARDED_FOR = 'x-forwarded-for',
+    X_FORWARDED_PROTO = 'x-forwarded-proto',
 }
