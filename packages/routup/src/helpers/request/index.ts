@@ -13,6 +13,7 @@ export * from './header-accept-charset';
 export * from './header-accept-encoding';
 export * from './header-accept-language';
 export * from './header-content-type';
+export * from './ip';
 export * from './mount-path';
 export * from './negotiator';
 export * from './params';

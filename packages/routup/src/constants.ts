@@ -30,4 +30,5 @@ export enum HeaderName {
     LAST_MODIFIED = 'last-modified',
     LOCATION = 'location',
     SET_COOKIE = 'set-cookie',
+    X_FORWARDED_FOR = 'x-forwarded-for',
 }

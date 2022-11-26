@@ -18,7 +18,10 @@ export type EtagOptions = EtagBaseOptions & {
 };
 
 export type EtagFn = (body: any, encoding?: BufferEncoding, size?: number) => string | undefined;
+export type EtagInput = boolean | EtagOptions | EtagFn;
+
 export type TrustProxyFn = (address: string, hop: number) => boolean;
+export type TrustProxyInput = boolean | number | string | string[] | TrustProxyFn;
 
 export type ConfigOptions = {
     /**
@@ -63,12 +66,12 @@ export type ConfigOptionsInput = {
     /**
      * default: true
      */
-    etag?: boolean | EtagOptions | EtagFn,
+    etag?: EtagInput,
 
     /**
      * default: false
      */
-    trustProxy?: boolean | number | string | string[] | TrustProxyFn,
+    trustProxy?: TrustProxyInput,
 } & Partial<Omit<ConfigOptions, 'etag' | 'trustProxy'>>;
 
 export type ConfigOptionsTransformer<T extends ObjectLiteral,
