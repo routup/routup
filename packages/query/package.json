@@ -1,6 +1,6 @@
 {
     "name": "@routup/query",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "description": "Query plugin for routup.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
@@ -51,7 +51,7 @@
         "qs": "^6.11.0"
     },
     "devDependencies": {
-        "routup": "^0.6.0"
+        "routup": "^0.7.0"
     },
     "gitHead": "11dd52c006ffe5041bba0f57dfc33527ee57d6c1",
     "publishConfig": {

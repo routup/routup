@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/Tada5hi/routup/compare/routup@0.6.0...routup@0.7.0) (2022-11-26)
+
+
+### Bug Fixes
+
+* **routup:** use case-sensitive option for path matcher ([e8af7e4](https://github.com/Tada5hi/routup/commit/e8af7e4c16e44240862c185d12aee1e06c1a68b9))
+* **routup:** use static error option constants ([109da37](https://github.com/Tada5hi/routup/commit/109da379286b81dc7e8ca1e63c7103119fa8a027))
+
+
+### Features
+
+* **routup:** add request hostname helper fn ([556a79a](https://github.com/Tada5hi/routup/commit/556a79a8b6c318565a2e9ffd1b3906faa15b3edb))
+* **routup:** add request ip helper fn ([70cdf12](https://github.com/Tada5hi/routup/commit/70cdf120fb6db7efb688f716dedb41e5553bbcd8))
+* **routup:** add request protocol helper fn ([4516174](https://github.com/Tada5hi/routup/commit/451617480ec3991412b76b1e0bb481627c231f61))
+* **routup:** global config container to manage options ([208be22](https://github.com/Tada5hi/routup/commit/208be2279d1cb6b6877417e133a2b20bc8314793))
+
+
+
+
+
 # [0.6.0](https://github.com/Tada5hi/routup/compare/routup@0.5.0...routup@0.6.0) (2022-11-21)
 
 
