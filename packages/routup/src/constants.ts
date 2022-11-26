@@ -27,8 +27,10 @@ export enum HeaderName {
     CONTENT_LENGTH = 'content-length',
     CONTENT_TYPE = 'content-type',
     COOKIE = 'cookie',
+    HOST = 'host',
     LAST_MODIFIED = 'last-modified',
     LOCATION = 'location',
     SET_COOKIE = 'set-cookie',
+    X_FORWARDED_HOST = 'x-forwarded-host',
     X_FORWARDED_FOR = 'x-forwarded-for',
 }

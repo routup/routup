@@ -9,7 +9,7 @@ import {getRequestIp, HeaderName, Request} from "../../../../src";
 
 function createReq (socketAddr: string, headers?: Record<string, any>) : Request {
     return {
-        connection: {
+        socket: {
             remoteAddress: socketAddr
         },
         headers: headers || {}
