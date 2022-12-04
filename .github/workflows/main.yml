@@ -7,7 +7,7 @@ on:
     push:
         branches: [master, next, beta, alpha]
     pull_request:
-        branches: [master, next, beta, alpha]
+        types: [ opened, synchronize ]
 
 permissions:
     packages: write

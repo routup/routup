@@ -140,7 +140,7 @@ export class Router {
             /* istanbul ignore if */
             if (!this.isRoot) {
                 if (typeof done !== 'undefined') {
-                    done(err);
+                    setImmediate(done, err);
                 }
 
                 return;
@@ -198,7 +198,7 @@ export class Router {
 
         const next = (err?: Error) : void => {
             if (index >= this.stack.length) {
-                fn(err);
+                setImmediate(fn, err);
                 return;
             }
 
@@ -243,7 +243,7 @@ export class Router {
             }
 
             if (!match || !layer) {
-                fn(err);
+                setImmediate(fn, err);
                 return;
             }
 
@@ -268,7 +268,7 @@ export class Router {
                 }
 
                 /* istanbul ignore next */
-                next(err);
+                setImmediate(next, err);
                 return;
             }
 
