@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/Tada5hi/routup/compare/routup@0.7.0...routup@0.8.0) (2022-12-04)
+
+
+### Features
+
+* **routup:** enhanced config container + add validations ([8d9cb7f](https://github.com/Tada5hi/routup/commit/8d9cb7fe9769d04bd779eb42d6b1bc5facbeeb0d))
+* **routup:** use set-immediate to increase concurrent connections ([c240659](https://github.com/Tada5hi/routup/commit/c24065952c8c9bf4c804e5c87924166064a9f9ed))
+
+
+
+
+
 # [0.7.0](https://github.com/Tada5hi/routup/compare/routup@0.6.0...routup@0.7.0) (2022-11-26)
 
 
