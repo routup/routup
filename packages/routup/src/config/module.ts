@@ -7,30 +7,94 @@
 
 import { hasOwnProperty } from 'smob';
 import { ObjectLiteral } from '../type';
-import { ConfigContext, ConfigOptionsTransformer } from './type';
+import {
+    ConfigContext, ConfigOptionTransformer, ConfigOptionsTransformer, ConfigOptionsValidators,
+} from './type';
+import { isConfigOptionValidatorResult } from './utils';
 
 export class Config<
     O extends ObjectLiteral,
-    I extends { [T in keyof O]?: any } = O,
+    I extends { [K in keyof O]?: any } = O,
 > {
     protected options : Partial<O>;
 
     protected defaults: O;
 
-    protected transformer: ConfigOptionsTransformer<O>;
+    protected transformers: ConfigOptionsTransformer<O>;
+
+    protected validators : ConfigOptionsValidators<O>;
 
     // -------------------------------------------------
 
     constructor(context: ConfigContext<O>) {
         this.options = context.options || {};
         this.defaults = context.defaults;
-        this.transformer = context.transform;
+        this.transformers = context.transformers || {};
+        this.validators = context.validators || {};
     }
 
     // -------------------------------------------------
 
-    set<K extends keyof O>(key: K, value: I[K]) : this {
-        this.options[key] = this.transformer(key, value);
+    set(value: O) : this;
+
+    set<K extends keyof O>(key: K, value: O[K]) : this;
+
+    set<K extends keyof O>(key: (keyof O) | O, value?: O[K]) : this {
+        /* istanbul ignore next */
+        if (typeof key === 'object') {
+            const keys = Object.keys(key);
+            for (let i = 0; i < keys.length; i++) {
+                this.set(keys[i], key[keys[i]]);
+            }
+
+            return this;
+        }
+
+        const validator = this.validators[key];
+        if (validator) {
+            try {
+                const output = validator(value);
+
+                if (isConfigOptionValidatorResult<O[K]>(output)) {
+                    if (output.success) {
+                        this.options[key] = output.data;
+                    }
+                } else {
+                    /* istanbul ignore next */
+                    this.options[key] = value;
+                }
+            } catch (e) {
+                // do nothing
+            }
+
+            return this;
+        }
+
+        /* istanbul ignore next */
+        this.options[key] = value;
+        /* istanbul ignore next */
+        return this;
+    }
+
+    setRaw(value: I) : this;
+
+    setRaw<K extends keyof O>(key: K, value: I[K]) : this;
+
+    setRaw<K extends keyof O>(key: K | I, value?: I[K]) : this {
+        if (typeof key === 'object') {
+            const keys = Object.keys(key);
+            for (let i = 0; i < keys.length; i++) {
+                this.setRaw(keys[i], key[keys[i]]);
+            }
+
+            return this;
+        }
+
+        if (this.transformers[key]) {
+            this.set(key, (this.transformers[key] as ConfigOptionTransformer<O[K]>)(value));
+        } else if (this.validators[key]) {
+            this.set(key, value as unknown as O[K]);
+        }
 
         return this;
     }
@@ -78,19 +142,34 @@ export class Config<
         return this.defaults[key];
     }
 
-    getRaw<K extends keyof O>(key: K) : O[K] | undefined {
-        if (hasOwnProperty(this.options, key)) {
-            return this.options[key] as O[K];
-        }
-
-        return undefined;
-    }
-
     // -------------------------------------------------
 
-    setDefault<K extends keyof O>(key: K, value: I[K]) : this {
-        this.defaults[key] = this.transformer(key, value) as O[K];
+    setDefault<K extends keyof O>(key: K, value: O[K]) : this {
+        const validator = this.validators[key];
+        if (validator) {
+            try {
+                const output = validator(value);
 
+                if (
+                    isConfigOptionValidatorResult<O[K]>(output)
+                ) {
+                    if (output.success) {
+                        this.defaults[key] = output.data;
+                    }
+                } else {
+                    /* istanbul ignore next */
+                    this.defaults[key] = value;
+                }
+            } catch (e) {
+                // do nothing
+            }
+
+            return this;
+        }
+
+        /* istanbul ignore next */
+        this.defaults[key] = value;
+        /* istanbul ignore next */
         return this;
     }
 

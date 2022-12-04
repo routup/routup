@@ -73,13 +73,26 @@ export type ConfigOptionsInput = {
      */
     trustProxy?: TrustProxyInput,
 } & Partial<Omit<ConfigOptions, 'etag' | 'trustProxy'>>;
+export type ConfigOptionTransformer<V> = (value: unknown) => V;
 
-export type ConfigOptionsTransformer<T extends ObjectLiteral,
-    K extends keyof T = keyof T,
-    > = (key: K, value: any) => T[K];
+export type ConfigOptionsTransformer<T extends ObjectLiteral> = {
+    [K in keyof T]?: ConfigOptionTransformer<T[K]>
+};
+
+export type ConfigOptionValidatorResult<V> = {
+    success: boolean,
+    data: V
+};
+
+export type ConfigOptionValidator<V> = (value: unknown) => unknown;
+
+export type ConfigOptionsValidators<T extends ObjectLiteral> = {
+    [K in keyof T]?: ConfigOptionValidator<T[K]>
+};
 
 export type ConfigContext<T extends ObjectLiteral> = {
     defaults: T,
     options?: Partial<T>,
-    transform: ConfigOptionsTransformer<T>
+    transformers?: ConfigOptionsTransformer<T>,
+    validators?: ConfigOptionsValidators<T>
 };

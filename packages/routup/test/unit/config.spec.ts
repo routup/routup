@@ -21,11 +21,12 @@ describe('src/config/**', () => {
         const defaultOption = config.getDefault('env');
         expect(defaultOption).toBeDefined();
 
-        expect(config.getRaw('env')).toBeUndefined();
         expect(config.has('env')).toBeFalsy();
         expect(config.get('env')).toEqual(defaultOption);
 
-        config.set('env', 'production');
+        config.setRaw({
+            env: 'production'
+        });
         expect(config.get('env')).toEqual('production');
         expect(config.get('env')).not.toEqual(defaultOption);
 
@@ -33,34 +34,52 @@ describe('src/config/**', () => {
         expect(config.get('env')).toEqual(defaultOption);
 
         config.reset();
+
+        config.setRaw({
+            trustProxy: false,
+            subdomainOffset: -1,
+            etag: false,
+            caseSensitive: false,
+            requestIdHeader: 'X-Request'
+        });
+
+        expect(config.get('trustProxy')).toBeDefined();
+        expect(config.get('subdomainOffset')).toEqual(2);
+        expect(config.get('etag')).toBeDefined();
+        expect(config.get('caseSensitive')).toBeFalsy();
+        expect(config.get('requestIdHeader')).toEqual('X-Request');
     })
 
     it('should set, get options', () => {
         const config = useConfig();
 
-        expect(config.getRaw('proxyIpHeader')).toBeUndefined();
-        expect(config.getRaw('proxyIpMax')).toBeUndefined();
+        expect(config.has('proxyIpHeader')).toBeFalsy();
+        expect(config.has('proxyIpMax')).toBeFalsy();
 
         config.set('proxyIpHeader', 'Header');
         config.set('proxyIpMax', 5);
 
-        expect(config.getRaw('proxyIpHeader')).toEqual('Header');
-        expect(config.getRaw('proxyIpMax')).toEqual(5);
+        expect(config.has('proxyIpHeader')).toBeTruthy();
+        expect(config.get('proxyIpHeader')).toEqual('Header');
+        expect(config.has('proxyIpMax')).toBeTruthy();
+        expect(config.get('proxyIpMax')).toEqual(5);
 
         config.reset(['proxyIpMax']);
-        expect(config.getRaw('proxyIpHeader')).toEqual('Header');
-        expect(config.getRaw('proxyIpMax')).toBeUndefined();
+        expect(config.has('proxyIpHeader')).toBeTruthy();
+        expect(config.get('proxyIpHeader')).toEqual('Header');
+        expect(config.has('proxyIpMax')).toBeFalsy();
 
         config.reset();
-        expect(config.getRaw('proxyIpHeader')).toBeUndefined();
-        expect(config.getRaw('proxyIpMax')).toBeUndefined();
+        expect(config.has('proxyIpHeader')).toBeFalsy();
+        expect(config.has('proxyIpMax')).toBeFalsy();
     });
 
     it('should overwrite execution', () => {
         const config = useConfig();
 
-        expect(config.getDefault('proxyIpMax')).toBeUndefined();
-        expect(config.get('proxyIpMax')).toBeUndefined();
+        expect(config.getDefault('proxyIpMax')).toEqual(0);
+        expect(config.has('proxyIpMax')).toBeFalsy();
+        expect(config.get('proxyIpMax')).toEqual(0);
 
         config.setDefault('proxyIpMax', 5);
         expect(config.getDefault('proxyIpMax')).toEqual(5);

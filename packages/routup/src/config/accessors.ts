@@ -17,7 +17,7 @@ import { ConfigOptions, ConfigOptionsInput } from './type';
 export function setConfigOption<K extends keyof ConfigOptionsInput>(key: K, value: ConfigOptionsInput[K]) {
     const config = useConfig();
 
-    config.set(key, value);
+    config.setRaw(key, value);
 }
 
 /**

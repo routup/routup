@@ -52,7 +52,8 @@
         "negotiator": "^0.6.3",
         "path-to-regexp": "^6.2.1",
         "proxy-addr": "^2.0.7",
-        "smob": "^0.0.6"
+        "smob": "^0.0.6",
+        "zod": "^3.19.1"
     },
     "gitHead": "11dd52c006ffe5041bba0f57dfc33527ee57d6c1"
 }
