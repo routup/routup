@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.1](https://github.com/Tada5hi/routup/compare/routup@0.8.0...routup@0.8.1) (2022-12-09)
+
+
+### Bug Fixes
+
+* **routup:** handle thrown route middleware error correctly ([43354cb](https://github.com/Tada5hi/routup/commit/43354cba99ff1c24f91f3d734e9c1b6170996532))
+
+
+
+
+
 # [0.8.0](https://github.com/Tada5hi/routup/compare/routup@0.7.0...routup@0.8.0) (2022-12-04)
 
 

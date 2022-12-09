@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.5](https://github.com/Tada5hi/routup/compare/@routup/decorators@0.1.4...@routup/decorators@0.1.5) (2022-12-09)
+
+
+### Bug Fixes
+
+* **routup:** handle thrown route middleware error correctly ([43354cb](https://github.com/Tada5hi/routup/commit/43354cba99ff1c24f91f3d734e9c1b6170996532))
+
+
+
+
+
 ## [0.1.4](https://github.com/Tada5hi/routup/compare/@routup/decorators@0.1.3...@routup/decorators@0.1.4) (2022-12-04)
 
 **Note:** Version bump only for package @routup/decorators
