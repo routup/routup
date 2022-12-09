@@ -121,11 +121,19 @@ export class Route {
             index++;
 
             if (index >= layers.length) {
-                setImmediate(() => done(err));
+                setImmediate(done, err);
                 return;
             }
 
             const layer = layers[index];
+            if (
+                err &&
+                !layer.isError()
+            ) {
+                next(err);
+                return;
+            }
+
             layer.dispatch(req, res, { ...layerMeta }, next);
         };
 

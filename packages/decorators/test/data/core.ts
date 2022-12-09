@@ -34,9 +34,7 @@ export class DeleteMiddleware implements HandlerInterface {
         const id = useRequestParam(request, 'id');
 
         if (typeof id !== 'string' || id.length < 3) {
-            response.statusCode = 400;
-            send(response);
-            return;
+            throw new Error();
         }
 
         next();

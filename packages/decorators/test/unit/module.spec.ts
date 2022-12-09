@@ -44,11 +44,6 @@ describe('src/module', () => {
         expect(response.body).toEqual({ id: 'admin' });
 
         response = await server
-            .delete('/users/a');
-
-        expect(response.statusCode).toEqual(400);
-
-        response = await server
             .put('/users');
 
         expect(response.statusCode).toEqual(200);
@@ -60,6 +55,19 @@ describe('src/module', () => {
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('patch');
     });
+
+    it('should handle core decorator error route', async () => {
+        const router = new Router();
+
+        mountControllers(router, [UserController]);
+
+        const server = supertest(router.createListener());
+
+        const response = await server
+            .delete('/users/a');
+
+        expect(response.statusCode).toEqual(400);
+    })
 
     it('should handle extra decorators', async () => {
         const router = new Router();

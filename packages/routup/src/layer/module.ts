@@ -6,6 +6,7 @@
  */
 
 import { BadRequestError } from '@ebec/http';
+import * as console from 'console';
 import {
     ParseOptions, TokensToRegexpOptions,
 } from 'path-to-regexp';
