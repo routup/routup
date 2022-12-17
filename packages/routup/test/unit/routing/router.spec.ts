@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { send, useRequestParams } from '@routup/helpers';
 import {GatewayTimeoutErrorOptions, NotFoundErrorOptions} from '@ebec/http';
 import supertest from 'supertest';
-import {Router, send, useRequestParams} from '../../../src';
+import {Router} from '../../../src';
 
 describe('src/module', () => {
     it('should process async & sync handler', async () => {

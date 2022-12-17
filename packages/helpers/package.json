@@ -1,7 +1,7 @@
 {
-    "name": "routup",
-    "version": "0.8.1",
-    "description": "Routup is a minimalistic http based routing framework.",
+    "name": "@routup/helpers",
+    "version": "0.0.0",
+    "description": "Plugin for request & response handling.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
     "files": [
@@ -22,6 +22,8 @@
     },
     "license": "MIT",
     "keywords": [
+        "request",
+        "response",
         "api",
         "rest",
         "http",
@@ -32,18 +34,30 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Tada5hi/routup.git"
+        "url": "git+https://github.com/Tada5hi/routup.git",
+        "directory": "packages/helpers"
     },
     "bugs": {
         "url": "https://github.com/Tada5hi/routup/issues"
     },
     "homepage": "https://github.com/Tada5hi/routup#readme",
     "dependencies": {
-        "@ebec/http": "^0.1.0",
-        "@routup/helpers": "^0.0.0",
-        "path-to-regexp": "^6.2.1",
+        "continu": "^1.0.3",
+        "etag": "^1.8.1",
+        "mime": "^3.0.0",
+        "negotiator": "^0.6.3",
+        "proxy-addr": "^2.0.7",
         "smob": "^0.0.6",
         "zod": "^3.20.2"
     },
-    "gitHead": "11dd52c006ffe5041bba0f57dfc33527ee57d6c1"
+    "devDependencies": {
+        "@types/etag": "^1.8.1",
+        "@types/mime": "^3.0.1",
+        "@types/negotiator": "^0.6.1",
+        "@types/proxy-addr": "^2.0.0",
+        "routup": "^0.8.1"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
 }

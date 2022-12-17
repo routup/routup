@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { send } from '@routup/helpers';
 import supertest from 'supertest';
-import {HeaderName, Route, Router, send} from '../../../src';
+import {HeaderName, Router, } from '../../../src';
 
 describe('routing/methods', () => {
     it('should handle different methods', async () => {

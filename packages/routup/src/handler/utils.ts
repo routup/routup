@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { send } from '../helpers';
+import { send } from '@routup/helpers';
 import { Next, Response } from '../type';
 import { isPromise } from '../utils';
 

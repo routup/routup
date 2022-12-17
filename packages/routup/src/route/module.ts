@@ -6,8 +6,8 @@
  */
 
 import { hasOwnProperty, merge } from 'smob';
+import { Method } from '@routup/helpers';
 import { useConfig } from '../config';
-import { Method } from '../constants';
 import { Handler } from '../handler';
 import { Layer } from '../layer';
 import { PathMatcher, PathMatcherOptions } from '../path';

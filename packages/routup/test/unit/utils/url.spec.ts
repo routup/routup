@@ -11,7 +11,7 @@ import {
     withTrailingSlash,
     withoutLeadingSlash,
     withoutTrailingSlash,
-} from '../../../src/utils';
+} from '../../../src';
 
 describe('src/utils/url', () => {
     it('should determine trailing slash', () => {

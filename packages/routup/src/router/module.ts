@@ -11,8 +11,13 @@ import {
 } from '@ebec/http';
 import { RequestListener, createServer } from 'http';
 import { merge, mergeArrays } from 'smob';
+import {
+    HeaderName,
+    Method,
+    send,
+    useRequestPath,
+} from '@routup/helpers';
 import { useConfig } from '../config';
-import { HeaderName, Method } from '../constants';
 import {
     ErrorHandler, Handler,
 } from '../handler';
@@ -34,10 +39,6 @@ import {
     Request,
     Response,
 } from '../type';
-import {
-    send,
-    useRequestPath,
-} from '../helpers';
 import { RouterOptions } from './type';
 
 export function isRouterInstance(input: unknown) : input is Router {
