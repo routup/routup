@@ -18,6 +18,7 @@ Helpers provide additional functionalities to transform and interact with the re
 - [Documentation](#documentation)
 - [Usage](#usage)
 - [Plugins](#plugins)
+- [Contributing](#contributing)
 - [License](#license)
 
 ## Installation
@@ -69,6 +70,12 @@ typically http framework functions, which are not integrated in the main package
 | [decorators](packages/decorators) | Create request handlers with class-, method- & parameter-decorators.   |
 | [query](packages/query)           | Read and parse the query string of the request url.                    |
 | [swagger](packages/swagger)       | Serve generated docs from URL or based on a JSON file.                 |
+
+## Contributing
+
+Before starting to work on a pull request, it is important to review the guidelines for
+[contributing](./CONTRIBUTING.md) and the [code of conduct](./CODE_OF_CONDUCT.md).
+These guidelines will help to ensure that contributions are made effectively and are accepted.
 
 ## License
 
