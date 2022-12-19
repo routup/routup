@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Router } from 'routup';
 import supertest from 'supertest';
 import {
     HeaderName,
@@ -22,18 +21,15 @@ import {
     send,
     setRequestHeader,
 } from '../../../src';
+import { createHandler } from '../../handler';
 
 describe('src/helpers/request/header', () => {
-    it('should set and get request header', async () => {
-        const router = new Router();
-
-        router.get('/', (req, res) => {
+    it('should set & get request header', async () => {
+        const server = supertest(createHandler((req, res) => {
             setRequestHeader(req, 'accept-language', 'de');
 
             send(res, getRequestHeader(req, 'accept-language'));
-        });
-
-        const server = supertest(router.createListener());
+        }));
 
         const response = await server
             .get('/');
@@ -42,38 +38,30 @@ describe('src/helpers/request/header', () => {
         expect(response.text).toEqual('de');
     });
 
-    it('should handle accept header', async () => {
-        const router = new Router();
-
-        router.get('/', (req, res) => {
+    it('should get all covered accept header values', async () => {
+        const server = supertest(createHandler((req, res) => {
             const accepts = getRequestAcceptableContentTypes(req);
 
             send(res, accepts);
-        });
+        }));
 
-        router.get('/json', (req, res) => {
-            const accepts = getRequestAcceptableContentType(req, 'json');
-
-            send(res, accepts);
-        });
-
-        router.get('/multiple', (req, res) => {
-            const accepts = getRequestAcceptableContentType(req, ['text', 'json']);
-
-            send(res, accepts);
-        });
-
-        const server = supertest(router.createListener());
-
-        let response = await server
+        const response = await server
             .get('/')
             .set(HeaderName.ACCEPT, 'application/json, text/html');
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(['application/json', 'text/html']);
+    });
 
-        response = await server
-            .get('/json')
+    it('should get covered accept header value', async () => {
+        const server = supertest(createHandler((req, res) => {
+            const accepts = getRequestAcceptableContentType(req, 'json');
+
+            send(res, accepts);
+        }));
+
+        let response = await server
+            .get('/')
             .set(HeaderName.ACCEPT, 'application/json, text/html');
 
         expect(response.statusCode).toEqual(200);
@@ -81,44 +69,41 @@ describe('src/helpers/request/header', () => {
 
         // no header -> use any content-type
         response = await server
-            .get('/json');
+            .get('/');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('json');
 
         // accept header do not match options
         response = await server
-            .get('/json')
+            .get('/')
             .set(HeaderName.ACCEPT, 'image/png');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toBeFalsy();
+    });
 
-        // accept header match one of available options
-        response = await server
-            .get('/multiple')
+    it('should get covered accept header value for multiple options', async () => {
+        const server = supertest(createHandler((req, res) => {
+            const accepts = getRequestAcceptableContentType(req, ['text', 'json']);
+
+            send(res, accepts);
+        }));
+
+        const response = await server
+            .get('/')
             .set(HeaderName.ACCEPT, 'application/json');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('json');
     });
 
-    it('should handle accept charset header', async () => {
-        const router = new Router();
-
-        router.get('/', (req, res) => {
+    it('should get all covered accept charset header values', async () => {
+        const server = supertest(createHandler((req, res) => {
             const accepts = getRequestAcceptableCharsets(req);
 
             send(res, accepts);
-        });
-
-        router.get('/utf-8', (req, res) => {
-            const accepts = getRequestAcceptableCharset(req, 'utf-8');
-
-            send(res, accepts);
-        });
-
-        const server = supertest(router.createListener());
+        }));
 
         let response = await server
             .get('/');
@@ -132,81 +117,71 @@ describe('src/helpers/request/header', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(['utf-8']);
+    });
 
-        response = await server
-            .get('/utf-8');
+    it('should get covered accept charset header value', async () => {
+        const server = supertest(createHandler((req, res) => {
+            const accepts = getRequestAcceptableCharset(req, 'utf-8');
+
+            send(res, accepts);
+        }));
+
+        let response = await server
+            .get('/');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('utf-8');
 
         response = await server
-            .get('/utf-8')
+            .get('/')
             .set(HeaderName.ACCEPT_CHARSET, 'binary');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toBeFalsy();
     });
 
-    it('should handle accept encoding header', async () => {
-        const router = new Router();
-
-        router.get('/', (req, res) => {
+    it('should get all covered accept encoding header values', async () => {
+        const server = supertest(createHandler((req, res) => {
             const accepts = getRequestAcceptableEncodings(req);
 
             send(res, accepts);
-        });
+        }));
 
-        router.get('/gzip', (req, res) => {
-            const accepts = getRequestAcceptableEncoding(req, 'gzip');
-
-            send(res, accepts);
-        });
-
-        const server = supertest(router.createListener());
-
-        let response = await server
+        const response = await server
             .get('/');
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(['gzip', 'deflate', 'identity']);
+    });
 
-        response = await server
-            .get('/gzip')
+    it('should get all covered accept encoding header value', async () => {
+        const server = supertest(createHandler((req, res) => {
+            const accepts = getRequestAcceptableEncoding(req, 'gzip');
+
+            send(res, accepts);
+        }));
+
+        let response = await server
+            .get('/')
             .set(HeaderName.ACCEPT_ENCODING, 'gzip');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('gzip');
 
         response = await server
-            .get('/gzip')
+            .get('/')
             .set(HeaderName.ACCEPT_ENCODING, 'deflate');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toBeFalsy();
     });
 
-    it('should handle accept language header', async () => {
-        const router = new Router();
-
-        router.get('/', (req, res) => {
+    it('should get all covered accept language header values', async () => {
+        const server = supertest(createHandler((req, res) => {
             const accepts = getRequestAcceptableLanguages(req);
 
             send(res, accepts);
-        });
-
-        router.get('/de', (req, res) => {
-            const accepts = getRequestAcceptableLanguage(req, 'de');
-
-            send(res, accepts);
-        });
-
-        router.get('/multiple', (req, res) => {
-            const accepts = getRequestAcceptableLanguage(req, ['de', 'en']);
-
-            send(res, accepts);
-        });
-
-        const server = supertest(router.createListener());
+        }));
 
         let response = await server
             .get('/');
@@ -220,8 +195,16 @@ describe('src/helpers/request/header', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(['en']);
+    });
 
-        response = await server
+    it('should get covered accept language header value', async () => {
+        const server = supertest(createHandler((req, res) => {
+            const accepts = getRequestAcceptableLanguage(req, 'de');
+
+            send(res, accepts);
+        }));
+
+        let response = await server
             .get('/de')
             .set(HeaderName.ACCEPT_LANGUAGE, 'de');
 
@@ -234,8 +217,16 @@ describe('src/helpers/request/header', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toBeFalsy();
+    });
 
-        response = await server
+    it('should get covered accept language header value for multiple options', async () => {
+        const server = supertest(createHandler((req, res) => {
+            const accepts = getRequestAcceptableLanguage(req, ['de', 'en']);
+
+            send(res, accepts);
+        }));
+
+        const response = await server
             .get('/multiple')
             .set(HeaderName.ACCEPT_LANGUAGE, 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5');
 
@@ -244,17 +235,13 @@ describe('src/helpers/request/header', () => {
     });
 
     it('should match request content type', async () => {
-        const router = new Router();
-
-        router.get('/', (req, res) => {
+        const server = supertest(createHandler((req, res) => {
             if (matchRequestContentType(req, 'json')) {
                 send(res, 'true');
             } else {
                 send(res, 'false');
             }
-        });
-
-        const server = supertest(router.createListener());
+        }));
 
         let response = await server
             .get('/')

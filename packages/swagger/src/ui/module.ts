@@ -14,7 +14,7 @@ import {
     send,
     useRequestMountPath,
     useRequestPath,
-} from 'routup';
+} from '@routup/core';
 import serveStatic from 'serve-static';
 import { merge } from 'smob';
 import swaggerUi from 'swagger-ui-dist';

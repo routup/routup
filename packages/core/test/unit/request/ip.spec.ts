@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Request } from 'routup';
-import { HeaderName, getRequestIp } from '../../../src';
+import { HeaderName, Request, getRequestIp } from '../../../src';
 
 function createReq(socketAddr: string, headers?: Record<string, any>) : Request {
     return {

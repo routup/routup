@@ -49,6 +49,8 @@
         "@routup/body": "^0.3.4",
         "@routup/cookie": "^0.2.4",
         "@routup/query": "^0.2.4",
+        "@types/supertest": "^2.0.12",
+        "supertest": "^6.3.3",
         "routup": "^0.8.1"
     },
     "publishConfig": {

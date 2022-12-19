@@ -5,24 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Router } from 'routup';
 import supertest from 'supertest';
+import { createHandler } from '../../handler';
 import {
-    send, setRequestEnv, unsetRequestEnv, useRequestEnv,
+    send,
+    setRequestEnv,
+    unsetRequestEnv,
+    useRequestEnv,
 } from '../../../src';
 
 describe('src/helpers/request/env', () => {
-    it('set request env', async () => {
-        const router = new Router();
-
-        router.get('/', (req, res) => {
+    it('set & get env param', async () => {
+        const server = supertest(createHandler((req, res) => {
             setRequestEnv(req, 'bar', 'baz');
             setRequestEnv(req, 'foo', 'bar');
 
             send(res, useRequestEnv(req, 'foo'));
-        });
-
-        const server = supertest(router.createListener());
+        }));
 
         const response = await server
             .get('/');
@@ -31,19 +30,15 @@ describe('src/helpers/request/env', () => {
         expect(response.text).toEqual('bar');
     });
 
-    it('set request env object', async () => {
-        const router = new Router();
-
-        router.get('/', (req, res) => {
+    it('set set & get env object', async () => {
+        const server = supertest(createHandler((req, res) => {
             setRequestEnv(req, {
                 foo: 'bar',
                 bar: 'baz',
             });
 
             send(res, useRequestEnv(req));
-        });
-
-        const server = supertest(router.createListener());
+        }));
 
         const response = await server
             .get('/');
@@ -56,9 +51,7 @@ describe('src/helpers/request/env', () => {
     });
 
     it('should append env to request', async () => {
-        const router = new Router();
-
-        router.get('/', (req, res) => {
+        const server = supertest(createHandler((req, res) => {
             setRequestEnv(req, {
                 foo: 'bar',
             });
@@ -68,9 +61,7 @@ describe('src/helpers/request/env', () => {
             }, true);
 
             send(res, useRequestEnv(req));
-        });
-
-        const server = supertest(router.createListener());
+        }));
 
         const response = await server
             .get('/');
@@ -83,9 +74,7 @@ describe('src/helpers/request/env', () => {
     });
 
     it('should overwrite env of request', async () => {
-        const router = new Router();
-
-        router.get('/', (req, res) => {
+        const server = supertest(createHandler((req, res) => {
             setRequestEnv(req, {
                 foo: 'bar',
             });
@@ -95,9 +84,7 @@ describe('src/helpers/request/env', () => {
             });
 
             send(res, useRequestEnv(req));
-        });
-
-        const server = supertest(router.createListener());
+        }));
 
         const response = await server
             .get('/');
@@ -109,9 +96,7 @@ describe('src/helpers/request/env', () => {
     });
 
     it('should unset env of request', async () => {
-        const router = new Router();
-
-        router.get('/', (req, res) => {
+        const server = supertest(createHandler((req, res) => {
             setRequestEnv(req, {
                 foo: 'bar',
                 bar: 'baz',
@@ -120,9 +105,7 @@ describe('src/helpers/request/env', () => {
             unsetRequestEnv(req, 'foo');
 
             send(res, useRequestEnv(req));
-        });
-
-        const server = supertest(router.createListener());
+        }));
 
         const response = await server
             .get('/');
@@ -134,13 +117,9 @@ describe('src/helpers/request/env', () => {
     });
 
     it('should use request env', async () => {
-        const router = new Router();
-
-        router.get('/', (req, res) => {
+        const server = supertest(createHandler((req, res) => {
             send(res, useRequestEnv(req));
-        });
-
-        const server = supertest(router.createListener());
+        }));
 
         const response = await server
             .get('/');

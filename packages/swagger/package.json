@@ -44,7 +44,7 @@
     },
     "homepage": "https://github.com/Tada5hi/routup#readme",
     "peerDependencies": {
-        "routup": ">=0.8.0 <1.0.0"
+        "@routup/core": "^0.0.0"
     },
     "dependencies": {
         "@types/serve-static": "^1.15.0",
@@ -54,6 +54,9 @@
         "swagger-ui-dist": "^4.15.5"
     },
     "devDependencies": {
+        "@routup/core": "^0.0.0",
+        "@types/supertest": "^2.0.12",
+        "supertest": "^6.3.3",
         "routup": "^0.8.1"
     },
     "publishConfig": {

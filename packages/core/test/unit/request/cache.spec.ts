@@ -5,31 +5,33 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Router } from 'routup';
 import supertest from 'supertest';
 import { isRequestCacheable, send } from '../../../src';
+import { createHandler } from '../../handler';
 
 describe('src/helpers/request/cache', () => {
-    it('should determine if request is cacheable', async () => {
-        const router = new Router();
-
-        router.get('/', async (req, res) => {
+    it('should be cacheable', async () => {
+        const server = supertest(createHandler((req, res) => {
             send(res, isRequestCacheable(req, new Date()));
-        });
+        }));
 
-        const server = supertest(router.createListener());
-
-        let response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('false');
-
-        response = await server
+        const response = await server
             .get('/')
             .set('If-Modified-Since', new Date(Date.now() + 3600).toUTCString());
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('true');
+    });
+
+    it('should not be cacheable', async () => {
+        const server = supertest(createHandler((req, res) => {
+            send(res, isRequestCacheable(req, new Date()));
+        }));
+
+        const response = await server
+            .get('/');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.text).toEqual('false');
     });
 });

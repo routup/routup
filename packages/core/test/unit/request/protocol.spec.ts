@@ -4,36 +4,28 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-
-import { Router } from 'routup';
 import supertest from 'supertest';
 import { HeaderName, getRequestProtocol, send } from '../../../src';
+import { createHandler } from '../../handler';
 
 describe('src/helpers/request/hostname', () => {
     it('should determine protocol', async () => {
-        const router = new Router();
-
-        router.get('/', async (req, res) => {
+        const server = supertest(createHandler((req, res) => {
             send(res, getRequestProtocol(req, { default: 'http', trustProxy: true }));
-        });
-
-        router.get('/not-trusted', (req, res) => {
-            send(res, getRequestProtocol(req));
-        });
-
-        const server = supertest(router.createListener());
+        }));
 
         await server
             .get('/')
             .expect('http');
+    });
+
+    it('should determine protocol of non-trusted', async () => {
+        const server = supertest(createHandler((req, res) => {
+            send(res, getRequestProtocol(req));
+        }));
 
         await server
             .get('/')
-            .set(HeaderName.X_FORWARDED_PROTO, 'https')
-            .expect('https');
-
-        await server
-            .get('/not-trusted')
             .set(HeaderName.X_FORWARDED_PROTO, 'https')
             .expect('http');
     });

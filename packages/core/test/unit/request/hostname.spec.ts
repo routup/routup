@@ -5,19 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Router } from 'routup';
 import supertest from 'supertest';
 import { HeaderName, getRequestHostName, send } from '../../../src';
+import { createHandler } from '../../handler';
 
 describe('src/helpers/request/hostname', () => {
     it('should determine hostname', async () => {
-        const router = new Router();
-
-        router.get('/', async (req, res) => {
+        const server = supertest(createHandler((req, res) => {
             send(res, getRequestHostName(req));
-        });
-
-        const server = supertest(router.createListener());
+        }));
 
         await server
             .get('/')
@@ -31,14 +27,10 @@ describe('src/helpers/request/hostname', () => {
     });
 
     it('should determine undefined hostname', async () => {
-        const router = new Router();
-
-        router.get('/', async (req, res) => {
+        const server = supertest(createHandler((req, res) => {
             req.headers[HeaderName.HOST] = undefined;
             send(res, getRequestHostName(req));
-        });
-
-        const server = supertest(router.createListener());
+        }));
 
         await server
             .get('/')
@@ -47,13 +39,9 @@ describe('src/helpers/request/hostname', () => {
     });
 
     it('should determine hostname for IPv6', async () => {
-        const router = new Router();
-
-        router.get('/', async (req, res) => {
+        const server = supertest(createHandler((req, res) => {
             send(res, getRequestHostName(req));
-        });
-
-        const server = supertest(router.createListener());
+        }));
 
         await server
             .get('/')
@@ -67,17 +55,9 @@ describe('src/helpers/request/hostname', () => {
     });
 
     it('should determine hostname with trust proxy', async () => {
-        const router = new Router();
-
-        router.get('/', async (req, res) => {
+        const server = supertest(createHandler((req, res) => {
             send(res, getRequestHostName(req, { trustProxy: true }));
-        });
-
-        router.get('/not-trusted', async (req, res) => {
-            send(res, getRequestHostName(req, { trustProxy: '10.1.10.0' }));
-        });
-
-        const server = supertest(router.createListener());
+        }));
 
         await server
             .get('/')
@@ -96,6 +76,12 @@ describe('src/helpers/request/hostname', () => {
             .set(HeaderName.HOST, 'localhost')
             .set(HeaderName.X_FORWARDED_HOST, 'example.com:3000 , foobar.com:3000')
             .expect('example.com');
+    });
+
+    it('should determine hostname with trust proxy restriction', async () => {
+        const server = supertest(createHandler((req, res) => {
+            send(res, getRequestHostName(req, { trustProxy: '10.1.10.0' }));
+        }));
 
         await server
             .get('/not-trusted')

@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Router } from 'routup';
 import supertest from 'supertest';
 import {
     HeaderName,
@@ -15,33 +14,32 @@ import {
     setResponseHeaderAttachment,
     setResponseHeaderContentType,
 } from '../../../src';
+import { createHandler } from '../../handler';
 
 describe('src/helpers/response/header', () => {
     it('should set header attachment', async () => {
-        const router = new Router();
-
-        router.get('/', (req, res) => {
+        const server = supertest(createHandler((req, res) => {
             setResponseHeaderAttachment(res);
 
             send(res);
-        });
+        }));
 
-        router.get('/file', (req, res) => {
-            setResponseHeaderAttachment(res, 'dummy.json');
-
-            send(res);
-        });
-
-        const server = supertest(router.createListener());
-
-        let response = await server
+        const response = await server
             .get('/');
 
         expect(response.statusCode).toEqual(200);
         expect(response.headers[HeaderName.CONTENT_DISPOSITION]).toEqual('attachment');
+    });
 
-        response = await server
-            .get('/file');
+    it('should set header attachment by filename ', async () => {
+        const server = supertest(createHandler((req, res) => {
+            setResponseHeaderAttachment(res, 'dummy.json');
+
+            send(res);
+        }));
+
+        const response = await server
+            .get('/');
 
         expect(response.statusCode).toEqual(200);
         expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json');
@@ -49,16 +47,12 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should append value', async () => {
-        const router = new Router();
-
-        router.get('/', (req, res) => {
+        const server = supertest(createHandler((req, res) => {
             appendResponseHeader(res, HeaderName.SET_COOKIE, 'foo=bar; Path=/');
             appendResponseHeader(res, HeaderName.SET_COOKIE, 'bar=baz; Path=/');
 
             send(res);
-        });
-
-        const server = supertest(router.createListener());
+        }));
 
         const response = await server
             .get('/');
@@ -70,32 +64,54 @@ describe('src/helpers/response/header', () => {
         ]);
     });
 
-    it('should append directive value', async () => {
-        const router = new Router();
-
-        router.get('/', (req, res) => {
+    it('should set header directive value', async () => {
+        const server = supertest(createHandler((req, res) => {
             appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, 'boundary=something');
 
             send(res);
-        });
+        }));
 
-        router.get('/multiple', (req, res) => {
+        const response = await server
+            .get('/');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('boundary=something');
+    });
+
+    it('should set multiple header directive values', async () => {
+        const server = supertest(createHandler((req, res) => {
             appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, [
                 'application/json',
                 'boundary=something',
             ]);
 
             send(res);
-        });
+        }));
 
-        router.get('/append', (req, res) => {
+        const response = await server
+            .get('/');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; boundary=something');
+    });
+
+    it('should append single header directive value', async () => {
+        const server = supertest(createHandler((req, res) => {
             setResponseHeaderAttachment(res, 'dummy.json');
             appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, 'boundary=something');
 
             send(res);
-        });
+        }));
 
-        router.get('/append-multiple', (req, res) => {
+        const response = await server
+            .get('/');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; boundary=something');
+    });
+
+    it('should append multiple header directive values', async () => {
+        const server = supertest(createHandler((req, res) => {
             setResponseHeaderAttachment(res, 'dummy.json');
             appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, [
                 'charset=utf-8',
@@ -103,29 +119,9 @@ describe('src/helpers/response/header', () => {
             ]);
 
             send(res);
-        });
+        }));
 
-        const server = supertest(router.createListener());
-
-        let response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('boundary=something');
-
-        response = await server
-            .get('/multiple');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; boundary=something');
-
-        response = await server
-            .get('/append');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; boundary=something');
-
-        response = await server
+        const response = await server
             .get('/append-multiple');
 
         expect(response.statusCode).toEqual(200);
@@ -133,31 +129,29 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should set response content type', async () => {
-        const router = new Router();
-
-        router.get('/', (req, res) => {
+        const server = supertest(createHandler((req, res) => {
             setResponseHeaderContentType(res, 'application/json');
             setResponseHeaderContentType(res, 'text/html', true);
 
             send(res);
-        });
+        }));
 
-        router.get('/overwrite', (req, res) => {
-            setResponseHeaderContentType(res, 'application/json');
-            setResponseHeaderContentType(res, 'text/html');
-
-            send(res);
-        });
-
-        const server = supertest(router.createListener());
-
-        let response = await server
+        const response = await server
             .get('/');
 
         expect(response.statusCode).toEqual(200);
         expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json');
+    });
 
-        response = await server
+    it('should overwrite response content-type', async () => {
+        const server = supertest(createHandler((req, res) => {
+            setResponseHeaderContentType(res, 'application/json');
+            setResponseHeaderContentType(res, 'text/html');
+
+            send(res);
+        }));
+
+        const response = await server
             .get('/overwrite');
 
         expect(response.statusCode).toEqual(200);

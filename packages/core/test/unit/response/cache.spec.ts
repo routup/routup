@@ -4,18 +4,15 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-
-import { Router } from 'routup';
 import supertest from 'supertest';
 import { HeaderName, send, setResponseCacheHeaders } from '../../../src';
+import { createHandler } from '../../handler';
 
 describe('src/helpers/response/cache', () => {
     it('should determine if request is cacheable', async () => {
-        const router = new Router();
-
         const date = new Date();
 
-        router.get('/', async (req, res) => {
+        const server = supertest(createHandler((req, res) => {
             setResponseCacheHeaders(res, {
                 maxAge: 3600,
                 modifiedTime: date,
@@ -25,9 +22,7 @@ describe('src/helpers/response/cache', () => {
             });
 
             send(res);
-        });
-
-        const server = supertest(router.createListener());
+        }));
 
         const response = await server
             .get('/');

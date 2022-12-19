@@ -50,6 +50,8 @@
     },
     "devDependencies": {
         "@routup/core": "^0.0.0",
+        "@types/supertest": "^2.0.12",
+        "supertest": "^6.3.3",
         "routup": "^0.8.1"
     },
     "publishConfig": {

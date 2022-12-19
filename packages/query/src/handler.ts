@@ -7,8 +7,9 @@
 
 import { Handler, hasRequestQuery, setRequestQuery } from '@routup/core';
 import qs from 'qs';
+import { ParseOptions } from './type';
 
-export function createRequestHandler() : Handler {
+export function createRequestHandler(options?: ParseOptions) : Handler {
     return (req, res, next) => {
         if (hasRequestQuery(req)) {
             next();
@@ -29,7 +30,7 @@ export function createRequestHandler() : Handler {
             search = search.substring(1);
         }
 
-        const data = qs.parse(search);
+        const data = qs.parse(search, options);
         setRequestQuery(req, data);
         next();
     };
