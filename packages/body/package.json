@@ -41,7 +41,7 @@
     },
     "homepage": "https://github.com/Tada5hi/routup#readme",
     "peerDependencies": {
-        "routup": ">=0.8.0 <1.0.0"
+        "@routup/core": "^0.x"
     },
     "dependencies": {
         "@types/body-parser": "^1.19.2",
@@ -49,6 +49,7 @@
         "smob": "^0.0.6"
     },
     "devDependencies": {
+        "@routup/core": "^0.0.0",
         "routup": "^0.8.1"
     },
     "publishConfig": {

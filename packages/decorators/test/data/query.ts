@@ -1,7 +1,9 @@
 import {
-   Response, send,
+    Response, send,
 } from 'routup';
-import {  DController, DGet, DResponse, DQuery } from '../../src';
+import {
+    DController, DGet, DQuery, DResponse,
+} from '../../src';
 
 @DController('/')
 export class QueryController {

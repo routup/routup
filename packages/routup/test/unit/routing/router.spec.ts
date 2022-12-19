@@ -5,24 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { send, useRequestParams } from '@routup/helpers';
-import {GatewayTimeoutErrorOptions, NotFoundErrorOptions} from '@ebec/http';
+import { send, useRequestParams } from '@routup/core';
+import { GatewayTimeoutErrorOptions, NotFoundErrorOptions } from '@ebec/http';
 import supertest from 'supertest';
-import {Router} from '../../../src';
+import { Router } from '../../../src';
 
 describe('src/module', () => {
     it('should process async & sync handler', async () => {
         const router = new Router();
 
-        router.get('/async', async (req, res) => {
-            return await new Promise((resolve) => {
-                setTimeout(() => resolve('foo'), 0);
-            });
-        });
+        router.get('/async', async (req, res) => new Promise((resolve) => {
+            setTimeout(() => resolve('foo'), 0);
+        }));
 
-        router.get('/sync',  () => {
-            return 'bar';
-        });
+        router.get('/sync', () => 'bar');
 
         const server = supertest(router.createListener());
 

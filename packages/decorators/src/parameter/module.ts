@@ -5,10 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { useRequestBody } from '@routup/body';
-import { useRequestCookie, useRequestCookies } from '@routup/cookie';
-import { useRequestQuery } from '@routup/query';
-import { useRequestParam, useRequestParams } from 'routup';
+import {
+    useRequestBody,
+    useRequestCookie,
+    useRequestCookies,
+    useRequestParam,
+    useRequestParams,
+    useRequestQuery,
+} from 'routup';
 import { useDecoratorMeta } from '../utils';
 import { DecoratorParameterBuildFn } from './type';
 

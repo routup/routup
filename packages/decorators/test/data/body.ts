@@ -1,7 +1,7 @@
+import { Response, send } from 'routup';
 import {
-    DController, DBody, DGet, DResponse,
+    DBody, DController, DGet, DResponse,
 } from '../../src';
-import { Response, send } from "routup";
 
 @DController('/')
 export class BodyController {

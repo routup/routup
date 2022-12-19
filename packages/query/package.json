@@ -44,13 +44,14 @@
     },
     "homepage": "https://github.com/Tada5hi/routup#readme",
     "peerDependencies": {
-        "routup": ">=0.8.0 <1.0.0"
+        "@routup/core": "^0.x"
     },
     "dependencies": {
         "@types/qs": "^6.9.7",
         "qs": "^6.11.0"
     },
     "devDependencies": {
+        "@routup/core": "^0.0.0",
         "routup": "^0.8.1"
     },
     "gitHead": "11dd52c006ffe5041bba0f57dfc33527ee57d6c1",

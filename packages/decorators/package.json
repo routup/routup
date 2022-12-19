@@ -43,9 +43,6 @@
     },
     "homepage": "https://github.com/Tada5hi/routup#readme",
     "peerDependencies": {
-        "@routup/body": ">=0.3.1 <1.0.0",
-        "@routup/cookie": ">=0.2.1 <1.0.0",
-        "@routup/query": ">=0.2.1 <1.0.0",
         "routup": ">=0.8.0 <1.0.0"
     },
     "devDependencies": {

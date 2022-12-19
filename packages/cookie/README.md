@@ -28,15 +28,21 @@ To read the docs, visit [https://routup.tada5hi.net](https://routup.tada5hi.net)
 
 ## Usage
 
+It is important to invoke the request middleware,
+to parse the cookies of the request header.
+
 ```typescript
-import { Router, send } from 'routup';
-import { 
+import {Router, send} from 'routup';
+import {
+    createRequestHandler,
     setResponseCookie,
-    useRequestCookie, 
+    useRequestCookie,
     useRequestCookies
 } from '@routup/cookie';
 
 const router = new Router();
+
+router.use(createRequestHandler());
 
 router.get('/', (req, res) => {
     const cookies = useRequestCookies(req);

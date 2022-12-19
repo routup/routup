@@ -7,14 +7,6 @@
 
 // eslint-disable-next-line max-classes-per-file
 import {
-    DController,
-    DGet, DHeader,
-    DHeaders,
-    DRequest,
-    DResponse,
-    HandlerInterface,
-} from '../../src';
-import {
     Next,
     Request,
     Response,
@@ -22,6 +14,14 @@ import {
     setRequestEnv,
     useRequestEnv,
 } from 'routup';
+import {
+    DController,
+    DGet, DHeader,
+    DHeaders,
+    DRequest,
+    DResponse,
+    HandlerInterface,
+} from '../../src';
 
 class DummyMiddleware implements HandlerInterface {
     run(request: Request, response: Response, next: Next): Promise<void> | void {

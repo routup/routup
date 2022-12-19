@@ -1,0 +1,63 @@
+{
+    "name": "@routup/core",
+    "version": "0.0.0",
+    "description": "Plugin for request & response handling.",
+    "main": "./dist/index.js",
+    "typings": "dist/index.d.ts",
+    "files": [
+        "dist/"
+    ],
+    "scripts": {
+        "build": "rimraf ./dist && tsc -p tsconfig.build.json",
+        "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
+        "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage",
+        "lint": "eslint --ext .js,.ts ./src",
+        "lint:fix": "npm run lint -- --fix",
+        "prepublishOnly": "npm run build"
+    },
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "license": "MIT",
+    "keywords": [
+        "request",
+        "response",
+        "handlers",
+        "api",
+        "rest",
+        "http",
+        "router",
+        "api-router",
+        "route",
+        "routing"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Tada5hi/routup.git",
+        "directory": "packages/core"
+    },
+    "bugs": {
+        "url": "https://github.com/Tada5hi/routup/issues"
+    },
+    "homepage": "https://github.com/Tada5hi/routup#readme",
+    "dependencies": {
+        "continu": "^1.0.4",
+        "etag": "^1.8.1",
+        "mime": "^3.0.0",
+        "negotiator": "^0.6.3",
+        "proxy-addr": "^2.0.7",
+        "smob": "^0.0.6",
+        "zod": "^3.20.2"
+    },
+    "devDependencies": {
+        "@types/etag": "^1.8.1",
+        "@types/mime": "^3.0.1",
+        "@types/negotiator": "^0.6.1",
+        "@types/proxy-addr": "^2.0.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

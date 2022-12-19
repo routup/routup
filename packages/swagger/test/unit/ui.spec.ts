@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from "path";
-import supertest from "supertest";
-import { Router, HeaderName } from "routup";
-import { createUIHandler} from "../../src";
+import path from 'path';
+import supertest from 'supertest';
+import { HeaderName, Router } from 'routup';
+import { createUIHandler } from '../../src';
 
 describe('src/ui', () => {
     it('should serve ui files', async () => {
@@ -36,4 +36,4 @@ describe('src/ui', () => {
 
         expect(response.statusCode).toEqual(404);
     });
-})
+});

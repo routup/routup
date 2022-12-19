@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { send, setRequestEnv, useRequestEnv } from '@routup/helpers';
+import { send, setRequestEnv, useRequestEnv } from '@routup/core';
 import supertest from 'supertest';
 import {
-    Next, Request, Response, Router
+    Next, Request, Response, Router,
 } from '../../../src';
 
 describe('routing/middleware', () => {

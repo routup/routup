@@ -7,7 +7,7 @@
 
 import supertest from 'supertest';
 import { Router } from 'routup';
-import {mountController, mountControllers} from "../../src/module";
+import { mountController, mountControllers } from '../../src';
 import { DummyController } from '../data/extra';
 import { UserController } from '../data/core';
 
@@ -67,7 +67,7 @@ describe('src/module', () => {
             .delete('/users/a');
 
         expect(response.statusCode).toEqual(400);
-    })
+    });
 
     it('should handle extra decorators', async () => {
         const router = new Router();

@@ -7,15 +7,14 @@
 
 import { BadRequestError } from '@ebec/http';
 import {
-    ParseOptions, TokensToRegexpOptions,
-} from 'path-to-regexp';
-import { setRequestMountPath, setRequestParams } from '@routup/helpers';
-import { useConfig } from '../config';
+    Next, Request, Response, setRequestMountPath, setRequestParams,
+} from '@routup/core';
 import { processHandlerExecutionOutput } from '../handler';
 import { PathMatcher } from '../path';
 import {
-    DispatcherMeta, Next, Path, Request, Response,
+    DispatcherMeta,
 } from '../type';
+import { LayerOptions } from './type';
 
 export class Layer {
     readonly '@instanceof' = Symbol.for('Layer');
@@ -27,16 +26,10 @@ export class Layer {
     // --------------------------------------------------
 
     constructor(
-        path: Path,
-        options: TokensToRegexpOptions & ParseOptions,
+        options: LayerOptions,
         fn: CallableFunction,
     ) {
-        if (typeof options.sensitive === 'undefined') {
-            const config = useConfig();
-            options.sensitive = config.get('caseSensitive');
-        }
-
-        this.pathMatcher = new PathMatcher(path, options);
+        this.pathMatcher = new PathMatcher(options.path, options.pathMatcher);
         this.fn = fn;
     }
 

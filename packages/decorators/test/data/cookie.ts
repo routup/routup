@@ -1,7 +1,7 @@
-import { Response, send } from "routup";
+import { Response, send } from 'routup';
 import {
-    DController, DGet, DResponse,
-    DCookie, DCookies
+    DController, DCookie, DCookies,
+    DGet, DResponse,
 } from '../../src';
 
 @DController('/')

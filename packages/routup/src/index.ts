@@ -13,4 +13,4 @@ export * from './router';
 export * from './type';
 export * from './utils';
 
-export * from '@routup/helpers';
+export * from '@routup/core';

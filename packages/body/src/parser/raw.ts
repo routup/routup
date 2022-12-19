@@ -6,7 +6,7 @@
  */
 
 import { Options, raw } from 'body-parser';
-import { Handler } from 'routup';
+import { Handler } from '@routup/core';
 
 export function createRequestRawHandler(options?: Options) : Handler {
     return raw(options);

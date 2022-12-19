@@ -6,7 +6,7 @@
  */
 
 import { Options } from 'body-parser';
-import { Handler } from 'routup';
+import { Handler } from '@routup/core';
 import { createRequestJsonHandler } from './json';
 import { createRequestUrlEncodedHandler } from './url-encoded';
 

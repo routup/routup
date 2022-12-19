@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { PathMatcherOptions } from '../path';
 import { Path } from '../type';
 
 export type RouterOptions = {
@@ -17,10 +18,19 @@ export type RouterOptions = {
     timeout?: number,
 
     /**
-     * Mount path.
+     * Path matcher options.
+     *
+     * default: {end: false, sensitive: true}
+     */
+    pathMatcherOptions: PathMatcherOptions,
+};
+
+export type RouterOptionsInput = Partial<RouterOptions> & {
+    /**
+     * The path the router is mounted on.
      *
      * @type string
      * @default '/'
      */
-    mountPath?: Path
+    path?: Path,
 };

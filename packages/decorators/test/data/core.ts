@@ -7,6 +7,13 @@
 
 // eslint-disable-next-line max-classes-per-file
 import {
+    Next,
+    Request,
+    Response,
+    send,
+    useRequestParam,
+} from 'routup';
+import {
     DController,
     DDelete,
     DGet,
@@ -18,16 +25,8 @@ import {
     DPut,
     DRequest,
     DResponse,
-    HandlerInterface
+    HandlerInterface,
 } from '../../src';
-
-import {
-    Next,
-    Request,
-    Response,
-    send,
-    useRequestParam,
-} from 'routup';
 
 export class DeleteMiddleware implements HandlerInterface {
     run(request: Request, response: Response, next: Next): Promise<void> | void {
@@ -45,9 +44,9 @@ export class DeleteMiddleware implements HandlerInterface {
 export class UserController {
     @DGet('')
     async getMany(
-        @DRequest() req: Request,
+    @DRequest() req: Request,
         @DResponse() res: Response,
-        @DNext() next: Next
+        @DNext() next: Next,
     ) {
         send(res, 'many');
     }

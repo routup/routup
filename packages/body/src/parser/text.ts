@@ -6,7 +6,7 @@
  */
 
 import { OptionsText, text } from 'body-parser';
-import { Handler } from 'routup';
+import { Handler } from '@routup/core';
 
 export function createRequestTextHandler(options?: OptionsText) : Handler {
     return text(options);

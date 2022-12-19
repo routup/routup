@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { send } from "@routup/helpers";
+import { send } from '@routup/core';
 import supertest from 'supertest';
 import { Router } from '../../../src';
 
@@ -38,7 +38,7 @@ describe('routing/paths', () => {
 
     it('should handle path by mount path', async () => {
         const router = new Router({
-            mountPath: '/foo',
+            path: '/foo',
         });
 
         router.get('/bar', async (req, res) => {
@@ -55,13 +55,13 @@ describe('routing/paths', () => {
     });
 
     it('should handle path for nested routers', async () => {
-        const child = new Router({ mountPath: '/bar' });
+        const child = new Router({ path: '/bar' });
 
         child.get('/baz', async (req, res) => {
             send(res, '/foo/bar/baz');
         });
 
-        const router = new Router({ mountPath: '/foo' });
+        const router = new Router({ path: '/foo' });
         router.use(child);
 
         const server = supertest(router.createListener());

@@ -5,19 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {setRequestBody} from "@routup/body";
-import {Router} from "routup";
-import supertest from "supertest";
-import {mountController} from "../../src/module";
-import {BodyController} from "../data/body";
+import { createRequestHandler } from '@routup/body';
+import { Router, setRequestBody } from 'routup';
+import supertest from 'supertest';
+import { mountController } from '../../src';
+import { BodyController } from '../data/body';
 
 describe('src/module', () => {
     it('should handle body decorators', async () => {
         const router = new Router();
+
+        router.use(createRequestHandler());
+
         router.use((req, res, next) => {
-            setRequestBody(req, {
-                foo: 'bar'
-            });
+            setRequestBody(req, 'foo', 'bar');
 
             next();
         });
@@ -30,12 +31,12 @@ describe('src/module', () => {
             .get('/many');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({foo: 'bar'});
+        expect(response.body).toEqual({ foo: 'bar' });
 
         response = await server
             .get('/single');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('bar');
-    })
+    });
 });

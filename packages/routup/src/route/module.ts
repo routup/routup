@@ -6,15 +6,16 @@
  */
 
 import { hasOwnProperty, merge } from 'smob';
-import { Method } from '@routup/helpers';
-import { useConfig } from '../config';
-import { Handler } from '../handler';
+import {
+    Handler, Method, Next, Request, Response,
+} from '@routup/core';
 import { Layer } from '../layer';
 import { PathMatcher, PathMatcherOptions } from '../path';
 import {
     DispatcherMeta,
-    Next, Path, Request, Response,
+    Path,
 } from '../type';
+import { RouteOptions } from './type';
 
 export class Route {
     readonly '@instanceof' = Symbol.for('Route');
@@ -29,13 +30,15 @@ export class Route {
 
     // --------------------------------------------------
 
-    constructor(path: Path) {
-        this.path = path;
+    constructor(options: RouteOptions) {
+        this.path = options.path;
 
-        const config = useConfig();
-
-        this.pathMatcherOptions = { end: true, strict: this.isStrictPath(), sensitive: config.get('caseSensitive') };
-        this.pathMatcher = new PathMatcher(path, this.pathMatcherOptions);
+        this.pathMatcherOptions = {
+            end: true,
+            strict: this.isStrictPath(),
+            ...options.pathMatcher,
+        };
+        this.pathMatcher = new PathMatcher(this.path, this.pathMatcherOptions);
     }
 
     // --------------------------------------------------
@@ -147,8 +150,10 @@ export class Route {
 
         for (let i = 0; i < handlers.length; i++) {
             const layer = new Layer(
-                this.path,
-                this.pathMatcherOptions,
+                {
+                    path: this.path,
+                    pathMatcher: this.pathMatcherOptions,
+                },
                 handlers[i],
             );
 

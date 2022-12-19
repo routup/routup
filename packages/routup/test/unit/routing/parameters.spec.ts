@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { send, useRequestParams } from '@routup/helpers';
+import { send, useRequestParams } from '@routup/core';
 import supertest from 'supertest';
-import { Router} from '../../../src';
+import { Router } from '../../../src';
 
 describe('routing/parameters', () => {
     it('should capture parameters', async () => {
@@ -28,7 +28,7 @@ describe('routing/parameters', () => {
 
     it('should pass on captured parameters', async () => {
         const router = new Router({
-            mountPath: '/:id',
+            path: '/:id',
         });
 
         router.get('/:action', async (req, res) => {

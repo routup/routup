@@ -5,27 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IncomingMessage, ServerResponse } from 'http';
-
-// --------------------------------------------------
-
 export type ObjectLiteral = Record<string, any>;
 
-// --------------------------------------------------
-
-export interface Response extends ServerResponse {
-
-}
-
-export interface Request extends IncomingMessage {
-
-}
-
-export type Next = (err?: Error) => void;
-
 export type Path = string | RegExp;
-
-// --------------------------------------------------
 
 export type DispatcherMeta = {
     /**

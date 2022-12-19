@@ -6,7 +6,7 @@
  */
 
 import { OptionsUrlencoded, urlencoded } from 'body-parser';
-import { Handler } from 'routup';
+import { Handler } from '@routup/core';
 
 export function createRequestUrlEncodedHandler(options?: OptionsUrlencoded) : Handler {
     return urlencoded(options);

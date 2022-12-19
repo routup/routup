@@ -10,18 +10,20 @@ import {
     NotFoundErrorOptions,
 } from '@ebec/http';
 import { RequestListener, createServer } from 'http';
+import { ParseOptions, TokensToRegexpOptions } from 'path-to-regexp';
 import { merge, mergeArrays } from 'smob';
 import {
+    ErrorHandler,
+    Handler,
     HeaderName,
     Method,
+    Next,
+    Request,
+    Response,
     send,
     useRequestPath,
-} from '@routup/helpers';
-import { useConfig } from '../config';
-import {
-    ErrorHandler, Handler,
-} from '../handler';
-import { PathMatcher } from '../path';
+} from '@routup/core';
+import { PathMatcher, PathMatcherOptions } from '../path';
 import {
     cleanDoubleSlashes,
     createRequestTimeout,
@@ -34,12 +36,9 @@ import { Layer, isLayerInstance } from '../layer';
 import { Route, isRouteInstance } from '../route';
 import {
     DispatcherMeta,
-    Next,
     Path,
-    Request,
-    Response,
 } from '../type';
-import { RouterOptions } from './type';
+import { RouterOptionsInput } from './type';
 
 export function isRouterInstance(input: unknown) : input is Router {
     return isInstance(input, 'Router');
@@ -48,46 +47,87 @@ export function isRouterInstance(input: unknown) : input is Router {
 export class Router {
     readonly '@instanceof' = Symbol.for('Router');
 
-    protected mountPath : Path | undefined;
-
-    protected timeout: number | undefined;
-
+    /**
+     * Array of mounted layers, routes & routers.
+     *
+     * @protected
+     */
     protected stack : (Router | Route | Layer)[] = [];
 
+    /**
+     * Mount path of instance
+     *
+     * @protected
+     */
+    protected path : Path | undefined;
+
+    /**
+     * Path matcher for the current mount path.
+     *
+     * @protected
+     */
     protected pathMatcher : PathMatcher | undefined;
 
     /**
-     * Is root instance?
+     * Is this the root instance?
      *
      * @protected
      */
     protected isRoot : boolean | undefined;
 
+    /**
+     * Path matcher options.
+     *
+     * @protected
+     */
+    protected pathMatcherOptions : TokensToRegexpOptions & ParseOptions;
+
+    /**
+     * Timeout before the router decides to abort the request.
+     *
+     * @protected
+     */
+    protected timeout: number | undefined;
+
     // --------------------------------------------------
 
-    constructor(options?: RouterOptions) {
-        options = options || {};
+    constructor(ctx?: RouterOptionsInput) {
+        ctx = ctx || {};
 
-        this.timeout = options.timeout;
-        this.setMountPath(options.mountPath || '/');
+        this.pathMatcherOptions = {
+            end: false,
+            sensitive: true,
+            ...(ctx.pathMatcherOptions || {}),
+        };
+
+        this.timeout = ctx.timeout;
+
+        this.setPath(ctx.path || '/');
     }
 
     // --------------------------------------------------
 
-    setMountPath(value: Path) {
+    setPath(value: Path) {
         if (value === '/' || !isPath(value)) {
-            this.mountPath = '/';
+            this.path = '/';
             return;
         }
 
         if (typeof value === 'string') {
-            this.mountPath = withLeadingSlash(withoutTrailingSlash(`${value}`));
+            this.path = withLeadingSlash(withoutTrailingSlash(`${value}`));
         } else {
-            this.mountPath = value;
+            this.path = value;
         }
 
-        const config = useConfig();
-        this.pathMatcher = new PathMatcher(this.mountPath, { end: false, sensitive: config.get('caseSensitive') });
+        this.pathMatcher = new PathMatcher(this.path, this.pathMatcherOptions);
+    }
+
+    setPathMatcherOptions(input: PathMatcherOptions) {
+        this.pathMatcherOptions = input;
+
+        if (this.pathMatcher) {
+            this.pathMatcher.regexpOptions = this.pathMatcherOptions;
+        }
     }
 
     // --------------------------------------------------
@@ -132,7 +172,7 @@ export class Router {
 
         if (
             this.isRoot &&
-            this.timeout
+            typeof this.timeout === 'number'
         ) {
             createRequestTimeout(res, this.timeout, done);
         }
@@ -141,7 +181,7 @@ export class Router {
             /* istanbul ignore if */
             if (!this.isRoot) {
                 if (typeof done !== 'undefined') {
-                    setImmediate(done, err);
+                    setImmediate(() => done(err));
                 }
 
                 return;
@@ -316,7 +356,12 @@ export class Router {
             return this.stack[index] as Route;
         }
 
-        const route = new Route(path);
+        const route = new Route({
+            path,
+            pathMatcher: {
+                sensitive: this.pathMatcherOptions.sensitive,
+            },
+        });
         this.stack.push(route);
 
         return route;
@@ -401,14 +446,22 @@ export class Router {
             const item = input[i];
             if (isRouterInstance(item)) {
                 if (path) {
-                    item.setMountPath(path);
+                    item.setPath(path);
                 }
+                item.setPathMatcherOptions(this.pathMatcherOptions);
                 this.stack.push(item);
                 continue;
             }
 
             if (typeof item === 'function') {
-                this.stack.push(new Layer(path || '/', { strict: false, end: false }, item));
+                this.stack.push(new Layer({
+                    path: path || '/',
+                    pathMatcher: {
+                        strict: false,
+                        end: false,
+                        sensitive: this.pathMatcherOptions.sensitive,
+                    },
+                }, item));
             }
         }
 

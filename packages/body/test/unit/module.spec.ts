@@ -5,16 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import supertest from "supertest";
-import {send, Router} from "routup";
+import supertest from 'supertest';
+import { Router, send } from 'routup';
 import {
     createRequestHandler,
     createRequestJsonHandler,
     createRequestRawHandler,
     createRequestTextHandler,
     createRequestUrlEncodedHandler,
-    useRequestBody
-} from "../../src";
+    useRequestBody,
+} from '../../src';
 
 describe('src/**', () => {
     it('should handle application/json', async () => {
@@ -22,7 +22,7 @@ describe('src/**', () => {
 
         router.use(createRequestJsonHandler());
 
-        router.post('/',  (req, res) => {
+        router.post('/', (req, res) => {
             const foo = useRequestBody(req);
 
             send(res, foo);
@@ -30,22 +30,22 @@ describe('src/**', () => {
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .post('/')
             .send({
-                foo: 'bar'
-            })
+                foo: 'bar',
+            });
 
         expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({foo: 'bar'});
+        expect(response.body).toEqual({ foo: 'bar' });
     });
 
     it('should handle application/x-www-form-urlencoded', async () => {
         const router = new Router();
 
-        router.use(createRequestUrlEncodedHandler({extended: false}));
+        router.use(createRequestUrlEncodedHandler({ extended: false }));
 
-        router.post('/',  (req, res) => {
+        router.post('/', (req, res) => {
             const foo = useRequestBody(req);
 
             send(res, foo);
@@ -53,12 +53,12 @@ describe('src/**', () => {
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .post('/')
             .send('foo=bar');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({foo: 'bar'});
+        expect(response.body).toEqual({ foo: 'bar' });
     });
 
     it('should handle raw to buffer', async () => {
@@ -66,7 +66,7 @@ describe('src/**', () => {
 
         router.use(createRequestRawHandler());
 
-        router.post('/',  (req, res) => {
+        router.post('/', (req, res) => {
             const foo = useRequestBody(req);
 
             send(res, Buffer.isBuffer(foo));
@@ -74,10 +74,10 @@ describe('src/**', () => {
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .post('/')
             .set('Content-Type', 'application/octet-stream')
-            .send('foo')
+            .send('foo');
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(true);
@@ -86,9 +86,9 @@ describe('src/**', () => {
     it('should handle text/html to text', async () => {
         const router = new Router();
 
-        router.use(createRequestTextHandler({type: 'text/html'}));
+        router.use(createRequestTextHandler({ type: 'text/html' }));
 
-        router.post('/',  (req, res) => {
+        router.post('/', (req, res) => {
             const foo = useRequestBody(req);
 
             send(res, foo);
@@ -96,10 +96,10 @@ describe('src/**', () => {
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .post('/')
             .set('Content-Type', 'text/html')
-            .send('<div>foo</div>')
+            .send('<div>foo</div>');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('<div>foo</div>');
@@ -110,7 +110,7 @@ describe('src/**', () => {
 
         router.use(createRequestHandler());
 
-        router.post('/multiple',  (req, res) => {
+        router.post('/multiple', (req, res) => {
             const foo = useRequestBody(req);
 
             send(res, foo);
@@ -121,17 +121,17 @@ describe('src/**', () => {
         let response = await server
             .post('/multiple')
             .send({
-                foo: 'bar'
-            })
+                foo: 'bar',
+            });
 
         expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({foo: 'bar'});
+        expect(response.body).toEqual({ foo: 'bar' });
 
         response = await server
             .post('/multiple')
             .send('foo=bar');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({foo: 'bar'});
+        expect(response.body).toEqual({ foo: 'bar' });
     });
-})
+});
