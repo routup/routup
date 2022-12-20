@@ -83,6 +83,7 @@ export class Route {
         meta: DispatcherMeta,
         done: Next,
     ) : void {
+        /* istanbul ignore next */
         if (!req.method) {
             done();
             return;
@@ -99,6 +100,7 @@ export class Route {
 
         const layers = this.layers[name];
 
+        /* istanbul ignore next */
         if (
             typeof layers === 'undefined' ||
             layers.length === 0 ||

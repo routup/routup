@@ -12,6 +12,7 @@ import { Path } from '../type';
 import { PathMatcherExecResult, PathMatcherOptions } from './type';
 
 function decodeParam(val: unknown) {
+    /* istanbul ignore next */
     if (typeof val !== 'string' || val.length === 0) {
         return val;
     }

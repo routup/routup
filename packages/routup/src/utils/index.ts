@@ -6,7 +6,6 @@
  */
 
 export * from './is-instance';
-export * from './object';
 export * from './path';
 export * from './promise';
 export * from './request';
