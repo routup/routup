@@ -1,14 +1,17 @@
 # Usage
 
 ```typescript
-import { Router, send } from 'routup';
-import { 
+import {Router, send} from 'routup';
+import {
+    createRequestHandler,
     setResponseCookie,
-    useRequestCookie, 
+    useRequestCookie,
     useRequestCookies
 } from '@routup/cookie';
 
 const router = new Router();
+
+router.use(createRequestHandler());
 
 router.get('/', (req, res) => {
     const cookies = useRequestCookies(req);
