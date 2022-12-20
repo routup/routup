@@ -1,6 +1,6 @@
 {
     "name": "@routup/decorators",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "description": "Decorators plugin for routup.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",

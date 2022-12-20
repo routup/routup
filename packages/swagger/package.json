@@ -1,6 +1,6 @@
 {
     "name": "@routup/swagger",
-    "version": "0.2.5",
+    "version": "0.2.6",
     "description": "Swagger plugin for routup.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
