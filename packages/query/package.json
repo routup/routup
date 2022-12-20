@@ -1,6 +1,6 @@
 {
     "name": "@routup/query",
-    "version": "0.2.4",
+    "version": "0.2.5",
     "description": "Query plugin for routup.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
@@ -51,10 +51,10 @@
         "qs": "^6.11.0"
     },
     "devDependencies": {
-        "@routup/core": "^0.0.0",
+        "@routup/core": "^0.0.1",
         "@types/supertest": "^2.0.12",
-        "supertest": "^6.3.3",
-        "routup": "^0.8.1"
+        "routup": "^0.8.2",
+        "supertest": "^6.3.3"
     },
     "gitHead": "11dd52c006ffe5041bba0f57dfc33527ee57d6c1",
     "publishConfig": {

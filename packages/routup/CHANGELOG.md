@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.2](https://github.com/Tada5hi/routup/compare/routup@0.8.1...routup@0.8.2) (2022-12-20)
+
+
+### Bug Fixes
+
+* **deps:** bump zod from 3.19.1 to 3.20.0 ([0a92156](https://github.com/Tada5hi/routup/commit/0a9215612fd3c66a2a2659e8b8dd326cf654cfad))
+* **deps:** bump zod from 3.20.0 to 3.20.2 ([263a600](https://github.com/Tada5hi/routup/commit/263a600f634d95d78a2f3276ab34cfced9f634db))
+* move is-object util ([1060f66](https://github.com/Tada5hi/routup/commit/1060f668316f1edecc629d1eb255a245486381c5))
+* **routup:** remove unnecessary import statement ([50b7069](https://github.com/Tada5hi/routup/commit/50b706933d17113a9158183c4b86d6ba6301149f))
+
+
+
+
+
 ## [0.8.1](https://github.com/Tada5hi/routup/compare/routup@0.8.0...routup@0.8.1) (2022-12-09)
 
 
