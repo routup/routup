@@ -17,7 +17,7 @@ export function sendStream(res: Response, stream: Readable, fn?: CallableFunctio
         if (typeof fn === 'function') {
             fn(err);
         } else {
-            res.statusCode = 500;
+            res.statusCode = 400;
             res.end();
         }
     });

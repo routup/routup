@@ -39,7 +39,7 @@ describe('src/helpers/response/send', () => {
         const response = await server
             .get('/foo');
 
-        expect(response.statusCode).toEqual(500);
+        expect(response.statusCode).toEqual(400);
     });
 
     it('should send redirect', async () => {

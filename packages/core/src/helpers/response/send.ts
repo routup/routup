@@ -69,9 +69,9 @@ export function send(res: Response, chunk?: any) {
     ) {
         const chunkHash = etagFn(chunk, encoding, len);
         if (typeof chunkHash === 'string') {
-            res.setHeader('ETag', chunkHash);
+            res.setHeader(HeaderName.ETag, chunkHash);
 
-            if (res.req.headers['if-none-match'] === chunkHash) {
+            if (res.req.headers[HeaderName.IF_NONE_MATCH] === chunkHash) {
                 res.statusCode = 304;
             }
         }
@@ -79,16 +79,16 @@ export function send(res: Response, chunk?: any) {
 
     // strip irrelevant headers
     if (res.statusCode === 204 || res.statusCode === 304) {
-        res.removeHeader('Content-Type');
-        res.removeHeader('Content-Length');
-        res.removeHeader('Transfer-Encoding');
+        res.removeHeader(HeaderName.CONTENT_TYPE);
+        res.removeHeader(HeaderName.CONTENT_LENGTH);
+        res.removeHeader(HeaderName.TRANSFER_ENCODING);
         chunk = '';
     }
 
     // alter headers for 205
     if (res.statusCode === 205) {
-        res.setHeader('Content-Length', 0);
-        res.removeHeader('Transfer-Encoding');
+        res.setHeader(HeaderName.CONTENT_LENGTH, 0);
+        res.removeHeader(HeaderName.TRANSFER_ENCODING);
         chunk = '';
     }
 
