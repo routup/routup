@@ -5,5 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Options } from 'body-parser';
+
+export {
+    Options,
+};
+
 export * from './parser';
 export * from './request';

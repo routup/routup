@@ -10,7 +10,6 @@ import {
     NotFoundErrorOptions,
 } from '@ebec/http';
 import { RequestListener, createServer } from 'http';
-import { ParseOptions, TokensToRegexpOptions } from 'path-to-regexp';
 import { merge, mergeArrays } from 'smob';
 import {
     ErrorHandler,
@@ -38,7 +37,7 @@ import {
     DispatcherMeta,
     Path,
 } from '../type';
-import { RouterOptionsInput } from './type';
+import { RouterOptions } from './type';
 
 export function isRouterInstance(input: unknown) : input is Router {
     return isInstance(input, 'Router');
@@ -69,18 +68,18 @@ export class Router {
     protected pathMatcher : PathMatcher | undefined;
 
     /**
+     * Path matcher options.
+     *
+     * @protected
+     */
+    protected pathMatcherOptions : PathMatcherOptions;
+
+    /**
      * Is this the root instance?
      *
      * @protected
      */
     protected isRoot : boolean | undefined;
-
-    /**
-     * Path matcher options.
-     *
-     * @protected
-     */
-    protected pathMatcherOptions : TokensToRegexpOptions & ParseOptions;
 
     /**
      * Timeout before the router decides to abort the request.
@@ -91,13 +90,13 @@ export class Router {
 
     // --------------------------------------------------
 
-    constructor(ctx?: RouterOptionsInput) {
+    constructor(ctx?: RouterOptions) {
         ctx = ctx || {};
 
         this.pathMatcherOptions = {
             end: false,
             sensitive: true,
-            ...(ctx.pathMatcherOptions || {}),
+            ...(ctx.pathMatcher || {}),
         };
 
         this.timeout = ctx.timeout;
@@ -106,6 +105,14 @@ export class Router {
     }
 
     // --------------------------------------------------
+
+    setPathMatcherOptions(input: PathMatcherOptions) {
+        this.pathMatcherOptions = input;
+
+        if (this.pathMatcher) {
+            this.pathMatcher.regexpOptions = this.pathMatcherOptions;
+        }
+    }
 
     setPath(value: Path) {
         if (value === '/' || !isPath(value)) {
@@ -120,14 +127,6 @@ export class Router {
         }
 
         this.pathMatcher = new PathMatcher(this.path, this.pathMatcherOptions);
-    }
-
-    setPathMatcherOptions(input: PathMatcherOptions) {
-        this.pathMatcherOptions = input;
-
-        if (this.pathMatcher) {
-            this.pathMatcher.regexpOptions = this.pathMatcherOptions;
-        }
     }
 
     // --------------------------------------------------
