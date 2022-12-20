@@ -34,15 +34,12 @@ to parse the cookies of the request header.
 ```typescript
 import {Router, send} from 'routup';
 import {
-    createRequestHandler,
     setResponseCookie,
     useRequestCookie,
     useRequestCookies
 } from '@routup/cookie';
 
 const router = new Router();
-
-router.use(createRequestHandler());
 
 router.get('/', (req, res) => {
     const cookies = useRequestCookies(req);

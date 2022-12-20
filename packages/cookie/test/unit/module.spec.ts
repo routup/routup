@@ -19,8 +19,6 @@ describe('src/module', () => {
     it('should parse cookie', async () => {
         const router = new Router();
 
-        router.use(createRequestHandler());
-
         router.get('/', (req, res) => {
             useRequestCookies(req);
 
@@ -38,10 +36,30 @@ describe('src/module', () => {
         expect(response.text).toEqual('bar');
     });
 
-    it('should set (multiple) cookie', async () => {
+    it('should parse cookie with middleware', async () => {
         const router = new Router();
 
         router.use(createRequestHandler());
+
+        router.get('/', (req, res) => {
+            useRequestCookies(req);
+
+            const foo = useRequestCookie(req, 'bar');
+            send(res, foo);
+        });
+
+        const server = supertest(router.createListener());
+
+        const response = await server
+            .get('/')
+            .set('Cookie', ['bar=baz']);
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.text).toEqual('baz');
+    });
+
+    it('should set (multiple) cookie', async () => {
+        const router = new Router();
 
         router.get('/', (req, res) => {
             setResponseCookie(res, 'bar', 'baz');
@@ -77,8 +95,6 @@ describe('src/module', () => {
 
     it('should unset cookie', async () => {
         const router = new Router();
-
-        router.use(createRequestHandler());
 
         router.get('/', (req, res) => {
             unsetResponseCookie(res, 'foo');

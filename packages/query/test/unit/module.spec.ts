@@ -14,8 +14,6 @@ describe('src/module', () => {
     it('should parse request query', async () => {
         const router = new Router();
 
-        router.use(createRequestHandler());
-
         router.get('/', (req, res) => {
             send(res, useRequestQuery(req));
         });
@@ -56,6 +54,26 @@ describe('src/module', () => {
 
         response = await server
             .get(`/reuse?${qs.stringify(query)}`);
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.body).toEqual(query);
+    });
+
+    it('should parse request query with middleware', async () => {
+        const router = new Router();
+
+        router.use(createRequestHandler());
+
+        router.get('/', (req, res) => {
+            send(res, useRequestQuery(req));
+        });
+
+        const server = supertest(router.createListener());
+
+        const query = { page: { limit: '10', offset: '0' }, sort: '-name' };
+
+        const response = await server
+            .get(`/?${qs.stringify(query)}`);
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(query);

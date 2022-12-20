@@ -7,15 +7,12 @@
 
 import {
     Handler,
-    HeaderName,
     hasRequestCookies,
     setRequestCookies,
 } from '@routup/core';
-import {
-    parse,
-} from 'cookie';
 
 import { ParseOptions } from './type';
+import { parseRequestCookie } from './utils';
 
 export function createRequestHandler(options?: ParseOptions) : Handler {
     return (req, res, next) => {
@@ -24,9 +21,7 @@ export function createRequestHandler(options?: ParseOptions) : Handler {
             return;
         }
 
-        const cookies = parse(req.headers[HeaderName.COOKIE] || '', options || {});
-
-        setRequestCookies(req, cookies);
+        setRequestCookies(req, parseRequestCookie(req, options));
 
         next();
     };

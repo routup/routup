@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './handler';
-export * from './request';
-export * from './response';
-export * from './type';
-export * from './utils';
+import { Request, Response } from '../type';
+
+export type RequestFn = (req: Request) => any;
+export type ResponseFn = (res: Response) => any;

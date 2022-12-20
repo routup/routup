@@ -6,9 +6,13 @@
  */
 
 import {
+    setRequestQueryFn,
     useRequestQuery,
 } from '@routup/core';
+import { parseRequestQuery } from './utils';
 
 export {
     useRequestQuery,
 };
+
+setRequestQueryFn(parseRequestQuery);

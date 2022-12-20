@@ -6,32 +6,18 @@
  */
 
 import { Handler, hasRequestQuery, setRequestQuery } from '@routup/core';
-import qs from 'qs';
 import { ParseOptions } from './type';
+import { parseRequestQuery } from './utils';
 
 export function createRequestHandler(options?: ParseOptions) : Handler {
     return (req, res, next) => {
         if (hasRequestQuery(req)) {
             next();
+
             return;
         }
 
-        /* istanbul ignore if  */
-        if (typeof req.url === 'undefined') {
-            setRequestQuery(req, {});
-            next();
-            return;
-        }
-
-        const url = new URL(req.url, 'http://localhost/');
-
-        let { search } = url;
-        if (search.substring(0, 1) === '?') {
-            search = search.substring(1);
-        }
-
-        const data = qs.parse(search, options);
-        setRequestQuery(req, data);
+        setRequestQuery(req, parseRequestQuery(req, options));
         next();
     };
 }

@@ -7,12 +7,26 @@
 
 import { IncomingMessage } from 'http';
 import { isObject, merge } from 'smob';
+import { RequestFn } from '../type';
 
 const CookieSymbol = Symbol.for('ReqCookie');
+
+let requestFn : undefined | RequestFn;
+
+export function setRequestCookieFn(fn: RequestFn) {
+    requestFn = fn;
+}
 
 export function useRequestCookies(
     req: IncomingMessage,
 ) : Record<string, string> {
+    if (
+        !(CookieSymbol in req) &&
+        typeof requestFn !== 'undefined'
+    ) {
+        (req as any)[CookieSymbol] = requestFn(req);
+    }
+
     if (CookieSymbol in req) {
         return (req as any)[CookieSymbol];
     }
