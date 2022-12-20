@@ -41,7 +41,6 @@
     "dependencies": {
         "@ebec/http": "^0.1.0",
         "@routup/core": "^0.0.0",
-        "continu": "^1.0.4",
         "path-to-regexp": "^6.2.1",
         "smob": "^0.0.6"
     },
