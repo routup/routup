@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.7](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.2.6...@routup/swagger@0.2.7) (2022-12-20)
+
+**Note:** Version bump only for package @routup/swagger
+
+
+
+
+
 ## [0.2.6](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.2.5...@routup/swagger@0.2.6) (2022-12-20)
 
 

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/Tada5hi/routup/compare/@routup/cookie@0.2.5...@routup/cookie@0.3.0) (2022-12-20)
+
+
+### Features
+
+* make request-handler optional for cookie- & query-plugin ([ac07d25](https://github.com/Tada5hi/routup/commit/ac07d2592a16de1dafaa5d78b9ba805e3a5d3da9))
+
+
+
+
+
 ## [0.2.5](https://github.com/Tada5hi/routup/compare/@routup/cookie@0.2.4...@routup/cookie@0.2.5) (2022-12-20)
 
 **Note:** Version bump only for package @routup/cookie
