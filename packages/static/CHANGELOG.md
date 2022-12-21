@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.2](https://github.com/Tada5hi/routup/compare/@routup/static@0.1.1...@routup/static@0.1.2) (2022-12-21)
+
+
+### Bug Fixes
+
+* **static:** add missing return statement ([85cfe01](https://github.com/Tada5hi/routup/commit/85cfe01a7f2f4c10199394cd5eb56839ab28cacb))
+
+
+
+
+
 ## [0.1.1](https://github.com/Tada5hi/routup/compare/@routup/static@0.1.0...@routup/static@0.1.1) (2022-12-21)
 
 
