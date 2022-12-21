@@ -1,6 +1,6 @@
 {
     "name": "routup",
-    "version": "0.8.3",
+    "version": "0.9.0",
     "description": "Routup is a minimalistic http based routing framework.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
@@ -40,7 +40,7 @@
     "homepage": "https://github.com/Tada5hi/routup#readme",
     "dependencies": {
         "@ebec/http": "^0.1.0",
-        "@routup/core": "^0.1.0",
+        "@routup/core": "^0.2.0",
         "path-to-regexp": "^6.2.1",
         "smob": "^0.0.6"
     },

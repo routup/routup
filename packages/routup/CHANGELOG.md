@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/Tada5hi/routup/compare/routup@0.8.3...routup@0.9.0) (2022-12-21)
+
+
+### Features
+
+* add static-middleware plugin ([ae633a1](https://github.com/Tada5hi/routup/commit/ae633a18530a236257780c0a4bffc926f93381a1))
+
+
+
+
+
 ## [0.8.3](https://github.com/Tada5hi/routup/compare/routup@0.8.2...routup@0.8.3) (2022-12-20)
 
 **Note:** Version bump only for package routup
