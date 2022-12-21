@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.3.0...@routup/swagger@0.3.1) (2022-12-21)
+
+
+### Bug Fixes
+
+* **static:** minor fix for etag check ([ce21ec2](https://github.com/Tada5hi/routup/commit/ce21ec2fd7264c116c99d773c73caeaf12bbdbae))
+
+
+
+
+
 # [0.3.0](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.2.7...@routup/swagger@0.3.0) (2022-12-21)
 
 
