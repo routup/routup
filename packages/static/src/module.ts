@@ -78,6 +78,7 @@ export function createHandler(directory: string, input?: HandlerOptionsInput) : 
                 ) {
                     res.writeHead(304);
                     res.end();
+                    return;
                 }
 
                 sendFile(res, fileInfo, (err: Error | null) => {
