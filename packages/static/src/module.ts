@@ -9,7 +9,6 @@ import {
     Handler,
     HeaderName,
     sendFile,
-    useConfig,
     useRequestMountPath,
     useRequestPath, withLeadingSlash,
 } from '@routup/core';
@@ -35,9 +34,6 @@ export function createHandler(directory: string, input?: HandlerOptionsInput) : 
     }
 
     scanFiles(options);
-
-    const config = useConfig();
-    const hasEtag = config.has('etag');
 
     return (req, res, next) => {
         let requestPath = useRequestPath(req);
@@ -78,7 +74,6 @@ export function createHandler(directory: string, input?: HandlerOptionsInput) : 
                 }
 
                 if (
-                    hasEtag &&
                     req.headers[HeaderName.IF_NONE_MATCH] === `W/"${fileInfo.stats.size}-${fileInfo.stats.mtime.getTime()}"`
                 ) {
                     res.writeHead(304);
