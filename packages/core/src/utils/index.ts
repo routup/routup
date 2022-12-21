@@ -9,3 +9,4 @@ export * from './etag';
 export * from './mime';
 export * from './object';
 export * from './trust-proxy';
+export * from './url';

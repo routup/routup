@@ -29,7 +29,7 @@ describe('src/ui', () => {
             .get('/docs/swagger-ui-bundle.js');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/javascript; charset=UTF-8');
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/javascript; charset=utf-8');
 
         response = await server
             .get('/docs/package.json');

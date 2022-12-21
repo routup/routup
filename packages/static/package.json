@@ -1,11 +1,10 @@
 {
-    "name": "@routup/swagger",
-    "version": "0.2.7",
-    "description": "Swagger plugin for routup.",
+    "name": "@routup/static",
+    "version": "0.0.0",
+    "description": "Routup plugin for serving static files.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
     "files": [
-        "assets/",
         "dist/"
     ],
     "scripts": {
@@ -23,9 +22,10 @@
     },
     "license": "MIT",
     "keywords": [
-        "swagger",
-        "swagger-ui",
-        "openapi",
+        "file",
+        "files",
+        "serve",
+        "static",
         "api",
         "rest",
         "http",
@@ -37,24 +37,17 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/Tada5hi/routup.git",
-        "directory": "packages/swagger"
+        "directory": "packages/static"
     },
     "bugs": {
         "url": "https://github.com/Tada5hi/routup/issues"
     },
     "homepage": "https://github.com/Tada5hi/routup#readme",
     "peerDependencies": {
-        "@routup/core": "^0.x",
-        "@routup/static": "^0.x"
-    },
-    "dependencies": {
-        "@types/swagger-ui-dist": "^3.30.1",
-        "smob": "^0.0.6",
-        "swagger-ui-dist": "^4.15.5"
+        "@routup/core": "^0.x"
     },
     "devDependencies": {
         "@routup/core": "^0.1.0",
-        "@routup/static": "^0.0.0",
         "@types/supertest": "^2.0.12",
         "routup": "^0.8.3",
         "supertest": "^6.3.3"

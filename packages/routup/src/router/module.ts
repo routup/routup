@@ -19,17 +19,18 @@ import {
     Next,
     Request,
     Response,
+    cleanDoubleSlashes,
     send,
     useRequestPath,
+    withLeadingSlash,
+    withoutTrailingSlash,
 } from '@routup/core';
 import { PathMatcher, PathMatcherOptions } from '../path';
 import {
-    cleanDoubleSlashes,
     createRequestTimeout,
     isInstance,
     isPath,
-    withLeadingSlash,
-    withoutTrailingSlash,
+
 } from '../utils';
 import { Layer, isLayerInstance } from '../layer';
 import { Route, isRouteInstance } from '../route';

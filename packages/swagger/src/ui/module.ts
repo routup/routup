@@ -15,7 +15,7 @@ import {
     useRequestMountPath,
     useRequestPath,
 } from '@routup/core';
-import serveStatic from 'serve-static';
+import { createHandler } from '@routup/static';
 import { merge } from 'smob';
 import swaggerUi from 'swagger-ui-dist';
 import { UIOptions } from './type';
@@ -43,8 +43,8 @@ export function createUIHandler(
     document: Record<string, any> | string,
     options?: UIOptions,
 ) {
-    const staticMiddleware = serveStatic(swaggerUi.getAbsoluteFSPath(), {
-        index: false,
+    const handler = createHandler(swaggerUi.getAbsoluteFSPath(), {
+        extensions: [],
     });
 
     const initOptions : UIOptions = merge(
@@ -65,27 +65,23 @@ export function createUIHandler(
 
     return (req: Request, res: Response, next: Next) => {
         /* istanbul ignore next */
-        if (typeof req.url !== 'string') {
+        if (typeof req.url === 'undefined') {
             next();
             return;
         }
 
         if (req.url.includes('/package.json')) {
-            res.statusCode = 404;
-            send(res);
+            if (typeof next !== 'undefined') {
+                next();
+            } else {
+                res.statusCode = 404;
+                send(res);
+            }
 
             return;
         }
 
-        const mountPath = useRequestMountPath(req);
-        let requestPath = useRequestPath(req);
-        if (requestPath.startsWith(mountPath)) {
-            requestPath = requestPath.substring(mountPath.length);
-        }
-
-        req.url = requestPath;
-
-        staticMiddleware(req, res, () => {
+        handler(req, res, () => {
             send(res, template);
         });
     };

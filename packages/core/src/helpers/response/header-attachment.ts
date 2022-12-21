@@ -5,20 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
 import { HeaderName } from '../../constants';
 import { Response } from '../../type';
-import { getMimeType } from '../../utils';
+import { setResponseContentTypeByFileName } from './utils';
 
 export function setResponseHeaderAttachment(res: Response, filename?: string) {
     if (typeof filename === 'string') {
-        const ext = path.extname(filename);
-        if (ext) {
-            const type = getMimeType(ext.substring(1));
-            if (type) {
-                res.setHeader(HeaderName.CONTENT_TYPE, type);
-            }
-        }
+        setResponseContentTypeByFileName(res, filename);
     }
 
     res.setHeader(

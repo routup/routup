@@ -24,7 +24,25 @@ describe('src/helpers/response/send', () => {
             .get('/');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json');
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8');
+        expect(response.body).toEqual({ id: 1, name: 'tada5hi' });
+    });
+
+    it('should send file to download', async () => {
+        const server = supertest(createHandler((req, res) => {
+            const filePath = path.join(__dirname, '..', '..', 'data', 'dummy.json');
+
+            sendFile(res, {
+                filePath,
+                attachment: true,
+            });
+        }));
+
+        const response = await server
+            .get('/');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8');
         expect(response.headers[HeaderName.CONTENT_DISPOSITION]).toEqual('attachment; filename="dummy.json"');
         expect(response.body).toEqual({ id: 1, name: 'tada5hi' });
     });
@@ -39,7 +57,7 @@ describe('src/helpers/response/send', () => {
         const response = await server
             .get('/foo');
 
-        expect(response.statusCode).toEqual(400);
+        expect(response.statusCode).toEqual(404);
     });
 
     it('should send redirect', async () => {

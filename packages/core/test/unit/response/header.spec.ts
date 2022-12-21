@@ -42,7 +42,7 @@ describe('src/helpers/response/header', () => {
             .get('/');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json');
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8');
         expect(response.headers[HeaderName.CONTENT_DISPOSITION]).toEqual('attachment; filename="dummy.json"');
     });
 
@@ -107,7 +107,7 @@ describe('src/helpers/response/header', () => {
             .get('/');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; boundary=something');
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8; boundary=something');
     });
 
     it('should append multiple header directive values', async () => {

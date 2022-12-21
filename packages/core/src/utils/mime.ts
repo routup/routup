@@ -14,3 +14,11 @@ export function getMimeType(type: string) : string | undefined {
 
     return mime.getType(type) || undefined;
 }
+
+export function getCharsetForMimeType(type: string) : string | undefined {
+    if ((/^text\/|^application\/(javascript|json)/).test(type)) {
+        return 'utf-8';
+    }
+
+    return undefined;
+}

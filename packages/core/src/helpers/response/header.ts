@@ -60,7 +60,7 @@ export function appendResponseHeaderDirective(
         header.push(`${value}`);
     }
 
-    // todo: check for unique values
+    header = [...new Set(header)];
 
     res.setHeader(name, header.join('; '));
 }
