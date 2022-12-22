@@ -52,12 +52,11 @@ export type HandlerOptions = {
      */
     fallback: string | boolean;
     /**
-     * Paths which should not be resolved to the
-     * fallback path.
+     * Paths/patterns that should not be forwarded to the fallback path.
      *
      * default: []
      */
-    fallbackIgnorePatterns: RegExp[];
+    fallbackIgnores: RegExp[];
     /**
      * Extensions to append to directory index file.
      *
@@ -72,20 +71,30 @@ export type HandlerOptions = {
     dotFiles: boolean;
 
     /**
-     * Paths which should be ignored aka not served.
+     * Paths/patterns which should be ignored aka not served.
      *
      * default: []
      */
-    ignorePatterns: RegExp[],
+    ignores: RegExp[],
 };
 
-export type HandlerOptionsInput = Omit<Partial<HandlerOptions>, 'fallbackIgnorePatterns' | 'fallbackPath'> & {
+export type HandlerOptionsInput = Omit<
+Partial<HandlerOptions>,
+'fallbackIgnores' | 'fallbackPath' | 'ignores'
+> & {
     /**
-     * Ignore specific files or directories.
+     * Paths/patterns that should not be forwarded to the fallback path.
      *
-     * default: undefined
+     * default: [.well-known]
      */
-    ignorePatterns?: Array<string | RegExp> | string | RegExp;
+    fallbackIgnores?: Array<string | RegExp> | string | RegExp;
+
+    /**
+     * Paths/patterns which should be ignored aka not served.
+     *
+     * default: []
+     */
+    ignores?: Array<string | RegExp> | string | RegExp
 };
 
 export type ReadDirectoryCallback = (relativePath: string, absolutePath: string, stats: fs.Stats) => void;

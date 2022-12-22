@@ -28,8 +28,8 @@ export function scanFiles(options: HandlerOptions) {
         }
 
         if (
-            options.ignorePatterns.length > 0 &&
-            isRegexMatch(relativePath, options.ignorePatterns)
+            options.ignores.length > 0 &&
+            isRegexMatch(relativePath, options.ignores)
         ) {
             return;
         }
@@ -113,8 +113,8 @@ export async function lookup(
     let fileInfo : FileInfo | undefined;
 
     if (
-        options.ignorePatterns.length === 0 ||
-        !isRegexMatch(requestPath, options.ignorePatterns)
+        options.ignores.length === 0 ||
+        !isRegexMatch(requestPath, options.ignores)
     ) {
         fileInfo = await lookupPath(requestPath, options);
     }
@@ -122,7 +122,7 @@ export async function lookup(
     if (
         typeof fileInfo === 'undefined' &&
         !!options.fallback &&
-        !isRegexMatch(requestPath, options.fallbackIgnorePatterns)
+        !isRegexMatch(requestPath, options.fallbackIgnores)
     ) {
         fileInfo = await lookupPath(options.fallbackPath, options);
     }

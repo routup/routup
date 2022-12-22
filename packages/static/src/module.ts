@@ -47,7 +47,7 @@ export function createHandler(directory: string, input?: HandlerOptionsInput) : 
 
         if (requestPath.indexOf('%') !== -1) {
             try {
-                requestPath = decodeURIComponent(requestPath);
+                requestPath = decodeURI(requestPath);
             } catch (err) {
                 // do nothing :)
             }

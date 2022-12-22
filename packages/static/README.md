@@ -124,13 +124,13 @@ Append the `immutable` directive to the cache-control header.
 - Description: 
 Resolve files, which are not found to a specific directory (default: '/')
 
-#### fallbackIgnorePatterns
+#### fallbackIgnores
 - Type: `RegExp[]`
 - Default: `[]`
 - Description:
 Specify paths/patterns that should not be forwarded to the fallback path.
 
-#### fallThrough
+#### fallthrough
 - Type: `Boolean`<br />
 - Default: `true`
 - Description:
@@ -149,7 +149,7 @@ When set, if a file is not found, the middleware will search for files with the 
 - Description:
 Determines how to treat dotfiles (files or directories beginning with a `.`).
 
-#### ignorePatterns
+#### ignores
 - Type: `RegExp[]`
 - Default: `[]`
 - Description:

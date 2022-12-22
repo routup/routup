@@ -8,28 +8,43 @@ import path from 'path';
 import { HandlerOptions, HandlerOptionsInput } from '../type';
 
 export function buildHandlerOptions(input: HandlerOptionsInput) : HandlerOptions {
-    const ignorePatterns : RegExp[] = [];
-
-    if (typeof input.ignorePatterns !== 'undefined') {
-        ignorePatterns.push(/[/]([A-Za-z\s\d~$._-]+\.\w+)+$/);
-
-        if (input.dotFiles) {
-            ignorePatterns.push(/\/\.\w/);
-        } else {
-            ignorePatterns.push(/\/\.well-known/);
-        }
-
-        if (Array.isArray(input.ignorePatterns)) {
-            for (let i = 0; i < input.ignorePatterns.length; i++) {
-                ignorePatterns.push(new RegExp(input.ignorePatterns[i], 'i'));
-            }
-        }
-    }
-
     let fallbackPath = '/';
     if (typeof input.fallback === 'string') {
         const idx = input.fallback.lastIndexOf('.');
         fallbackPath += ~idx ? input.fallback.substring(0, idx) : input.fallback;
+    }
+
+    const fallbackIgnores : RegExp[] = [];
+    if (typeof input.fallbackIgnores !== 'undefined') {
+        // any file with extension
+        fallbackIgnores.push(/[/]([A-Za-z\s\d~$._-]+\.\w+)+$/);
+
+        if (input.dotFiles) {
+            fallbackIgnores.push(/\/\.\w/);
+        } else {
+            fallbackIgnores.push(/\/\.well-known/);
+        }
+
+        if (Array.isArray(input.fallbackIgnores)) {
+            for (let i = 0; i < input.fallbackIgnores.length; i++) {
+                fallbackIgnores.push(new RegExp(input.fallbackIgnores[i], 'i'));
+            }
+        } else {
+            fallbackIgnores.push(new RegExp(input.fallbackIgnores, 'i'));
+        }
+    }
+
+    const ignores : RegExp[] = [];
+    if (typeof input.ignores !== 'undefined') {
+        if (!input.dotFiles) {
+            ignores.push(/\/\.\w/);
+        }
+
+        if (Array.isArray(input.ignores)) {
+            for (let i = 0; i < input.ignores.length; i++) {
+                ignores.push(new RegExp(input.ignores[i], 'i'));
+            }
+        }
     }
 
     let directoryPath : string;
@@ -63,9 +78,9 @@ export function buildHandlerOptions(input: HandlerOptionsInput) : HandlerOptions
         fallthrough: input.fallthrough ?? true,
         cacheImmutable: input.cacheImmutable ?? false,
         fallback: input.fallback ?? false,
-        fallbackIgnorePatterns: ignorePatterns,
+        fallbackIgnores,
         extensions: input.extensions ?? ['html', 'htm'],
         dotFiles: input.dotFiles ?? false,
-        ignorePatterns: input.ignorePatterns ?? [],
+        ignores,
     };
 }
