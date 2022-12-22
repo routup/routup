@@ -36,7 +36,7 @@ When a file is not found, instead of sending a 404 response, this module will in
 to move on to the next middleware, allowing for stacking and fall-backs.
 
 ```typescript
-import {Router, send} from 'routup';
+import { Router } from 'routup';
 import {
     createHandler
 } from '@routup/static';
@@ -56,7 +56,7 @@ To accomplish this, this plugin can be used multiple times.
 An example of this is shown below:
 
 ```typescript
-import {Router, send} from 'routup';
+import { Router } from 'routup';
 import {
     createHandler
 } from '@routup/static';
@@ -79,7 +79,7 @@ It is also possible to define a mount path for a root directory.
 This is done as follows:
 
 ```typescript
-import {Router, send} from 'routup';
+import { Router } from 'routup';
 import {
     createHandler
 } from '@routup/static';
