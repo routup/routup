@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.3.2...@routup/swagger@0.4.0) (2022-12-22)
+
+
+### Bug Fixes
+
+* **swager:** remove console import ([93f0d8e](https://github.com/Tada5hi/routup/commit/93f0d8e1aa621dd85e8b1ebf98fc38c8d3946578))
+
+
+### Features
+
+* **static:** ignore-pattern option to prevent serving specific files ([2d4ed0c](https://github.com/Tada5hi/routup/commit/2d4ed0ca6cdd82671e0d26a6ca33b2fb9ffaa9de))
+
+
+
+
+
 ## [0.3.2](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.3.1...@routup/swagger@0.3.2) (2022-12-21)
 
 **Note:** Version bump only for package @routup/swagger

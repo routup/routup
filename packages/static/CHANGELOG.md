@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/Tada5hi/routup/compare/@routup/static@0.1.2...@routup/static@0.2.0) (2022-12-22)
+
+
+### Bug Fixes
+
+* **static:** minor pattern match issues + uri decoding ([f2d2fd2](https://github.com/Tada5hi/routup/commit/f2d2fd26c3da6ee8ac9f10e90ff170b5fb6ebbc5))
+
+
+### Features
+
+* **static:** ignore-pattern option to prevent serving specific files ([2d4ed0c](https://github.com/Tada5hi/routup/commit/2d4ed0ca6cdd82671e0d26a6ca33b2fb9ffaa9de))
+
+
+
+
+
 ## [0.1.2](https://github.com/Tada5hi/routup/compare/@routup/static@0.1.1...@routup/static@0.1.2) (2022-12-21)
 
 
