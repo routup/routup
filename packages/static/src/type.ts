@@ -45,17 +45,19 @@ export type HandlerOptions = {
     fallthrough: boolean;
     /**
      * Serving single-page-application?
-     * Boolean or relative path to main directory.
+     * Boolean or relative path to main directory, when a
+     * path can not be resolved.
      *
      * default: false
      */
-    spa: string | boolean;
+    fallback: string | boolean;
     /**
-     * Ignore specific files or directories.
+     * Paths which should not be resolved to the
+     * fallback path.
      *
      * default: []
      */
-    ignorePatterns: RegExp[];
+    fallbackIgnorePatterns: RegExp[];
     /**
      * Extensions to append to directory index file.
      *
@@ -68,9 +70,16 @@ export type HandlerOptions = {
      * default: false
      */
     dotFiles: boolean;
+
+    /**
+     * Paths which should be ignored aka not served.
+     *
+     * default: []
+     */
+    ignorePatterns: RegExp[],
 };
 
-export type HandlerOptionsInput = Omit<Partial<HandlerOptions>, 'ignorePatterns' | 'fallbackPath'> & {
+export type HandlerOptionsInput = Omit<Partial<HandlerOptions>, 'fallbackIgnorePatterns' | 'fallbackPath'> & {
     /**
      * Ignore specific files or directories.
      *

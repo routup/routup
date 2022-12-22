@@ -27,9 +27,9 @@ export function buildHandlerOptions(input: HandlerOptionsInput) : HandlerOptions
     }
 
     let fallbackPath = '/';
-    if (typeof input.spa === 'string') {
-        const idx = input.spa.lastIndexOf('.');
-        fallbackPath += ~idx ? input.spa.substring(0, idx) : input.spa;
+    if (typeof input.fallback === 'string') {
+        const idx = input.fallback.lastIndexOf('.');
+        fallbackPath += ~idx ? input.fallback.substring(0, idx) : input.fallback;
     }
 
     let directoryPath : string;
@@ -62,9 +62,10 @@ export function buildHandlerOptions(input: HandlerOptionsInput) : HandlerOptions
         cacheMaxAge,
         fallthrough: input.fallthrough ?? true,
         cacheImmutable: input.cacheImmutable ?? false,
-        spa: input.spa ?? false,
-        ignorePatterns,
+        fallback: input.fallback ?? false,
+        fallbackIgnorePatterns: ignorePatterns,
         extensions: input.extensions ?? ['html', 'htm'],
         dotFiles: input.dotFiles ?? false,
+        ignorePatterns: input.ignorePatterns ?? [],
     };
 }

@@ -27,6 +27,13 @@ export function scanFiles(options: HandlerOptions) {
             return;
         }
 
+        if (
+            options.ignorePatterns.length > 0 &&
+            isRegexMatch(relativePath, options.ignorePatterns)
+        ) {
+            return;
+        }
+
         const key = `/${relativePath.normalize().replace(/\\+/g, '/')}`;
 
         files[key] = {
@@ -103,12 +110,19 @@ export async function lookup(
     requestPath: string,
     options: HandlerOptions,
 ) : Promise<FileInfo | undefined> {
-    let fileInfo = await lookupPath(requestPath, options);
+    let fileInfo : FileInfo | undefined;
+
+    if (
+        options.ignorePatterns.length === 0 ||
+        !isRegexMatch(requestPath, options.ignorePatterns)
+    ) {
+        fileInfo = await lookupPath(requestPath, options);
+    }
 
     if (
         typeof fileInfo === 'undefined' &&
-        options.spa &&
-        !isRegexMatch(requestPath, options.ignorePatterns)
+        !!options.fallback &&
+        !isRegexMatch(requestPath, options.fallbackIgnorePatterns)
     ) {
         fileInfo = await lookupPath(options.fallbackPath, options);
     }

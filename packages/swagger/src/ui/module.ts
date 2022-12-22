@@ -69,12 +69,8 @@ export function createUIHandler(
         }
 
         if (req.url.includes('/package.json')) {
-            if (typeof next !== 'undefined') {
-                next();
-            } else {
-                res.statusCode = 404;
-                send(res);
-            }
+            res.statusCode = 404;
+            send(res);
 
             return;
         }

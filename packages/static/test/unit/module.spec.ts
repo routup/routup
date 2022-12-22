@@ -79,7 +79,7 @@ describe('src/module', () => {
         const router = new Router();
 
         router.use(createHandler(directoryPath, {
-            spa: true,
+            fallback: true,
         }));
 
         const server = supertest(router.createListener());

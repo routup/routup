@@ -118,17 +118,23 @@ Set the `max-age` (in seconds) directive of the cache-control header.
 - Description:
 Append the `immutable` directive to the cache-control header.
 
-#### spa
+#### fallback
 - Type: `Boolean|String`<br />
 - Default: `false`
 - Description: 
-Treat the directory as a single-page application.
+Resolve files, which are not found to a specific directory (default: '/')
 
-#### ignorePatterns
-- Type: `RegExp`
+#### fallbackIgnorePatterns
+- Type: `RegExp[]`
 - Default: `[]`
 - Description:
-Specify paths/patterns that should ignore the fallback behavior that `spa` provides.
+Specify paths/patterns that should not be forwarded to the fallback path.
+
+#### fallThrough
+- Type: `Boolean`<br />
+- Default: `true`
+- Description:
+Pass the request to the next handler, if no file was found and the fallback strategy is disabled.
 
 #### extensions
 - Type: `String[]`
@@ -142,6 +148,12 @@ When set, if a file is not found, the middleware will search for files with the 
 - Default: `false`
 - Description:
 Determines how to treat dotfiles (files or directories beginning with a `.`).
+
+#### ignorePatterns
+- Type: `RegExp[]`
+- Default: `[]`
+- Description:
+  Specify paths/patterns that should not be served.
 
 ## License
 
