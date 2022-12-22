@@ -5,14 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import * as console from 'console';
 import fs from 'fs';
 import path from 'path';
 import {
     Next,
     Request,
     Response,
-    send, useRequestMountPath,
+    send,
 } from '@routup/core';
 import { createHandler } from '@routup/static';
 import { merge } from 'smob';
