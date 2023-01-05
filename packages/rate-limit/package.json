@@ -1,0 +1,59 @@
+{
+    "name": "@routup/rate-limit",
+    "version": "0.0.0",
+    "description": "Routup rate limiter.",
+    "main": "./dist/index.js",
+    "typings": "dist/index.d.ts",
+    "files": [
+        "dist/"
+    ],
+    "scripts": {
+        "build": "rimraf ./dist && tsc -p tsconfig.build.json",
+        "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
+        "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage",
+        "lint": "eslint --ext .js,.ts ./src",
+        "lint:fix": "npm run lint -- --fix",
+        "prepublishOnly": "npm run build"
+    },
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "license": "MIT",
+    "keywords": [
+        "rate",
+        "limit",
+        "request",
+        "rate-limit",
+        "rate-limiter"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Tada5hi/routup.git",
+        "directory": "packages/rate-limit"
+    },
+    "bugs": {
+        "url": "https://github.com/Tada5hi/routup/issues"
+    },
+    "homepage": "https://github.com/Tada5hi/routup#readme",
+    "peerDependencies": {
+        "@routup/core": "^0.x",
+        "redis-extension": "^1.x"
+    },
+    "peerDependenciesMeta": {
+        "redis-extension": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "@routup/core": "^0.2.0",
+        "@types/supertest": "^2.0.12",
+        "routup": "^0.9.0",
+        "redis-extension": "^1.2.0",
+        "supertest": "^6.3.3"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}
