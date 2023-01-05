@@ -69,6 +69,7 @@ typically http framework functions, which are not integrated in the main package
 | [cookie](packages/cookie)         | Read and parse request cookies and serialize cookies for the response. |
 | [decorators](packages/decorators) | Create request handlers with class-, method- & parameter-decorators.   |
 | [query](packages/query)           | Read and parse the query string of the request url.                    |
+| [rate-limit](packages/rate-limit) | Rate limit incoming requests.                                          |
 | [static](packages/static)         | Serve static files from a directory.                                   |
 | [swagger](packages/swagger)       | Serve generated docs from URL or based on a JSON file.                 |
 

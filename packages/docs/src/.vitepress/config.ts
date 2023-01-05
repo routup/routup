@@ -100,6 +100,18 @@ export default defineConfig({
                     ]
                 },
             ],
+            '/plugins/rate-limit/': [
+                {
+                    text: '@routup/rate-limit',
+                    collapsible: false,
+                    items: [
+                        {text: 'Introduction', link: '/plugins/rate-limit/'},
+                        {text: 'Installation', link: '/plugins/rate-limit/installation.md'},
+                        {text: 'Usage', link: '/plugins/rate-limit/usage.md'},
+                        {text: 'API Reference', link: '/plugins/rate-limit/api-reference.md'}
+                    ]
+                },
+            ],
             '/plugins/static/': [
                 {
                     text: '@routup/static',
