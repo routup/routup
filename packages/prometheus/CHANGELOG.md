@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1](https://github.com/Tada5hi/routup/compare/@routup/prometheus@0.3.0...@routup/prometheus@0.3.1) (2023-01-08)
+
+
+### Bug Fixes
+
+* **prometheus:** capture duration for both metrics in sec ([8458cd3](https://github.com/Tada5hi/routup/commit/8458cd387cacc750119d84cff2be7645e171777f))
+
+
+
+
+
 # [0.3.0](https://github.com/Tada5hi/routup/compare/@routup/prometheus@0.2.0...@routup/prometheus@0.3.0) (2023-01-08)
 
 
