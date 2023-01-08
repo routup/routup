@@ -1,6 +1,6 @@
 {
     "name": "@routup/rate-limit",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Routup rate limiter.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
