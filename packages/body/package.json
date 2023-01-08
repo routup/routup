@@ -1,6 +1,6 @@
 {
     "name": "@routup/body",
-    "version": "0.3.8",
+    "version": "0.4.0",
     "description": "Body plugin for routup.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
@@ -49,9 +49,9 @@
         "smob": "^0.0.6"
     },
     "devDependencies": {
-        "@routup/core": "^0.3.0",
+        "@routup/core": "^0.4.0",
         "@types/supertest": "^2.0.12",
-        "routup": "^0.9.1",
+        "routup": "^0.10.0",
         "supertest": "^6.3.3"
     },
     "publishConfig": {

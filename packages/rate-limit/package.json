@@ -1,6 +1,6 @@
 {
     "name": "@routup/rate-limit",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "Routup rate limiter.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
@@ -47,10 +47,10 @@
         }
     },
     "devDependencies": {
-        "@routup/core": "^0.3.0",
+        "@routup/core": "^0.4.0",
         "@types/supertest": "^2.0.12",
         "redis-extension": "^1.2.0",
-        "routup": "^0.9.1",
+        "routup": "^0.10.0",
         "supertest": "^6.3.3"
     },
     "publishConfig": {

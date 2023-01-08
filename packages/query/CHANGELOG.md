@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/Tada5hi/routup/compare/@routup/query@0.3.2...@routup/query@0.4.0) (2023-01-08)
+
+
+### Features
+
+* bump version ([4d3fce2](https://github.com/Tada5hi/routup/commit/4d3fce2941ce56fa86dc789b81021fffb4a5424c))
+
+
+
+
+
 ## [0.3.2](https://github.com/Tada5hi/routup/compare/@routup/query@0.3.1...@routup/query@0.3.2) (2023-01-05)
 
 **Note:** Version bump only for package @routup/query

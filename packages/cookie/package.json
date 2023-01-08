@@ -1,6 +1,6 @@
 {
     "name": "@routup/cookie",
-    "version": "0.3.2",
+    "version": "0.4.0",
     "description": "Cookie plugin for routup.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",
@@ -50,9 +50,9 @@
         "cookie": "^0.5.0"
     },
     "devDependencies": {
-        "@routup/core": "^0.3.0",
+        "@routup/core": "^0.4.0",
         "@types/supertest": "^2.0.12",
-        "routup": "^0.9.1",
+        "routup": "^0.10.0",
         "supertest": "^6.3.3"
     },
     "gitHead": "11dd52c006ffe5041bba0f57dfc33527ee57d6c1",
