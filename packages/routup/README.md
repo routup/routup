@@ -67,6 +67,7 @@ typically http framework functions, which are not integrated in the main package
 | [body](https://www.npmjs.com/package/@routup/body)             | Read and parse the request body.                                       |
 | [cookie](https://www.npmjs.com/package/@routup/cookie)         | Read and parse request cookies and serialize cookies for the response. |
 | [decorators](https://www.npmjs.com/package/@routup/decorators) | Create request handlers with class-, method- & parameter-decorators.   |
+| [prometheus](https://www.npmjs.com/package/@routup/prometheus) | Collect and serve metrics for prometheus.                              |
 | [query](https://www.npmjs.com/package/@routup/query)           | Read and parse the query string of the request url.                    |
 | [rate-limit](https://www.npmjs.com/package/@routup/rate-limit) | Rate limit incoming requests.                                          |
 | [static](https://www.npmjs.com/package/@routup/static)         | Serve static files from a directory.                                   |
