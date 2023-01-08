@@ -105,7 +105,7 @@ jobs:
               run: |
                   cd ./packages/docs/src/.vitepress/dist/
                   touch CNAME
-                  echo "routup.tada5hi.net" > CNAME
+                  echo "routup.net" > CNAME
 
             - name: Deploy
               uses: peaceiris/actions-gh-pages@v3

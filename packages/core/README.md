@@ -26,7 +26,7 @@ npm install @routup/core --save
 
 ## Documentation
 
-To read the docs, visit [https://routup.tada5hi.net](https://routup.tada5hi.net)
+To read the docs, visit [https://routup.net](https://routup.net)
 
 
 ## License
