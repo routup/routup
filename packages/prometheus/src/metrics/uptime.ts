@@ -14,9 +14,9 @@ export function buildUptimeMetric(options: Options) : Gauge {
 
     return new promClient.Gauge({
         name: options.uptimeName,
-        help: 'Duration in ms since application is up and running.',
+        help: 'duration (sec) since application is up and running.',
         collect() {
-            this.set(parseFloat((performance.now() - starTime).toFixed(2)));
+            this.set(parseInt(`${((performance.now() - starTime) / 1000)}`, 10));
         },
         registers: [
             options.registry,
