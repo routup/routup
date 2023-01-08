@@ -8,11 +8,25 @@
 import path from 'path';
 import supertest from 'supertest';
 import {
-    HeaderName, sendAccepted, sendCreated, sendFile, sendRedirect,
+    HeaderName, send, sendAccepted, sendCreated, sendFile, sendRedirect,
 } from '../../../src';
 import { createHandler } from '../../handler';
 
 describe('src/helpers/response/send', () => {
+    fit('should send text as html', async () => {
+        const server = supertest(createHandler((req, res) => {
+            send(res, 'foo');
+        }));
+
+        const response = await server
+            .get('/');
+
+        console.log(response.headers);
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('text/html; charset=utf-8');
+    });
+
     it('should send file', async () => {
         const server = supertest(createHandler((req, res) => {
             const filePath = path.join(__dirname, '..', '..', 'data', 'dummy.json');

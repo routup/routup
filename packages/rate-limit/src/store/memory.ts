@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { HandlerOptions, IncrementResponse } from '../type';
+import { IncrementResponse, Options } from '../type';
 import { Store } from './type';
 import { calculateNextResetTime } from './utils';
 
@@ -37,7 +37,7 @@ export class MemoryStore implements Store {
      *
      * @param options {Options} - The options used to setup the middleware.
      */
-    init(options: HandlerOptions): void {
+    init(options: Options): void {
         // Get the duration of a window from the options.
         this.windowMs = options.windowMs;
 

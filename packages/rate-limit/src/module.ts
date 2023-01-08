@@ -9,10 +9,10 @@ import {
     Handler, HeaderName,
 } from '@routup/core';
 import { setRequestRateLimitInfo, useRequestRateLimitInfo } from './request';
-import { HandlerOptionsInput } from './type';
+import { OptionsInput } from './type';
 import { buildHandlerOptions } from './utils';
 
-export function createHandler(input?: HandlerOptionsInput) : Handler {
+export function createHandler(input?: OptionsInput) : Handler {
     const options = buildHandlerOptions({
         ...(input || {}),
     });

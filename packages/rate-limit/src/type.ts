@@ -45,7 +45,7 @@ export type RateLimitExceededEventHandler = (
     request: Request,
     response: Response,
     next: Next,
-    options: HandlerOptions,
+    options: Options,
 ) => void;
 
 /**
@@ -62,7 +62,7 @@ export type IncrementResponse = {
     resetTime: Date | undefined
 };
 
-export type HandlerOptions = {
+export type Options = {
     /**
      * How long we should remember the requests.
      *
@@ -151,4 +151,4 @@ export type HandlerOptions = {
     store: Store
 };
 
-export type HandlerOptionsInput = Partial<HandlerOptions>;
+export type OptionsInput = Partial<Options>;

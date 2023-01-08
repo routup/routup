@@ -6,12 +6,12 @@
  */
 
 import { Client, createClient, useClient } from 'redis-extension';
-import { HandlerOptions, IncrementResponse } from '../type';
+import { IncrementResponse, Options } from '../type';
 import { Store } from './type';
 import { calculateNextResetTime } from './utils';
 
 export class RedisStore implements Store {
-    options!: HandlerOptions;
+    options!: Options;
 
     client : Client;
 
@@ -30,7 +30,7 @@ export class RedisStore implements Store {
      *
      * @param options {Options} - The options used to setup the middleware.
      */
-    init(options: HandlerOptions) : void {
+    init(options: Options) : void {
         this.options = options;
     }
 

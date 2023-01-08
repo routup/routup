@@ -4,7 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import { HandlerOptions, IncrementResponse } from '../type';
+import { IncrementResponse, Options } from '../type';
 
 /**
  * An interface that all stores must implement.
@@ -16,7 +16,7 @@ export interface Store {
      *
      * @param options {Options} - The options used to setup the middleware.
      */
-    init?: (options: HandlerOptions) => void
+    init?: (options: Options) => void
 
     /**
      * Method to increment a client's hit counter.
