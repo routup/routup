@@ -8,4 +8,5 @@
 import { Request, Response } from '../type';
 
 export type RequestFn = (req: Request) => any;
+
 export type ResponseFn = (res: Response) => any;
