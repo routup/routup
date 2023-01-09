@@ -8,42 +8,12 @@ import { hasTrailingSlash } from '@routup/core';
 import fs from 'fs';
 import path from 'path';
 import { FileInfo, HandlerOptions } from '../type';
-import { readDirectory } from './directory';
 import { isRegexMatch } from './regex';
 
-const files : Record<string, FileInfo> = {};
-
-export function scanFiles(options: HandlerOptions) {
-    if (!options.scan) {
-        return;
-    }
-
-    readDirectory(options.directoryPath, (relativePath, filePath, stats) => {
-        if (
-            !(/\.well-known[\\+/]/.test(relativePath)) &&
-            !options.dotFiles &&
-            /(^\.|[\\+|/+]\.)/.test(relativePath)
-        ) {
-            return;
-        }
-
-        if (
-            options.ignores.length > 0 &&
-            isRegexMatch(relativePath, options.ignores)
-        ) {
-            return;
-        }
-
-        const key = `/${relativePath.normalize().replace(/\\+/g, '/')}`;
-
-        files[key] = {
-            filePath,
-            stats,
-        };
-    });
-}
-
-function generatePaths(requestPath: string, extensions: string[]) : string[] {
+function generatePaths(
+    requestPath: string,
+    extensions: string[],
+) : string[] {
     const items = [];
 
     for (let i = 0; i < extensions.length; i++) {
@@ -59,6 +29,7 @@ function generatePaths(requestPath: string, extensions: string[]) : string[] {
 const lookupPath = async (
     requestPath: string,
     options: HandlerOptions,
+    stack?: Record<string, FileInfo>,
 ) : Promise<FileInfo | undefined> => {
     const relativeFilePaths : string[] = [];
 
@@ -78,10 +49,13 @@ const lookupPath = async (
         }
     }
 
-    if (options.scan) {
+    if (
+        options.scan &&
+        stack
+    ) {
         for (let i = 0; i < relativeFilePaths.length; i++) {
-            if (typeof files[relativeFilePaths[i]] !== 'undefined') {
-                return files[relativeFilePaths[i]];
+            if (typeof stack[relativeFilePaths[i]] !== 'undefined') {
+                return stack[relativeFilePaths[i]];
             }
         }
     } else {
@@ -109,6 +83,7 @@ const lookupPath = async (
 export async function lookup(
     requestPath: string,
     options: HandlerOptions,
+    stack?: Record<string, FileInfo>,
 ) : Promise<FileInfo | undefined> {
     let fileInfo : FileInfo | undefined;
 
@@ -116,7 +91,7 @@ export async function lookup(
         options.ignores.length === 0 ||
         !isRegexMatch(requestPath, options.ignores)
     ) {
-        fileInfo = await lookupPath(requestPath, options);
+        fileInfo = await lookupPath(requestPath, options, stack);
     }
 
     if (
@@ -124,7 +99,7 @@ export async function lookup(
         !!options.fallback &&
         !isRegexMatch(requestPath, options.fallbackIgnores)
     ) {
-        fileInfo = await lookupPath(options.fallbackPath, options);
+        fileInfo = await lookupPath(options.fallbackPath, options, stack);
     }
 
     return fileInfo;

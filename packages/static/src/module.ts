@@ -12,9 +12,9 @@ import {
     useRequestMountPath,
     useRequestPath, withLeadingSlash,
 } from '@routup/core';
-import { HandlerOptionsInput } from './type';
-import { buildHandlerOptions } from './utils';
-import { lookup, scanFiles } from './utils/lookup';
+import { FileInfo, HandlerOptionsInput } from './type';
+import { buildHandlerOptions, scanFiles } from './utils';
+import { lookup } from './utils/lookup';
 
 export function createHandler(directory: string, input?: HandlerOptionsInput) : Handler {
     const options = buildHandlerOptions({
@@ -33,7 +33,9 @@ export function createHandler(directory: string, input?: HandlerOptionsInput) : 
         }
     }
 
-    scanFiles(options);
+    const stack : Record<string, FileInfo> = {};
+
+    scanFiles(stack, options);
 
     return (req, res, next) => {
         let requestPath = useRequestPath(req);
@@ -53,7 +55,7 @@ export function createHandler(directory: string, input?: HandlerOptionsInput) : 
             }
         }
 
-        lookup(requestPath, options)
+        lookup(requestPath, options, stack)
             .then((fileInfo) => {
                 if (typeof fileInfo === 'undefined') {
                     if (
