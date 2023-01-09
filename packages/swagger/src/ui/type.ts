@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { SwaggerConfigs } from 'swagger-ui-dist';
+import type { SwaggerConfigs } from 'swagger-ui-dist';
 
 export type UIOAuthOptions = {
     clientId?: string,
