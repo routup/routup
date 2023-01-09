@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.6.0...@routup/swagger@0.7.0) (2023-01-09)
+
+
+### Features
+
+* **swagger:** avoid import of swagger-ui-dist ([f0066fe](https://github.com/Tada5hi/routup/commit/f0066fe03e00405fb7a1c6039ad572e9c8d4621a))
+
+
+
+
+
 # [0.6.0](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.5.0...@routup/swagger@0.6.0) (2023-01-09)
 
 
