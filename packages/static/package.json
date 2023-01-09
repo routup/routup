@@ -1,6 +1,6 @@
 {
     "name": "@routup/static",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "Routup plugin for serving static files.",
     "main": "./dist/index.js",
     "typings": "dist/index.d.ts",

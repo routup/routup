@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/Tada5hi/routup/compare/@routup/static@0.3.0...@routup/static@0.4.0) (2023-01-09)
+
+
+### Features
+
+* **static:** optimized file scanning ([dd55bbd](https://github.com/Tada5hi/routup/commit/dd55bbdee65d793c8cb71bfaed6e6b0f9b6263bd))
+
+
+
+
+
 # [0.3.0](https://github.com/Tada5hi/routup/compare/@routup/static@0.2.1...@routup/static@0.3.0) (2023-01-08)
 
 
