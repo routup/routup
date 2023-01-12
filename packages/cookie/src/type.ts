@@ -8,7 +8,7 @@
 import {
     CookieParseOptions,
     CookieSerializeOptions,
-} from 'cookie';
+} from 'cookie-es';
 
 export type ParseOptions = CookieParseOptions;
 export type SerializeOptions = CookieSerializeOptions;

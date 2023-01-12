@@ -6,7 +6,7 @@
  */
 
 import { HeaderName, Response, appendResponseHeader } from '@routup/core';
-import { serialize } from 'cookie';
+import { serialize } from 'cookie-es';
 import { SerializeOptions } from './type';
 
 export function setResponseCookie(res: Response, name: string, value: string, options?: SerializeOptions) {

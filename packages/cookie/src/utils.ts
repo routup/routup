@@ -6,7 +6,7 @@
  */
 
 import { HeaderName, Request } from '@routup/core';
-import { parse } from 'cookie';
+import { parse } from 'cookie-es';
 import { ParseOptions } from './type';
 
 export function parseRequestCookie(req: Request, options?: ParseOptions) {
