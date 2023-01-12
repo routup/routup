@@ -10,7 +10,6 @@ import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
 import babel from '@rollup/plugin-babel';
-import terser from "@rollup/plugin-terser";
 
 const extensions = [
     '.js', '.jsx', '.ts', '.tsx',
@@ -71,9 +70,7 @@ export function createConfig({pkg, vuePlugin = false }) {
                     '@babel/preset-env',
                     '@babel/preset-typescript',
                 ]
-            }),
-
-            terser()
+            })
         ],
     };
 }

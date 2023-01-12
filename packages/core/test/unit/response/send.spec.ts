@@ -13,15 +13,13 @@ import {
 import { createHandler } from '../../handler';
 
 describe('src/helpers/response/send', () => {
-    fit('should send text as html', async () => {
+    it('should send text as html', async () => {
         const server = supertest(createHandler((req, res) => {
             send(res, 'foo');
         }));
 
         const response = await server
             .get('/');
-
-        console.log(response.headers);
 
         expect(response.statusCode).toEqual(200);
         expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('text/html; charset=utf-8');

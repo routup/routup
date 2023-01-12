@@ -5,19 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import mime from 'mime';
+import { get, getType } from 'mime-es';
 
 export function getMimeType(type: string) : string | undefined {
     if (type.indexOf('/') !== -1) {
         return type;
     }
 
-    return mime.getType(type) || undefined;
+    return getType(type);
 }
 
 export function getCharsetForMimeType(type: string) : string | undefined {
     if ((/^text\/|^application\/(javascript|json)/).test(type)) {
         return 'utf-8';
+    }
+
+    const meta = get(type);
+    if (
+        meta &&
+        meta.charset
+    ) {
+        return meta.charset.toLowerCase();
     }
 
     return undefined;
