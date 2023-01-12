@@ -4,7 +4,9 @@
     "compilerOptions": {
         "esModuleInterop": true,
         "outDir": "./dist",
-        "lib": ["dom"]
+
+        "declaration": true,
+        "declarationDir": "dist/types"
     },
 
     "include": [
