@@ -46,12 +46,12 @@
     },
     "homepage": "https://github.com/Tada5hi/routup#readme",
     "dependencies": {
-        "continu": "^1.0.4",
+        "continu": "^1.0.5",
         "etag": "^1.8.1",
         "mime": "^3.0.0",
         "negotiator": "^0.6.3",
         "proxy-addr": "^2.0.7",
-        "smob": "^0.0.6",
+        "smob": "^0.0.7",
         "zod": "^3.20.2"
     },
     "devDependencies": {
