@@ -2,9 +2,15 @@
     "name": "@routup/cookie",
     "version": "0.4.0",
     "description": "Cookie plugin for routup.",
-    "main": "dist/index.cjs.js",
-    "module": "dist/index.esm.js",
-    "typings": "dist/types/index.d.ts",
+    "main": "dist/index.cjs",
+    "module": "dist/index.mjs",
+    "typings": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "require": "./dist/index.cjs",
+            "import": "./dist/index.mjs"
+        }
+    },
     "files": [
         "dist/"
     ],

@@ -2,10 +2,7 @@
     "extends": "../../tsconfig.build.json",
 
     "compilerOptions": {
-        "outDir": "./dist",
-
-        "declaration": true,
-        "declarationDir": "dist/types"
+        "outDir": "./dist"
     },
 
     "include": [
