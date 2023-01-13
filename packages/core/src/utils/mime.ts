@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { get, getType } from 'mime-es';
+import { get, getType } from 'mime-explorer';
 
 export function getMimeType(type: string) : string | undefined {
     if (type.indexOf('/') !== -1) {
