@@ -9,6 +9,10 @@
             "syntax": "typescript",
             "decorators": true
         },
+        "transform": {
+            "decoratorMetadata": true,
+            "legacyDecorator": true
+        },
         "loose": true
     }
 }
