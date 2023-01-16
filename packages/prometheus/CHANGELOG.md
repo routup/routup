@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/Tada5hi/routup/compare/@routup/prometheus@0.3.1...@routup/prometheus@0.4.0) (2023-01-16)
+
+
+### Features
+
+* create cjs & esm bundle ([5c13568](https://github.com/Tada5hi/routup/commit/5c135687d9dc6e7c38905d8e742029064454ab43))
+
+
+
+
+
 ## [0.3.1](https://github.com/Tada5hi/routup/compare/@routup/prometheus@0.3.0...@routup/prometheus@0.3.1) (2023-01-08)
 
 

@@ -1,6 +1,6 @@
 {
     "name": "@routup/static",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "description": "Routup plugin for serving static files.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -57,9 +57,9 @@
         "@routup/core": ">=0.4.0 <1.0.0"
     },
     "devDependencies": {
-        "@routup/core": "^0.4.0",
+        "@routup/core": "^0.5.0",
         "@types/supertest": "^2.0.12",
-        "routup": "^0.10.0",
+        "routup": "^0.11.0",
         "supertest": "^6.3.3"
     },
     "publishConfig": {

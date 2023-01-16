@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/Tada5hi/routup/compare/@routup/decorators@0.2.0...@routup/decorators@0.3.0) (2023-01-16)
+
+
+### Features
+
+* create cjs & esm bundle ([5c13568](https://github.com/Tada5hi/routup/commit/5c135687d9dc6e7c38905d8e742029064454ab43))
+
+
+
+
+
 # [0.2.0](https://github.com/Tada5hi/routup/compare/@routup/decorators@0.1.10...@routup/decorators@0.2.0) (2023-01-08)
 
 

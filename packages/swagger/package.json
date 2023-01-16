@@ -1,6 +1,6 @@
 {
     "name": "@routup/swagger",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "description": "Swagger plugin for routup.",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -64,10 +64,10 @@
         "swagger-ui-dist": "^4.15.5"
     },
     "devDependencies": {
-        "@routup/core": "^0.4.0",
-        "@routup/static": "^0.4.0",
+        "@routup/core": "^0.5.0",
+        "@routup/static": "^0.5.0",
         "@types/supertest": "^2.0.12",
-        "routup": "^0.10.0",
+        "routup": "^0.11.0",
         "supertest": "^6.3.3"
     },
     "publishConfig": {

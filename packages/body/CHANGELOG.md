@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/Tada5hi/routup/compare/@routup/body@0.4.0...@routup/body@0.5.0) (2023-01-16)
+
+
+### Bug Fixes
+
+* **deps:** bump smob from 0.0.6 to 0.0.7 ([ced5d39](https://github.com/Tada5hi/routup/commit/ced5d396edb9a242b037b895775e586ce946b134))
+
+
+### Features
+
+* create cjs & esm bundle ([5c13568](https://github.com/Tada5hi/routup/commit/5c135687d9dc6e7c38905d8e742029064454ab43))
+
+
+
+
+
 # [0.4.0](https://github.com/Tada5hi/routup/compare/@routup/body@0.3.8...@routup/body@0.4.0) (2023-01-08)
 
 

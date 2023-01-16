@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/Tada5hi/routup/compare/@routup/core@0.4.0...@routup/core@0.5.0) (2023-01-16)
+
+
+### Bug Fixes
+
+* **core:** updated mime dependency ([591252b](https://github.com/Tada5hi/routup/commit/591252b369491d1cbfbef6b39fabdf8a271e170b))
+* **deps:** bump continu from 1.0.4 to 1.0.5 ([f4f63ea](https://github.com/Tada5hi/routup/commit/f4f63ea8d430571e4525cc64ce840af0368960b0))
+* **deps:** bump smob from 0.0.6 to 0.0.7 ([ced5d39](https://github.com/Tada5hi/routup/commit/ced5d396edb9a242b037b895775e586ce946b134))
+
+
+### Features
+
+* create cjs & esm bundle ([5c13568](https://github.com/Tada5hi/routup/commit/5c135687d9dc6e7c38905d8e742029064454ab43))
+
+
+
+
+
 # [0.4.0](https://github.com/Tada5hi/routup/compare/@routup/core@0.3.0...@routup/core@0.4.0) (2023-01-08)
 
 
