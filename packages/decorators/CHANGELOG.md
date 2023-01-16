@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/Tada5hi/routup/compare/@routup/decorators@0.3.0...@routup/decorators@0.4.0) (2023-01-16)
+
+
+### Features
+
+* replaced rollup,esbuild & ts-jest with swc ([eec4671](https://github.com/Tada5hi/routup/commit/eec46710781894532b9be0b0b9d1b911f0c7e937))
+
+
+
+
+
 # [0.3.0](https://github.com/Tada5hi/routup/compare/@routup/decorators@0.2.0...@routup/decorators@0.3.0) (2023-01-16)
 
 
