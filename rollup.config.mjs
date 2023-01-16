@@ -9,7 +9,7 @@ import { builtinModules } from 'module';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
-import babel from '@rollup/plugin-babel';
+import esbuild from 'rollup-plugin-esbuild';
 
 const extensions = [
     '.js', '.jsx', '.ts', '.tsx',
@@ -18,10 +18,10 @@ const extensions = [
 /**
  * Create a base rollup config
  * @param {Record<string,any>} pkg Imported package.json
- * @param {boolean} vuePlugin Is vue package
+ * @param {boolean} defaultExport Is vue package
  * @returns {import('rollup').Options}
  */
-export function createConfig({pkg, vuePlugin = false }) {
+export function createConfig({pkg, vuePlugin: defaultExport = false }) {
     return {
         input: 'src/index.ts',
         external: Object.keys(pkg.dependencies || {})
@@ -37,7 +37,7 @@ export function createConfig({pkg, vuePlugin = false }) {
                 file: pkg.main,
                 exports: 'named',
                 // in all other cases we do not have a default import...
-                ...(vuePlugin ? {footer: 'module.exports = Object.assign(exports.default, exports);'} : {}),
+                ...(defaultExport ? {footer: 'module.exports = Object.assign(exports.default, exports);'} : {}),
                 sourcemap: true
             },
             {
@@ -61,15 +61,9 @@ export function createConfig({pkg, vuePlugin = false }) {
             // Allow bundling cjs modules. Rollup doesn't understand cjs
             commonjs(),
 
-            // Compile TypeScript/JavaScript files
-            babel({
-                exclude: 'node_modules/**',
-                extensions,
-                babelHelpers: 'bundled',
-                presets: [
-                    '@babel/preset-env',
-                    '@babel/preset-typescript',
-                ]
+            esbuild({
+                tsconfig: 'tsconfig.build.json',
+                minify: true,
             })
         ],
     };
