@@ -2,22 +2,14 @@
     "name": "@routup/core",
     "version": "0.5.0",
     "description": "Plugin for request & response handling.",
-    "main": "dist/index.cjs",
-    "module": "dist/index.mjs",
+    "main": "dist/index.js",
     "typings": "dist/index.d.ts",
-    "exports": {
-        "./package.json": "./package.json",
-        ".": {
-            "require": "./dist/index.cjs",
-            "import": "./dist/index.mjs"
-        }
-    },
     "files": [
         "dist/"
     ],
     "scripts": {
         "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
-        "build:js": "rollup -c",
+        "build:js": "npx swc ./src -d dist --config-file ../../.swcrc.json",
         "build": "rimraf ./dist && cross-env NODE_ENV=production npm run build:js && npm run build:types",
         "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
         "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage",
