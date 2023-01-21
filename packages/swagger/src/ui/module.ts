@@ -15,7 +15,6 @@ import {
 } from '@routup/core';
 import { createHandler } from '@routup/static';
 import { merge } from 'smob';
-import resolvePackagePath from 'resolve-package-path';
 import { UIOptions } from './type';
 
 /* istanbul ignore next */
@@ -41,14 +40,7 @@ export function createUIHandler(
     document: Record<string, any> | string,
     options?: UIOptions,
 ) {
-    let swaggerUiPath = resolvePackagePath('swagger-ui-dist', __dirname, false);
-    if (swaggerUiPath) {
-        swaggerUiPath = path.dirname(swaggerUiPath);
-    } else {
-        swaggerUiPath = require.resolve('swagger-ui-dist');
-    }
-
-    const handler = createHandler(swaggerUiPath, {
+    const handler = createHandler(path.dirname(require.resolve('swagger-ui-dist')), {
         extensions: [],
     });
 
