@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.9.0...@routup/swagger@0.10.0) (2023-01-21)
+
+
+### Features
+
+* **swagger:** remove resolve-package-path dependency ([d3df1b7](https://github.com/Tada5hi/routup/commit/d3df1b77b3d7edd367bdaf7c1efedff02fb782ab))
+
+
+
+
+
 # [0.9.0](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.8.0...@routup/swagger@0.9.0) (2023-01-16)
 
 
