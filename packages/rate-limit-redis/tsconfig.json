@@ -1,0 +1,11 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "paths": {
+            "@routup/core": ["./packages/core/src"],
+            "@routup/rate-limit": ["./packages/rate-limit/src"],
+            "routup": ["./packages/routup/src"]
+        }
+    }
+}
+

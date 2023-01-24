@@ -1,7 +1,7 @@
 {
-    "name": "@routup/rate-limit",
-    "version": "0.5.0",
-    "description": "Routup rate limiter.",
+    "name": "@routup/rate-limit-redis",
+    "version": "0.0.0",
+    "description": "Red adapter for the routup rate-limit plugin.",
     "exports": {
         "./package.json": "./package.json",
         ".": {
@@ -20,8 +20,6 @@
         "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
         "build:js": "rollup -c",
         "build": "rimraf ./dist && cross-env NODE_ENV=production npm run build:js && npm run build:types",
-        "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
-        "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage",
         "lint": "eslint --ext .js,.ts ./src",
         "lint:fix": "npm run lint -- --fix",
         "prepublishOnly": "npm run build"
@@ -37,23 +35,33 @@
         "limit",
         "request",
         "rate-limit",
-        "rate-limiter"
+        "rate-limter",
+        "redis"
     ],
     "repository": {
         "type": "git",
         "url": "git+https://github.com/Tada5hi/routup.git",
-        "directory": "packages/rate-limit"
+        "directory": "packages/rate-limit-redis"
     },
     "bugs": {
         "url": "https://github.com/Tada5hi/routup/issues"
     },
     "homepage": "https://github.com/Tada5hi/routup#readme",
     "peerDependencies": {
-        "@routup/core": ">=0.6.0 <1.0.0"
+        "@routup/core": ">=0.6.0 <1.0.0",
+        "@routup/rate-limit": ">=0.5.0 <1.0.0",
+        "redis-extension": "^1.x"
+    },
+    "peerDependenciesMeta": {
+        "redis-extension": {
+            "optional": true
+        }
     },
     "devDependencies": {
         "@routup/core": "^0.6.0",
+        "@routup/rate-limit": "^0.5.0",
         "@types/supertest": "^2.0.12",
+        "redis-extension": "^1.2.1",
         "routup": "^0.12.0",
         "supertest": "^6.3.3"
     },

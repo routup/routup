@@ -6,9 +6,12 @@
  */
 
 import { Client, createClient, useClient } from 'redis-extension';
-import { IncrementResponse, Options } from '../type';
-import { Store } from './type';
-import { calculateNextResetTime } from './utils';
+import {
+    IncrementResponse,
+    Options,
+    Store,
+    calculateNextResetTime,
+} from '@routup/rate-limit';
 
 export class RedisStore implements Store {
     options!: Options;
