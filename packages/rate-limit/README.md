@@ -42,9 +42,7 @@ To read the docs, visit [https://routup.net](https://routup.net)
 
 ```typescript
 import { Router } from 'routup';
-import {
-    createHandler
-} from '@routup/rate-limit';
+import { createHandler } from '@routup/rate-limit';
 
 const router = new Router();
 

@@ -32,9 +32,7 @@ to parse the query-string of the request url.
 
 ```typescript
 import {Router, send} from 'routup';
-import {
-    useRequestQuery
-} from '@routup/query';
+import { useRequestQuery } from '@routup/query';
 
 const router = new Router();
 

@@ -37,9 +37,7 @@ to move on to the next middleware, allowing for stacking and fall-backs.
 
 ```typescript
 import { Router } from 'routup';
-import {
-    createHandler
-} from '@routup/static';
+import { createHandler } from '@routup/static';
 
 const router = new Router();
 
@@ -57,9 +55,7 @@ An example of this is shown below:
 
 ```typescript
 import { Router } from 'routup';
-import {
-    createHandler
-} from '@routup/static';
+import { createHandler } from '@routup/static';
 
 const router = new Router();
 
@@ -80,9 +76,7 @@ This is done as follows:
 
 ```typescript
 import { Router } from 'routup';
-import {
-    createHandler
-} from '@routup/static';
+import { createHandler } from '@routup/static';
 
 const router = new Router();
 

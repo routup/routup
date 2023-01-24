@@ -29,10 +29,8 @@ To read the docs, visit [https://routup.net](https://routup.net)
 
 ```typescript
 import { Router } from 'routup';
-import { 
-    createHandler
-} from '@routup/rate-limit';
-import RedisStore from '@routup/rate-limit-redis';
+import { createHandler } from '@routup/rate-limit';
+import { RedisStore } from '@routup/rate-limit-redis';
 
 const router = new Router();
 
