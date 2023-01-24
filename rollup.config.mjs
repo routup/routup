@@ -12,7 +12,7 @@ import { builtinModules } from 'module';
 import { transform } from "@swc/core";
 
 const extensions = [
-    '.js', '.mjs', '.ts',
+    '.js', '.mjs', '.cjs', '.ts',
 ];
 
 const swcOptions = {
