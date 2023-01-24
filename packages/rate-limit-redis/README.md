@@ -32,9 +32,7 @@ import { Router } from 'routup';
 import { 
     createHandler
 } from '@routup/rate-limit';
-import {
-    Store
-} from '@routup/rate-limit-redis';
+import RedisStore from '@routup/rate-limit-redis';
 
 const router = new Router();
 
@@ -48,7 +46,7 @@ const handler = createHandler({
     
     // connection string or ioredis instance 
     // can be passed optional as argument 
-    store: new Store(), 
+    store: new RedisStore(), 
 })
 
 // Apply the rate limiting middleware to API calls only
