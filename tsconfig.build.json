@@ -1,22 +1,19 @@
 {
+    "extends": "@tada5hi/tsconfig",
     "compilerOptions": {
-        "sourceMap": true,
-        "strict": true,
-
-        "declaration": true,
         "declarationMap": true,
 
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
 
-        "skipLibCheck": true,
+        "noUncheckedIndexedAccess": false,
+        "noPropertyAccessFromIndexSignature": false,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
 
-        "esModuleInterop": true,
         "lib": ["ESNext"],
-        "target": "ESNext",
-
-        "moduleResolution": "Node",
-        "module": "ESNext"
+        "module": "ESNext",
+        "target": "ES2020"
     },
     "exclude": [
         "node_modules",
