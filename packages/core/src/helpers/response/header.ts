@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OutgoingHttpHeader } from 'http';
+import type { OutgoingHttpHeader } from 'node:http';
 import { Response } from '../../type';
 
 export function appendResponseHeader(

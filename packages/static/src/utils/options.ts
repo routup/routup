@@ -4,7 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import path from 'path';
+import path from 'node:path';
 import { HandlerOptions, HandlerOptionsInput } from '../type';
 
 export function buildHandlerOptions(input: HandlerOptionsInput) : HandlerOptions {

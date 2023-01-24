@@ -6,7 +6,7 @@
  */
 
 import { Continu, FlattenObject } from 'continu';
-import * as process from 'process';
+import process from 'node:process';
 import zod from 'zod';
 import {
     EtagInput,

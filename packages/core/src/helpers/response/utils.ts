@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
+import path from 'node:path';
 import { HeaderName } from '../../constants';
 import { Response } from '../../type';
 import { getCharsetForMimeType, getMimeType } from '../../utils';

@@ -9,7 +9,7 @@ import {
     BadRequestErrorOptions,
     NotFoundErrorOptions,
 } from '@ebec/http';
-import { RequestListener, createServer } from 'http';
+import { RequestListener, createServer } from 'node:http';
 import { merge, mergeArrays } from 'smob';
 import {
     ErrorHandler,

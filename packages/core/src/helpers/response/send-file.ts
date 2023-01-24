@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Stats, createReadStream, stat } from 'fs';
-import path from 'path';
+import { Stats, createReadStream, stat } from 'node:fs';
+import path from 'node:path';
 import { HeaderName } from '../../constants';
 import { Response } from '../../type';
 import { setResponseHeaderAttachment } from './header-attachment';
