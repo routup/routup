@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/Tada5hi/routup/compare/@routup/core@0.6.0...@routup/core@0.7.0) (2023-01-24)
+
+
+### Bug Fixes
+
+* prefix node modules imports with node: ([a45055a](https://github.com/Tada5hi/routup/commit/a45055a15d09e4e299c6772ff2d385f9f62468ad))
+
+
+### Features
+
+* use rollup + swc for transpiling and bundle code for esm/cjs ([aeabf06](https://github.com/Tada5hi/routup/commit/aeabf06d2372f315bdbe33546ea5dacb74ce6d9d))
+
+
+
+
+
 # [0.6.0](https://github.com/Tada5hi/routup/compare/@routup/core@0.5.0...@routup/core@0.6.0) (2023-01-16)
 
 

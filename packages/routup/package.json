@@ -1,6 +1,6 @@
 {
     "name": "routup",
-    "version": "0.12.0",
+    "version": "0.13.0",
     "description": "Routup is a minimalistic http based routing framework.",
     "exports": {
         "./package.json": "./package.json",
@@ -58,7 +58,7 @@
         "smob": "^0.0.7"
     },
     "devDependencies": {
-        "@routup/core": "^0.6.0",
+        "@routup/core": "^0.7.0",
         "@types/supertest": "^2.0.12",
         "supertest": "^6.3.3"
     },
