@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Continu } from 'continu';
-import { FlattenObject } from 'continu/dist/types/type';
+import { Continu, FlattenObject } from 'continu';
 import * as process from 'process';
 import zod from 'zod';
 import {
