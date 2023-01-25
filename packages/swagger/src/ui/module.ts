@@ -15,6 +15,7 @@ import {
 } from '@routup/core';
 import { createHandler } from '@routup/static';
 import { merge } from 'smob';
+import { getAssetsPath } from '../utils';
 import { UIOptions } from './type';
 
 /* istanbul ignore next */
@@ -54,7 +55,7 @@ export function createUIHandler(
         },
     );
 
-    const template = fs.readFileSync(path.join(__dirname, '..', '..', 'assets', 'template.tpl'), {
+    const template = fs.readFileSync(path.join(getAssetsPath(), 'template.tpl'), {
         encoding: 'utf-8',
     })
         .replace('<% title %>', 'Swagger UI')

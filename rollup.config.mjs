@@ -31,7 +31,9 @@ const swcOptions = {
     sourceMaps: true
 }
 
-export function createConfig({ pkg, external = [], defaultExport = false }) {
+export function createConfig(
+    { pkg, external = [], defaultExport = false }
+) {
     external = Object.keys(pkg.dependencies || {})
         .concat(Object.keys(pkg.peerDependencies || {}))
         .concat(builtinModules)
