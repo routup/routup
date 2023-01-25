@@ -1,6 +1,6 @@
 {
     "name": "@routup/swagger",
-    "version": "0.11.0",
+    "version": "0.11.1",
     "description": "Swagger plugin for routup.",
     "exports": {
         "./package.json": "./package.json",

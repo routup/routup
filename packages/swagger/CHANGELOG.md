@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.11.1](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.11.0...@routup/swagger@0.11.1) (2023-01-25)
+
+
+### Bug Fixes
+
+* **swagger:** assets path resolution ([84b62b8](https://github.com/Tada5hi/routup/commit/84b62b8e643b243eaf216c2ce4731f605ce22cf4))
+
+
+
+
+
 # [0.11.0](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.10.0...@routup/swagger@0.11.0) (2023-01-24)
 
 
