@@ -55,7 +55,7 @@
     "dependencies": {
         "@ebec/http": "^0.2.2",
         "path-to-regexp": "^6.2.1",
-        "smob": "^0.0.7"
+        "smob": "^0.1.0"
     },
     "devDependencies": {
         "@routup/core": "^0.7.0",
