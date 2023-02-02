@@ -61,7 +61,7 @@
         "@routup/core": "^0.7.0",
         "@routup/rate-limit": "^0.6.0",
         "@types/supertest": "^2.0.12",
-        "redis-extension": "^1.2.2",
+        "redis-extension": "^1.2.3",
         "routup": "^0.13.0",
         "supertest": "^6.3.3"
     },
