@@ -43,7 +43,7 @@
         "@tada5hi/eslint-config-vue-typescript": "^1.1.1",
         "@tada5hi/tsconfig": "^0.4.0",
         "@types/jest": "^29.4.0",
-        "@types/node": "^18.11.18",
+        "@types/node": "^18.11.19",
         "@types/supertest": "^2.0.12",
         "cross-env": "^7.0.3",
         "eslint": "^8.33.0",
