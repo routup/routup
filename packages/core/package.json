@@ -59,7 +59,7 @@
         "negotiator": "^0.6.3",
         "proxy-addr": "^2.0.7",
         "smob": "^0.1.0",
-        "zod": "^3.20.2"
+        "zod": "^3.20.3"
     },
     "devDependencies": {
         "@types/negotiator": "^0.6.1",
