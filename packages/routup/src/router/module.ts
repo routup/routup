@@ -188,9 +188,7 @@ export class Router {
             }
 
             if (typeof err !== 'undefined') {
-                res.statusCode = BadRequestErrorOptions.statusCode;
-                res.statusMessage = BadRequestErrorOptions.message;
-
+                res.statusCode = 400;
                 res.end();
 
                 return;
@@ -210,7 +208,7 @@ export class Router {
                 return;
             }
 
-            res.statusCode = NotFoundErrorOptions.statusCode;
+            res.statusCode = 404;
             res.end();
         };
 

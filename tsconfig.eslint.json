@@ -1,6 +1,8 @@
 {
     "extends": "./tsconfig.build.json",
     "include": [
+        "commitlint.config.js",
+        "rollup.config.mjs",
         "packages/**/src/**/*.ts",
         "packages/**/test/**/*.ts",
     ]

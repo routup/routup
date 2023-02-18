@@ -90,7 +90,18 @@ describe('src/module', () => {
             throw new Error('foo');
         });
 
-        router.get('/async', async () => {
+        const server = supertest(router.createListener());
+
+        const response = await server
+            .get('/');
+
+        expect(response.statusCode).toEqual(400);
+    });
+
+    it('should process with async error thrown', async () => {
+        const router = new Router();
+
+        router.get('/', async () => {
             await new Promise((resolve, reject) => {
                 setTimeout(() => {
                     reject(new Error('bar'));
@@ -100,13 +111,8 @@ describe('src/module', () => {
 
         const server = supertest(router.createListener());
 
-        let response = await server
+        const response = await server
             .get('/');
-
-        expect(response.statusCode).toEqual(400);
-
-        response = await server
-            .get('/async');
 
         expect(response.statusCode).toEqual(400);
     });
