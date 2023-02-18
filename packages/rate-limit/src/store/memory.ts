@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IncrementResponse, Options } from '../type';
-import { Store } from './type';
+import type { IncrementResponse, Options } from '../type';
+import type { Store } from './type';
 import { calculateNextResetTime } from './utils';
 
 export class MemoryStore implements Store {

@@ -5,11 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    Handler, HeaderName,
-} from '@routup/core';
+import type { Handler } from '@routup/core';
+import { HeaderName } from '@routup/core';
 import { setRequestRateLimitInfo, useRequestRateLimitInfo } from './request';
-import { OptionsInput } from './type';
+import type { OptionsInput } from './type';
 import { buildHandlerOptions } from './utils';
 
 export function createHandler(input?: OptionsInput) : Handler {

@@ -4,12 +4,11 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import {
-    Next, Request, Response, getRequestIp, send,
-} from '@routup/core';
+import type { Next, Request, Response } from '@routup/core';
+import { getRequestIp, send } from '@routup/core';
 import { RETRY_AGAIN_MESSAGE } from '../constants';
 import { MemoryStore } from '../store';
-import { Options, OptionsInput, ValueDeterminingMiddleware } from '../type';
+import type { Options, OptionsInput, ValueDeterminingMiddleware } from '../type';
 
 export function buildHandlerOptions(input?: OptionsInput) : Options {
     input = input || {};

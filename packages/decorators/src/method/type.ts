@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ClassType } from '../type';
+import type { ClassType } from '../type';
 
 export type DecoratorMethodOptions = {
     method: string;

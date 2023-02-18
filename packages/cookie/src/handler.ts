@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Handler } from '@routup/core';
 import {
-    Handler,
     hasRequestCookies,
     setRequestCookies,
 } from '@routup/core';
 
-import { ParseOptions } from './type';
+import type { ParseOptions } from './type';
 import { parseRequestCookie } from './utils';
 
 export function createRequestHandler(options?: ParseOptions) : Handler {

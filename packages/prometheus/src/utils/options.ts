@@ -7,7 +7,7 @@
 
 import promClient from 'prom-client';
 import { MetricName, MetricTypeName } from '../constants';
-import { Options, OptionsInput } from '../type';
+import type { Options, OptionsInput } from '../type';
 
 export function buildHandlerOptions(input?: OptionsInput) : Options {
     input = input || {};

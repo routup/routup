@@ -6,9 +6,10 @@
  */
 
 import proxyAddr from 'proxy-addr';
-import { Request } from '../../type';
+import type { Request } from '../../type';
 import { useConfig } from '../../config';
-import { TrustProxyFn, TrustProxyInput, buildTrustProxyFn } from '../../utils';
+import type { TrustProxyFn, TrustProxyInput } from '../../utils';
+import { buildTrustProxyFn } from '../../utils';
 
 type RequestIpOptions = {
     trustProxy?: TrustProxyInput

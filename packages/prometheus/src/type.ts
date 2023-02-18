@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Request, Response } from '@routup/core';
-import {
+import type { Request, Response } from '@routup/core';
+import type {
     DefaultMetricsCollectorConfiguration,
     Gauge,
     Histogram,
@@ -16,7 +16,7 @@ import {
     Summary,
     SummaryConfiguration,
 } from 'prom-client';
-import { MetricTypeName } from './constants';
+import type { MetricTypeName } from './constants';
 
 export type Metrics = {
     uptime?: Gauge,

@@ -13,6 +13,7 @@ import {
     send,
     useRequestParam,
 } from 'routup';
+import type { HandlerInterface } from '../../src';
 import {
     DController,
     DDelete,
@@ -25,7 +26,6 @@ import {
     DPut,
     DRequest,
     DResponse,
-    HandlerInterface,
 } from '../../src';
 
 export class DeleteMiddleware implements HandlerInterface {

@@ -6,7 +6,7 @@
  */
 import { useConfig } from '../../config';
 import { HeaderName } from '../../constants';
-import { Response } from '../../type';
+import type { Response } from '../../type';
 import { appendResponseHeaderDirective } from './header';
 import { setResponseHeaderContentType } from './header-content-type';
 

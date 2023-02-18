@@ -5,16 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Continu, FlattenObject } from 'continu';
+import type { FlattenObject } from 'continu';
+import { Continu } from 'continu';
 import process from 'node:process';
 import zod from 'zod';
-import {
+import type {
     EtagInput,
     TrustProxyInput,
+} from '../utils';
+import {
     buildEtagFn,
     buildTrustProxyFn,
 } from '../utils';
-import { Options, OptionsInput } from './type';
+import type { Options, OptionsInput } from './type';
 
 let instance : Continu<Options, OptionsInput> | undefined;
 

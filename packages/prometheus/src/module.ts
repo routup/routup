@@ -5,18 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Handler } from '@routup/core';
 import {
-    Handler,
     setResponseHeaderContentType,
     useRequestPath,
     withLeadingSlash,
 } from '@routup/core';
-import promClient, {
+import type {
     LabelValues,
     Registry,
 } from 'prom-client';
+import promClient from 'prom-client';
 import { buildRequestDurationMetric, buildUptimeMetric } from './metrics';
-import { Metrics, OptionsInput } from './type';
+import type { Metrics, OptionsInput } from './type';
 import { buildHandlerOptions, onResponseFinished } from './utils';
 
 export function createHandler(input?: Registry) : Handler {

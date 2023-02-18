@@ -6,15 +6,14 @@
  */
 
 import { BadRequestError } from '@ebec/http';
-import {
-    Next, Request, Response, setRequestMountPath, setRequestParams,
-} from '@routup/core';
+import type { Next, Request, Response } from '@routup/core';
+import { setRequestMountPath, setRequestParams } from '@routup/core';
 import { processHandlerExecutionOutput } from '../handler';
 import { PathMatcher } from '../path';
-import {
+import type {
     DispatcherMeta,
 } from '../type';
-import { LayerOptions } from './type';
+import type { LayerOptions } from './type';
 
 export class Layer {
     readonly '@instanceof' = Symbol.for('Layer');

@@ -7,7 +7,7 @@
 import { hasTrailingSlash } from '@routup/core';
 import fs from 'node:fs';
 import path from 'node:path';
-import { FileInfo, HandlerOptions } from '../type';
+import type { FileInfo, HandlerOptions } from '../type';
 import { isRegexMatch } from './regex';
 
 function generatePaths(

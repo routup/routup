@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Request } from '../../type';
+import type { Request } from '../../type';
 import { HeaderName } from '../../constants';
 import { getMimeType } from '../../utils';
 import { getRequestHeader } from './header';

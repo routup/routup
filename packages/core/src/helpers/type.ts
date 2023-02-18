@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Request, Response } from '../type';
+import type { Request, Response } from '../type';
 
 export type RequestFn = (req: Request) => any;
 

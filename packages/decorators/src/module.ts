@@ -5,11 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    Handler, Router, isObject, processHandlerExecutionOutput,
-} from 'routup';
+import type { Handler } from 'routup';
+import { Router, isObject, processHandlerExecutionOutput } from 'routup';
 import { buildDecoratorMethodArguments } from './method';
-import { ClassType } from './type';
+import type { ClassType } from './type';
 import { createHandlerForClassType, useDecoratorMeta } from './utils';
 
 export function mountController(router: Router, input: (ClassType | Record<string, any>)) {

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DecoratorMeta } from '../type';
+import type { DecoratorMeta } from '../type';
 
 const symbol = Symbol.for('DecoratorMeta');
 

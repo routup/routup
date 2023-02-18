@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { EtagFn, EtagInput } from '../utils/etag/type';
-import { TrustProxyFn, TrustProxyInput } from '../utils/trust-proxy';
+import type { EtagFn, EtagInput } from '../utils/etag/type';
+import type { TrustProxyFn, TrustProxyInput } from '../utils/trust-proxy';
 
 export type Options = {
     /**

@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import promClient, { Histogram, Summary } from 'prom-client';
+import type { Histogram, Summary } from 'prom-client';
+import promClient from 'prom-client';
 import { MetricTypeName } from '../constants';
-import { Options } from '../type';
+import type { Options } from '../type';
 
 export function buildRequestDurationMetric(options: Options) : Histogram | Summary {
     const labels : string[] = [

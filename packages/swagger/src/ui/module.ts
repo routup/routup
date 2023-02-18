@@ -7,16 +7,18 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import {
+import type {
     Next,
     Request,
     Response,
+} from '@routup/core';
+import {
     send,
 } from '@routup/core';
 import { createHandler } from '@routup/static';
 import { merge } from 'smob';
 import { getAssetsPath } from '../utils';
-import { UIOptions } from './type';
+import type { UIOptions } from './type';
 
 /* istanbul ignore next */
 const stringify = (obj: Record<string, any>) => {

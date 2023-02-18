@@ -4,7 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import { Request } from '../../type';
+import type { Request } from '../../type';
 
 const ParamsSymbol = Symbol.for('ReqParams');
 

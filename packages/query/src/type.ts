@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IParseOptions } from 'qs';
+import type { IParseOptions } from 'qs';
 
 export type ParseOptions = IParseOptions;

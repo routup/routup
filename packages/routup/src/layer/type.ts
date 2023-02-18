@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PathMatcherOptions } from '../path';
-import { Path } from '../type';
+import type { PathMatcherOptions } from '../path';
+import type { Path } from '../type';
 
 export type LayerOptions = {
     path: Path,

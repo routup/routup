@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Request } from '@routup/core';
-import { RateLimitInfo } from './type';
+import type { Request } from '@routup/core';
+import type { RateLimitInfo } from './type';
 
 const symbol = Symbol.for('ReqRateLimit');
 export function useRequestRateLimitInfo(req: Request) : RateLimitInfo;

@@ -4,7 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import { IncrementResponse, Options } from '../type';
+import type { IncrementResponse, Options } from '../type';
 
 /**
  * An interface that all stores must implement.

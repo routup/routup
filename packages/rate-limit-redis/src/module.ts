@@ -5,11 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client, createClient, useClient } from 'redis-extension';
-import {
+import type { Client } from 'redis-extension';
+import { createClient, useClient } from 'redis-extension';
+import type {
     IncrementResponse,
     Options,
     Store,
+} from '@routup/rate-limit';
+import {
     calculateNextResetTime,
 } from '@routup/rate-limit';
 

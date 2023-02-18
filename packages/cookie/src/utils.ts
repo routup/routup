@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { HeaderName, Request } from '@routup/core';
+import type { Request } from '@routup/core';
+import { HeaderName } from '@routup/core';
 import { parse } from 'cookie-es';
-import { ParseOptions } from './type';
+import type { ParseOptions } from './type';
 
 export function parseRequestCookie(req: Request, options?: ParseOptions) {
     return parse(req.headers[HeaderName.COOKIE] || '', options || {});

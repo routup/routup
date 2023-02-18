@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OptionsText, text } from 'body-parser';
-import { Handler } from '@routup/core';
+import type { OptionsText } from 'body-parser';
+import { text } from 'body-parser';
+import type { Handler } from '@routup/core';
 
 export function createRequestTextHandler(options?: OptionsText) : Handler {
     return text(options);

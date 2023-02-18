@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { HeaderName, Response, appendResponseHeader } from '@routup/core';
+import type { Response } from '@routup/core';
+import { HeaderName, appendResponseHeader } from '@routup/core';
 import { serialize } from 'cookie-es';
-import { SerializeOptions } from './type';
+import type { SerializeOptions } from './type';
 
 export function setResponseCookie(res: Response, name: string, value: string, options?: SerializeOptions) {
     appendResponseHeader(res, HeaderName.SET_COOKIE, serialize(name, value, {

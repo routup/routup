@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Next, Request, Response } from '@routup/core';
-import { Store } from './store';
+import type { Next, Request, Response } from '@routup/core';
+import type { Store } from './store';
 
 /**
  * Request rate limit info record.

@@ -6,7 +6,7 @@
  */
 import crypto from 'node:crypto';
 import { Stats } from 'node:fs';
-import { EtagOptions } from './type';
+import type { EtagOptions } from './type';
 
 /**
  * Determine if object is a Stats object.

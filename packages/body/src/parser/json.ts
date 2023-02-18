@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OptionsJson, json } from 'body-parser';
-import { Handler } from '@routup/core';
+import type { OptionsJson } from 'body-parser';
+import { json } from 'body-parser';
+import type { Handler } from '@routup/core';
 
 export function createRequestJsonHandler(options?: OptionsJson) : Handler {
     return json(options);

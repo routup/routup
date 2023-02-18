@@ -7,7 +7,7 @@
 
 import path from 'node:path';
 import { HeaderName } from '../../constants';
-import { Response } from '../../type';
+import type { Response } from '../../type';
 import { getCharsetForMimeType, getMimeType } from '../../utils';
 
 export function setResponseContentTypeByFileName(res: Response, fileName: string) {

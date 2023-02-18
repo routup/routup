@@ -6,8 +6,8 @@
  */
 
 import { isObject, merge } from 'smob';
-import { Request } from '../../type';
-import { RequestFn } from '../type';
+import type { Request } from '../../type';
+import type { RequestFn } from '../type';
 
 const QuerySymbol = Symbol.for('ReqQuery');
 

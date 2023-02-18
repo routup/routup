@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Readable } from 'stream';
-import { Response } from '../../type';
+import type { Readable } from 'stream';
+import type { Response } from '../../type';
 
 export function sendStream(res: Response, stream: Readable, fn?: CallableFunction) {
     stream.on('open', () => {

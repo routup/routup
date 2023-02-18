@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Options, raw } from 'body-parser';
-import { Handler } from '@routup/core';
+import type { Options } from 'body-parser';
+import { raw } from 'body-parser';
+import type { Handler } from '@routup/core';
 
 export function createRequestRawHandler(options?: Options) : Handler {
     return raw(options);

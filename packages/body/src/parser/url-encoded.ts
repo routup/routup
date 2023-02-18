@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OptionsUrlencoded, urlencoded } from 'body-parser';
-import { Handler } from '@routup/core';
+import type { OptionsUrlencoded } from 'body-parser';
+import { urlencoded } from 'body-parser';
+import type { Handler } from '@routup/core';
 
 export function createRequestUrlEncodedHandler(options?: OptionsUrlencoded) : Handler {
     return urlencoded(options);

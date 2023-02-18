@@ -14,7 +14,7 @@ import {
     useRequestQuery,
 } from 'routup';
 import { useDecoratorMeta } from '../utils';
-import { DecoratorParameterBuildFn } from './type';
+import type { DecoratorParameterBuildFn } from './type';
 
 export function createParameterDecorator(
     build: DecoratorParameterBuildFn,

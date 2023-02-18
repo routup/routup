@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { RequestListener } from 'http';
-import { Handler } from '../src';
+import type { RequestListener } from 'http';
+import type { Handler } from '../src';
 
 export function createHandler(handler: Handler) : RequestListener {
     return (req, res) => {

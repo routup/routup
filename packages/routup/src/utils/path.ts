@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Path } from '../type';
+import type { Path } from '../type';
 
 export function isPath(input: unknown) : input is Path {
     return typeof input === 'string' || input instanceof RegExp;

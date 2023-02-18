@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Request } from '../../type';
+import type { Request } from '../../type';
 
 export function isRequestCacheable(req: Request, modifiedTime: string | Date) : boolean {
     const modifiedSince = req.headers['if-modified-since'];

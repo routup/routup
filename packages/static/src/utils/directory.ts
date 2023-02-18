@@ -7,7 +7,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { ReadDirectoryCallback } from '../type';
+import type { ReadDirectoryCallback } from '../type';
 
 export function readDirectory(
     dir: string,

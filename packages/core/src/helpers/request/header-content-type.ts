@@ -6,7 +6,7 @@
  */
 
 import { HeaderName } from '../../constants';
-import { Request } from '../../type';
+import type { Request } from '../../type';
 import { getMimeType } from '../../utils';
 import { getRequestHeader } from './header';
 

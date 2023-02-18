@@ -9,9 +9,9 @@ import { send } from '@routup/core';
 import { Registry } from 'prom-client';
 import { Router } from 'routup';
 import supertest from 'supertest';
+import type { OptionsInput } from '../../src';
 import {
     MetricName,
-    OptionsInput,
     createHandler,
     registerMetrics,
 } from '../../src';

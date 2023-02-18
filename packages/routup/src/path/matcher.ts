@@ -5,11 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    Key, pathToRegexp,
-} from 'path-to-regexp';
-import { Path } from '../type';
-import { PathMatcherExecResult, PathMatcherOptions } from './type';
+import type { Key } from 'path-to-regexp';
+import { pathToRegexp } from 'path-to-regexp';
+import type { Path } from '../type';
+import type { PathMatcherExecResult, PathMatcherOptions } from './type';
 
 function decodeParam(val: unknown) {
     /* istanbul ignore next */

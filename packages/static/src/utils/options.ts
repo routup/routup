@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import path from 'node:path';
-import { HandlerOptions, HandlerOptionsInput } from '../type';
+import type { HandlerOptions, HandlerOptionsInput } from '../type';
 
 export function buildHandlerOptions(input: HandlerOptionsInput) : HandlerOptions {
     let fallbackPath = '/';

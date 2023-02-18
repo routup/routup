@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Handler, hasRequestQuery, setRequestQuery } from '@routup/core';
-import { ParseOptions } from './type';
+import type { Handler } from '@routup/core';
+import { hasRequestQuery, setRequestQuery } from '@routup/core';
+import type { ParseOptions } from './type';
 import { parseRequestQuery } from './utils';
 
 export function createRequestHandler(options?: ParseOptions) : Handler {

@@ -7,9 +7,8 @@
 
 import { send, setRequestEnv, useRequestEnv } from '@routup/core';
 import supertest from 'supertest';
-import {
-    Next, Request, Response, Router,
-} from '../../../src';
+import type { Next, Request, Response } from '../../../src';
+import { Router } from '../../../src';
 
 describe('routing/middleware', () => {
     it('should use middleware', async () => {

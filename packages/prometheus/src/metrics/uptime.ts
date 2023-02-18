@@ -6,8 +6,9 @@
  */
 
 import { performance } from 'node:perf_hooks';
-import promClient, { Gauge } from 'prom-client';
-import { Options } from '../type';
+import type { Gauge } from 'prom-client';
+import promClient from 'prom-client';
+import type { Options } from '../type';
 
 export function buildUptimeMetric(options: Options) : Gauge {
     const starTime = performance.now();

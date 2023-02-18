@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Response } from '../../type';
+import type { Response } from '../../type';
 import { send } from './send';
 
 export function sendRedirect(res: Response, location: string, statusCode = 302) {

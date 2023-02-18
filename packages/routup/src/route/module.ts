@@ -6,16 +6,18 @@
  */
 
 import { hasOwnProperty, merge } from 'smob';
-import {
-    Handler, Method, Next, Request, Response,
+import type {
+    Handler, Next, Request, Response,
 } from '@routup/core';
+import { Method } from '@routup/core';
 import { Layer } from '../layer';
-import { PathMatcher, PathMatcherOptions } from '../path';
-import {
+import type { PathMatcherOptions } from '../path';
+import { PathMatcher } from '../path';
+import type {
     DispatcherMeta,
     Path,
 } from '../type';
-import { RouteOptions } from './type';
+import type { RouteOptions } from './type';
 
 export class Route {
     readonly '@instanceof' = Symbol.for('Route');

@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Next, Request, Response } from 'routup';
-import { DecoratorMethodOptions } from './method';
-import { DecoratorParameterOptions } from './parameter';
+import type { Next, Request, Response } from 'routup';
+import type { DecoratorMethodOptions } from './method';
+import type { DecoratorParameterOptions } from './parameter';
 
 export interface ClassType extends Function {
     new(...args: any[]): any;

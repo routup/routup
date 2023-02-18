@@ -6,7 +6,7 @@
  */
 
 import type { OutgoingHttpHeader } from 'node:http';
-import { Response } from '../../type';
+import type { Response } from '../../type';
 
 export function appendResponseHeader(
     res: Response,

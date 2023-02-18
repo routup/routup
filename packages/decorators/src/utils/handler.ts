@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Handler } from 'routup';
 import {
-    Handler,
     isObject,
 } from 'routup';
-import { ClassType, HandlerInterface } from '../type';
+import type { ClassType, HandlerInterface } from '../type';
 
 export function isHandlerClassInstance(input: unknown) : input is HandlerInterface {
     return isObject(input) &&

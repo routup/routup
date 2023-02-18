@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
+import type {
     Request,
 } from '@routup/core';
 import { parse } from 'qs';
 
-import { ParseOptions } from './type';
+import type { ParseOptions } from './type';
 
 export function parseRequestQuery(req: Request, options?: ParseOptions) {
     /* istanbul ignore if  */

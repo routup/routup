@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Request } from '../../type';
+import type { Request } from '../../type';
 import { useConfig } from '../../config';
 import { HeaderName } from '../../constants';
-import { TrustProxyFn, TrustProxyInput, buildTrustProxyFn } from '../../utils';
+import type { TrustProxyFn, TrustProxyInput } from '../../utils';
+import { buildTrustProxyFn } from '../../utils';
 
 type RequestHostNameOptions = {
     trustProxy?: TrustProxyInput

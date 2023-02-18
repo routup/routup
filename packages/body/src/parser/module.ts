@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Options } from 'body-parser';
-import { Handler } from '@routup/core';
+import type { Options } from 'body-parser';
+import type { Handler } from '@routup/core';
 import { createRequestJsonHandler } from './json';
 import { createRequestUrlEncodedHandler } from './url-encoded';
 

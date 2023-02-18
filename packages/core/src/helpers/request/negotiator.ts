@@ -6,7 +6,7 @@
  */
 
 import Negotiator from 'negotiator';
-import { Request } from '../../type';
+import type { Request } from '../../type';
 
 const NegotiatorSymbol = Symbol.for('ReqNegotiator');
 

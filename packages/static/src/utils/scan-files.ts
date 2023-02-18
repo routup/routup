@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { FileInfo, HandlerOptions } from '../type';
+import type { FileInfo, HandlerOptions } from '../type';
 import { readDirectory } from './directory';
 import { isRegexMatch } from './regex';
 

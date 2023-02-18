@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Request } from '../../type';
+import type { Request } from '../../type';
 import { useRequestNegotiator } from './negotiator';
 
 export function getRequestAcceptableLanguages(req: Request) : string[] {

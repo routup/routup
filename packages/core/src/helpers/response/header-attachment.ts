@@ -6,7 +6,7 @@
  */
 
 import { HeaderName } from '../../constants';
-import { Response } from '../../type';
+import type { Response } from '../../type';
 import { setResponseContentTypeByFileName } from './utils';
 
 export function setResponseHeaderAttachment(res: Response, filename?: string) {

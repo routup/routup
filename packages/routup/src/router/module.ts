@@ -9,23 +9,27 @@ import {
     BadRequestErrorOptions,
     NotFoundErrorOptions,
 } from '@ebec/http';
-import { RequestListener, createServer } from 'node:http';
+import type { RequestListener } from 'node:http';
+import { createServer } from 'node:http';
 import { merge, mergeArrays } from 'smob';
-import {
+import type {
     ErrorHandler,
     Handler,
-    HeaderName,
-    Method,
     Next,
     Request,
     Response,
+} from '@routup/core';
+import {
+    HeaderName,
+    Method,
     cleanDoubleSlashes,
     send,
     useRequestPath,
     withLeadingSlash,
     withoutTrailingSlash,
 } from '@routup/core';
-import { PathMatcher, PathMatcherOptions } from '../path';
+import type { PathMatcherOptions } from '../path';
+import { PathMatcher } from '../path';
 import {
     createRequestTimeout,
     isInstance,
@@ -34,11 +38,11 @@ import {
 } from '../utils';
 import { Layer, isLayerInstance } from '../layer';
 import { Route, isRouteInstance } from '../route';
-import {
+import type {
     DispatcherMeta,
     Path,
 } from '../type';
-import { RouterOptions } from './type';
+import type { RouterOptions } from './type';
 
 export function isRouterInstance(input: unknown) : input is Router {
     return isInstance(input, 'Router');

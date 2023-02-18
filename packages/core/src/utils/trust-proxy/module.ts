@@ -6,7 +6,7 @@
  */
 
 import proxyAddr from 'proxy-addr';
-import { TrustProxyFn } from './type';
+import type { TrustProxyFn } from './type';
 
 export function buildTrustProxyFn(
     input?: boolean | number | string | string[] | TrustProxyFn,

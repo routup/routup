@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { EtagFn, TrustProxyFn } from '../../src';
 import {
-    EtagFn, TrustProxyFn, buildEtagFn, buildTrustProxyFn, getConfigOption,
+    buildEtagFn, buildTrustProxyFn, getConfigOption,
     setConfigOption, useConfig,
 } from '../../src';
 

@@ -7,7 +7,7 @@
 
 import { isObject, merge } from 'smob';
 import { createEtag } from './module';
-import { EtagFn, EtagOptions } from './type';
+import type { EtagFn, EtagOptions } from './type';
 
 export function buildEtagFn(input?: boolean | EtagOptions | EtagFn) : EtagFn {
     if (typeof input === 'function') {

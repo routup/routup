@@ -8,8 +8,9 @@
 import { hasOwnProperty } from 'smob';
 import { useConfig } from '../../config';
 import { HeaderName } from '../../constants';
-import { Request } from '../../type';
-import { TrustProxyFn, TrustProxyInput, buildTrustProxyFn } from '../../utils';
+import type { Request } from '../../type';
+import type { TrustProxyFn, TrustProxyInput } from '../../utils';
+import { buildTrustProxyFn } from '../../utils';
 
 type RequestProtocolOptions = {
     trustProxy?: TrustProxyInput,

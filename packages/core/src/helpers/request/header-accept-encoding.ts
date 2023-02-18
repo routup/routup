@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IncomingMessage } from 'http';
+import type { IncomingMessage } from 'http';
 import { useRequestNegotiator } from './negotiator';
 
 export function getRequestAcceptableEncodings(req: IncomingMessage) : string[] {
