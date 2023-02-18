@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.12.0](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.11.1...@routup/swagger@0.12.0) (2023-02-18)
+
+
+### Bug Fixes
+
+* **deps:** bump smob from 0.0.7 to 0.1.0 ([#120](https://github.com/Tada5hi/routup/issues/120)) ([5a83923](https://github.com/Tada5hi/routup/commit/5a839236ac72232cf1bf0ba693f8d193830876e4))
+
+
+### Features
+
+* serve swagger ui template on paths with no trail slash ([da780dd](https://github.com/Tada5hi/routup/commit/da780dd4b424a2a11311fa04dfe1d3e4cdb8abc8))
+
+
+
+
+
 ## [0.11.1](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.11.0...@routup/swagger@0.11.1) (2023-01-25)
 
 

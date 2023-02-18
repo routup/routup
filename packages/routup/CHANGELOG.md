@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.1](https://github.com/Tada5hi/routup/compare/routup@0.13.0...routup@0.13.1) (2023-02-18)
+
+
+### Bug Fixes
+
+* **deps:** bump @ebec/http from 0.1.0 to 0.2.2 ([#115](https://github.com/Tada5hi/routup/issues/115)) ([d4bf39d](https://github.com/Tada5hi/routup/commit/d4bf39db27f0d50a8c79c7856d993554ea94722f))
+* **deps:** bump smob from 0.0.7 to 0.1.0 ([#120](https://github.com/Tada5hi/routup/issues/120)) ([5a83923](https://github.com/Tada5hi/routup/commit/5a839236ac72232cf1bf0ba693f8d193830876e4))
+
+
+
+
+
 # [0.13.0](https://github.com/Tada5hi/routup/compare/routup@0.12.0...routup@0.13.0) (2023-01-24)
 
 
