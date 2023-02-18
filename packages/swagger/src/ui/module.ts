@@ -13,7 +13,7 @@ import type {
     Response,
 } from '@routup/core';
 import {
-    send,
+    send, useRequestMountPath, withTrailingSlash,
 } from '@routup/core';
 import { createHandler } from '@routup/static';
 import { merge } from 'smob';
@@ -57,11 +57,36 @@ export function createUIHandler(
         },
     );
 
-    const template = fs.readFileSync(path.join(getAssetsPath(), 'template.tpl'), {
+    let template : string | undefined;
+    const templateRaw = fs.readFileSync(path.join(getAssetsPath(), 'template.tpl'), {
         encoding: 'utf-8',
-    })
-        .replace('<% title %>', 'Swagger UI')
-        .replace('<% swaggerOptions %>', stringify(initOptions));
+    });
+
+    const compileTemplate = (context: {url?: string, mountPath: string}) : void => {
+        let href = '/';
+        if (context.url) {
+            let pathName : string;
+            if (context.url.startsWith('http')) {
+                pathName = new URL(context.url).pathname;
+            } else {
+                pathName = context.url;
+            }
+
+            const mountPathIndex = pathName.indexOf(context.mountPath);
+            if (mountPathIndex !== -1) {
+                href = pathName.substring(0, mountPathIndex + context.mountPath.length);
+            } else {
+                href = pathName;
+            }
+
+            href = withTrailingSlash(href);
+        }
+
+        template = templateRaw
+            .replace('<% title %>', 'Swagger UI')
+            .replace('<% swaggerOptions %>', stringify(initOptions))
+            .replace('<% baseHref %>', href);
+    };
 
     return (req: Request, res: Response, next: Next) => {
         /* istanbul ignore next */
@@ -77,7 +102,11 @@ export function createUIHandler(
             return;
         }
 
-        handler(req, res, () => {
+        handler(req, res, async () => {
+            if (typeof template === 'undefined') {
+                compileTemplate({ url: req.url, mountPath: useRequestMountPath(req) });
+            }
+
             send(res, template);
         });
     };
