@@ -33,8 +33,8 @@ To read the docs, visit [https://routup.net](https://routup.net)
 Serve generated docs from URL or based on a JSON file with [swagger-ui](https://www.npmjs.com/package/swagger-ui-dist).
 
 ```typescript
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { Router } from 'routup';
 import { createUIHandler } from '@routup/swagger';
 
