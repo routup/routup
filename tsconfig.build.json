@@ -6,8 +6,6 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
 
-        "noUncheckedIndexedAccess": false,
-        "noPropertyAccessFromIndexSignature": false,
         "noUnusedLocals": false,
         "noUnusedParameters": false,
 
