@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.1](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.12.0...@routup/swagger@0.12.1) (2023-03-01)
+
+
+### Bug Fixes
+
+* **deps:** bump peer-dependencies ([f353d3e](https://github.com/Tada5hi/routup/commit/f353d3e6e0c7f1752b66ba4c70302786e1216165))
+
+
+
+
+
 # [0.12.0](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.11.1...@routup/swagger@0.12.0) (2023-02-18)
 
 

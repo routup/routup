@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/Tada5hi/routup/compare/@routup/core@0.7.1...@routup/core@0.8.0) (2023-03-01)
+
+
+### Features
+
+* minor internal api changes ([83b46e5](https://github.com/Tada5hi/routup/commit/83b46e5f2d09bf58ced2e9e8dc9a8637106746b7))
+
+
+
+
+
 ## [0.7.1](https://github.com/Tada5hi/routup/compare/@routup/core@0.7.0...@routup/core@0.7.1) (2023-02-18)
 
 

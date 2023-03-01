@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.14.0](https://github.com/Tada5hi/routup/compare/routup@0.13.1...routup@0.14.0) (2023-03-01)
+
+
+### Bug Fixes
+
+* **deps:** bump peer-dependencies ([f353d3e](https://github.com/Tada5hi/routup/commit/f353d3e6e0c7f1752b66ba4c70302786e1216165))
+
+
+### Features
+
+* minor internal api changes ([83b46e5](https://github.com/Tada5hi/routup/commit/83b46e5f2d09bf58ced2e9e8dc9a8637106746b7))
+
+
+
+
+
 ## [0.13.1](https://github.com/Tada5hi/routup/compare/routup@0.13.0...routup@0.13.1) (2023-02-18)
 
 

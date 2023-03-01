@@ -1,6 +1,6 @@
 {
     "name": "@routup/core",
-    "version": "0.7.1",
+    "version": "0.8.0",
     "description": "Plugin for request & response handling.",
     "exports": {
         "./package.json": "./package.json",
