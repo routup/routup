@@ -23,3 +23,30 @@ export function setResponseContentTypeByFileName(res: Response, fileName: string
         }
     }
 }
+
+export function onResponseFinished(
+    res: Response,
+    cb: (err?: Error) => void,
+) {
+    let called : boolean;
+
+    const callCallback = (err?: Error) => {
+        if (called) return;
+
+        called = true;
+
+        cb(err);
+    };
+
+    res.on('finish', async () => {
+        callCallback();
+    });
+
+    res.on('close', async () => {
+        callCallback();
+    });
+
+    res.on('error', async (err) => {
+        callCallback(err);
+    });
+}

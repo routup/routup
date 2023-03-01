@@ -10,6 +10,6 @@ import { HeaderName } from '@routup/core';
 import { parse } from 'cookie-es';
 import type { ParseOptions } from './type';
 
-export function parseRequestCookie(req: Request, options?: ParseOptions) {
+export function parseRequestCookies(req: Request, options?: ParseOptions) {
     return parse(req.headers[HeaderName.COOKIE] || '', options || {});
 }

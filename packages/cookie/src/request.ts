@@ -10,11 +10,11 @@ import {
     useRequestCookie,
     useRequestCookies,
 } from '@routup/core';
-import { parseRequestCookie } from './utils';
+import { parseRequestCookies } from './utils';
 
 export {
     useRequestCookie,
     useRequestCookies,
 };
 
-setRequestCookieFn(parseRequestCookie);
+setRequestCookieFn(parseRequestCookies);

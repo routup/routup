@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type ObjectLiteral = Record<string, any>;
-
 export type Path = string | RegExp;
 
 export type DispatcherMeta = {
@@ -18,6 +16,8 @@ export type DispatcherMeta = {
      * Path to check for the current instance.
      */
     path?: string,
-
+    /**
+     * The relative path on which the router is hung.
+     */
     mountPath?: string
 };

@@ -7,6 +7,7 @@
 
 import type { Handler } from '@routup/core';
 import {
+    onResponseFinished,
     setResponseHeaderContentType,
     useRequestPath,
     withLeadingSlash,
@@ -18,7 +19,7 @@ import type {
 import promClient from 'prom-client';
 import { buildRequestDurationMetric, buildUptimeMetric } from './metrics';
 import type { Metrics, OptionsInput } from './type';
-import { buildHandlerOptions, onResponseFinished } from './utils';
+import { buildHandlerOptions } from './utils';
 
 export function createHandler(input?: Registry) : Handler {
     const registry : Registry = input || promClient.register;

@@ -6,4 +6,3 @@
  */
 
 export * from './options';
-export * from './on-response-finished';

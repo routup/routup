@@ -12,7 +12,7 @@ import {
 } from '@routup/core';
 
 import type { ParseOptions } from './type';
-import { parseRequestCookie } from './utils';
+import { parseRequestCookies } from './utils';
 
 export function createRequestHandler(options?: ParseOptions) : Handler {
     return (req, res, next) => {
@@ -21,7 +21,7 @@ export function createRequestHandler(options?: ParseOptions) : Handler {
             return;
         }
 
-        setRequestCookies(req, parseRequestCookie(req, options));
+        setRequestCookies(req, parseRequestCookies(req, options));
 
         next();
     };
