@@ -5,15 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import {
+    cleanDoubleSlashes,
+    send,
+    useRequestMountPath,
+    withLeadingSlash,
+    withTrailingSlash,
+    withoutLeadingSlash,
+} from '@routup/core';
 import fs from 'node:fs';
 import path from 'node:path';
 import type {
     Next,
     Request,
     Response,
-} from '@routup/core';
-import {
-    send, useRequestMountPath, withTrailingSlash,
 } from '@routup/core';
 import { createHandler } from '@routup/static';
 import { merge } from 'smob';
@@ -79,7 +84,17 @@ export function createUIHandler(
                 href = pathName;
             }
 
+            if (initOptions.baseUrl) {
+                href = new URL(withoutLeadingSlash(href), initOptions.baseUrl).href;
+            } else if (initOptions.basePath) {
+                href = withLeadingSlash(cleanDoubleSlashes(`${initOptions.basePath}/${href}`));
+            }
+
             href = withTrailingSlash(href);
+        } else if (initOptions.baseUrl) {
+            href = withTrailingSlash(initOptions.baseUrl);
+        } else if (initOptions.basePath) {
+            href = withTrailingSlash(withLeadingSlash(initOptions.basePath));
         }
 
         template = templateRaw

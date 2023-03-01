@@ -20,6 +20,20 @@ export type UIOAuthOptions = {
 };
 
 export type UIOptions = SwaggerConfigs & {
+
     oauth?: UIOAuthOptions,
-    authAction?: Record<string, any>
+
+    authAction?: Record<string, any>,
+
+    /**
+     * The baseUrl defines the base url,
+     * where the application is run.
+     */
+    baseUrl?: string,
+
+    /**
+     * the basePath defines the path relative to the fqdn
+     * on which the application is run.
+     */
+    basePath?: string,
 };

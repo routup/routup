@@ -8,13 +8,14 @@
 import path from 'node:path';
 import supertest from 'supertest';
 import { HeaderName, Router } from 'routup';
+import type { UIOptions } from '../../src';
 import { createUIHandler } from '../../src';
 
-const createRouter = async () => {
+const createRouter = async (options?: UIOptions) => {
     const router = new Router();
 
     const doc = await import(path.resolve(__dirname, '..', 'data', 'swagger.json'));
-    router.use('/docs', createUIHandler(doc));
+    router.use('/docs', createUIHandler(doc, options));
 
     return router;
 };
@@ -66,6 +67,34 @@ describe('src/ui', () => {
         expect(response.statusCode).toEqual(200);
         expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('text/html; charset=utf-8');
         expect(response.text.includes('<base href="/sub/docs/" />')).toBeTruthy();
+    });
+
+    it('should serve swagger ui files on custom base path', async () => {
+        const router = await createRouter({
+            basePath: '/api/',
+        });
+        const server = supertest(router.createListener());
+
+        const response = await server
+            .get('/docs');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('text/html; charset=utf-8');
+        expect(response.text.includes('<base href="/api/docs/" />')).toBeTruthy();
+    });
+
+    it('should serve swagger ui files on custom base url', async () => {
+        const router = await createRouter({
+            baseUrl: 'https://example.com/api/',
+        });
+        const server = supertest(router.createListener());
+
+        const response = await server
+            .get('/docs');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('text/html; charset=utf-8');
+        expect(response.text.includes('<base href="https://example.com/api/docs/" />')).toBeTruthy();
     });
 
     it('should serve swagger ui files', async () => {
