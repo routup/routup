@@ -9,7 +9,6 @@ import {
     Request,
     Response,
     send,
-    useRequestEnv,
 } from 'routup';
 import {
     DController,

@@ -5,10 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Next } from '@routup/core';
+// eslint-disable-next-line max-classes-per-file
+import type { Next } from 'routup';
 import {
-    Request, Response, send, setRequestEnv, useRequestEnv,
-} from '@routup/core';
+    Request, Response, send,
+    setRequestEnv, useRequestEnv,
+} from 'routup';
 import type { HandlerInterface } from '../../src';
 import {
     DController, DGet, DRequest, DResponse,
