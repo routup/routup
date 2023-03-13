@@ -7,11 +7,11 @@
 
 import {
     cleanDoubleSlashes,
+    isObject,
     send,
     useRequestMountPath,
     withLeadingSlash,
-    withTrailingSlash,
-    withoutLeadingSlash,
+    withTrailingSlash, withoutLeadingSlash,
 } from '@routup/core';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -44,6 +44,12 @@ const stringify = (obj: Record<string, any>) => {
     return `var options = ${json};`;
 };
 
+/**
+ * Create a swagger handler by swagger document or web url.
+ *
+ * @param document
+ * @param options
+ */
 export function createUIHandler(
     document: Record<string, any> | string,
     options?: UIOptions,
@@ -54,12 +60,10 @@ export function createUIHandler(
 
     const initOptions : UIOptions = merge(
         {},
-        options || {},
         {
-            spec: typeof document !== 'string' ? document : undefined,
-            url: typeof document === 'string' ? document : undefined,
-            urls: undefined,
+            ...(isObject(document) ? { spec: document } : { url: document }),
         },
+        options || {},
     );
 
     let template : string | undefined;

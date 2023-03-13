@@ -13,6 +13,7 @@ This is a plugin for reading and parsing the request payload.
 - [Installation](#installation)
 - [Documentation](#documentation)
 - [Usage](#usage)
+  - [Generator](#generator) 
   - [UI](#ui)
 - [License](#license)
 
@@ -27,6 +28,60 @@ npm install @routup/swagger --save
 To read the docs, visit [https://routup.net](https://routup.net)
 
 ## Usage
+
+### Generator
+
+Generate a swagger document for the API endpoints.
+
+**`V2`**
+
+```typescript
+import { generate, Version } from '@routup/swager';
+import process from 'node:process';
+
+await generate({
+    version: Version.V2,
+    options: {
+        metadata: {
+            preset: '@routup/swagger-preset',
+            entryPoint: {
+                cwd: process.cwd(),
+                pattern: '**/*.ts',
+            },
+        },
+        output: true,
+        outputDirectory: 'writable',
+        servers: ['http://localhost:3000/'],
+    },
+});
+```
+
+The function call will save the file under the location: `./writable/swagger.json`.
+
+**`V3`**
+
+```typescript
+import { generate, Version } from '@routup/swager';
+import process from 'node:process';
+
+await generate({
+    version: Version.V3,
+    options: {
+        metadata: {
+            preset: '@routup/swagger-preset',
+            entryPoint: {
+                cwd: process.cwd(),
+                pattern: '**/*.ts',
+            },
+        },
+        output: true,
+        outputDirectory: 'writable',
+        servers: ['http://localhost:3000/'],
+    },
+});
+```
+
+The function call will save the file under the location: `./writable/swagger.json`.
 
 ### UI
 

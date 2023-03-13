@@ -26,13 +26,13 @@ describe('src/decorator', () => {
         };
 
         let response = await server
-            .get(`/many?${stringify(query)}`);
+            .get(`/query/many?${stringify(query)}`);
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual({ foo: 'bar' });
 
         response = await server
-            .get(`/single?${stringify(query)}`);
+            .get(`/query/single?${stringify(query)}`);
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('bar');

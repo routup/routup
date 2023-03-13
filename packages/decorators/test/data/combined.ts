@@ -19,9 +19,9 @@ import {
     DDelete,
     DGet,
     DNext,
-    DParam,
-    DParams,
     DPatch,
+    DPath,
+    DPaths,
     DPost,
     DPut,
     DRequest,
@@ -40,8 +40,8 @@ export class DeleteMiddleware implements HandlerInterface {
     }
 }
 
-@DController('/users')
-export class UserController {
+@DController('/combined')
+export class CombinedController {
     @DGet('')
     async getMany(
     @DRequest() req: Request,
@@ -55,7 +55,7 @@ export class UserController {
     async getOne(
     @DRequest() req: Request,
         @DResponse() res: Response,
-        @DParam('id') id: string,
+        @DPath('id') id: string,
     ) {
         send(res, id);
     }
@@ -88,8 +88,8 @@ export class UserController {
     async delete(
     @DRequest() req: Request,
         @DResponse() res: Response,
-        @DParams() params: Record<string, any>,
+        @DPaths() data: { id: string },
     ) {
-        send(res, params);
+        send(res, data);
     }
 }

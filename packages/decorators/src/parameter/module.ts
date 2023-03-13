@@ -54,11 +54,11 @@ export function DNext() : ParameterDecorator {
     return createParameterDecorator((req, res, next) => next)();
 }
 
-export function DParams() : ParameterDecorator {
+export function DPaths() : ParameterDecorator {
     return createParameterDecorator((req, res, next) => useRequestParams(req))();
 }
 
-export function DParam(property: string) : ParameterDecorator {
+export function DPath(property: string) : ParameterDecorator {
     return createParameterDecorator((req, res, next) => useRequestParam(req, property))(property);
 }
 

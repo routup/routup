@@ -7,24 +7,23 @@
 
 import { Response, send } from 'routup';
 import {
-    DController, DCookie, DCookies,
-    DGet, DResponse,
+    DBody, DController, DPost, DResponse,
 } from '../../src';
 
-@DController('/cookie')
-export class CookieController {
-    @DGet('many')
-    getMany(
+@DController('/post')
+export class PostController {
+    @DPost('many')
+    postMany(
     @DResponse() res: Response,
-        @DCookies() cookies: Record<string, any>,
+        @DBody() body: { foo: string },
     ) {
-        send(res, cookies);
+        send(res, body);
     }
 
-    @DGet('single')
-    get(
+    @DPost('single')
+    post(
     @DResponse() res: Response,
-        @DCookie('foo') foo: string,
+        @DBody('foo') foo: string,
     ) {
         send(res, foo);
     }

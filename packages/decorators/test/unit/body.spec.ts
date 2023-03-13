@@ -9,10 +9,10 @@ import { createRequestHandler } from '@routup/body';
 import { Router, setRequestBody } from 'routup';
 import supertest from 'supertest';
 import { mountController } from '../../src';
-import { BodyController } from '../data/body';
+import { PostController } from '../data/post';
 
-describe('src/module', () => {
-    it('should handle body decorators', async () => {
+describe('data/body', () => {
+    it('should handle decorator endpoints', async () => {
         const router = new Router();
 
         router.use(createRequestHandler());
@@ -23,18 +23,18 @@ describe('src/module', () => {
             next();
         });
 
-        mountController(router, BodyController);
+        mountController(router, PostController);
 
         const server = supertest(router.createListener());
 
         let response = await server
-            .get('/many');
+            .post('/post/many');
 
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual({ foo: 'bar' });
 
         response = await server
-            .get('/single');
+            .post('/post/single');
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('bar');

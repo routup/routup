@@ -38,7 +38,6 @@ export default defineConfig({
             '/guide/': [
                 {
                     text: 'Introduction',
-                    collapsible: false,
                     items: [
                         {text: 'What is it?', link: '/guide/'},
                         {text: 'Installation', link: '/guide/installation'},
@@ -59,7 +58,6 @@ export default defineConfig({
                 },
                 {
                     text: 'API Reference',
-                    collapsible: false,
                     items: [
                         {text: 'Request Helpers', link: '/guide/api-reference-request-helpers'},
                         {text: 'Response Helpers', link: '/guide/api-reference-response-helpers'}
@@ -69,7 +67,6 @@ export default defineConfig({
             '/plugins/body/': [
                 {
                     text: '@routup/body',
-                    collapsible: false,
                     items: [
                         {text: 'Introduction', link: '/plugins/body/'},
                         {text: 'Installation', link: '/plugins/body/installation.md'},
@@ -81,7 +78,6 @@ export default defineConfig({
             '/plugins/cookie/': [
                 {
                     text: '@routup/cookie',
-                    collapsible: false,
                     items: [
                         {text: 'Introduction', link: '/plugins/cookie/'},
                         {text: 'Installation', link: '/plugins/cookie/installation.md'},
@@ -92,7 +88,6 @@ export default defineConfig({
             '/plugins/query/': [
                 {
                     text: '@routup/query',
-                    collapsible: false,
                     items: [
                         {text: 'Introduction', link: '/plugins/query/'},
                         {text: 'Installation', link: '/plugins/query/installation.md'},
@@ -103,7 +98,6 @@ export default defineConfig({
             '/plugins/rate-limit/': [
                 {
                     text: '@routup/rate-limit',
-                    collapsible: false,
                     items: [
                         {text: 'Introduction', link: '/plugins/rate-limit/'},
                         {text: 'Installation', link: '/plugins/rate-limit/installation.md'},
@@ -115,7 +109,6 @@ export default defineConfig({
             '/plugins/static/': [
                 {
                     text: '@routup/static',
-                    collapsible: false,
                     items: [
                         {text: 'Introduction', link: '/plugins/static/'},
                         {text: 'Installation', link: '/plugins/static/installation.md'},
@@ -126,7 +119,6 @@ export default defineConfig({
             '/plugins/swagger/': [
                 {
                     text: '@routup/swagger',
-                    collapsible: false,
                     items: [
                         {text: 'Introduction', link: '/plugins/swagger/'},
                         {text: 'Installation', link: '/plugins/swagger/installation.md'},

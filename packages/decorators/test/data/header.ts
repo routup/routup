@@ -5,16 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-// eslint-disable-next-line max-classes-per-file
-import type { Next } from 'routup';
 import {
     Request,
     Response,
     send,
-    setRequestEnv,
     useRequestEnv,
 } from 'routup';
-import type { HandlerInterface } from '../../src';
 import {
     DController,
     DGet, DHeader,
@@ -23,17 +19,9 @@ import {
     DResponse,
 } from '../../src';
 
-class DummyMiddleware implements HandlerInterface {
-    run(request: Request, response: Response, next: Next): Promise<void> | void {
-        setRequestEnv(request, 'key', 'value');
-
-        next();
-    }
-}
-
-@DController('/', [DummyMiddleware])
-export class DummyController {
-    @DGet('/headers')
+@DController('/header')
+export class HeaderController {
+    @DGet('/many')
     async headers(
     @DRequest() req: Request,
         @DResponse() res: Response,
@@ -42,20 +30,12 @@ export class DummyController {
         send(res, headers);
     }
 
-    @DGet('/header')
+    @DGet('/single')
     async header(
     @DRequest() req: Request,
         @DResponse() res: Response,
         @DHeader('connection') header: string,
     ) {
         send(res, header);
-    }
-
-    @DGet('/middleware')
-    async middleware(
-    @DRequest() req: Request,
-        @DResponse() res: Response,
-    ) {
-        send(res, useRequestEnv(req, 'key'));
     }
 }
