@@ -90,9 +90,12 @@ describe('src/generator/**', () => {
         expect(await expression.evaluate(pathContent)).toEqual('No content');
 
         expression = jsonata('parameters[0].name');
-        expect(await expression.evaluate(pathContent)).toEqual('foo');
+        expect(await expression.evaluate(pathContent)).toEqual('body');
 
         expression = jsonata('parameters[0].schema.type');
+        expect(await expression.evaluate(pathContent)).toEqual('object');
+
+        expression = jsonata('parameters[0].schema.properties.foo.type');
         expect(await expression.evaluate(pathContent)).toEqual('string');
     });
 
