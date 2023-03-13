@@ -1,6 +1,6 @@
 {
     "name": "@routup/decorators",
-    "version": "0.6.1",
+    "version": "0.6.2",
     "description": "Decorators plugin for routup.",
     "exports": {
         "./package.json": "./package.json",

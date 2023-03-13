@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.2](https://github.com/Tada5hi/routup/compare/@routup/decorators@0.6.1...@routup/decorators@0.6.2) (2023-03-13)
+
+
+### Bug Fixes
+
+* add additional type exports of trapi/swagger ([21e2973](https://github.com/Tada5hi/routup/commit/21e2973a27ab8cbb203f65b0f202d5a4e280a2bf))
+
+
+
+
+
 ## [0.6.1](https://github.com/Tada5hi/routup/compare/@routup/decorators@0.6.0...@routup/decorators@0.6.1) (2023-03-13)
 
 

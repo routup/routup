@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.3](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.13.2...@routup/swagger@0.13.3) (2023-03-13)
+
+
+### Bug Fixes
+
+* add additional type exports of trapi/swagger ([21e2973](https://github.com/Tada5hi/routup/commit/21e2973a27ab8cbb203f65b0f202d5a4e280a2bf))
+
+
+
+
+
 ## [0.13.2](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.13.1...@routup/swagger@0.13.2) (2023-03-13)
 
 **Note:** Version bump only for package @routup/swagger
