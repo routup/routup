@@ -53,7 +53,7 @@
     },
     "homepage": "https://github.com/Tada5hi/routup#readme",
     "peerDependencies": {
-        "@trapi/swagger": "1.0.0-alpha.x || 1.x"
+        "@trapi/swagger": ">=1.0.0-alpha.0 || 1.x"
     },
     "devDependencies": {
         "@trapi/swagger": "^1.0.0-alpha.9"
