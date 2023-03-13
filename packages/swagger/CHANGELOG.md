@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.1](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.13.0...@routup/swagger@0.13.1) (2023-03-13)
+
+**Note:** Version bump only for package @routup/swagger
+
+
+
+
+
 # [0.13.0](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.12.1...@routup/swagger@0.13.0) (2023-03-13)
 
 
