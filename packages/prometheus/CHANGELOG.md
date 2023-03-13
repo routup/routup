@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.1](https://github.com/Tada5hi/routup/compare/@routup/prometheus@0.7.0...@routup/prometheus@0.7.1) (2023-03-13)
+
+**Note:** Version bump only for package @routup/prometheus
+
+
+
+
+
 # [0.7.0](https://github.com/Tada5hi/routup/compare/@routup/prometheus@0.6.1...@routup/prometheus@0.7.0) (2023-03-01)
 
 

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.3](https://github.com/Tada5hi/routup/compare/@routup/query@0.7.2...@routup/query@0.7.3) (2023-03-13)
+
+
+### Bug Fixes
+
+* **deps:** bump qs from 6.11.0 to 6.11.1 ([#177](https://github.com/Tada5hi/routup/issues/177)) ([778a74b](https://github.com/Tada5hi/routup/commit/778a74bf46b01e2d981e8a7c3cae3c45c6e4427d))
+
+
+
+
+
 ## [0.7.2](https://github.com/Tada5hi/routup/compare/@routup/query@0.7.1...@routup/query@0.7.2) (2023-03-01)
 
 

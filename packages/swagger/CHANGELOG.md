@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.13.0](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.12.1...@routup/swagger@0.13.0) (2023-03-13)
+
+
+### Bug Fixes
+
+* **deps:** bump swagger-ui-dist from 4.15.5 to 4.18.1 ([#176](https://github.com/Tada5hi/routup/issues/176)) ([d4c5423](https://github.com/Tada5hi/routup/commit/d4c54230fbe469387fde8b0a5685bb31523975c0))
+
+
+### Features
+
+* add swagger generator for api endpoints ([c8ff8a7](https://github.com/Tada5hi/routup/commit/c8ff8a78c4e0e8b6399db567ce8b882bac2c1e83))
+
+
+
+
+
 ## [0.12.1](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.12.0...@routup/swagger@0.12.1) (2023-03-01)
 
 

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.1](https://github.com/Tada5hi/routup/compare/@routup/core@0.8.0...@routup/core@0.8.1) (2023-03-13)
+
+
+### Bug Fixes
+
+* **deps:** bump zod from 3.20.6 to 3.21.4 ([#174](https://github.com/Tada5hi/routup/issues/174)) ([356df0f](https://github.com/Tada5hi/routup/commit/356df0ff13e2378fc5961e371c63fb90b76aff4b))
+
+
+
+
+
 # [0.8.0](https://github.com/Tada5hi/routup/compare/@routup/core@0.7.1...@routup/core@0.8.0) (2023-03-01)
 
 

@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.3](https://github.com/Tada5hi/routup/compare/@routup/static@0.7.2...@routup/static@0.7.3) (2023-03-13)
+
+**Note:** Version bump only for package @routup/static
+
+
+
+
+
 ## [0.7.2](https://github.com/Tada5hi/routup/compare/@routup/static@0.7.1...@routup/static@0.7.2) (2023-03-01)
 
 

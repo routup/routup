@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.3](https://github.com/Tada5hi/routup/compare/@routup/body@0.7.2...@routup/body@0.7.3) (2023-03-13)
+
+
+### Bug Fixes
+
+* **deps:** bump body-parser from 1.20.1 to 1.20.2 ([#158](https://github.com/Tada5hi/routup/issues/158)) ([c23a434](https://github.com/Tada5hi/routup/commit/c23a434e75b6cf23ac94b80f05a41569f759ba65))
+
+
+
+
+
 ## [0.7.2](https://github.com/Tada5hi/routup/compare/@routup/body@0.7.1...@routup/body@0.7.2) (2023-03-01)
 
 

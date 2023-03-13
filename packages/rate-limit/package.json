@@ -1,6 +1,6 @@
 {
     "name": "@routup/rate-limit",
-    "version": "0.6.2",
+    "version": "0.6.3",
     "description": "Routup rate limiter.",
     "exports": {
         "./package.json": "./package.json",
@@ -52,9 +52,9 @@
         "@routup/core": ">=0.8.0 <1.0.0"
     },
     "devDependencies": {
-        "@routup/core": "^0.8.0",
+        "@routup/core": "^0.8.1",
         "@types/supertest": "^2.0.12",
-        "routup": "^0.14.0",
+        "routup": "^0.14.1",
         "supertest": "^6.3.3"
     },
     "publishConfig": {
