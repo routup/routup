@@ -7,9 +7,9 @@
 
 import { Response, send } from 'routup';
 import {
-    DController, DGet, DPath, DPaths, DResponse,
+    DController, DExample, DGet, DPath, DPaths,
+    DResponse,
 } from '../../src';
-import { DExample } from '../../src/mixed';
 
 type GetManyResponse = {
     foo: string

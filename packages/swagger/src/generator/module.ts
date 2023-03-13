@@ -8,7 +8,7 @@
 import { Version, generate as _generate, isMetadata } from '@trapi/swagger';
 import path from 'node:path';
 import process from 'node:process';
-import { merge } from 'smob';
+import { createMerger } from 'smob';
 import type { GeneratorContext, GeneratorOutput } from './type';
 
 export async function generate<V extends `${Version}`>(
@@ -35,6 +35,11 @@ export async function generate<V extends `${Version}`>(
             ],
         };
     }
+
+    const merge = createMerger({
+        array: true,
+        arrayDistinct: true,
+    });
 
     context.options = merge({
         name: 'API Documentation',

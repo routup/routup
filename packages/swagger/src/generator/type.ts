@@ -6,6 +6,9 @@
  */
 
 import type {
+    Metadata,
+    MetadataOptions,
+    Options,
     OptionsInput,
     SpecV2,
     SpecV3,
@@ -21,7 +24,16 @@ export type GeneratorContext<V extends `${Version}`> = {
     version: V
 };
 
+type GeneratorOptions = Options;
+type GeneratorOptionsInput = OptionsInput;
+type GeneratorMetadataOptions = MetadataOptions;
+type GeneratorMetadata = Metadata;
+
 export {
+    GeneratorOptions,
+    GeneratorOptionsInput,
+    GeneratorMetadataOptions,
+    GeneratorMetadata,
     SpecV2,
     SpecV3,
     TsCompilerOptions,
