@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.1](https://github.com/Tada5hi/routup/compare/@routup/decorators@0.6.0...@routup/decorators@0.6.1) (2023-03-13)
+
+
+### Bug Fixes
+
+* add missing export for mixed decorators ([a944a56](https://github.com/Tada5hi/routup/commit/a944a564dc4894f213ad6a510bbd514935bbcfd4))
+
+
+
+
+
 # [0.6.0](https://github.com/Tada5hi/routup/compare/@routup/decorators@0.5.2...@routup/decorators@0.6.0) (2023-03-13)
 
 
