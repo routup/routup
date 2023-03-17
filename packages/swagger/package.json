@@ -60,7 +60,7 @@
     },
     "dependencies": {
         "@routup/swagger-preset": "^0.1.1",
-        "@trapi/swagger": "^1.0.0-alpha.10",
+        "@trapi/swagger": "^1.0.0-alpha.12",
         "@types/swagger-ui-dist": "^3.30.1",
         "smob": "^0.1.0",
         "swagger-ui-dist": "^4.18.1"
