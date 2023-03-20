@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.4](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.13.3...@routup/swagger@0.13.4) (2023-03-20)
+
+
+### Bug Fixes
+
+* **deps:** bump @trapi/swagger from 1.0.0-alpha.10 to 1.0.0-alpha.12 ([#194](https://github.com/Tada5hi/routup/issues/194)) ([7797c00](https://github.com/Tada5hi/routup/commit/7797c00ed396ce7932bbff652e6b4f434d35c90d))
+
+
+
+
+
 ## [0.13.3](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.13.2...@routup/swagger@0.13.3) (2023-03-13)
 
 
