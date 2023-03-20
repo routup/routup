@@ -53,7 +53,7 @@
         "@routup/core": ">=0.8.0 <1.0.0"
     },
     "dependencies": {
-        "@ebec/http": "^0.2.2",
+        "@ebec/http": "^1.0.0",
         "path-to-regexp": "^6.2.1",
         "smob": "^1.0.0"
     },
