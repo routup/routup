@@ -70,7 +70,7 @@
         "@routup/decorators": "^0.6.2",
         "@routup/static": "^0.7.3",
         "@types/supertest": "^2.0.12",
-        "jsonata": "^2.0.2",
+        "jsonata": "^2.0.3",
         "routup": "^0.14.1",
         "supertest": "^6.3.3"
     },
