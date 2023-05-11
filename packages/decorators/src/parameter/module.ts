@@ -21,7 +21,7 @@ export function createParameterDecorator(
 ) : ((property?: string) => ParameterDecorator) {
     return (property?: string) => (
         target: any,
-        propertyKey: string | symbol,
+        propertyKey: string | symbol | undefined,
         parameterIndex: number,
     ) => {
         /* istanbul ignore next */

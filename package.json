@@ -51,7 +51,7 @@
         "rimraf": "^5.0.0",
         "rollup": "^3.21.6",
         "supertest": "^6.3.3",
-        "typescript": "5.0.2"
+        "typescript": "5.0.4"
     },
     "scripts": {
         "bootstrap": "lerna bootstrap",
