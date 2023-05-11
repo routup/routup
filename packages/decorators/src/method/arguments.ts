@@ -16,7 +16,10 @@ export function buildDecoratorMethodArguments(
     parameters: DecoratorParameterOptions[],
 ): any[] {
     /* istanbul ignore next */
-    if (parameters.length === 0) {
+    if (
+        !Array.isArray(parameters) ||
+        parameters.length === 0
+    ) {
         return [req, res, next];
     }
 
