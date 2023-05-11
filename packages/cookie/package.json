@@ -57,7 +57,7 @@
         "@routup/core": ">=0.8.0 <1.0.0"
     },
     "dependencies": {
-        "cookie-es": "^0.5.0"
+        "cookie-es": "^1.0.0"
     },
     "devDependencies": {
         "@routup/core": "^0.8.1",
