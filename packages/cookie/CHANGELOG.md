@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.2](https://github.com/Tada5hi/routup/compare/@routup/cookie@0.8.1...@routup/cookie@0.8.2) (2023-05-11)
+
+
+### Bug Fixes
+
+* **deps:** bump cookie-es from 0.5.0 to 1.0.0 ([#239](https://github.com/Tada5hi/routup/issues/239)) ([c5e7923](https://github.com/Tada5hi/routup/commit/c5e7923dab5d9d31f1a7d278d3708e8a5d2d5bcb))
+
+
+
+
+
 ## [0.8.1](https://github.com/Tada5hi/routup/compare/@routup/cookie@0.8.0...@routup/cookie@0.8.1) (2023-03-13)
 
 **Note:** Version bump only for package @routup/cookie

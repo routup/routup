@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.4](https://github.com/Tada5hi/routup/compare/@routup/body@0.7.3...@routup/body@0.7.4) (2023-05-11)
+
+
+### Bug Fixes
+
+* **deps:** bump smob from 0.1.0 to 1.0.0 ([#198](https://github.com/Tada5hi/routup/issues/198)) ([9a5ca76](https://github.com/Tada5hi/routup/commit/9a5ca760e917ebd94a6e5025b0fc9edb635346c5))
+
+
+
+
+
 ## [0.7.3](https://github.com/Tada5hi/routup/compare/@routup/body@0.7.2...@routup/body@0.7.3) (2023-03-13)
 
 

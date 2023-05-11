@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.3](https://github.com/Tada5hi/routup/compare/@routup/decorators@0.6.2...@routup/decorators@0.6.3) (2023-05-11)
+
+
+### Bug Fixes
+
+* building decorator method arguments ([e1d7139](https://github.com/Tada5hi/routup/commit/e1d7139e0fd5d89ed7535d067681e118bc3e7a68))
+* decorator parameter generation (return argument) ([71eb522](https://github.com/Tada5hi/routup/commit/71eb52285a642ff69d4bfa7afb703d11c0071418))
+
+
+
+
+
 ## [0.6.2](https://github.com/Tada5hi/routup/compare/@routup/decorators@0.6.1...@routup/decorators@0.6.2) (2023-03-13)
 
 

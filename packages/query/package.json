@@ -1,6 +1,6 @@
 {
     "name": "@routup/query",
-    "version": "0.7.3",
+    "version": "0.7.4",
     "description": "Query plugin for routup.",
     "exports": {
         "./package.json": "./package.json",
@@ -62,9 +62,9 @@
         "qs": "^6.11.1"
     },
     "devDependencies": {
-        "@routup/core": "^0.8.1",
+        "@routup/core": "^0.8.2",
         "@types/supertest": "^2.0.12",
-        "routup": "^0.14.1",
+        "routup": "^0.14.2",
         "supertest": "^6.3.3"
     },
     "gitHead": "11dd52c006ffe5041bba0f57dfc33527ee57d6c1",

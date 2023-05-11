@@ -1,6 +1,6 @@
 {
     "name": "@routup/cookie",
-    "version": "0.8.1",
+    "version": "0.8.2",
     "description": "Cookie plugin for routup.",
     "exports": {
         "./package.json": "./package.json",
@@ -60,9 +60,9 @@
         "cookie-es": "^1.0.0"
     },
     "devDependencies": {
-        "@routup/core": "^0.8.1",
+        "@routup/core": "^0.8.2",
         "@types/supertest": "^2.0.12",
-        "routup": "^0.14.1",
+        "routup": "^0.14.2",
         "supertest": "^6.3.3"
     },
     "gitHead": "11dd52c006ffe5041bba0f57dfc33527ee57d6c1",

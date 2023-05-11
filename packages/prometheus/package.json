@@ -1,6 +1,6 @@
 {
     "name": "@routup/prometheus",
-    "version": "0.7.1",
+    "version": "0.7.2",
     "description": "Routup rate limiter.",
     "exports": {
         "./package.json": "./package.json",
@@ -51,10 +51,10 @@
         "prom-client": ">=13.0.0"
     },
     "devDependencies": {
-        "@routup/core": "^0.8.1",
+        "@routup/core": "^0.8.2",
         "@types/supertest": "^2.0.12",
         "prom-client": "^14.2.0",
-        "routup": "^0.14.1",
+        "routup": "^0.14.2",
         "supertest": "^6.3.3"
     },
     "publishConfig": {

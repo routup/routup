@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.5](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.13.4...@routup/swagger@0.13.5) (2023-05-11)
+
+
+### Bug Fixes
+
+* **deps:** bump smob from 0.1.0 to 1.0.0 ([#198](https://github.com/Tada5hi/routup/issues/198)) ([9a5ca76](https://github.com/Tada5hi/routup/commit/9a5ca760e917ebd94a6e5025b0fc9edb635346c5))
+* **deps:** bump swagger-ui-dist from 4.18.1 to 4.18.2 ([#222](https://github.com/Tada5hi/routup/issues/222)) ([ef6fd34](https://github.com/Tada5hi/routup/commit/ef6fd34aef5ff077565a25942b09bcf284b323ad))
+* **deps:** bump swagger-ui-dist from 4.18.2 to 4.18.3 ([#249](https://github.com/Tada5hi/routup/issues/249)) ([82e4d06](https://github.com/Tada5hi/routup/commit/82e4d0630d468bc20a52a778e94b636d70d4c71e))
+
+
+
+
+
 ## [0.13.4](https://github.com/Tada5hi/routup/compare/@routup/swagger@0.13.3...@routup/swagger@0.13.4) (2023-03-20)
 
 
