@@ -6,7 +6,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/routup/badge.svg)](https://snyk.io/test/github/Tada5hi/routup)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
-**Routup** is a lightweight and extendable http interface based routing framework.
+**Routup** is a lightweight, minimalistic and extendable http interface based routing framework.
 It uses node's vanilla request and response interfaces, which are injected into route handlers aka middlewares as function argument.
 
 Helpers provide additional functionalities to transform and interact with the request and manipulate the response upstream.
@@ -29,11 +29,11 @@ npm install routup --save
 ## Features
 
 - 🚀 high performance routing
-- 🧰 response & request helpers/utilities
+- 🧰 response & request composables/helpers
 - 💼 extendable & compact
 - 🛫 named route parameters
 - 📁 nestable routers
-- 😌 define one or many (error-) middlewares
+- 🤝️ define one or many (error-) middlewares
 - ✨ promise support for route- & middleware-handlers
 - 👕 TypeScript fully supported
 - 🤏 Minimalistic to fit into any solution with minimum overhead

@@ -1,6 +1,10 @@
 # Helpers
 
-Helpers exist to transform and interact with the incoming [request](./api-reference-request-helpers.md) and manipulate the [response](./api-reference-response-helpers.md) upstream.
+A "helper" is a function that allows logic to be encapsulated and reused in different places.
 
-The most important response helper, is properly the [send](./api-reference-response-helpers.md#send) helper, 
+They exist to transform and interact with the incoming [request](./api-reference-request-helpers.md) and 
+manipulate the [response](./api-reference-response-helpers.md) upstream. For example, 
+it may be necessary to access the IP address, Host, Path, etc. at different places.
+
+The most important response composable, is properly the [send](./api-reference-response-helpers.md#send) method, 
 which sends any (optional) data to client and terminates the request on completion.

@@ -24,4 +24,4 @@ router.listen(3000);
 
 To create a custom Store it is mandatory to extend the `Store` interface.
 The following adapters are officially provided:
-- [@routup/rate-limit-redis](https://www.npmjs.com/package/@routup/rate-limit-redis)
+- [@routup/rate-limit-redis](./../rate-limit-redis/index.md)

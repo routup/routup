@@ -17,7 +17,10 @@ type RequestProtocolOptions = {
     default?: string
 };
 
-export function getRequestProtocol(req: Request, options?: RequestProtocolOptions) {
+export function getRequestProtocol(
+    req: Request,
+    options?: RequestProtocolOptions,
+) : string {
     options = options || {};
 
     let trustProxy : TrustProxyFn;
