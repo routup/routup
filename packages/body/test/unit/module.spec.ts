@@ -9,8 +9,8 @@ import supertest from 'supertest';
 import { Router, send } from 'routup';
 import {
     createHandler,
+    createJsonHandler,
     createRawHandler,
-    createRequestJsonHandler,
     createTextHandler,
     createUrlEncodedHandler,
     useRequestBody,
@@ -20,7 +20,7 @@ describe('src/**', () => {
     it('should handle application/json', async () => {
         const router = new Router();
 
-        router.use(createRequestJsonHandler());
+        router.use(createJsonHandler());
 
         router.post('/', (req, res) => {
             const foo = useRequestBody(req);
