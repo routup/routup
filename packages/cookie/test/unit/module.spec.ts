@@ -8,7 +8,7 @@
 import supertest from 'supertest';
 import { HeaderName, Router, send } from 'routup';
 import {
-    createRequestHandler,
+    createHandler,
     setResponseCookie,
     unsetResponseCookie,
     useRequestCookie,
@@ -39,7 +39,7 @@ describe('src/module', () => {
     it('should parse cookie with middleware', async () => {
         const router = new Router();
 
-        router.use(createRequestHandler());
+        router.use(createHandler());
 
         router.get('/', (req, res) => {
             useRequestCookies(req);

@@ -15,7 +15,7 @@ describe('data/body', () => {
     it('should handle decorator endpoints', async () => {
         const router = new Router();
 
-        router.use(createRequestHandler());
+        router.use(createHandler());
 
         router.use((req, res, next) => {
             setRequestBody(req, 'foo', 'bar');

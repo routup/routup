@@ -14,7 +14,7 @@ import {
 import type { ParseOptions } from './type';
 import { parseRequestCookies } from './utils';
 
-export function createRequestHandler(options?: ParseOptions) : Handler {
+export function createHandler(options?: ParseOptions) : Handler {
     return (req, res, next) => {
         if (hasRequestCookies(req)) {
             next();
