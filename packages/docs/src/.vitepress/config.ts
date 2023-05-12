@@ -28,6 +28,10 @@ export default defineConfig({
                 items: [
                     { text: 'Body', link: '/plugins/body/' },
                     { text: 'Cookie', link: '/plugins/cookie/' },
+                    { text: 'Decorators', link: '/plugins/decorators/' },
+                    { text: 'Prometheus', link: '/plugins/prometheus/' },
+                    { text: 'RateLimit', link: '/plugins/rate-limit/' },
+                    { text: 'RateLimit Redis', link: '/plugins/rate-limit-redis/' },
                     { text: 'Query', link: '/plugins/query/' },
                     { text: 'Static', link: '/plugins/static/' },
                     { text: 'Swagger', link: '/plugins/swagger/' },
@@ -85,6 +89,28 @@ export default defineConfig({
                     ]
                 },
             ],
+            '/plugins/decorators/': [
+                {
+                    text: '@routup/decorators',
+                    items: [
+                        {text: 'Introduction', link: '/plugins/decorators/'},
+                        {text: 'Installation', link: '/plugins/decorators/installation.md'},
+                        {text: 'Configuration', link: '/plugins/decorators/configuration.md'},
+                        {text: 'Usage', link: '/plugins/decorators/usage.md'}
+                    ]
+                },
+            ],
+            '/plugins/prometheus/': [
+                {
+                    text: '@routup/prometheus',
+                    items: [
+                        {text: 'Introduction', link: '/plugins/prometheus/'},
+                        {text: 'Installation', link: '/plugins/prometheus/installation.md'},
+                        {text: 'Configuration', link: '/plugins/prometheus/configuration.md'},
+                        {text: 'Usage', link: '/plugins/prometheus/usage.md'}
+                    ]
+                },
+            ],
             '/plugins/query/': [
                 {
                     text: '@routup/query',
@@ -103,6 +129,16 @@ export default defineConfig({
                         {text: 'Installation', link: '/plugins/rate-limit/installation.md'},
                         {text: 'Usage', link: '/plugins/rate-limit/usage.md'},
                         {text: 'API Reference', link: '/plugins/rate-limit/api-reference.md'}
+                    ]
+                },
+            ],
+            '/plugins/rate-limit-redis/': [
+                {
+                    text: '@routup/rate-limit-redis',
+                    items: [
+                        {text: 'Introduction', link: '/plugins/rate-limit-redis/'},
+                        {text: 'Installation', link: '/plugins/rate-limit-redis/installation.md'},
+                        {text: 'Usage', link: '/plugins/rate-limit-redis/usage.md'}
                     ]
                 },
             ],
