@@ -8,7 +8,8 @@
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 
-import { builtinModules } from 'module';
+import { builtinModules } from 'node:module';
+import { readFileSync } from 'node:fs';
 import { transform } from "@swc/core";
 
 const extensions = [
@@ -31,7 +32,7 @@ const swcOptions = {
     sourceMaps: true
 }
 
-export function createConfig(
+function createConfig(
     { pkg, external = [], defaultExport = false }
 ) {
     external = Object.keys(pkg.dependencies || {})
@@ -74,3 +75,8 @@ export function createConfig(
         ]
     };
 }
+
+export default createConfig({
+    pkg: JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')),
+    defaultExport: true
+});
