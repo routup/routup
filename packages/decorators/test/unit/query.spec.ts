@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createRequestHandler, stringify } from '@routup/query';
+import { createHandler, stringify } from '@routup/query';
 import { Router } from 'routup';
 import supertest from 'supertest';
 import { mountController } from '../../src';
@@ -15,7 +15,7 @@ describe('src/decorator', () => {
     it('should handle query decorator', async () => {
         const router = new Router();
 
-        router.use(createRequestHandler());
+        router.use(createHandler());
 
         mountController(router, QueryController);
 

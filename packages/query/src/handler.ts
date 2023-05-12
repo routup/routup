@@ -10,7 +10,7 @@ import { hasRequestQuery, setRequestQuery } from 'routup';
 import type { ParseOptions } from './type';
 import { parseRequestQuery } from './utils';
 
-export function createRequestHandler(options?: ParseOptions) : Handler {
+export function createHandler(options?: ParseOptions) : Handler {
     return (req, res, next) => {
         if (hasRequestQuery(req)) {
             next();

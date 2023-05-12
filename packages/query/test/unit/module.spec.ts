@@ -8,7 +8,7 @@
 import qs from 'qs';
 import supertest from 'supertest';
 import { Router, send } from 'routup';
-import { createRequestHandler, useRequestQuery } from '../../src';
+import { createHandler, useRequestQuery } from '../../src';
 
 describe('src/module', () => {
     it('should parse request query', async () => {
@@ -62,7 +62,7 @@ describe('src/module', () => {
     it('should parse request query with middleware', async () => {
         const router = new Router();
 
-        router.use(createRequestHandler());
+        router.use(createHandler());
 
         router.get('/', (req, res) => {
             send(res, useRequestQuery(req));
