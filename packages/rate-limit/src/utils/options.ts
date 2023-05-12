@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { Next, Request, Response } from 'routup';
-import { getRequestIp, send } from 'routup';
+import { getRequestIP, send } from 'routup';
 import { RETRY_AGAIN_MESSAGE } from '../constants';
 import { MemoryStore } from '../store';
 import type { Options, OptionsInput, ValueDeterminingMiddleware } from '../type';

@@ -255,12 +255,12 @@ type RequestHostNameOptions = {
 
 - [TrustProxyInput](#trustproxyinput)
 
-## `getRequestIp`
+## `getRequestIP`
 
 Get the IP Address of the current request.
 
 ```typescript
-declare function getRequestIp(
+declare function getRequestIP(
     req: Request, 
     options?: RequestIpOptions
 ) : string;

@@ -15,7 +15,7 @@ type RequestIpOptions = {
     trustProxy?: TrustProxyInput
 };
 
-export function getRequestIp(req: Request, options?: RequestIpOptions) : string {
+export function getRequestIP(req: Request, options?: RequestIpOptions) : string {
     options = options || {};
 
     let trustProxy : TrustProxyFn;
