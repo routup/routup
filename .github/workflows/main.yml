@@ -111,24 +111,24 @@ jobs:
                     token: ${{ secrets.codecov }}
                     directory: ./coverage/
 
-release:
-    name: Release
-    needs: [lint, tests]
-    runs-on: ubuntu-latest
-    steps:
-        -   name: Checkout
-            uses: actions/checkout@v3
+    release:
+        name: Release
+        needs: [lint, tests]
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v3
 
-        -   name: Install
-            uses: ./.github/actions/install
-            with:
-                node-version: ${{ env.PRIMARY_NODE_VERSION }}
+            -   name: Install
+                uses: ./.github/actions/install
+                with:
+                    node-version: ${{ env.PRIMARY_NODE_VERSION }}
 
-        -   name: Build
-            uses: ./.github/actions/build
+            -   name: Build
+                uses: ./.github/actions/build
 
-        -   name: Release
-            env:
-                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-            run: npx semantic-release
+            -   name: Release
+                env:
+                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                    NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+                run: npx semantic-release
