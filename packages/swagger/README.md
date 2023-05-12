@@ -85,25 +85,15 @@ The function call will save the file under the location: `./writable/swagger.jso
 
 ### UI
 
-Serve generated docs from URL or based on a JSON file with [swagger-ui](https://www.npmjs.com/package/swagger-ui-dist).
+Serve generated docs from (file- / web-) URL or based on a JSON file with [swagger-ui](https://www.npmjs.com/package/swagger-ui-dist).
 
 ```typescript
-import fs from 'node:fs';
-import path from 'node:path';
 import { Router } from 'routup';
 import { createUIHandler } from '@routup/swagger';
 
 const router = new Router();
 
-const docStr = fs.readFileSync(
-    path.resolve(__dirname, '..', 'test', 'data', 'swagger.json'), 
-    {
-        encoding: 'utf-8',
-    }
-);
-const doc = JSON.parse(docStr);
-
-router.use('/docs', createUIHandler(doc));
+router.use('/docs', createUIHandler('test/data/swagger.json'));
 
 router.listen(3000);
 ```

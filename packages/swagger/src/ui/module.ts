@@ -11,19 +11,23 @@ import {
     send,
     useRequestMountPath,
     withLeadingSlash,
-    withTrailingSlash, withoutLeadingSlash,
+    withTrailingSlash,
+    withoutLeadingSlash,
 } from 'routup';
 import fs from 'node:fs';
 import path from 'node:path';
 import type {
+    Handler,
     Next,
     Request,
     Response,
 } from 'routup';
 import { createHandler } from '@routup/static';
-import { merge } from 'smob';
+import { URL } from 'node:url';
+import type { Spec } from 'swagger-ui-dist';
 import { getAssetsPath } from '../utils';
 import type { UIOptions } from './type';
+import { isFileURL } from './utils';
 
 /* istanbul ignore next */
 const stringify = (obj: Record<string, any>) => {
@@ -51,20 +55,21 @@ const stringify = (obj: Record<string, any>) => {
  * @param options
  */
 export function createUIHandler(
-    document: Record<string, any> | string,
-    options?: UIOptions,
-) {
+    document: Spec | string,
+    options: UIOptions = {},
+) : Handler {
     const handler = createHandler(path.dirname(require.resolve('swagger-ui-dist')), {
         extensions: [],
     });
 
-    const initOptions : UIOptions = merge(
-        {},
-        {
-            ...(isObject(document) ? { spec: document } : { url: document }),
-        },
-        options || {},
-    );
+    if (isObject(document)) {
+        options.spec = document;
+    } else if (isFileURL(document)) {
+        const documentFile = fs.readFileSync(document, { encoding: 'utf-8' });
+        options.spec = JSON.parse(documentFile);
+    } else {
+        options.url = document;
+    }
 
     let template : string | undefined;
     const templateRaw = fs.readFileSync(path.join(getAssetsPath(), 'template.tpl'), {
@@ -88,22 +93,22 @@ export function createUIHandler(
                 href = pathName;
             }
 
-            if (initOptions.baseUrl) {
-                href = new URL(withoutLeadingSlash(href), initOptions.baseUrl).href;
-            } else if (initOptions.basePath) {
-                href = withLeadingSlash(cleanDoubleSlashes(`${initOptions.basePath}/${href}`));
+            if (options.baseURL) {
+                href = new URL(withoutLeadingSlash(href), options.baseURL).href;
+            } else if (options.basePath) {
+                href = withLeadingSlash(cleanDoubleSlashes(`${options.basePath}/${href}`));
             }
 
             href = withTrailingSlash(href);
-        } else if (initOptions.baseUrl) {
-            href = withTrailingSlash(initOptions.baseUrl);
-        } else if (initOptions.basePath) {
-            href = withTrailingSlash(withLeadingSlash(initOptions.basePath));
+        } else if (options.baseURL) {
+            href = withTrailingSlash(options.baseURL);
+        } else if (options.basePath) {
+            href = withTrailingSlash(withLeadingSlash(options.basePath));
         }
 
         template = templateRaw
             .replace('<% title %>', 'Swagger UI')
-            .replace('<% swaggerOptions %>', stringify(initOptions))
+            .replace('<% swaggerOptions %>', stringify(options))
             .replace('<% baseHref %>', href);
     };
 
@@ -123,7 +128,10 @@ export function createUIHandler(
 
         handler(req, res, async () => {
             if (typeof template === 'undefined') {
-                compileTemplate({ url: req.url, mountPath: useRequestMountPath(req) });
+                compileTemplate({
+                    url: req.url,
+                    mountPath: useRequestMountPath(req),
+                });
             }
 
             send(res, template);

@@ -5,17 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'node:path';
 import supertest from 'supertest';
 import { HeaderName, Router } from 'routup';
-import type { UIOptions } from '../../src';
-import { createUIHandler } from '../../src';
+import type { UIOptions } from '../../../src';
+import { createUIHandler } from '../../../src';
 
 const createRouter = async (options?: UIOptions) => {
     const router = new Router();
 
-    const doc = await import(path.resolve(__dirname, '..', 'data', 'swagger.json'));
-    router.use('/docs', createUIHandler(doc, options));
+    router.use('/docs', createUIHandler('test/data/swagger.json', options));
 
     return router;
 };
@@ -85,7 +83,7 @@ describe('src/ui', () => {
 
     it('should serve swagger ui files on custom base url', async () => {
         const router = await createRouter({
-            baseUrl: 'https://example.com/api/',
+            baseURL: 'https://example.com/api/',
         });
         const server = supertest(router.createListener());
 
