@@ -35,13 +35,13 @@ To read the docs, visit [https://routup.net](https://routup.net)
 
 ```typescript
 import { Router, send } from 'routup';
-import { createRequestHandler, useRequestBody } from '@routup/body';
+import { createHandler, useRequestBody } from '@routup/body';
 
 const router = new Router();
 // This will parse requests with Content-Type:
 // application/json
 // application/x-www-form-urlencoded
-router.use(createRequestHandler());
+router.use(createHandler());
 
 router.get('/', (req, res) => {
     const body = useRequestBody(req);
@@ -56,7 +56,7 @@ router.listen(3000);
 
 ## Handler
 
-Besides using the `createRequestHandler` method, it is also possible to register a specific handler
+Besides using the `createHandler` method, it is also possible to register a specific handler
 as middleware.
 
 ### Json
@@ -109,10 +109,10 @@ To parse `any` input data as Buffer, mount the raw handler to the router instanc
 
 ```typescript
 import { Router, send } from 'routup';
-import { createRequestRawHandler, useRequestBody } from '@routup/body';
+import { createRawHandler, useRequestBody } from '@routup/body';
 
 const router = new Router();
-router.use(createRequestRawHandler());
+router.use(createRawHandler());
 
 router.get('/', (req, res) => {
     const body = useRequestBody(req);

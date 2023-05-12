@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createRequestHandler } from '@routup/body';
+import { createHandler } from '@routup/body';
 import { Router, setRequestBody } from 'routup';
 import supertest from 'supertest';
 import { mountController } from '../../src';

@@ -8,11 +8,11 @@
 import supertest from 'supertest';
 import { Router, send } from 'routup';
 import {
-    createRequestHandler,
+    createHandler,
+    createRawHandler,
     createRequestJsonHandler,
-    createRequestRawHandler,
-    createRequestTextHandler,
-    createRequestUrlEncodedHandler,
+    createTextHandler,
+    createUrlEncodedHandler,
     useRequestBody,
 } from '../../src';
 
@@ -43,7 +43,7 @@ describe('src/**', () => {
     it('should handle application/x-www-form-urlencoded', async () => {
         const router = new Router();
 
-        router.use(createRequestUrlEncodedHandler({ extended: false }));
+        router.use(createUrlEncodedHandler({ extended: false }));
 
         router.post('/', (req, res) => {
             const foo = useRequestBody(req);
@@ -64,7 +64,7 @@ describe('src/**', () => {
     it('should handle raw to buffer', async () => {
         const router = new Router();
 
-        router.use(createRequestRawHandler());
+        router.use(createRawHandler());
 
         router.post('/', (req, res) => {
             const foo = useRequestBody(req);
@@ -86,7 +86,7 @@ describe('src/**', () => {
     it('should handle text/html to text', async () => {
         const router = new Router();
 
-        router.use(createRequestTextHandler({ type: 'text/html' }));
+        router.use(createTextHandler({ type: 'text/html' }));
 
         router.post('/', (req, res) => {
             const foo = useRequestBody(req);
@@ -108,7 +108,7 @@ describe('src/**', () => {
     it('should parse application/json & application/x-www-form-urlencoded', async () => {
         const router = new Router();
 
-        router.use(createRequestHandler());
+        router.use(createHandler());
 
         router.post('/multiple', (req, res) => {
             const foo = useRequestBody(req);
