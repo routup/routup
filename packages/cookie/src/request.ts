@@ -9,7 +9,7 @@ import {
     setRequestCookieFn,
     useRequestCookie,
     useRequestCookies,
-} from '@routup/core';
+} from 'routup';
 import { parseRequestCookies } from './utils';
 
 export {

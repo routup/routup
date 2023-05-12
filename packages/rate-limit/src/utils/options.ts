@@ -4,8 +4,8 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { Next, Request, Response } from '@routup/core';
-import { getRequestIp, send } from '@routup/core';
+import type { Next, Request, Response } from 'routup';
+import { getRequestIp, send } from 'routup';
 import { RETRY_AGAIN_MESSAGE } from '../constants';
 import { MemoryStore } from '../store';
 import type { Options, OptionsInput, ValueDeterminingMiddleware } from '../type';

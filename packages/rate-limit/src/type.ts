@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Next, Request, Response } from '@routup/core';
+import type { Next, Request, Response } from 'routup';
 import type { Store } from './store';
 
 /**

@@ -8,7 +8,7 @@
 import {
     setRequestQueryFn,
     useRequestQuery,
-} from '@routup/core';
+} from 'routup';
 import { parseRequestQuery } from './utils';
 
 export {

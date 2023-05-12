@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { HeaderName, send } from '@routup/core';
+import { HeaderName, send } from 'routup';
 import supertest from 'supertest';
 import { createHandler } from '../../src';
 import { RETRY_AGAIN_MESSAGE } from '../../src/constants';

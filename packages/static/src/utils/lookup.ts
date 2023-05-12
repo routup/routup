@@ -4,7 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import { hasTrailingSlash } from '@routup/core';
+import { hasTrailingSlash } from 'routup';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { FileInfo, HandlerOptions } from '../type';

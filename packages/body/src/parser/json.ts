@@ -7,7 +7,7 @@
 
 import type { OptionsJson } from 'body-parser';
 import { json } from 'body-parser';
-import type { Handler } from '@routup/core';
+import type { Handler } from 'routup';
 
 export function createRequestJsonHandler(options?: OptionsJson) : Handler {
     return json(options);

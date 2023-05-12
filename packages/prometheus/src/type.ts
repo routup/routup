@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Request, Response } from '@routup/core';
+import type { Request, Response } from 'routup';
 import type {
     DefaultMetricsCollectorConfiguration,
     Gauge,

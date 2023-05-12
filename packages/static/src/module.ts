@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Handler } from '@routup/core';
+import type { Handler } from 'routup';
 import {
     HeaderName,
     sendFile,
     useRequestMountPath,
     useRequestPath, withLeadingSlash,
-} from '@routup/core';
+} from 'routup';
 import type { FileInfo, HandlerOptionsInput } from './type';
 import { buildHandlerOptions, scanFiles } from './utils';
 import { lookup } from './utils/lookup';

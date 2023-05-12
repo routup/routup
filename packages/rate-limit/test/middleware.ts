@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Handler } from '@routup/core';
+import type { Handler } from 'routup';
 import type { RequestListener } from 'http';
 
 export function createMiddleware(handler: Handler) : RequestListener {

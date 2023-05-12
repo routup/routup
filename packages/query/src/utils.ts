@@ -7,7 +7,7 @@
 
 import type {
     Request,
-} from '@routup/core';
+} from 'routup';
 import { parse } from 'qs';
 
 import type { ParseOptions } from './type';

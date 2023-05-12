@@ -5,7 +5,6 @@
             "routup": ["./packages/routup/src"],
             "@routup/body": ["./packages/body/src"],
             "@routup/cookie": ["./packages/cookie/src"],
-            "@routup/core": ["./packages/core/src"],
             "@routup/query": ["./packages/query/src"]
         }
     }

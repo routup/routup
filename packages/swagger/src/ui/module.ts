@@ -12,14 +12,14 @@ import {
     useRequestMountPath,
     withLeadingSlash,
     withTrailingSlash, withoutLeadingSlash,
-} from '@routup/core';
+} from 'routup';
 import fs from 'node:fs';
 import path from 'node:path';
 import type {
     Next,
     Request,
     Response,
-} from '@routup/core';
+} from 'routup';
 import { createHandler } from '@routup/static';
 import { merge } from 'smob';
 import { getAssetsPath } from '../utils';

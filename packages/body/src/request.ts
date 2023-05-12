@@ -8,7 +8,7 @@
 import {
     setRequestBody,
     useRequestBody,
-} from '@routup/core';
+} from 'routup';
 
 export {
     setRequestBody,
