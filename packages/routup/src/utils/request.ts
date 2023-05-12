@@ -6,7 +6,7 @@
  */
 
 import { GatewayTimeoutErrorOptions } from '@ebec/http';
-import type { Next, Response } from '@routup/core';
+import type { Next, Response } from '../type';
 
 /* istanbul ignore next */
 export function createRequestTimeout(res: Response, timeout: number, done?: Next) {

@@ -6,8 +6,7 @@
  */
 
 import supertest from 'supertest';
-import { send, useRequestMountPath } from '@routup/core';
-import { Router } from '../../../../src';
+import { Router, send, useRequestMountPath } from '../../../../src';
 
 describe('src/helpers/request/mount-path', () => {
     it('should get base-url with predefined path', async () => {

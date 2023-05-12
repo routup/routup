@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Next, Response } from '@routup/core';
-import { send } from '@routup/core';
+import type { Next, Response } from '../type';
+import { send } from '../helpers';
 import { isPromise } from '../utils';
 
 export function processHandlerExecutionOutput(res: Response, next: Next, output?: unknown) {

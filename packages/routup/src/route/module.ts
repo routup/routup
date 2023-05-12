@@ -6,17 +6,16 @@
  */
 
 import { hasOwnProperty, merge } from 'smob';
+import { Method } from '../constants';
 import type {
-    Handler, Next, Request, Response,
-} from '@routup/core';
-import { Method } from '@routup/core';
+    DispatcherMeta, Handler, Next, Path,
+
+    Request,
+    Response,
+} from '../type';
 import { Layer } from '../layer';
 import type { PathMatcherOptions } from '../path';
 import { PathMatcher } from '../path';
-import type {
-    DispatcherMeta,
-    Path,
-} from '../type';
 import type { RouteOptions } from './type';
 
 export class Route {

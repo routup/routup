@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { send, useRequestParams } from '@routup/core';
 import supertest from 'supertest';
-import { Router } from '../../../src';
+import { Router, send, useRequestParams } from '../../../src';
 
 describe('routing/parameters', () => {
     it('should capture parameters', async () => {

@@ -5,43 +5,41 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    BadRequestErrorOptions,
-    NotFoundErrorOptions,
-} from '@ebec/http';
 import type { RequestListener } from 'node:http';
 import { createServer } from 'node:http';
 import { merge, mergeArrays } from 'smob';
 import type {
+    DispatcherMeta,
     ErrorHandler,
     Handler,
     Next,
+    Path,
+
     Request,
     Response,
-} from '@routup/core';
+} from '../type';
 import {
     HeaderName,
     Method,
-    cleanDoubleSlashes,
+} from '../constants';
+import {
     send,
     useRequestPath,
-    withLeadingSlash,
-    withoutTrailingSlash,
-} from '@routup/core';
-import type { PathMatcherOptions } from '../path';
-import { PathMatcher } from '../path';
+} from '../helpers';
 import {
+    cleanDoubleSlashes,
     createRequestTimeout,
     isInstance,
+
     isPath,
+    withLeadingSlash,
+    withoutTrailingSlash,
 
 } from '../utils';
+import type { PathMatcherOptions } from '../path';
+import { PathMatcher } from '../path';
 import { Layer, isLayerInstance } from '../layer';
 import { Route, isRouteInstance } from '../route';
-import type {
-    DispatcherMeta,
-    Path,
-} from '../type';
 import type { RouterOptions } from './type';
 
 export function isRouterInstance(input: unknown) : input is Router {

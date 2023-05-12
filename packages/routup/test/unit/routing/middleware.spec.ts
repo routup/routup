@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { send, setRequestEnv, useRequestEnv } from '@routup/core';
 import supertest from 'supertest';
+import {
+    Router, send, setRequestEnv, useRequestEnv,
+} from '../../../src';
 import type { Next, Request, Response } from '../../../src';
-import { Router } from '../../../src';
 
 describe('routing/middleware', () => {
     it('should use middleware', async () => {

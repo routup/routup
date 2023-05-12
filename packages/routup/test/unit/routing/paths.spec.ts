@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { send } from '@routup/core';
 import supertest from 'supertest';
-import { Router } from '../../../src';
+import { Router, send } from '../../../src';
 
 describe('routing/paths', () => {
     it('should handle path', async () => {
