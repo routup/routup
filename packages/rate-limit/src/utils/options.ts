@@ -22,7 +22,7 @@ export function buildHandlerOptions(input?: OptionsInput) : Options {
         skipSuccessfulRequest: false,
         requestWasSuccessful: (request: Request, response: Response): boolean => response.statusCode < 400,
         skip: (_request: Request, _response: Response): boolean => false,
-        keyGenerator: (request: Request, _response: Response): string => getRequestIp(request, { trustProxy: true }),
+        keyGenerator: (request: Request, _response: Response): string => getRequestIP(request, { trustProxy: true }),
         async handler(
             request: Request,
             response: Response,

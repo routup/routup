@@ -116,11 +116,11 @@ Should be a (sync/async) function that accepts the node http `request` and
 By default, the client's IP address is used:
 
 ```ts
-import { getRequestIp } from 'routup';
+import { getRequestIP } from 'routup';
 
 const handler = createHandler({
     // ...
-    keyGenerator: (request, response) => getRequestIp(request, { trustProxy: true }),
+    keyGenerator: (request, response) => getRequestIP(request, { trustProxy: true }),
 })
 ```
 

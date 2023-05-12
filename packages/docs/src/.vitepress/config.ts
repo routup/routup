@@ -3,6 +3,7 @@ import { defineConfig } from 'vitepress';
 export default defineConfig({
     title: 'Routup',
     base: '/',
+    ignoreDeadLinks: 'localhostLinks',
     themeConfig: {
         socialLinks: [
             { icon: 'github', link: 'https://github.com/tada5hi/routup' },
