@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { send } from 'routup';
+import { Router, send } from 'routup';
 import { Registry } from 'prom-client';
-import { Router } from 'routup';
 import supertest from 'supertest';
 import type { OptionsInput } from '../../src';
 import {

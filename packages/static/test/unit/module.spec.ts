@@ -5,10 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { HeaderName } from 'routup';
-import path from 'path';
+import { HeaderName, Router } from 'routup';
+import path from 'node:path';
 import supertest from 'supertest';
-import { Router } from 'routup';
 import { createHandler } from '../../src';
 
 const directoryPath = path.join(__dirname, '..', 'data');

@@ -180,7 +180,7 @@ Should be a (sync/async) function that accepts the node http `request` and
 By default, the client's IP address is used:
 
 ```ts
-import { getRequestIp } from '@routup/core';
+import { getRequestIp } from 'routup';
 
 const handler = createHandler({
     // ...
