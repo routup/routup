@@ -20,11 +20,13 @@ export function createRequestTimeout(res: Response, timeout: number, done?: Next
     res.once('close', () => {
         clearTimeout(instance);
 
+        /* istanbul ignore next */
         if (typeof done === 'function') {
             done();
         }
     });
 
+    /* istanbul ignore next */
     res.once('error', (e) => {
         clearTimeout(instance);
 

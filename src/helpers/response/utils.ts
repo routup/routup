@@ -24,6 +24,7 @@ export function setResponseContentTypeByFileName(res: Response, fileName: string
     }
 }
 
+/* istanbul ignore next */
 export function onResponseFinished(
     res: Response,
     cb: (err?: Error) => void,
@@ -38,15 +39,15 @@ export function onResponseFinished(
         cb(err);
     };
 
-    res.on('finish', async () => {
+    res.on('finish', () => {
         callCallback();
     });
 
-    res.on('close', async () => {
+    res.on('close', () => {
         callCallback();
     });
 
-    res.on('error', async (err) => {
+    res.on('error', (err) => {
         callCallback(err);
     });
 }

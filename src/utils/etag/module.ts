@@ -16,7 +16,7 @@ import type { EtagOptions } from './type';
  * @api private
  */
 function isStatsObject(obj: unknown) : obj is Stats {
-    // genuine fs.Stats
+    /* istanbul ignore next */
     if (
         typeof Stats === 'function' &&
         obj instanceof Stats

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import path from 'path';
+import path from 'node:path';
 import supertest from 'supertest';
 import {
     HeaderName, send, sendAccepted, sendCreated, sendFile, sendRedirect,

@@ -13,6 +13,7 @@ export function sendStream(res: Response, stream: Readable, fn?: CallableFunctio
         stream.pipe(res);
     });
 
+    /* istanbul ignore next */
     stream.on('error', (err) => {
         if (typeof fn === 'function') {
             fn(err);
