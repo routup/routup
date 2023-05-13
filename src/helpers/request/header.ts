@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IncomingHttpHeaders } from 'http';
+import type { IncomingHttpHeaders } from 'node:http';
 import type { Request } from '../../type';
 
 export function getRequestHeader<K extends keyof IncomingHttpHeaders>(

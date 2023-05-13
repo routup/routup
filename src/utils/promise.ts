@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from 'smob';
+import { isObject } from './object';
 
 export function isPromise(p: unknown) : p is Promise<unknown> {
     return isObject(p) &&

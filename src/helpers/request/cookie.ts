@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IncomingMessage } from 'http';
-import { isObject, merge } from 'smob';
+import type { IncomingMessage } from 'node:http';
+import { merge } from 'smob';
+import { isObject } from '../../utils';
 import type { RequestFn } from '../type';
 
 const CookieSymbol = Symbol.for('ReqCookie');

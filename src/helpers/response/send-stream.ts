@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Readable } from 'stream';
+import type { Readable } from 'node:stream';
 import type { Response } from '../../type';
 
 export function sendStream(res: Response, stream: Readable, fn?: CallableFunction) {
