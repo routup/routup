@@ -61,6 +61,7 @@ export function sendFile(res: Response, filePath: string | SendFileOptions, fn?:
     }
 
     resolveStats(options, (err, stats) => {
+        /* istanbul ignore next */
         if (err) {
             if (typeof fn === 'function') {
                 fn(err);
@@ -86,7 +87,11 @@ export function sendFile(res: Response, filePath: string | SendFileOptions, fn?:
 
             streamOptions.start = parseInt(x, 10) || 0;
 
-            if (streamOptions.start >= stats.size || streamOptions.end >= stats.size) {
+            if (streamOptions.end >= stats.size) {
+                streamOptions.end = stats.size - 1;
+            }
+
+            if (streamOptions.start >= stats.size) {
                 res.setHeader(HeaderName.CONTENT_RANGE, `bytes */${stats.size}`);
                 res.statusCode = 416;
                 res.end();
@@ -103,6 +108,6 @@ export function sendFile(res: Response, filePath: string | SendFileOptions, fn?:
         res.setHeader(HeaderName.LAST_MODIFIED, stats.mtime.toUTCString());
         res.setHeader(HeaderName.ETag, `W/"${stats.size}-${stats.mtime.getTime()}"`);
 
-        sendStream(res, createReadStream(options?.filePath, streamOptions), fn);
+        sendStream(res, createReadStream(options.filePath, streamOptions), fn);
     });
 }
