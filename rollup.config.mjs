@@ -77,6 +77,5 @@ function createConfig(
 }
 
 export default createConfig({
-    pkg: JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')),
-    defaultExport: true
+    pkg: JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'))
 });
