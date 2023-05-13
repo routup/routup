@@ -1,3 +1,10 @@
+# [1.0.0-alpha.2](https://github.com/routup/routup/compare/v1.0.0-alpha.1...v1.0.0-alpha.2) (2023-05-13)
+
+
+### Bug Fixes
+
+* default export for output build ([7f9afbf](https://github.com/routup/routup/commit/7f9afbf6bf1266aeb90cffc2527d20b8a154b580))
+
 # 1.0.0-alpha.1 (2023-05-13)
 
 
