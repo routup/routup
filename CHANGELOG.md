@@ -1,3 +1,15 @@
+# [1.0.0-alpha.3](https://github.com/routup/routup/compare/v1.0.0-alpha.2...v1.0.0-alpha.3) (2023-05-14)
+
+
+### Bug Fixes
+
+* exceeding of byte range for file streaming + added tests ([bec5b1b](https://github.com/routup/routup/commit/bec5b1bdf5186410937a324120a36bf245f73f87))
+
+
+### Features
+
+* add send-format helper + test suite ([2a7b0d5](https://github.com/routup/routup/commit/2a7b0d59e16bb3f867617bc54360a349b7526013))
+
 # [1.0.0-alpha.2](https://github.com/routup/routup/compare/v1.0.0-alpha.1...v1.0.0-alpha.2) (2023-05-13)
 
 
