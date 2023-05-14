@@ -6,12 +6,24 @@
  */
 
 import type { Response } from '../../type';
+import { getRequestAcceptableContentType } from '../request';
 
 export type ResponseFormat = {
-    [key: string]: () => void,
-    default: () => void
+    default: () => void,
+    [key: string]: () => void
 };
 
-export function sendFormat(_res: Response, _format: ResponseFormat) {
+export function sendFormat(res: Response, input: ResponseFormat) {
+    const { default: formatDefault, ...formats } = input;
 
+    const contentTypes = Object.keys(formats);
+
+    const contentType = getRequestAcceptableContentType(res.req, contentTypes);
+    if (contentType) {
+        formats[contentType]();
+
+        return;
+    }
+
+    formatDefault();
 }
