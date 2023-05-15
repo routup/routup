@@ -1,3 +1,10 @@
+# [1.0.0-alpha.6](https://github.com/routup/routup/compare/v1.0.0-alpha.5...v1.0.0-alpha.6) (2023-05-15)
+
+
+### Bug Fixes
+
+* separate set/extend body payload + added fn overloading for cookie & query ([c27dde4](https://github.com/routup/routup/commit/c27dde43b47f00b4426ff155e9ea57b04c420982))
+
 # [1.0.0-alpha.5](https://github.com/routup/routup/compare/v1.0.0-alpha.4...v1.0.0-alpha.5) (2023-05-15)
 
 
