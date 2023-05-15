@@ -22,7 +22,8 @@ export function useRequestCookies(
 }
 
 export function hasRequestCookies(req: Request) {
-    return CookieSymbol in req && isObject((req as any)[CookieSymbol]);
+    return CookieSymbol in req &&
+        isObject((req as any)[CookieSymbol]);
 }
 
 export function useRequestCookie(req: Request, name: string) : string | undefined {

@@ -31,6 +31,7 @@ export enum HeaderName {
     COOKIE = 'cookie',
     ETag = 'etag',
     HOST = 'host',
+    IF_MODIFIED_SINCE = 'if-modified-since',
     IF_NONE_MATCH = 'if-none-match',
     LAST_MODIFIED = 'last-modified',
     LOCATION = 'location',
