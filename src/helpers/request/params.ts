@@ -9,6 +9,7 @@ import type { Request } from '../../type';
 const ParamsSymbol = Symbol.for('ReqParams');
 
 export function useRequestParams(req: Request) : Record<string, any> {
+    /* istanbul ignore next */
     if ('params' in req) {
         return (req as any).params;
     }

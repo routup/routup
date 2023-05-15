@@ -9,7 +9,7 @@ import supertest from 'supertest';
 import { send, useRequestMountPath } from '../../../src';
 import { createHandler } from '../../handler';
 
-describe('src/helpers/request/mount-path', () => {
+describe('src/helpers/request/query', () => {
     it('should get mount path', async () => {
         const server = supertest(createHandler((req, res) => send(res, useRequestMountPath(req))));
 

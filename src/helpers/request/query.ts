@@ -8,13 +8,14 @@
 import { merge } from 'smob';
 import { isObject } from '../../utils';
 import type { Request } from '../../type';
-import type { RequestFn } from '../type';
+
+type RequestQueryFn = (req: Request) => Record<string, any>;
 
 const QuerySymbol = Symbol.for('ReqQuery');
 
-let requestFn : undefined | RequestFn;
+let requestFn : undefined | RequestQueryFn;
 
-export function setRequestQueryFn(fn: RequestFn) {
+export function setRequestQueryFn(fn: RequestQueryFn) {
     requestFn = fn;
 }
 
@@ -53,23 +54,9 @@ export function hasRequestQuery(req: Request) : boolean {
 }
 
 export function setRequestQuery(req: Request, key: string, value: unknown) : void;
-export function setRequestQuery(req: Request, record: Record<string, any>, append?: boolean) : void;
-export function setRequestQuery(req: Request, key: Record<string, any> | string, value?: boolean | unknown) : void {
-    if (QuerySymbol in req) {
-        if (typeof key === 'object') {
-            if (value) {
-                (req as any)[QuerySymbol] = merge((req as any)[QuerySymbol], key);
-            } else {
-                (req as any)[QuerySymbol] = key;
-            }
-        } else {
-            (req as any)[QuerySymbol][key] = value;
-        }
-
-        return;
-    }
-
-    if (typeof key === 'object') {
+export function setRequestQuery(req: Request, record: Record<string, any>) : void;
+export function setRequestQuery(req: Request, key: Record<string, any> | string, value?: unknown) : void {
+    if (isObject(key)) {
         (req as any)[QuerySymbol] = key;
         return;
     }
@@ -77,4 +64,25 @@ export function setRequestQuery(req: Request, key: Record<string, any> | string,
     (req as any)[QuerySymbol] = {
         [key]: value,
     };
+}
+
+export function extendRequestQuery(req: Request, key: string, value: unknown) : void;
+export function extendRequestQuery(req: Request, record: Record<string, any>) : void;
+export function extendRequestQuery(req: Request, key: Record<string, any> | string, value?: unknown) : void {
+    if (QuerySymbol in req) {
+        if (isObject(key)) {
+            (req as any)[QuerySymbol] = merge((req as any)[QuerySymbol], key);
+        } else {
+            (req as any)[QuerySymbol][key] = value;
+        }
+
+        return;
+    }
+
+    if (isObject(key)) {
+        setRequestQuery(req, key);
+        return;
+    }
+
+    setRequestQuery(req, key, value);
 }

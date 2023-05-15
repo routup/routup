@@ -7,14 +7,16 @@
 
 import type { IncomingMessage } from 'node:http';
 import { merge } from 'smob';
+import type { Request } from '../../type';
 import { isObject } from '../../utils';
-import type { RequestFn } from '../type';
 
 const CookieSymbol = Symbol.for('ReqCookie');
 
-let requestFn : undefined | RequestFn;
+type RequestCookieFn = (req: Request) => Record<string, string>;
 
-export function setRequestCookieFn(fn: RequestFn) {
+let requestFn : undefined | RequestCookieFn;
+
+export function setRequestCookieFn(fn: RequestCookieFn) {
     requestFn = fn;
 }
 
@@ -23,7 +25,7 @@ export function useRequestCookies(
 ) : Record<string, string> {
     if (
         !(CookieSymbol in req) &&
-        typeof requestFn !== 'undefined'
+        typeof requestFn === 'function'
     ) {
         (req as any)[CookieSymbol] = requestFn(req);
     }
@@ -46,12 +48,16 @@ export function useRequestCookie(req: IncomingMessage, name: string) : string | 
 export function setRequestCookies(
     req: IncomingMessage,
     record: Record<string, any>,
-    mergeIt?: boolean,
 ) : void {
+    (req as any)[CookieSymbol] = record;
+}
+
+export function extendRequestCookies(
+    req: IncomingMessage,
+    record: Record<string, any>,
+) {
     if (CookieSymbol in req) {
-        if (mergeIt) {
-            (req as any)[CookieSymbol] = merge((req as any)[CookieSymbol], record);
-        }
+        (req as any)[CookieSymbol] = merge((req as any)[CookieSymbol], record);
 
         return;
     }
