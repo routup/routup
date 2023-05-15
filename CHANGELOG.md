@@ -1,3 +1,10 @@
+# [1.0.0-alpha.5](https://github.com/routup/routup/compare/v1.0.0-alpha.4...v1.0.0-alpha.5) (2023-05-15)
+
+
+### Bug Fixes
+
+* remove cookie/query fn setter ([eb9c6c1](https://github.com/routup/routup/commit/eb9c6c1d60d8373a17614bde7499043f98a1bae0))
+
 # [1.0.0-alpha.4](https://github.com/routup/routup/compare/v1.0.0-alpha.3...v1.0.0-alpha.4) (2023-05-15)
 
 
