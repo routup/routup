@@ -1,3 +1,10 @@
+# [1.0.0-alpha.4](https://github.com/routup/routup/compare/v1.0.0-alpha.3...v1.0.0-alpha.4) (2023-05-15)
+
+
+### Bug Fixes
+
+* cleanup cookie and query handler + extended test suites ([1e46be9](https://github.com/routup/routup/commit/1e46be9ff907a1741e80e7135b5f00a984b410a2))
+
 # [1.0.0-alpha.3](https://github.com/routup/routup/compare/v1.0.0-alpha.2...v1.0.0-alpha.3) (2023-05-14)
 
 
