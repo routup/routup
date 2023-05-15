@@ -6,7 +6,9 @@
  */
 
 import supertest from 'supertest';
-import { send, setRequestBody, useRequestBody } from '../../../src';
+import {
+    extendRequestBody, send, setRequestBody, useRequestBody,
+} from '../../../src';
 import { createHandler } from '../../handler';
 
 describe('src/module', () => {
@@ -16,7 +18,7 @@ describe('src/module', () => {
 
             setRequestBody(req, { bar: 'baz' });
 
-            setRequestBody(req, { baz: 'foo' }, true);
+            extendRequestBody(req, { baz: 'foo' });
 
             send(res, useRequestBody(req));
         }));

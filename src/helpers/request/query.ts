@@ -31,11 +31,20 @@ export function useRequestQuery(req: Request, key?: string) {
         return (req as any)[QuerySymbol];
     }
 
-    return {};
+    return typeof key === 'string' ?
+        undefined :
+        {};
 }
 
 export function hasRequestQuery(req: Request) : boolean {
-    return (QuerySymbol in req) && isObject((req as any)[QuerySymbol]);
+    return (
+        (QuerySymbol in req) &&
+        isObject((req as any)[QuerySymbol])
+    ) ||
+        (
+            ('query' in req) &&
+            isObject(req.query)
+        );
 }
 
 export function setRequestQuery(req: Request, key: string, value: unknown) : void;
@@ -54,11 +63,14 @@ export function setRequestQuery(req: Request, key: Record<string, any> | string,
 export function extendRequestQuery(req: Request, key: string, value: unknown) : void;
 export function extendRequestQuery(req: Request, record: Record<string, any>) : void;
 export function extendRequestQuery(req: Request, key: Record<string, any> | string, value?: unknown) : void {
-    if (QuerySymbol in req) {
+    if (hasRequestQuery(req)) {
+        const query = useRequestQuery(req);
+
         if (isObject(key)) {
-            (req as any)[QuerySymbol] = merge((req as any)[QuerySymbol], key);
+            (req as any)[QuerySymbol] = merge({}, key, query);
         } else {
-            (req as any)[QuerySymbol][key] = value;
+            query[key] = value;
+            (req as any)[QuerySymbol] = query;
         }
 
         return;

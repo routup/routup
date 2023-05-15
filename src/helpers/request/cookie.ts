@@ -29,22 +29,46 @@ export function useRequestCookie(req: Request, name: string) : string | undefine
     return useRequestCookies(req)[name];
 }
 
-export function setRequestCookies(
-    req: Request,
-    record: Record<string, any>,
-) : void {
-    (req as any)[CookieSymbol] = record;
+export function setRequestCookies(req: Request, key: string, value: unknown) : void;
+export function setRequestCookies(req: Request, record: Record<string, any>) : void;
+export function setRequestCookies(req: Request, key: Record<string, any> | string, value?: unknown) : void {
+    if (isObject(key)) {
+        (req as any)[CookieSymbol] = key;
+        return;
+    }
+
+    (req as any)[CookieSymbol] = {
+        [key]: value,
+    };
 }
 
+export function extendRequestCookies(req: Request, key: string, value: string) : void;
+export function extendRequestCookies(req: Request, record: Record<string, any>) : void;
 export function extendRequestCookies(
     req: Request,
-    record: Record<string, any>,
+    key: string | Record<string, any>,
+    value?: string,
 ) {
-    if (CookieSymbol in req) {
-        (req as any)[CookieSymbol] = merge((req as any)[CookieSymbol], record);
+    if (hasRequestCookies(req)) {
+        const cookies = useRequestCookies(req);
+
+        if (isObject(key)) {
+            (req as any)[CookieSymbol] = merge({}, key, cookies);
+        } else {
+            cookies[key] = value as string;
+            (req as any)[CookieSymbol] = cookies;
+        }
+
+        (req as any)[CookieSymbol] = merge((req as any)[CookieSymbol], cookies);
 
         return;
     }
 
-    (req as any)[CookieSymbol] = record;
+    if (isObject(key)) {
+        setRequestCookies(req, key);
+
+        return;
+    }
+
+    setRequestCookies(req, key, value);
 }

@@ -7,6 +7,7 @@
 
 import { merge } from 'smob';
 import type { Request } from '../../type';
+import { isObject } from '../../utils';
 
 const BodySymbol = Symbol.for('ReqBody');
 
@@ -45,24 +46,14 @@ export function useRequestBody(req: Request, key?: string) {
         {};
 }
 
+export function hasRequestBody(req: Request) : boolean {
+    return 'body' in req || BodySymbol in req;
+}
+
 export function setRequestBody(req: Request, key: string, value: unknown) : void;
-export function setRequestBody(req: Request, record: Record<string, any>, append?: boolean) : void;
-export function setRequestBody(req: Request, key: Record<string, any> | string, value?: boolean | unknown) : void {
-    if (BodySymbol in req) {
-        if (typeof key === 'object') {
-            if (value) {
-                (req as any)[BodySymbol] = merge((req as any)[BodySymbol], key);
-            } else {
-                (req as any)[BodySymbol] = key;
-            }
-        } else {
-            (req as any)[BodySymbol][key] = value;
-        }
-
-        return;
-    }
-
-    if (typeof key === 'object') {
+export function setRequestBody(req: Request, record: Record<string, any>) : void;
+export function setRequestBody(req: Request, key: Record<string, any> | string, value?: unknown) : void {
+    if (isObject(key)) {
         (req as any)[BodySymbol] = key;
         return;
     }
@@ -70,4 +61,34 @@ export function setRequestBody(req: Request, key: Record<string, any> | string, 
     (req as any)[BodySymbol] = {
         [key]: value,
     };
+}
+
+export function extendRequestBody(req: Request, key: string, value: unknown) : void;
+export function extendRequestBody(req: Request, record: Record<string, any>) : void;
+export function extendRequestBody(req: Request, key: Record<string, any> | string, value?: unknown) : void {
+    if (hasRequestBody(req)) {
+        const body = useRequestBody(req);
+
+        // body can not be merged :/
+        if (!isObject(body)) {
+            return;
+        }
+
+        if (isObject(key)) {
+            (req as any)[BodySymbol] = merge({}, key, body);
+        } else {
+            body[key] = value;
+            (req as any)[BodySymbol] = body;
+        }
+
+        return;
+    }
+
+    if (isObject(key)) {
+        setRequestBody(req, key);
+
+        return;
+    }
+
+    setRequestBody(req, key, value);
 }
