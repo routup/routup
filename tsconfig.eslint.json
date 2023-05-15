@@ -6,5 +6,6 @@
         "rollup.config.mjs",
         "src/**/*.ts",
         "test/**/*.ts",
+        "test/jest.config.js"
     ]
 }
