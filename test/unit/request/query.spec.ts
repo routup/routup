@@ -9,7 +9,7 @@ import supertest from 'supertest';
 import {
     extendRequestQuery,
     hasRequestQuery,
-    send, setRequestQuery, setRequestQueryFn, useRequestQuery,
+    send, setRequestQuery, useRequestQuery,
 } from '../../../src';
 import { createHandler } from '../../handler';
 
@@ -61,21 +61,6 @@ describe('src/helpers/request/query', () => {
         expect(response.body).toEqual({
             foo: 'bar',
             bar: 'baz',
-        });
-    });
-
-    it('should use query fn to set query on demand', async () => {
-        const server = supertest(createHandler((req, res) => {
-            setRequestQueryFn((_req) => ({ foo: 'bar' }));
-
-            send(res, useRequestQuery(req));
-        }));
-
-        const response = await server
-            .get('/');
-
-        expect(response.body).toEqual({
-            foo: 'bar',
         });
     });
 });
