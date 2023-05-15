@@ -9,15 +9,7 @@ import { merge } from 'smob';
 import { isObject } from '../../utils';
 import type { Request } from '../../type';
 
-type RequestQueryFn = (req: Request) => Record<string, any>;
-
 const QuerySymbol = Symbol.for('ReqQuery');
-
-let requestFn : undefined | RequestQueryFn;
-
-export function setRequestQueryFn(fn: RequestQueryFn) {
-    requestFn = fn;
-}
 
 export function useRequestQuery(req: Request) : Record<string, any>;
 export function useRequestQuery(req: Request, key: string) : any;
@@ -29,13 +21,6 @@ export function useRequestQuery(req: Request, key?: string) {
         }
 
         return (req as any).query;
-    }
-
-    if (
-        !(QuerySymbol in req) &&
-        typeof requestFn !== 'undefined'
-    ) {
-        (req as any)[QuerySymbol] = requestFn(req);
     }
 
     if (QuerySymbol in req) {

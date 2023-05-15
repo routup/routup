@@ -7,8 +7,12 @@
 
 import supertest from 'supertest';
 import {
-    extendRequestCookies, hasRequestCookies,
-    send, setRequestCookieFn, setRequestCookies, useRequestCookie, useRequestCookies,
+    extendRequestCookies,
+    hasRequestCookies,
+    send,
+    setRequestCookies,
+    useRequestCookie,
+    useRequestCookies,
 } from '../../../src';
 import { createHandler } from '../../handler';
 
@@ -60,21 +64,6 @@ describe('src/helpers/request/cookie', () => {
         expect(response.body).toEqual({
             foo: 'bar',
             bar: 'baz',
-        });
-    });
-
-    it('should use cookie fn to set cookies on demand', async () => {
-        const server = supertest(createHandler((req, res) => {
-            setRequestCookieFn((_req) => ({ foo: 'bar' }));
-
-            send(res, useRequestCookies(req));
-        }));
-
-        const response = await server
-            .get('/');
-
-        expect(response.body).toEqual({
-            foo: 'bar',
         });
     });
 });
