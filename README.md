@@ -66,7 +66,8 @@ router.listen(3000);
 
 ## Plugins
 
-According to the fact that routup is a minimalistic framework, it depends on plugins to cover some 
+According to the fact that routup is a minimalistic framework, 
+it depends on [plugins](https://github.com/routup/plugins) to cover some 
 typically http framework functions, which are not integrated in the main package.
 
 | Name                                                                       | Description                                                            |
