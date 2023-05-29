@@ -1,6 +1,6 @@
 import type { RequestListener } from 'node:http';
 import { createServer } from 'node:http';
-import { merge, mergeArrays } from 'smob';
+import { distinctArray, merge } from 'smob';
 import type {
     DispatcherMeta,
     ErrorHandler,
@@ -266,11 +266,10 @@ export class Router {
                         match = false;
 
                         if (req.method.toLowerCase() === MethodName.OPTIONS) {
-                            allowedMethods = mergeArrays(
+                            allowedMethods = distinctArray(merge(
                                 allowedMethods,
                                 layer.getMethods(),
-                                true,
-                            );
+                            ));
                         }
                     }
                 }
