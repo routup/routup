@@ -13,7 +13,7 @@ import type {
 } from '../type';
 import {
     HeaderName,
-    Method,
+    MethodName,
 } from '../constants';
 import {
     send,
@@ -191,7 +191,7 @@ export class Router {
 
             if (
                 req.method &&
-                req.method.toLowerCase() === Method.OPTIONS
+                req.method.toLowerCase() === MethodName.OPTIONS
             ) {
                 const options = allowedMethods
                     .map((key) => key.toUpperCase())
@@ -265,7 +265,7 @@ export class Router {
                     ) {
                         match = false;
 
-                        if (req.method.toLowerCase() === Method.OPTIONS) {
+                        if (req.method.toLowerCase() === MethodName.OPTIONS) {
                             allowedMethods = mergeArrays(
                                 allowedMethods,
                                 layer.getMethods(),
