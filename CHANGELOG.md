@@ -1,3 +1,11 @@
+## [1.0.1](https://github.com/routup/routup/compare/v1.0.0...v1.0.1) (2023-05-29)
+
+
+### Bug Fixes
+
+* bump smob version to v1.4.x ([d42c7e9](https://github.com/routup/routup/commit/d42c7e97f3f1feeb3988b655bc3ad06531d9ad21))
+* rename method constant to method-name ([5e42609](https://github.com/routup/routup/commit/5e4260939e9c28456b2336eccd6af117ff66fb9d))
+
 # 1.0.0 (2023-05-15)
 
 
