@@ -1,3 +1,11 @@
+## [1.0.2](https://github.com/routup/routup/compare/v1.0.1...v1.0.2) (2023-07-18)
+
+
+### Bug Fixes
+
+* **deps:** bump @ebec/http from 1.0.0 to 1.1.0 ([#272](https://github.com/routup/routup/issues/272)) ([2157d4b](https://github.com/routup/routup/commit/2157d4baab579aa0801387458d4ad9bec148755a))
+* **deps:** bump continu from 1.3.1 to 1.3.2 ([#302](https://github.com/routup/routup/issues/302)) ([85eec1f](https://github.com/routup/routup/commit/85eec1f350f616768ae484b6f28c6ba7315a7af1))
+
 ## [1.0.1](https://github.com/routup/routup/compare/v1.0.0...v1.0.1) (2023-05-29)
 
 
