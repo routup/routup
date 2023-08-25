@@ -1,4 +1,4 @@
-import proxyAddr from 'proxy-addr';
+import { compile } from 'proxy-addr';
 import type { TrustProxyFn } from './type';
 
 export function buildTrustProxyFn(
@@ -21,5 +21,5 @@ export function buildTrustProxyFn(
             .map((value) => value.trim());
     }
 
-    return proxyAddr.compile(input || []);
+    return compile(input || []);
 }
