@@ -1,4 +1,3 @@
-import { URL } from 'node:url';
 import type { Request } from '../../type';
 
 const PathSymbol = Symbol.for('ReqPath');
