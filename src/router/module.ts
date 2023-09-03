@@ -33,7 +33,7 @@ import type { PathMatcherOptions } from '../path';
 import { PathMatcher } from '../path';
 import { Layer, isLayerInstance } from '../layer';
 import { Route, isRouteInstance } from '../route';
-import type { RouterOptions } from './type';
+import { RouterOptions } from './type';
 
 export function isRouterInstance(input: unknown) : input is Router {
     return isInstance(input, 'Router');
@@ -198,7 +198,9 @@ export class Router {
                     .join(',');
 
                 res.setHeader(HeaderName.ALLOW, options);
-                send(res, options);
+
+                Promise.resolve()
+                    .then(() => send(res, options));
 
                 return;
             }

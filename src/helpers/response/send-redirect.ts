@@ -1,7 +1,7 @@
 import type { Response } from '../../type';
 import { send } from './send';
 
-export function sendRedirect(res: Response, location: string, statusCode = 302) {
+export function sendRedirect(res: Response, location: string, statusCode = 302): Promise<void> {
     res.statusCode = statusCode;
     res.setHeader('location', location);
 

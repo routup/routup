@@ -81,19 +81,19 @@ describe('src/config/**', () => {
         config.reset('env');
     });
 
-    it('should build etag option', () => {
-        const defaultFn : EtagFn = () => undefined;
+    it('should build etag option', async () => {
+        const defaultFn : EtagFn = () => Promise.resolve(undefined);
 
         let fn = buildEtagFn(defaultFn);
         expect(fn).toEqual(defaultFn);
 
         fn = buildEtagFn(false);
         expect(fn).toBeDefined();
-        expect(fn('foo')).toBeUndefined();
+        expect(await fn('foo')).toBeUndefined();
 
         fn = buildEtagFn({ threshold: 10_000 });
         expect(fn).toBeDefined();
-        expect(fn('foo')).toBeUndefined();
+        expect(await fn('foo')).toBeUndefined();
     });
 
     it('should build trust proxy fn', () => {

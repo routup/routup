@@ -11,7 +11,7 @@ export function buildEtagFn(input?: boolean | EtagOptions | EtagFn) : EtagFn {
     input = input ?? true;
 
     if (input === false) {
-        return () => undefined;
+        return () => Promise.resolve(undefined);
     }
 
     let options : EtagOptions = {
@@ -22,7 +22,7 @@ export function buildEtagFn(input?: boolean | EtagOptions | EtagFn) : EtagFn {
         options = merge(input, options);
     }
 
-    return (body: any, encoding?: BufferEncoding, size?: number) => {
+    return async (body: any, encoding?: BufferEncoding, size?: number) => {
         const buff = Buffer.isBuffer(body) ?
             body :
             Buffer.from(body, encoding);

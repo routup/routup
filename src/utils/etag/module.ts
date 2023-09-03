@@ -1,5 +1,6 @@
-import crypto from 'node:crypto';
-import { Stats } from 'node:fs';
+import { subtle } from 'uncrypto';
+import { type Stats } from 'node:fs';
+import { isObject } from '../object';
 import type { EtagOptions } from './type';
 
 /**
@@ -10,26 +11,25 @@ import type { EtagOptions } from './type';
  * @api private
  */
 function isStatsObject(obj: unknown) : obj is Stats {
-    /* istanbul ignore next */
-    if (
-        typeof Stats === 'function' &&
-        obj instanceof Stats
-    ) {
-        return true;
-    }
-
     // quack quack
-    return !!obj && typeof obj === 'object' &&
+    return isObject(obj) &&
         'ctime' in obj && Object.prototype.toString.call(obj.ctime) === '[object Date]' &&
         'mtime' in obj && Object.prototype.toString.call(obj.mtime) === '[object Date]' &&
         'ino' in obj && typeof obj.ino === 'number' &&
         'size' in obj && typeof obj.size === 'number';
 }
 
+async function sha1(str: string) : Promise<string> {
+    const enc = new TextEncoder();
+    const hash = await subtle.digest('SHA-1', enc.encode(str));
+
+    return btoa(String.fromCharCode(...new Uint8Array(hash)));
+}
+
 /**
  * Generate an ETag.
  */
-export function generateETag(input: string | Buffer | Stats) : string {
+export async function generateETag(input: string | Buffer | Stats) : Promise<string> {
     if (isStatsObject(input)) {
         const mtime = input.mtime.getTime().toString(16);
         const size = input.size.toString(16);
@@ -47,22 +47,18 @@ export function generateETag(input: string | Buffer | Stats) : string {
         input;
 
     // compute hash of entity
-    const hash = crypto
-        .createHash('sha1')
-        .update(entity, 'utf8')
-        .digest('base64')
-        .substring(0, 27);
+    const hash = await sha1(entity);
 
-    return `"${entity.length.toString(16)}-${hash}"`;
+    return `"${entity.length.toString(16)}-${hash.substring(0, 27)}"`;
 }
 
 /**
  * Create a simple ETag.
  */
-export function createEtag(
+export async function createEtag(
     input: string | Buffer | Stats,
     options?: EtagOptions,
-) : string {
+) : Promise<string> {
     options = options || {};
 
     const weak = typeof options.weak === 'boolean' ?
@@ -70,7 +66,7 @@ export function createEtag(
         isStatsObject(input);
 
     // generate entity tag
-    const tag = generateETag(input);
+    const tag = await generateETag(input);
 
     return weak ?
         `W/${tag}` :

@@ -4,7 +4,7 @@ import type { Response } from '../../type';
 import { appendResponseHeaderDirective } from './header';
 import { setResponseHeaderContentType } from './header-content-type';
 
-export function send(res: Response, chunk?: any) {
+export async function send(res: Response, chunk?: any) : Promise<void> {
     switch (typeof chunk) {
         case 'string': {
             setResponseHeaderContentType(res, 'html', true);
@@ -58,10 +58,8 @@ export function send(res: Response, chunk?: any) {
     const config = useConfig();
     const etagFn = config.get('etag');
 
-    if (
-        typeof len !== 'undefined'
-    ) {
-        const chunkHash = etagFn(chunk, encoding, len);
+    if (typeof len !== 'undefined') {
+        const chunkHash = await etagFn(chunk, encoding, len);
         if (typeof chunkHash === 'string') {
             res.setHeader(HeaderName.ETag, chunkHash);
 

@@ -13,6 +13,6 @@ export type EtagOptions = {
     threshold?: number
 };
 
-export type EtagFn = (body: any, encoding?: BufferEncoding, size?: number) => string | undefined;
+export type EtagFn = (body: any, encoding?: BufferEncoding, size?: number) => Promise<string | undefined>;
 
 export type EtagInput = boolean | EtagOptions | EtagFn;

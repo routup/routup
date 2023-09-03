@@ -7,7 +7,7 @@ export function processHandlerExecutionOutput(res: Response, next: Next, output?
         output
             .then((r) => {
                 if (typeof r !== 'undefined') {
-                    send(res, r);
+                    return send(res, r);
                 }
 
                 return r;
@@ -17,6 +17,7 @@ export function processHandlerExecutionOutput(res: Response, next: Next, output?
     }
 
     if (typeof output !== 'undefined') {
-        send(res, output);
+        Promise.resolve()
+            .then(() => send(res, output));
     }
 }
