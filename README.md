@@ -53,6 +53,7 @@ To read the docs, visit [https://routup.net](https://routup.net)
 ## Usage
 
 ```typescript
+import { createServer } from 'node:http';
 import { Router, send } from 'routup';
 
 const router = new Router();
@@ -61,7 +62,8 @@ router.get('/', (req, res) => {
     send(res, 'Hello World');
 });
 
-router.listen(3000);
+const server = createServer(router.createListener());
+server.listen(3000)
 ```
 
 ## Plugins

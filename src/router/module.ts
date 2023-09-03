@@ -1,5 +1,4 @@
 import type { RequestListener } from 'node:http';
-import { createServer } from 'node:http';
 import { distinctArray, merge } from 'smob';
 import type {
     DispatcherMeta,
@@ -133,12 +132,6 @@ export class Router {
         return (req, res) => {
             this.dispatch(req, res);
         };
-    }
-
-    /* istanbul ignore next */
-    listen(port: number) {
-        const server = createServer(this.createListener());
-        return server.listen(port);
     }
 
     // --------------------------------------------------
