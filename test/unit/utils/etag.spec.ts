@@ -7,13 +7,13 @@ describe('src/utils/etag', () => {
         expect(stats).toBeDefined();
 
         let etag = generateETag(stats);
-        expect(etag).toBeDefined();
+        expect(etag).toEqual('"28-1881175b497"');
 
         etag = generateETag('');
         expect(etag).toEqual('"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk"');
 
         etag = generateETag('foo');
-        expect(etag).toBeDefined();
+        expect(etag).toEqual('"3-C+7Hteo/D9vJXQ3UfzxbwnXaijM"');
     });
 
     it('should create etag', () => {
