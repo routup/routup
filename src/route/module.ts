@@ -9,7 +9,7 @@ import type {
 import { Layer } from '../layer';
 import type { PathMatcherOptions } from '../path';
 import { PathMatcher } from '../path';
-import type { RouteOptions } from './type';
+import { RouteOptions } from './type';
 
 export class Route {
     readonly '@instanceof' = Symbol.for('Route');

@@ -1,10 +1,9 @@
-import path from 'node:path';
 import { HeaderName } from '../../constants';
 import type { Response } from '../../type';
-import { getCharsetForMimeType, getMimeType } from '../../utils';
+import { extname, getCharsetForMimeType, getMimeType } from '../../utils';
 
 export function setResponseContentTypeByFileName(res: Response, fileName: string) {
-    const ext = path.extname(fileName);
+    const ext = extname(fileName);
     if (ext) {
         let type = getMimeType(ext.substring(1));
         if (type) {

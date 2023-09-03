@@ -1,16 +1,15 @@
 import type { Stats } from 'node:fs';
 import { createReadStream, stat } from 'node:fs';
-import path from 'node:path';
 import { HeaderName } from '../../constants';
 import type { Response } from '../../type';
+import { basename } from '../../utils';
 import { setResponseHeaderAttachment } from './header-attachment';
 import { sendStream } from './send-stream';
 import { setResponseContentTypeByFileName } from './utils';
 
 type ReadStreamOptions = {
     end?: number,
-
-    start?: number | undefined;
+    start?: number;
 };
 
 export type SendFileOptions = {
@@ -42,7 +41,7 @@ export function sendFile(res: Response, filePath: string | SendFileOptions, fn?:
         options = filePath;
     }
 
-    const fileName = path.basename(options.filePath);
+    const fileName = basename(options.filePath);
 
     if (options.attachment) {
         const dispositionHeader = res.getHeader(HeaderName.CONTENT_DISPOSITION);
