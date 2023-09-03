@@ -1,6 +1,5 @@
 import type { FlattenObject } from 'continu';
 import { Continu } from 'continu';
-import process from 'node:process';
 import zod from 'zod';
 import type {
     EtagInput,
@@ -17,7 +16,6 @@ let instance : Continu<Options, OptionsInput> | undefined;
 export function buildConfig() {
     return new Continu<Options, OptionsInput>({
         defaults: {
-            env: process.env.NODE_ENV || 'development',
             trustProxy: () => false,
             subdomainOffset: 2,
             etag: buildEtagFn(),
@@ -28,7 +26,6 @@ export function buildConfig() {
             trustProxy: (value) => buildTrustProxyFn(value as TrustProxyInput),
         },
         validators: {
-            env: (value) => zod.string().safeParse(value),
             trustProxy: (value) => zod.any().safeParse(value),
             subdomainOffset: (value) => zod.number().nonnegative().safeParse(value),
             etag: (value) => zod.any().safeParse(value),

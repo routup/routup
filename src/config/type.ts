@@ -1,12 +1,8 @@
-import type { EtagFn, EtagInput } from '../utils/etag/type';
-import type { TrustProxyFn, TrustProxyInput } from '../utils/trust-proxy';
+import type {
+    EtagFn, EtagInput, TrustProxyFn, TrustProxyInput,
+} from '../utils';
 
 export type Options = {
-    /**
-     * default: production
-     */
-    env: string,
-
     /**
      * default: () => true
      */

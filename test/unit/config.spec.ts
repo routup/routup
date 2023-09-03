@@ -14,20 +14,20 @@ describe('src/config/**', () => {
     it('should set, get option', () => {
         const config = useConfig();
 
-        const defaultOption = config.getDefault('env');
+        const defaultOption = config.getDefault('proxyIpMax');
         expect(defaultOption).toBeDefined();
 
-        expect(config.has('env')).toBeFalsy();
-        expect(config.get('env')).toEqual(defaultOption);
+        expect(config.has('proxyIpMax')).toBeFalsy();
+        expect(config.get('proxyIpMax')).toEqual(defaultOption);
 
         config.setRaw({
-            env: 'production',
+            proxyIpMax: 10,
         });
-        expect(config.get('env')).toEqual('production');
-        expect(config.get('env')).not.toEqual(defaultOption);
+        expect(config.get('proxyIpMax')).toEqual(10);
+        expect(config.get('proxyIpMax')).not.toEqual(defaultOption);
 
-        config.reset('env');
-        expect(config.get('env')).toEqual(defaultOption);
+        config.reset('proxyIpMax');
+        expect(config.get('proxyIpMax')).toEqual(defaultOption);
 
         config.reset();
 
@@ -74,11 +74,11 @@ describe('src/config/**', () => {
     });
 
     it('should use accessors', () => {
-        setConfigOption('env', 'development');
-        expect(getConfigOption('env')).toEqual('development');
+        setConfigOption('proxyIpMax', 10);
+        expect(getConfigOption('proxyIpMax')).toEqual(10);
 
         const config = useConfig();
-        config.reset('env');
+        config.reset('proxyIpMax');
     });
 
     it('should build etag option', async () => {
