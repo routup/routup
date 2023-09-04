@@ -1,24 +1,67 @@
+import { createReadStream } from 'fs';
 import fs from 'node:fs';
 import supertest from 'supertest';
-import { HeaderName, sendFile } from '../../../src';
+import type { SendFileOptions } from '../../../src';
+import { HeaderName, Router, sendFile } from '../../../src';
 import { createHandler } from '../../handler';
 
+const buildSendFileOptions = (
+    filePath: string,
+    attachment?: boolean,
+) : SendFileOptions => ({
+    name: filePath,
+    getStats() {
+        return fs.promises.stat(filePath);
+    },
+    getContent(options) {
+        return createReadStream(filePath, options);
+    },
+    attachment,
+});
 describe('src/helpers/response/send-file', () => {
     it('should send file', async () => {
-        const server = supertest(createHandler((req, res) => {
-            sendFile(res, 'test/data/dummy.json');
+        const server = supertest(createHandler((_req, res) => {
+            sendFile(res, buildSendFileOptions('test/data/dummy.json'));
         }));
 
         const response = await server
             .get('/');
 
-        expect(response).toBeDefined();
-        expect(response.status).toEqual(200);
+        expect(response.statusCode).toEqual(200);
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8');
+        expect(response.body).toEqual({ id: 1, name: 'tada5hi' });
+    });
+
+    it('should not send file', async () => {
+        const router = new Router();
+
+        router.get('/', (_req, res) => sendFile(res, buildSendFileOptions('test/data/foo.json')));
+
+        const server = supertest(router.createListener());
+
+        const response = await server
+            .get('/');
+
+        expect(response.statusCode).toEqual(400);
+    });
+
+    it('should send file to download', async () => {
+        const server = supertest(createHandler((_req, res) => {
+            sendFile(res, buildSendFileOptions('test/data/dummy.json', true));
+        }));
+
+        const response = await server
+            .get('/');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8');
+        expect(response.headers[HeaderName.CONTENT_DISPOSITION]).toEqual('attachment; filename="dummy.json"');
+        expect(response.body).toEqual({ id: 1, name: 'tada5hi' });
     });
 
     it('should shrink end of range if it results in an overflow', async () => {
-        const server = supertest(createHandler((req, res) => {
-            sendFile(res, 'test/data/dummy.txt');
+        const server = supertest(createHandler((_req, res) => {
+            sendFile(res, buildSendFileOptions('test/data/dummy.txt'));
         }));
 
         const response = await server
@@ -35,8 +78,8 @@ describe('src/helpers/response/send-file', () => {
     });
 
     it('should throw error when start range exceeds file size', async () => {
-        const server = supertest(createHandler((req, res) => {
-            sendFile(res, 'test/data/dummy.txt');
+        const server = supertest(createHandler((_req, res) => {
+            sendFile(res, buildSendFileOptions('test/data/dummy.txt'));
         }));
 
         const response = await server

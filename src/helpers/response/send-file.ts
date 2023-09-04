@@ -1,105 +1,110 @@
-import type { Stats } from 'node:fs';
-import { createReadStream, stat } from 'node:fs';
 import { HeaderName } from '../../constants';
 import type { Response } from '../../type';
 import { basename } from '../../utils';
 import { setResponseHeaderAttachment } from './header-attachment';
+import { send } from './send';
 import { sendStream } from './send-stream';
-import { setResponseContentTypeByFileName } from './utils';
+import { isStream, setResponseContentTypeByFileName } from './utils';
 
-type ReadStreamOptions = {
+export type SendFileContentOptions = {
     end?: number,
     start?: number;
 };
 
-export type SendFileOptions = {
-    stats?: Stats,
-    filePath: string,
-    attachment?: boolean
+export type SendFileStats = {
+    size?: number,
+    mtime?: Date | number | string
 };
 
-function resolveStats(
+export type SendFileOptions = {
+    getStats: () => Promise<SendFileStats> | SendFileStats,
+    getContent: (options: SendFileContentOptions) => Promise<unknown> | unknown
+    attachment?: boolean,
+    name?: string,
+    next?: (err?: Error) => Promise<unknown> | unknown
+};
+
+export async function sendFile(
+    res: Response,
     options: SendFileOptions,
-    cb: (err: Error | null, stats: Stats) => void,
 ) {
-    if (options.stats) {
-        cb(null, options.stats);
-        return;
-    }
-
-    stat(options.filePath, (err, stats) => cb(err, stats));
-}
-
-export function sendFile(res: Response, filePath: string | SendFileOptions, fn?: CallableFunction) {
-    let options : SendFileOptions;
-
-    if (typeof filePath === 'string') {
-        options = {
-            filePath,
-        };
-    } else {
-        options = filePath;
-    }
-
-    const fileName = basename(options.filePath);
-
-    if (options.attachment) {
-        const dispositionHeader = res.getHeader(HeaderName.CONTENT_DISPOSITION);
-        if (!dispositionHeader) {
-            setResponseHeaderAttachment(res, fileName);
+    let stats: SendFileStats;
+    try {
+        stats = await options.getStats();
+    } catch (e) {
+        if (options.next) {
+            return options.next(e as Error);
         }
-    } else {
-        setResponseContentTypeByFileName(res, fileName);
+
+        return Promise.reject(e);
     }
 
-    resolveStats(options, (err, stats) => {
-        /* istanbul ignore next */
-        if (err) {
-            if (typeof fn === 'function') {
-                fn(err);
-            } else {
-                res.statusCode = 404;
-                res.end();
+    if (options.name) {
+        const fileName = basename(options.name);
+
+        if (options.attachment) {
+            const dispositionHeader = res.getHeader(HeaderName.CONTENT_DISPOSITION);
+            if (!dispositionHeader) {
+                setResponseHeaderAttachment(res, fileName);
             }
-
-            return;
+        } else {
+            setResponseContentTypeByFileName(res, fileName);
         }
+    }
 
-        const streamOptions : ReadStreamOptions = {};
+    const contentOptions : SendFileContentOptions = {};
 
+    if (stats.size) {
         const rangeHeader = res.req.headers[HeaderName.RANGE];
         if (rangeHeader) {
             const [x, y] = rangeHeader.replace('bytes=', '')
                 .split('-');
 
-            streamOptions.end = Math.min(
+            contentOptions.end = Math.min(
                 parseInt(y, 10) || stats.size - 1,
                 stats.size - 1,
             );
 
-            streamOptions.start = parseInt(x, 10) || 0;
+            contentOptions.start = parseInt(x, 10) || 0;
 
-            if (streamOptions.end >= stats.size) {
-                streamOptions.end = stats.size - 1;
+            if (contentOptions.end >= stats.size) {
+                contentOptions.end = stats.size - 1;
             }
 
-            if (streamOptions.start >= stats.size) {
+            if (contentOptions.start >= stats.size) {
                 res.setHeader(HeaderName.CONTENT_RANGE, `bytes */${stats.size}`);
                 res.statusCode = 416;
                 res.end();
-                return;
+                return Promise.resolve();
             }
 
-            res.setHeader(HeaderName.CONTENT_RANGE, `bytes ${streamOptions.start}-${streamOptions.end}/${stats.size}`);
-            res.setHeader(HeaderName.CONTENT_LENGTH, (streamOptions.end - streamOptions.start + 1));
+            res.setHeader(HeaderName.CONTENT_RANGE, `bytes ${contentOptions.start}-${contentOptions.end}/${stats.size}`);
+            res.setHeader(HeaderName.CONTENT_LENGTH, (contentOptions.end - contentOptions.start + 1));
         } else {
             res.setHeader(HeaderName.CONTENT_LENGTH, stats.size);
         }
 
         res.setHeader(HeaderName.ACCEPT_RANGES, 'bytes');
-        res.setHeader(HeaderName.LAST_MODIFIED, stats.mtime.toUTCString());
-        res.setHeader(HeaderName.ETag, `W/"${stats.size}-${stats.mtime.getTime()}"`);
 
-        sendStream(res, createReadStream(options.filePath, streamOptions), fn);
-    });
+        if (stats.mtime) {
+            const mtime = new Date(stats.mtime);
+            res.setHeader(HeaderName.LAST_MODIFIED, mtime.toUTCString());
+            res.setHeader(HeaderName.ETag, `W/"${stats.size}-${mtime.getTime()}"`);
+        }
+    }
+
+    try {
+        const content = await options.getContent(contentOptions);
+        if (isStream(content)) {
+            return await sendStream(res, content, options.next);
+        }
+
+        return await send(res, content);
+    } catch (e) {
+        if (options.next) {
+            return options.next(e as Error);
+        }
+
+        return Promise.reject(e);
+    }
 }

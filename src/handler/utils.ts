@@ -49,25 +49,26 @@ export function callHandler(
                 output = handler(req, res, nextPolyfill);
             }
 
-            const handle = (data: any) => {
+            const handle = (data: any) : Promise<void> => {
                 if (typeof data === 'undefined' || handled) {
-                    return;
+                    return Promise.resolve();
                 }
 
                 handled = true;
                 unsubscribe();
 
-                send(res, data)
-                    .then(() => resolve())
-                    .catch((e) => reject(e));
+                return send(res, data);
             };
 
             if (isPromise(output)) {
                 output
                     .then((r) => handle(r))
+                    .then(() => resolve())
                     .catch((e) => reject(e));
             } else {
-                handle(output);
+                handle(output)
+                    .then(() => resolve())
+                    .catch((e) => reject(e));
             }
         } catch (error) {
             nextPolyfill(error as Error);

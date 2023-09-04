@@ -1,7 +1,6 @@
-import path from 'node:path';
 import supertest from 'supertest';
 import {
-    HeaderName, send, sendAccepted, sendCreated, sendFile, sendRedirect,
+    HeaderName, send, sendAccepted, sendCreated, sendRedirect,
 } from '../../../src';
 import { createHandler } from '../../handler';
 
@@ -16,53 +15,6 @@ describe('src/helpers/response/send', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('text/html; charset=utf-8');
-    });
-
-    it('should send file', async () => {
-        const server = supertest(createHandler((req, res) => {
-            const filePath = path.join(__dirname, '..', '..', 'data', 'dummy.json');
-
-            sendFile(res, filePath);
-        }));
-
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8');
-        expect(response.body).toEqual({ id: 1, name: 'tada5hi' });
-    });
-
-    it('should send file to download', async () => {
-        const server = supertest(createHandler((req, res) => {
-            const filePath = path.join(__dirname, '..', '..', 'data', 'dummy.json');
-
-            sendFile(res, {
-                filePath,
-                attachment: true,
-            });
-        }));
-
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8');
-        expect(response.headers[HeaderName.CONTENT_DISPOSITION]).toEqual('attachment; filename="dummy.json"');
-        expect(response.body).toEqual({ id: 1, name: 'tada5hi' });
-    });
-
-    it('should not send file', async () => {
-        const server = supertest(createHandler((req, res) => {
-            const filePath = path.join(__dirname, '..', '..', 'data', 'foo.json');
-
-            sendFile(res, filePath);
-        }));
-
-        const response = await server
-            .get('/foo');
-
-        expect(response.statusCode).toEqual(404);
     });
 
     it('should send redirect', async () => {

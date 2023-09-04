@@ -1,26 +1,58 @@
 import type { Readable } from 'node:stream';
 import type { Response } from '../../type';
+import { isWebStream } from './utils';
 
-export function sendStream(res: Response, stream: Readable, fn?: CallableFunction) {
-    stream.on('open', () => {
-        stream.pipe(res);
-    });
+export async function sendStream(
+    res: Response,
+    stream: Readable | ReadableStream,
+    next?: (err?: Error) => Promise<unknown> | unknown,
+) {
+    if (isWebStream(stream)) {
+        return stream
+            .pipeTo(
+                new WritableStream({
+                    write(chunk) {
+                        res.write(chunk);
+                    },
+                }),
+            )
+            .then(() => {
+                res.end();
+            })
+            .catch((err) => {
+                if (next) {
+                    return next(err);
+                }
 
-    /* istanbul ignore next */
-    stream.on('error', (err) => {
-        if (typeof fn === 'function') {
-            fn(err);
-        } else {
-            res.statusCode = 400;
+                return Promise.reject(err);
+            });
+    }
+
+    return new Promise<void>((resolve, reject) => {
+        stream.on('open', () => {
+            stream.pipe(res);
+        });
+
+        /* istanbul ignore next */
+        stream.on('error', (err) => {
+            if (next) {
+                Promise.resolve()
+                    .then(() => next(err))
+                    .then(() => resolve())
+                    .catch((e) => reject(e));
+
+                return;
+            }
+
             res.end();
-        }
-    });
 
-    stream.on('close', () => {
-        if (typeof fn === 'function') {
-            fn();
-        } else {
+            reject(err);
+        });
+
+        stream.on('close', () => {
             res.end();
-        }
+
+            resolve();
+        });
     });
 }
