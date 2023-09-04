@@ -57,19 +57,22 @@ export function callHandler(
                 handled = true;
                 unsubscribe();
 
-                return send(res, data);
+                return send(res, data)
+                    .then(() => resolve())
+                    .catch((e) => reject(e));
             };
 
             if (isPromise(output)) {
                 output
                     .then((r) => handle(r))
-                    .then(() => resolve())
                     .catch((e) => reject(e));
-            } else {
-                handle(output)
-                    .then(() => resolve())
-                    .catch((e) => reject(e));
+
+                return;
             }
+
+            Promise.resolve()
+                .then(() => handle(output))
+                .catch((e) => reject(e));
         } catch (error) {
             nextPolyfill(error as Error);
         }

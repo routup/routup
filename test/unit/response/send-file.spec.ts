@@ -2,7 +2,9 @@ import { createReadStream } from 'fs';
 import fs from 'node:fs';
 import supertest from 'supertest';
 import type { SendFileOptions } from '../../../src';
-import { HeaderName, Router, sendFile } from '../../../src';
+import {
+    HeaderName, Router, sendFile,
+} from '../../../src';
 import { createHandler } from '../../handler';
 
 const buildSendFileOptions = (
@@ -32,25 +34,16 @@ describe('src/helpers/response/send-file', () => {
         expect(response.body).toEqual({ id: 1, name: 'tada5hi' });
     });
 
-    it('should not send file', async () => {
-        const router = new Router();
-
-        router.get('/', (_req, res) => {
-            sendFile(res, buildSendFileOptions('test/data/foo.json'));
-        });
-
-        const server = supertest(router.createListener());
-
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(404);
-    });
-
     it('should not send file promise', async () => {
         const router = new Router();
 
-        router.get('/', (_req, res) => sendFile(res, buildSendFileOptions('test/data/foo.json')));
+        router.get(
+            '/',
+            (
+                _req,
+                res,
+            ) => sendFile(res, buildSendFileOptions('test/data/foo.json')),
+        );
 
         const server = supertest(router.createListener());
 

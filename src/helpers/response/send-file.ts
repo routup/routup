@@ -19,30 +19,29 @@ export type SendFileStats = {
 
 export type SendFileOptions = {
     getStats: () => Promise<SendFileStats> | SendFileStats,
-    getContent: (options: SendFileContentOptions) => Promise<unknown> | unknown
+    getContent: (
+        options: SendFileContentOptions
+    ) => Promise<unknown> | unknown
     attachment?: boolean,
-    name?: string,
-    next?: (err?: Error) => Promise<unknown> | unknown
+    name?: string
 };
 
 export async function sendFile(
     res: Response,
     options: SendFileOptions,
-) {
+    next?: (err?: Error) => Promise<unknown> | unknown,
+) : Promise<unknown> {
     let stats: SendFileStats;
     try {
         stats = await options.getStats();
     } catch (e) {
-        if (options.next) {
-            return options.next(e as Error);
+        if (next) {
+            return next(e as Error);
         }
 
         if (isResponseGone(res)) {
             return Promise.resolve();
         }
-
-        res.statusCode = 400;
-        res.end();
 
         return Promise.reject(e);
     }
@@ -104,21 +103,18 @@ export async function sendFile(
     try {
         const content = await options.getContent(contentOptions);
         if (isStream(content)) {
-            return await sendStream(res, content, options.next);
+            return await sendStream(res, content, next);
         }
 
         return await send(res, content);
     } catch (e) {
-        if (options.next) {
-            return options.next(e as Error);
+        if (next) {
+            return next(e as Error);
         }
 
         if (isResponseGone(res)) {
             return Promise.resolve();
         }
-
-        res.statusCode = 400;
-        res.end();
 
         return Promise.reject(e);
     }

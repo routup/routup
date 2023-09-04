@@ -6,31 +6,31 @@ describe('routing/methods', () => {
         const router = new Router();
 
         router.delete('/delete', async (req, res) => {
-            send(res, 'delete');
+            await send(res, 'delete');
         });
 
         router.get('/get', async (req, res) => {
-            send(res, 'get');
+            await send(res, 'get');
         });
 
         router.patch('/patch', async (req, res) => {
-            send(res, 'patch');
+            await send(res, 'patch');
         });
 
         router.post('/post', async (req, res) => {
-            send(res, 'post');
+            await send(res, 'post');
         });
 
         router.put('/put', async (req, res) => {
-            send(res, 'put');
+            await send(res, 'put');
         });
 
         router.head('/head', async (req, res) => {
-            send(res);
+            await send(res);
         });
 
         router.options('/options', async (req, res) => {
-            send(res, 'options');
+            await send(res, 'options');
         });
 
         const server = supertest(router.createListener());
@@ -81,23 +81,23 @@ describe('routing/methods', () => {
         const router = new Router();
 
         router.delete('/', async (req, res) => {
-            send(res, 'delete');
+            await send(res, 'delete');
         });
 
         router.get('/', async (req, res) => {
-            send(res, 'get');
+            await send(res, 'get');
         });
 
         router.patch('/', async (req, res) => {
-            send(res, 'patch');
+            await send(res, 'patch');
         });
 
         router.post('/', async (req, res) => {
-            send(res, 'post');
+            await send(res, 'post');
         });
 
         router.put('/', async (req, res) => {
-            send(res, 'put');
+            await send(res, 'put');
         });
 
         const server = supertest(router.createListener());

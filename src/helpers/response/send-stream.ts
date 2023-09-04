@@ -17,7 +17,12 @@ export async function sendStream(
                 }),
             )
             .then(() => {
+                if (next) {
+                    return next();
+                }
+
                 res.end();
+                return Promise.resolve();
             })
             .catch((err) => {
                 if (next) {
@@ -50,6 +55,15 @@ export async function sendStream(
         });
 
         stream.on('close', () => {
+            if (next) {
+                Promise.resolve()
+                    .then(() => next())
+                    .then(() => resolve())
+                    .catch((e) => reject(e));
+
+                return;
+            }
+
             res.end();
 
             resolve();
