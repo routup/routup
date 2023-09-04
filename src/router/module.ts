@@ -14,6 +14,7 @@ import {
     MethodName,
 } from '../constants';
 import {
+    isResponseGone,
     send,
     useRequestPath,
 } from '../helpers';
@@ -162,8 +163,10 @@ export class Router {
             }
 
             if (typeof err !== 'undefined') {
-                res.statusCode = 400;
-                res.end();
+                if (!isResponseGone(res)) {
+                    res.statusCode = 400;
+                    res.end();
+                }
 
                 return Promise.resolve();
             }
@@ -181,8 +184,10 @@ export class Router {
                 return send(res, options);
             }
 
-            res.statusCode = 404;
-            res.end();
+            if (!isResponseGone(res)) {
+                res.statusCode = 404;
+                res.end();
+            }
 
             return Promise.resolve();
         };

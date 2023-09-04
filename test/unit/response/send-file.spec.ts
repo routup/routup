@@ -35,6 +35,21 @@ describe('src/helpers/response/send-file', () => {
     it('should not send file', async () => {
         const router = new Router();
 
+        router.get('/', (_req, res) => {
+            sendFile(res, buildSendFileOptions('test/data/foo.json'));
+        });
+
+        const server = supertest(router.createListener());
+
+        const response = await server
+            .get('/');
+
+        expect(response.statusCode).toEqual(404);
+    });
+
+    it('should not send file promise', async () => {
+        const router = new Router();
+
         router.get('/', (_req, res) => sendFile(res, buildSendFileOptions('test/data/foo.json')));
 
         const server = supertest(router.createListener());

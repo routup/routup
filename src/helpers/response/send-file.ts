@@ -1,6 +1,7 @@
 import { HeaderName } from '../../constants';
 import type { Response } from '../../type';
 import { basename } from '../../utils';
+import { isResponseGone } from './gone';
 import { setResponseHeaderAttachment } from './header-attachment';
 import { send } from './send';
 import { sendStream } from './send-stream';
@@ -35,6 +36,13 @@ export async function sendFile(
         if (options.next) {
             return options.next(e as Error);
         }
+
+        if (isResponseGone(res)) {
+            return Promise.resolve();
+        }
+
+        res.statusCode = 400;
+        res.end();
 
         return Promise.reject(e);
     }
@@ -104,6 +112,13 @@ export async function sendFile(
         if (options.next) {
             return options.next(e as Error);
         }
+
+        if (isResponseGone(res)) {
+            return Promise.resolve();
+        }
+
+        res.statusCode = 400;
+        res.end();
 
         return Promise.reject(e);
     }

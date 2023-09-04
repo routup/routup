@@ -1,6 +1,7 @@
 import { useConfig } from '../../config';
 import { HeaderName } from '../../constants';
 import type { Response } from '../../type';
+import { isResponseGone } from './gone';
 import { appendResponseHeaderDirective } from './header';
 import { setResponseHeaderContentType } from './header-content-type';
 
@@ -60,6 +61,10 @@ export async function send(res: Response, chunk?: any) : Promise<void> {
 
     if (typeof len !== 'undefined') {
         const chunkHash = await etagFn(chunk, encoding, len);
+        if (isResponseGone(res)) {
+            return Promise.resolve();
+        }
+
         if (typeof chunkHash === 'string') {
             res.setHeader(HeaderName.ETag, chunkHash);
 
@@ -84,17 +89,23 @@ export async function send(res: Response, chunk?: any) : Promise<void> {
         chunk = '';
     }
 
+    if (isResponseGone(res)) {
+        return Promise.resolve();
+    }
+
     if (res.req.method === 'HEAD') {
         // skip body for HEAD
         res.end();
 
-        return;
+        return Promise.resolve();
     }
 
     if (typeof encoding !== 'undefined') {
         res.end(chunk, encoding);
-        return;
+        return Promise.resolve();
     }
 
     res.end(chunk);
+
+    return Promise.resolve();
 }

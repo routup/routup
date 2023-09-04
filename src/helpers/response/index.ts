@@ -1,4 +1,5 @@
 export * from './cache';
+export * from './gone';
 export * from './header';
 export * from './header-attachment';
 export * from './header-content-type';
