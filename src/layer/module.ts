@@ -1,10 +1,9 @@
-import { BadRequestError } from '@ebec/http';
 import { setRequestMountPath, setRequestParams } from '../helpers';
 import type {
-    DispatcherMeta, Next, Request,
+    DispatcherMeta, Request,
     Response,
 } from '../type';
-import { processHandlerExecutionOutput } from '../handler';
+import { callHandler } from '../handler';
 import { PathMatcher } from '../path';
 import type { LayerOptions } from './type';
 
@@ -37,72 +36,28 @@ export class Layer {
         req: Request,
         res: Response,
         meta: DispatcherMeta,
-        next: CallableFunction
-    ) : void;
+        next: (err?: Error) => Promise<any>
+    ) : Promise<any>;
 
     dispatch(
         req: Request,
         res: Response,
         meta: DispatcherMeta,
-        next: CallableFunction,
+        next: (err?: Error) => Promise<any>,
         err: Error,
-    ) : void;
+    ) : Promise<any>;
 
     dispatch(
         req: Request,
         res: Response,
         meta: DispatcherMeta,
-        next: Next,
+        next: (err?: Error) => Promise<any>,
         err?: Error,
-    ) : void {
+    ) : Promise<any> {
         setRequestParams(req, meta.params || {});
         setRequestMountPath(req, meta.mountPath || '/');
 
-        if (typeof err !== 'undefined') {
-            if (this.fn.length === 4) {
-                try {
-                    this.fn(err, req, res, next);
-                } catch (e) {
-                    /* istanbul ignore next */
-                    /* istanbul ignore next */
-                    if (e instanceof Error) {
-                        next(e);
-                    } else {
-                        next(new BadRequestError({
-                            message: 'The request could not be processed by the error handler.',
-                        }));
-                    }
-                }
-
-                return;
-            }
-
-            /* istanbul ignore next */
-            next(err);
-            /* istanbul ignore next */
-            return;
-        }
-
-        /* istanbul ignore next */
-        if (this.fn.length > 3) {
-            next();
-            return;
-        }
-
-        try {
-            const output = this.fn(req, res, next);
-
-            processHandlerExecutionOutput(res, next, output);
-        } catch (e) {
-            /* istanbul ignore next */
-            if (e instanceof Error) {
-                next(e);
-            } else {
-                next(new BadRequestError({
-                    message: 'The request could not be processed by the handler.',
-                }));
-            }
-        }
+        return callHandler(this.fn, req, res, next, err);
     }
 
     // --------------------------------------------------

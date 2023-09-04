@@ -1,7 +1,8 @@
+import { isObject } from './object';
+
 export function isInstance(input: unknown, name: string) {
     return (
-        typeof input === 'object' &&
-        input !== null &&
+        isObject(input) &&
         (input as { '@instanceof': symbol })['@instanceof'] === Symbol.for(name)
     );
 }

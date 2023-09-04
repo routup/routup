@@ -1,6 +1,10 @@
 import { isInstance } from '../utils';
-import type { Layer } from './module';
+import { Layer } from './module';
 
 export function isLayerInstance(input: unknown) : input is Layer {
+    if (input instanceof Layer) {
+        return true;
+    }
+
     return isInstance(input, 'Layer');
 }

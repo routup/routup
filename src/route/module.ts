@@ -1,7 +1,7 @@
 import { hasOwnProperty, merge } from 'smob';
 import { MethodName } from '../constants';
 import type {
-    DispatcherMeta, Handler, Next, Path,
+    DispatcherMeta, Handler, Path,
 
     Request,
     Response,
@@ -75,12 +75,11 @@ export class Route {
         req: Request,
         res: Response,
         meta: DispatcherMeta,
-        done: Next,
-    ) : void {
+        done: (err?: Error) => Promise<any>,
+    ) : Promise<any> {
         /* istanbul ignore next */
         if (!req.method) {
-            done();
-            return;
+            return done();
         }
 
         let name = req.method.toLowerCase();
@@ -100,9 +99,7 @@ export class Route {
             layers.length === 0 ||
             typeof meta.path === 'undefined'
         ) {
-            done();
-
-            return;
+            return done();
         }
 
         const layerMeta : DispatcherMeta = {
@@ -116,27 +113,28 @@ export class Route {
 
         let index = -1;
 
-        const next = (err?: Error) : void => {
+        const next = (err?: Error) : Promise<any> => {
             index++;
 
             if (index >= layers.length) {
-                setImmediate(done, err);
-                return;
+                if (err) {
+                    throw err;
+                }
+
+                return Promise.resolve();
             }
 
             const layer = layers[index];
-            if (
-                err &&
-                !layer.isError()
-            ) {
-                next(err);
-                return;
+            if (err && !layer.isError()) {
+                throw err;
             }
 
-            layer.dispatch(req, res, { ...layerMeta }, next);
+            return layer.dispatch(req, res, { ...layerMeta }, next);
         };
 
-        next();
+        return next()
+            .then(() => done())
+            .catch((err) => done(err));
     }
 
     // --------------------------------------------------

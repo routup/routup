@@ -4,7 +4,6 @@ import type {
     DispatcherMeta,
     ErrorHandler,
     Handler,
-    Next,
     Path,
 
     Request,
@@ -32,9 +31,13 @@ import type { PathMatcherOptions } from '../path';
 import { PathMatcher } from '../path';
 import { Layer, isLayerInstance } from '../layer';
 import { Route, isRouteInstance } from '../route';
-import { RouterOptions } from './type';
+import type { RouterOptions } from './type';
 
 export function isRouterInstance(input: unknown) : input is Router {
+    if (input instanceof Router) {
+        return true;
+    }
+
     return isInstance(input, 'Router');
 }
 
@@ -68,13 +71,6 @@ export class Router {
      * @protected
      */
     protected pathMatcherOptions : PathMatcherOptions;
-
-    /**
-     * Is this the root instance?
-     *
-     * @protected
-     */
-    protected isRoot : boolean | undefined;
 
     /**
      * Timeout before the router decides to abort the request.
@@ -127,10 +123,13 @@ export class Router {
     // --------------------------------------------------
 
     createListener() : RequestListener {
-        this.isRoot = true;
-
         return (req, res) => {
-            this.dispatch(req, res);
+            if (this.timeout) {
+                createRequestTimeout(res, this.timeout);
+            }
+
+            Promise.resolve()
+                .then(() => this.dispatch(req, res));
         };
     }
 
@@ -150,36 +149,23 @@ export class Router {
         req: Request,
         res: Response,
         meta?: DispatcherMeta,
-        done?: Next,
-    ) : void {
-        let index = -1;
-
+        parentNext?: (err?: Error) => Promise<any>,
+    ) : Promise<void> {
         meta = meta || {};
 
+        let index = -1;
+
         let allowedMethods : string[] = [];
-
-        if (
-            this.isRoot &&
-            typeof this.timeout === 'number'
-        ) {
-            createRequestTimeout(res, this.timeout, done);
-        }
-
-        const fn = (err?: Error) => {
-            /* istanbul ignore if */
-            if (!this.isRoot) {
-                if (typeof done !== 'undefined') {
-                    setImmediate(() => done(err));
-                }
-
-                return;
+        const fn = (err?: Error) : Promise<void> => {
+            if (typeof parentNext !== 'undefined') {
+                return parentNext(err);
             }
 
             if (typeof err !== 'undefined') {
                 res.statusCode = 400;
                 res.end();
 
-                return;
+                return Promise.resolve();
             }
 
             if (
@@ -192,14 +178,13 @@ export class Router {
 
                 res.setHeader(HeaderName.ALLOW, options);
 
-                Promise.resolve()
-                    .then(() => send(res, options));
-
-                return;
+                return send(res, options);
             }
 
             res.statusCode = 404;
             res.end();
+
+            return Promise.resolve();
         };
 
         let path = meta.path || useRequestPath(req);
@@ -225,10 +210,13 @@ export class Router {
             meta.mountPath = '/';
         }
 
-        const next = (err?: Error) : void => {
+        const next = (err?: Error) : Promise<void> => {
             if (index >= this.stack.length) {
-                setImmediate(fn, err);
-                return;
+                if (err) {
+                    throw err;
+                }
+
+                return Promise.resolve();
             }
 
             let layer : Route | Router | Layer | undefined;
@@ -256,7 +244,7 @@ export class Router {
 
                     if (
                         req.method &&
-                        !layer.matchMethod(req.method)
+                            !layer.matchMethod(req.method)
                     ) {
                         match = false;
 
@@ -271,8 +259,11 @@ export class Router {
             }
 
             if (!match || !layer) {
-                setImmediate(fn, err);
-                return;
+                if (err) {
+                    throw err;
+                }
+
+                return Promise.resolve();
             }
 
             const layerMeta : DispatcherMeta = { ...meta };
@@ -287,40 +278,19 @@ export class Router {
             }
 
             if (err) {
-                if (
-                    isLayerInstance(layer) &&
-                    layer.isError()
-                ) {
-                    layer.dispatch(req, res, layerMeta, next, err);
-                    return;
+                if (isLayerInstance(layer) && layer.isError()) {
+                    return layer.dispatch(req, res, layerMeta, next, err);
                 }
 
-                /* istanbul ignore next */
-                setImmediate(next, err);
-                return;
+                return next(err);
             }
 
-            layer.dispatch(req, res, layerMeta, next);
+            return layer.dispatch(req, res, layerMeta, next);
         };
 
-        next();
-    }
-
-    /* istanbul ignore next */
-    dispatchAsync(
-        req: Request,
-        res: Response,
-    ) : Promise<void> {
-        return new Promise((resolve, reject) => {
-            this.dispatch(req, res, {}, (err?: Error) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-
-                resolve();
-            });
-        });
+        return next()
+            .then(() => fn())
+            .catch((e) => fn(e));
     }
 
     // --------------------------------------------------
