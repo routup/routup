@@ -9,7 +9,10 @@ export function callHandler(
     next: (err?: Error) => Promise<void>,
     err?: Error,
 ) : Promise<void> {
-    if (handler.length !== 4 && err) {
+    if (
+        (handler.length !== 4 && err) ||
+        (handler.length === 4 && !err)
+    ) {
         return Promise.reject(err);
     }
 
