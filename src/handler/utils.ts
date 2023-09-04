@@ -8,13 +8,13 @@ export function callHandler(
     res: Response,
     next: (err?: Error) => Promise<void>,
     err?: Error,
-) {
+) : Promise<void> {
     if (handler.length !== 4 && err) {
-        throw err;
+        return Promise.reject(err);
     }
 
     return new Promise<void>((resolve, reject) => {
-        let nextCalled = false;
+        let handled = false;
 
         const unsubscribe = () => {
             res.off('close', nextPolyfill);
@@ -22,8 +22,11 @@ export function callHandler(
         };
 
         const nextPolyfill = (err?: Error) => {
-            nextCalled = true;
+            if (handled) {
+                return;
+            }
 
+            handled = true;
             unsubscribe();
 
             next(err)
@@ -43,26 +46,25 @@ export function callHandler(
                 output = handler(req, res, nextPolyfill);
             }
 
-            const handleOutput = (data: any) => {
-                if (nextCalled) {
+            const handle = (data: any) => {
+                if (typeof data === 'undefined' || handled) {
                     return;
                 }
 
-                if (typeof data !== 'undefined') {
-                    unsubscribe();
+                handled = true;
+                unsubscribe();
 
-                    send(res, data)
-                        .then(() => resolve())
-                        .catch((e) => reject(e));
-                }
+                send(res, data)
+                    .then(() => resolve())
+                    .catch((e) => reject(e));
             };
 
             if (isPromise(output)) {
                 output
-                    .then((r) => handleOutput(r))
+                    .then((r) => handle(r))
                     .catch((e) => reject(e));
             } else {
-                handleOutput(output);
+                handle(output);
             }
         } catch (error) {
             nextPolyfill(error as Error);

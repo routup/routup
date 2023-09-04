@@ -149,16 +149,16 @@ export class Router {
         req: Request,
         res: Response,
         meta?: DispatcherMeta,
-        parentNext?: (err?: Error) => Promise<any>,
+        done?: (err?: Error) => Promise<any>,
     ) : Promise<void> {
         meta = meta || {};
 
         let index = -1;
 
         let allowedMethods : string[] = [];
-        const fn = (err?: Error) : Promise<void> => {
-            if (typeof parentNext !== 'undefined') {
-                return parentNext(err);
+        const check = (err?: Error) : Promise<void> => {
+            if (typeof done !== 'undefined') {
+                return done(err);
             }
 
             if (typeof err !== 'undefined') {
@@ -213,7 +213,7 @@ export class Router {
         const next = (err?: Error) : Promise<void> => {
             if (index >= this.stack.length) {
                 if (err) {
-                    throw err;
+                    return Promise.reject(err);
                 }
 
                 return Promise.resolve();
@@ -260,7 +260,7 @@ export class Router {
 
             if (!match || !layer) {
                 if (err) {
-                    throw err;
+                    return Promise.reject(err);
                 }
 
                 return Promise.resolve();
@@ -289,8 +289,8 @@ export class Router {
         };
 
         return next()
-            .then(() => fn())
-            .catch((e) => fn(e));
+            .then(() => check())
+            .catch((e) => check(e));
     }
 
     // --------------------------------------------------

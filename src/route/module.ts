@@ -9,7 +9,7 @@ import type {
 import { Layer } from '../layer';
 import type { PathMatcherOptions } from '../path';
 import { PathMatcher } from '../path';
-import { RouteOptions } from './type';
+import type { RouteOptions } from './type';
 
 export class Route {
     readonly '@instanceof' = Symbol.for('Route');
@@ -118,7 +118,7 @@ export class Route {
 
             if (index >= layers.length) {
                 if (err) {
-                    throw err;
+                    return Promise.reject(err);
                 }
 
                 return Promise.resolve();
@@ -126,7 +126,7 @@ export class Route {
 
             const layer = layers[index];
             if (err && !layer.isError()) {
-                throw err;
+                return Promise.reject(err);
             }
 
             return layer.dispatch(req, res, { ...layerMeta }, next);
