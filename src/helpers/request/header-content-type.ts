@@ -1,9 +1,9 @@
 import { HeaderName } from '../../constants';
-import type { Request } from '../../type';
+import type { NodeRequest } from '../../type';
 import { getMimeType } from '../../utils';
 import { getRequestHeader } from './header';
 
-export function matchRequestContentType(req: Request, contentType: string) : boolean {
+export function matchRequestContentType(req: NodeRequest, contentType: string) : boolean {
     const header = getRequestHeader(req, HeaderName.CONTENT_TYPE);
     if (!header) {
         return true;

@@ -1,9 +1,3 @@
-import type { Path } from '../type';
-
-export function isPath(input: unknown) : input is Path {
-    return typeof input === 'string' || input instanceof RegExp;
-}
-
 /**
  * Based on https://github.com/unjs/pathe v1.1.1 (055f50a6f1131f4e5c56cf259dd8816168fba329)
  */

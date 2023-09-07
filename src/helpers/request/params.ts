@@ -1,8 +1,8 @@
-import type { Request } from '../../type';
+import type { NodeRequest } from '../../type';
 
 const ParamsSymbol = Symbol.for('ReqParams');
 
-export function useRequestParams(req: Request) : Record<string, any> {
+export function useRequestParams(req: NodeRequest) : Record<string, any> {
     /* istanbul ignore next */
     if ('params' in req) {
         return (req as any).params;
@@ -15,19 +15,19 @@ export function useRequestParams(req: Request) : Record<string, any> {
     return {};
 }
 
-export function useRequestParam(req: Request, key: string) : any {
+export function useRequestParam(req: NodeRequest, key: string) : any {
     return useRequestParams(req)[key];
 }
 
 export function setRequestParams(
-    req: Request,
+    req: NodeRequest,
     data: Record<string, any>,
 ) {
     (req as any)[ParamsSymbol] = data;
 }
 
 export function setRequestParam(
-    req: Request,
+    req: NodeRequest,
     key: string,
     value: any,
 ) {

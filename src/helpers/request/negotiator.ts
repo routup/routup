@@ -1,9 +1,9 @@
 import Negotiator from 'negotiator';
-import type { Request } from '../../type';
+import type { NodeRequest } from '../../type';
 
 const NegotiatorSymbol = Symbol.for('ReqNegotiator');
 
-export function useRequestNegotiator(req: Request) : Negotiator {
+export function useRequestNegotiator(req: NodeRequest) : Negotiator {
     if (NegotiatorSymbol in req) {
         return (req as any)[NegotiatorSymbol];
     }

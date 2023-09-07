@@ -1,15 +1,15 @@
 import type { IncomingHttpHeaders } from 'node:http';
-import type { Request } from '../../type';
+import type { NodeRequest } from '../../type';
 
 export function getRequestHeader<K extends keyof IncomingHttpHeaders>(
-    req: Request,
+    req: NodeRequest,
     name: K,
 ) : IncomingHttpHeaders[K] {
     return req.headers[name];
 }
 
 export function setRequestHeader<K extends keyof IncomingHttpHeaders>(
-    req: Request,
+    req: NodeRequest,
     name: K,
     value: IncomingHttpHeaders[K],
 ) {

@@ -1,5 +1,5 @@
 import { HeaderName } from '../../constants';
-import type { Response } from '../../type';
+import type { NodeResponse } from '../../type';
 import { basename } from '../../utils';
 import { isResponseGone } from './gone';
 import { setResponseHeaderAttachment } from './header-attachment';
@@ -27,7 +27,7 @@ export type SendFileOptions = {
 };
 
 export async function sendFile(
-    res: Response,
+    res: NodeResponse,
     options: SendFileOptions,
     next?: (err?: Error) => Promise<unknown> | unknown,
 ) : Promise<unknown> {

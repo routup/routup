@@ -1,12 +1,12 @@
 import { merge } from 'smob';
-import type { Request } from '../../type';
+import type { NodeRequest } from '../../type';
 import { isObject } from '../../utils';
 
 const BodySymbol = Symbol.for('ReqBody');
 
-export function useRequestBody(req: Request) : Record<string, any>;
-export function useRequestBody(req: Request, key: string) : any | undefined;
-export function useRequestBody(req: Request, key?: string) {
+export function useRequestBody(req: NodeRequest) : Record<string, any>;
+export function useRequestBody(req: NodeRequest, key: string) : any | undefined;
+export function useRequestBody(req: NodeRequest, key?: string) {
     let body : Record<string, any> | undefined;
 
     /* istanbul ignore next */
@@ -39,13 +39,13 @@ export function useRequestBody(req: Request, key?: string) {
         {};
 }
 
-export function hasRequestBody(req: Request) : boolean {
+export function hasRequestBody(req: NodeRequest) : boolean {
     return 'body' in req || BodySymbol in req;
 }
 
-export function setRequestBody(req: Request, key: string, value: unknown) : void;
-export function setRequestBody(req: Request, record: Record<string, any>) : void;
-export function setRequestBody(req: Request, key: Record<string, any> | string, value?: unknown) : void {
+export function setRequestBody(req: NodeRequest, key: string, value: unknown) : void;
+export function setRequestBody(req: NodeRequest, record: Record<string, any>) : void;
+export function setRequestBody(req: NodeRequest, key: Record<string, any> | string, value?: unknown) : void {
     if (isObject(key)) {
         (req as any)[BodySymbol] = key;
         return;
@@ -56,9 +56,9 @@ export function setRequestBody(req: Request, key: Record<string, any> | string, 
     };
 }
 
-export function extendRequestBody(req: Request, key: string, value: unknown) : void;
-export function extendRequestBody(req: Request, record: Record<string, any>) : void;
-export function extendRequestBody(req: Request, key: Record<string, any> | string, value?: unknown) : void {
+export function extendRequestBody(req: NodeRequest, key: string, value: unknown) : void;
+export function extendRequestBody(req: NodeRequest, record: Record<string, any>) : void;
+export function extendRequestBody(req: NodeRequest, key: Record<string, any> | string, value?: unknown) : void {
     if (hasRequestBody(req)) {
         const body = useRequestBody(req);
 

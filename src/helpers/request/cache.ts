@@ -1,7 +1,7 @@
 import { HeaderName } from '../../constants';
-import type { Request } from '../../type';
+import type { NodeRequest } from '../../type';
 
-export function isRequestCacheable(req: Request, modifiedTime: string | Date) : boolean {
+export function isRequestCacheable(req: NodeRequest, modifiedTime: string | Date) : boolean {
     const modifiedSince = req.headers[HeaderName.IF_MODIFIED_SINCE];
     if (!modifiedSince) {
         return false;

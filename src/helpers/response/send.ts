@@ -1,11 +1,11 @@
 import { useConfig } from '../../config';
 import { HeaderName } from '../../constants';
-import type { Response } from '../../type';
+import type { NodeResponse } from '../../type';
 import { isResponseGone } from './gone';
 import { appendResponseHeaderDirective } from './header';
 import { setResponseHeaderContentType } from './header-content-type';
 
-export async function send(res: Response, chunk?: any) : Promise<void> {
+export async function send(res: NodeResponse, chunk?: any) : Promise<void> {
     switch (typeof chunk) {
         case 'string': {
             setResponseHeaderContentType(res, 'html', true);

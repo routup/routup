@@ -1,8 +1,9 @@
 import { GatewayTimeoutErrorOptions } from '@ebec/http';
-import type { Next, Response } from '../type';
+import type { DispatcherNext, NodeResponse } from '../type';
 
+// todo: this should be applied on every handler call
 /* istanbul ignore next */
-export function createRequestTimeout(res: Response, timeout: number, done?: Next) {
+export function createRequestTimeout(res: NodeResponse, timeout: number, done?: DispatcherNext) {
     const instance = setTimeout(() => {
         res.statusCode = GatewayTimeoutErrorOptions.statusCode;
         res.statusMessage = GatewayTimeoutErrorOptions.message;

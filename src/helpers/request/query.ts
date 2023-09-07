@@ -1,12 +1,12 @@
 import { merge } from 'smob';
 import { isObject } from '../../utils';
-import type { Request } from '../../type';
+import type { NodeRequest } from '../../type';
 
 const QuerySymbol = Symbol.for('ReqQuery');
 
-export function useRequestQuery(req: Request) : Record<string, any>;
-export function useRequestQuery(req: Request, key: string) : any;
-export function useRequestQuery(req: Request, key?: string) {
+export function useRequestQuery(req: NodeRequest) : Record<string, any>;
+export function useRequestQuery(req: NodeRequest, key: string) : any;
+export function useRequestQuery(req: NodeRequest, key?: string) {
     /* istanbul ignore if  */
     if ('query' in req) {
         if (typeof key === 'string') {
@@ -29,7 +29,7 @@ export function useRequestQuery(req: Request, key?: string) {
         {};
 }
 
-export function hasRequestQuery(req: Request) : boolean {
+export function hasRequestQuery(req: NodeRequest) : boolean {
     return (
         (QuerySymbol in req) &&
         isObject((req as any)[QuerySymbol])
@@ -40,9 +40,9 @@ export function hasRequestQuery(req: Request) : boolean {
         );
 }
 
-export function setRequestQuery(req: Request, key: string, value: unknown) : void;
-export function setRequestQuery(req: Request, record: Record<string, any>) : void;
-export function setRequestQuery(req: Request, key: Record<string, any> | string, value?: unknown) : void {
+export function setRequestQuery(req: NodeRequest, key: string, value: unknown) : void;
+export function setRequestQuery(req: NodeRequest, record: Record<string, any>) : void;
+export function setRequestQuery(req: NodeRequest, key: Record<string, any> | string, value?: unknown) : void {
     if (isObject(key)) {
         (req as any)[QuerySymbol] = key;
         return;
@@ -53,9 +53,9 @@ export function setRequestQuery(req: Request, key: Record<string, any> | string,
     };
 }
 
-export function extendRequestQuery(req: Request, key: string, value: unknown) : void;
-export function extendRequestQuery(req: Request, record: Record<string, any>) : void;
-export function extendRequestQuery(req: Request, key: Record<string, any> | string, value?: unknown) : void {
+export function extendRequestQuery(req: NodeRequest, key: string, value: unknown) : void;
+export function extendRequestQuery(req: NodeRequest, record: Record<string, any>) : void;
+export function extendRequestQuery(req: NodeRequest, key: Record<string, any> | string, value?: unknown) : void {
     if (hasRequestQuery(req)) {
         const query = useRequestQuery(req);
 

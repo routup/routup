@@ -1,10 +1,10 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-export interface Response extends ServerResponse {
+export interface NodeResponse extends ServerResponse {
 
 }
 
-export interface Request extends IncomingMessage {
+export interface NodeRequest extends IncomingMessage {
 
 }
 
@@ -12,22 +12,25 @@ export type Next = (err?: Error) => void;
 
 // --------------------------------------------------
 
-export type Handler = (
-    req: Request,
-    res: Response,
+export type NodeHandler = (
+    req: NodeRequest,
+    res: NodeResponse,
     next: Next
 ) => unknown;
 
-export type ErrorHandler = (
+export type NodeErrorHandler = (
     err: Error,
-    req: Request,
-    res: Response,
+    req: NodeRequest,
+    res: NodeResponse,
     next: Next
 ) => unknown;
 
 // --------------------------------------------------
 
-export type Path = string | RegExp;
+/**
+ * Callback fn to call the next item on the stack.
+ */
+export type DispatcherNext = (err?: Error) => Promise<any>;
 
 export type DispatcherMeta = {
     /**

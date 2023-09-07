@@ -1,8 +1,8 @@
-import type { Request } from '../../type';
+import type { NodeRequest } from '../../type';
 
 const ReqMountPathSymbol = Symbol.for('ReqMountPath');
 
-export function useRequestMountPath(req: Request) : string {
+export function useRequestMountPath(req: NodeRequest) : string {
     if (ReqMountPathSymbol in req) {
         return (req as any)[ReqMountPathSymbol];
     }
@@ -10,6 +10,6 @@ export function useRequestMountPath(req: Request) : string {
     return '/';
 }
 
-export function setRequestMountPath(req: Request, basePath: string) {
+export function setRequestMountPath(req: NodeRequest, basePath: string) {
     (req as any)[ReqMountPathSymbol] = basePath;
 }

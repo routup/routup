@@ -1,16 +1,16 @@
-import type { Request } from '../../type';
+import type { NodeRequest } from '../../type';
 import { HeaderName } from '../../constants';
 import { getMimeType } from '../../utils';
 import { getRequestHeader } from './header';
 import { useRequestNegotiator } from './negotiator';
 
-export function getRequestAcceptableContentTypes(req: Request) : string[] {
+export function getRequestAcceptableContentTypes(req: NodeRequest) : string[] {
     const negotiator = useRequestNegotiator(req);
 
     return negotiator.mediaTypes();
 }
 
-export function getRequestAcceptableContentType(req: Request, input?: string | string[]) : string | undefined {
+export function getRequestAcceptableContentType(req: NodeRequest, input?: string | string[]) : string | undefined {
     input = input || [];
 
     const items = Array.isArray(input) ? input : [input];

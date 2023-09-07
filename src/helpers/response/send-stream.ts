@@ -1,9 +1,9 @@
 import type { Readable } from 'node:stream';
-import type { Response } from '../../type';
+import type { NodeResponse } from '../../type';
 import { isWebStream } from './utils';
 
 export async function sendStream(
-    res: Response,
+    res: NodeResponse,
     stream: Readable | ReadableStream,
     next?: (err?: Error) => Promise<unknown> | unknown,
 ) {

@@ -2,7 +2,10 @@ import supertest from 'supertest';
 import {
     Router, send, setRequestEnv, useRequestEnv,
 } from '../../../src';
-import type { Next, Request, Response } from '../../../src';
+import type {
+    DispatcherNext, Next, NodeRequest,
+    NodeResponse,
+} from '../../../src';
 
 describe('routing/middleware', () => {
     it('should use middleware', async () => {
@@ -34,7 +37,7 @@ describe('routing/middleware', () => {
             throw new Error('ero');
         });
 
-        router.use((err: Error, req: Request, res: Response, next: Next) => {
+        router.use((err: Error, req: NodeRequest, res: NodeResponse, next: DispatcherNext) => {
             send(res, err.message);
         });
 

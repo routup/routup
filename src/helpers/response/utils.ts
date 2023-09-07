@@ -1,11 +1,11 @@
 import type { Readable } from 'node:stream';
 import { HeaderName } from '../../constants';
-import type { Response } from '../../type';
+import type { NodeResponse } from '../../type';
 import {
     extname, getCharsetForMimeType, getMimeType, isObject,
 } from '../../utils';
 
-export function setResponseContentTypeByFileName(res: Response, fileName: string) {
+export function setResponseContentTypeByFileName(res: NodeResponse, fileName: string) {
     const ext = extname(fileName);
     if (ext) {
         let type = getMimeType(ext.substring(1));
@@ -35,7 +35,7 @@ export function isStream(data: any): data is Readable | ReadableStream {
 
 /* istanbul ignore next */
 export function onResponseFinished(
-    res: Response,
+    res: NodeResponse,
     cb: (err?: Error) => void,
 ) {
     let called : boolean;

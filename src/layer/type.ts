@@ -1,5 +1,4 @@
-import type { PathMatcherOptions } from '../path';
-import type { Path } from '../type';
+import type { Path, PathMatcherOptions } from '../path';
 
 export type LayerOptions = {
     path: Path,

@@ -1,4 +1,4 @@
-import type { Response } from '../../type';
+import type { NodeResponse } from '../../type';
 import { getRequestAcceptableContentType } from '../request';
 
 type ResponseFormats = {
@@ -6,7 +6,7 @@ type ResponseFormats = {
     [key: string]: () => void
 };
 
-export function sendFormat(res: Response, input: ResponseFormats) {
+export function sendFormat(res: NodeResponse, input: ResponseFormats) {
     const { default: formatDefault, ...formats } = input;
 
     const contentTypes = Object.keys(formats);

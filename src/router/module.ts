@@ -2,12 +2,12 @@ import type { RequestListener } from 'node:http';
 import { distinctArray, merge } from 'smob';
 import type {
     DispatcherMeta,
-    ErrorHandler,
-    Handler,
-    Path,
+    NodeErrorHandler,
+    NodeHandler,
+    NodeRequest,
 
-    Request,
-    Response,
+    NodeResponse,
+
 } from '../type';
 import {
     HeaderName,
@@ -23,13 +23,12 @@ import {
     createRequestTimeout,
     isInstance,
 
-    isPath,
     withLeadingSlash,
     withoutTrailingSlash,
 
 } from '../utils';
-import type { PathMatcherOptions } from '../path';
-import { PathMatcher } from '../path';
+import type { Path, PathMatcherOptions } from '../path';
+import { PathMatcher, isPath } from '../path';
 import { Layer, isLayerInstance } from '../layer';
 import { Route, isRouteInstance } from '../route';
 import type { RouterOptions } from './type';
@@ -147,8 +146,8 @@ export class Router {
     // --------------------------------------------------
 
     dispatch(
-        req: Request,
-        res: Response,
+        req: NodeRequest,
+        res: NodeResponse,
         meta?: DispatcherMeta,
         done?: (err?: Error) => Promise<any>,
     ) : Promise<void> {
@@ -329,49 +328,49 @@ export class Router {
         return route;
     }
 
-    delete(path: Path, ...handlers: Handler[]) : this {
+    delete(path: Path, ...handlers: NodeHandler[]) : this {
         const route = this.route(path);
         route.delete(...handlers);
 
         return this;
     }
 
-    get(path: Path, ...handlers: Handler[]) : this {
+    get(path: Path, ...handlers: NodeHandler[]) : this {
         const route = this.route(path);
         route.get(...handlers);
 
         return this;
     }
 
-    post(path: Path, ...handlers: Handler[]) : this {
+    post(path: Path, ...handlers: NodeHandler[]) : this {
         const route = this.route(path);
         route.post(...handlers);
 
         return this;
     }
 
-    put(path: Path, ...handlers: Handler[]) : this {
+    put(path: Path, ...handlers: NodeHandler[]) : this {
         const route = this.route(path);
         route.put(...handlers);
 
         return this;
     }
 
-    patch(path: Path, ...handlers: Handler[]) : this {
+    patch(path: Path, ...handlers: NodeHandler[]) : this {
         const route = this.route(path);
         route.patch(...handlers);
 
         return this;
     }
 
-    head(path: Path, ...handlers: Handler[]) : this {
+    head(path: Path, ...handlers: NodeHandler[]) : this {
         const route = this.route(path);
         route.head(...handlers);
 
         return this;
     }
 
-    options(path: Path, ...handlers: Handler[]) : this {
+    options(path: Path, ...handlers: NodeHandler[]) : this {
         const route = this.route(path);
         route.options(...handlers);
 
@@ -382,15 +381,15 @@ export class Router {
 
     use(router: Router) : this;
 
-    use(handler: Handler) : this;
+    use(handler: NodeHandler) : this;
 
-    use(handler: ErrorHandler) : this;
+    use(handler: NodeErrorHandler) : this;
 
     use(path: Path, router: Router) : this;
 
-    use(path: Path, handler: Handler) : this;
+    use(path: Path, handler: NodeHandler) : this;
 
-    use(path: Path, handler: ErrorHandler) : this;
+    use(path: Path, handler: NodeErrorHandler) : this;
 
     use(...input: unknown[]) : this {
         /* istanbul ignore next */

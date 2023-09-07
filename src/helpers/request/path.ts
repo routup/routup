@@ -1,8 +1,8 @@
-import type { Request } from '../../type';
+import type { NodeRequest } from '../../type';
 
 const PathSymbol = Symbol.for('ReqPath');
 
-export function useRequestPath(req: Request) : string {
+export function useRequestPath(req: NodeRequest) : string {
     if ('path' in req) {
         return (req as any).path;
     }

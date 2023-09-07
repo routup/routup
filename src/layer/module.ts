@@ -1,7 +1,7 @@
 import { setRequestMountPath, setRequestParams } from '../helpers';
 import type {
-    DispatcherMeta, Request,
-    Response,
+    DispatcherMeta, NodeRequest,
+    NodeResponse,
 } from '../type';
 import { callHandler } from '../handler';
 import { PathMatcher } from '../path';
@@ -33,23 +33,23 @@ export class Layer {
     // --------------------------------------------------
 
     dispatch(
-        req: Request,
-        res: Response,
+        req: NodeRequest,
+        res: NodeResponse,
         meta: DispatcherMeta,
         next: (err?: Error) => Promise<any>
     ) : Promise<any>;
 
     dispatch(
-        req: Request,
-        res: Response,
+        req: NodeRequest,
+        res: NodeResponse,
         meta: DispatcherMeta,
         next: (err?: Error) => Promise<any>,
         err: Error,
     ) : Promise<any>;
 
     dispatch(
-        req: Request,
-        res: Response,
+        req: NodeRequest,
+        res: NodeResponse,
         meta: DispatcherMeta,
         next: (err?: Error) => Promise<any>,
         err?: Error,

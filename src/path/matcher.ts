@@ -1,8 +1,6 @@
 import type { Key } from 'path-to-regexp';
 import { pathToRegexp } from 'path-to-regexp';
-import { Path } from '../type';
-import { PathMatcherOptions } from './type';
-import type { PathMatcherExecResult } from './type';
+import type { Path, PathMatcherExecResult, PathMatcherOptions } from './type';
 
 function decodeParam(val: unknown) {
     /* istanbul ignore next */

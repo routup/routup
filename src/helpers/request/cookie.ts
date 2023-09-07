@@ -1,11 +1,11 @@
 import { merge } from 'smob';
-import type { Request } from '../../type';
+import type { NodeRequest } from '../../type';
 import { isObject } from '../../utils';
 
 const CookieSymbol = Symbol.for('ReqCookie');
 
 export function useRequestCookies(
-    req: Request,
+    req: NodeRequest,
 ) : Record<string, string> {
     if (CookieSymbol in req) {
         return (req as any)[CookieSymbol];
@@ -14,18 +14,18 @@ export function useRequestCookies(
     return {};
 }
 
-export function hasRequestCookies(req: Request) {
+export function hasRequestCookies(req: NodeRequest) {
     return CookieSymbol in req &&
         isObject((req as any)[CookieSymbol]);
 }
 
-export function useRequestCookie(req: Request, name: string) : string | undefined {
+export function useRequestCookie(req: NodeRequest, name: string) : string | undefined {
     return useRequestCookies(req)[name];
 }
 
-export function setRequestCookies(req: Request, key: string, value: unknown) : void;
-export function setRequestCookies(req: Request, record: Record<string, any>) : void;
-export function setRequestCookies(req: Request, key: Record<string, any> | string, value?: unknown) : void {
+export function setRequestCookies(req: NodeRequest, key: string, value: unknown) : void;
+export function setRequestCookies(req: NodeRequest, record: Record<string, any>) : void;
+export function setRequestCookies(req: NodeRequest, key: Record<string, any> | string, value?: unknown) : void {
     if (isObject(key)) {
         (req as any)[CookieSymbol] = key;
         return;
@@ -36,10 +36,10 @@ export function setRequestCookies(req: Request, key: Record<string, any> | strin
     };
 }
 
-export function extendRequestCookies(req: Request, key: string, value: string) : void;
-export function extendRequestCookies(req: Request, record: Record<string, any>) : void;
+export function extendRequestCookies(req: NodeRequest, key: string, value: string) : void;
+export function extendRequestCookies(req: NodeRequest, record: Record<string, any>) : void;
 export function extendRequestCookies(
-    req: Request,
+    req: NodeRequest,
     key: string | Record<string, any>,
     value?: string,
 ) {

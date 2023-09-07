@@ -1,7 +1,7 @@
 import { hasOwnProperty } from 'smob';
 import { useConfig } from '../../config';
 import { HeaderName } from '../../constants';
-import type { Request } from '../../type';
+import type { NodeRequest } from '../../type';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils';
 import { buildTrustProxyFn } from '../../utils';
 
@@ -11,7 +11,7 @@ type RequestProtocolOptions = {
 };
 
 export function getRequestProtocol(
-    req: Request,
+    req: NodeRequest,
     options?: RequestProtocolOptions,
 ) : string {
     options = options || {};

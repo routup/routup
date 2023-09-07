@@ -1,8 +1,8 @@
 import { HeaderName } from '../../constants';
-import type { Response } from '../../type';
+import type { NodeResponse } from '../../type';
 import { setResponseContentTypeByFileName } from './utils';
 
-export function setResponseHeaderAttachment(res: Response, filename?: string) {
+export function setResponseHeaderAttachment(res: NodeResponse, filename?: string) {
     if (typeof filename === 'string') {
         setResponseContentTypeByFileName(res, filename);
     }

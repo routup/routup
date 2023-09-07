@@ -1,6 +1,6 @@
 import { all } from 'proxy-addr';
 import { useConfig } from '../../config';
-import type { Request } from '../../type';
+import type { NodeRequest } from '../../type';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils';
 import { buildTrustProxyFn } from '../../utils';
 
@@ -8,7 +8,7 @@ type RequestIpOptions = {
     trustProxy?: TrustProxyInput
 };
 
-export function getRequestIP(req: Request, options?: RequestIpOptions) : string {
+export function getRequestIP(req: NodeRequest, options?: RequestIpOptions) : string {
     options = options || {};
 
     let trustProxy : TrustProxyFn;

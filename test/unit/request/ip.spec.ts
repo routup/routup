@@ -1,13 +1,13 @@
-import type { Request } from '../../../src';
+import type { NodeRequest } from '../../../src';
 import { HeaderName, getRequestIP } from '../../../src';
 
-function createReq(socketAddr: string, headers?: Record<string, any>) : Request {
+function createReq(socketAddr: string, headers?: Record<string, any>) : NodeRequest {
     return {
         socket: {
             remoteAddress: socketAddr,
         },
         headers: headers || {},
-    } as Request;
+    } as NodeRequest;
 }
 
 describe('src/helpers/request/ip', () => {

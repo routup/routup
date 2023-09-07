@@ -1,4 +1,4 @@
-import type { Response } from '../../type';
+import type { NodeResponse } from '../../type';
 
 export type ResponseCacheHeadersOptions = {
     maxAge?: number,
@@ -6,7 +6,7 @@ export type ResponseCacheHeadersOptions = {
     cacheControls?: string[]
 };
 
-export function setResponseCacheHeaders(res: Response, options?: ResponseCacheHeadersOptions) {
+export function setResponseCacheHeaders(res: NodeResponse, options?: ResponseCacheHeadersOptions) {
     options = options || {};
 
     const cacheControls = ['public'].concat(options.cacheControls || []);

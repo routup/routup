@@ -1,20 +1,20 @@
 import { hasOwnProperty, merge } from 'smob';
 import { MethodName } from '../constants';
 import type {
-    DispatcherMeta, Handler, Path,
+    DispatcherMeta, DispatcherNext, NodeHandler, NodeRequest,
 
-    Request,
-    Response,
+    NodeResponse,
+
 } from '../type';
 import { Layer } from '../layer';
-import type { PathMatcherOptions } from '../path';
+import type { Path, PathMatcherOptions } from '../path';
 import { PathMatcher } from '../path';
 import type { RouteOptions } from './type';
 
 export class Route {
     readonly '@instanceof' = Symbol.for('Route');
 
-    public path : Path;
+    public readonly path : Path;
 
     protected pathMatcher : PathMatcher;
 
@@ -72,10 +72,10 @@ export class Route {
     // --------------------------------------------------
 
     dispatch(
-        req: Request,
-        res: Response,
+        req: NodeRequest,
+        res: NodeResponse,
         meta: DispatcherMeta,
-        done: (err?: Error) => Promise<any>,
+        done: DispatcherNext,
     ) : Promise<any> {
         /* istanbul ignore next */
         if (!req.method) {
@@ -113,7 +113,7 @@ export class Route {
 
         let index = -1;
 
-        const next = (err?: Error) : Promise<any> => {
+        const next : DispatcherNext = (err?: Error) : Promise<any> => {
             index++;
 
             if (index >= layers.length) {
@@ -139,7 +139,7 @@ export class Route {
 
     // --------------------------------------------------
 
-    register(method: `${MethodName}`, ...handlers: Handler[]) {
+    register(method: `${MethodName}`, ...handlers: NodeHandler[]) {
         this.layers[method] = [];
 
         for (let i = 0; i < handlers.length; i++) {
@@ -155,31 +155,31 @@ export class Route {
         }
     }
 
-    get(...handlers: Handler[]) {
+    get(...handlers: NodeHandler[]) {
         return this.register(MethodName.GET, ...handlers);
     }
 
-    post(...handlers: Handler[]) {
+    post(...handlers: NodeHandler[]) {
         return this.register(MethodName.POST, ...handlers);
     }
 
-    put(...handlers: Handler[]) {
+    put(...handlers: NodeHandler[]) {
         return this.register(MethodName.PUT, ...handlers);
     }
 
-    patch(...handlers: Handler[]) {
+    patch(...handlers: NodeHandler[]) {
         return this.register(MethodName.PATCH, ...handlers);
     }
 
-    delete(...handlers: Handler[]) {
+    delete(...handlers: NodeHandler[]) {
         return this.register(MethodName.DELETE, ...handlers);
     }
 
-    head(...handlers: Handler[]) {
+    head(...handlers: NodeHandler[]) {
         return this.register(MethodName.HEAD, ...handlers);
     }
 
-    options(...handlers: Handler[]) {
+    options(...handlers: NodeHandler[]) {
         return this.register(MethodName.OPTIONS, ...handlers);
     }
 

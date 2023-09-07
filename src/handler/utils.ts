@@ -1,11 +1,11 @@
 import { send } from '../helpers';
-import type { Request, Response } from '../type';
+import type { NodeRequest, NodeResponse } from '../type';
 import { isPromise } from '../utils';
 
 export function callHandler(
     handler: CallableFunction,
-    req: Request,
-    res: Response,
+    req: NodeRequest,
+    res: NodeResponse,
     next: (err?: Error) => Promise<void>,
     err?: Error,
 ) : Promise<void> {

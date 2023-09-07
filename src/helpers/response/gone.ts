@@ -1,7 +1,7 @@
-import type { Response } from '../../type';
+import type { NodeResponse } from '../../type';
 
 const GoneSymbol = Symbol.for('ResGone');
-export function isResponseGone(res: Response) {
+export function isResponseGone(res: NodeResponse) {
     if (res.headersSent || res.writableEnded) {
         return true;
     }

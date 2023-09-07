@@ -1,8 +1,8 @@
 import type { OutgoingHttpHeader } from 'node:http';
-import type { Response } from '../../type';
+import type { NodeResponse } from '../../type';
 
 export function appendResponseHeader(
-    res: Response,
+    res: NodeResponse,
     name: string,
     value: OutgoingHttpHeader,
 ) {
@@ -21,7 +21,7 @@ export function appendResponseHeader(
 }
 
 export function appendResponseHeaderDirective(
-    res: Response,
+    res: NodeResponse,
     name: string,
     value: OutgoingHttpHeader,
 ) {

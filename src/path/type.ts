@@ -6,3 +6,5 @@ export type PathMatcherExecResult = {
     path: string,
     params: Record<string, any>
 };
+
+export type Path = string | RegExp;

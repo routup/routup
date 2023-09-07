@@ -1,4 +1,4 @@
-import type { Request } from '../../type';
+import type { NodeRequest } from '../../type';
 import { useConfig } from '../../config';
 import { HeaderName } from '../../constants';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils';
@@ -8,7 +8,7 @@ type RequestHostNameOptions = {
     trustProxy?: TrustProxyInput
 };
 
-export function getRequestHostName(req: Request, options?: RequestHostNameOptions) : string | undefined {
+export function getRequestHostName(req: NodeRequest, options?: RequestHostNameOptions) : string | undefined {
     options = options || {};
 
     let trustProxy : TrustProxyFn;
