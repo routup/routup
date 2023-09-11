@@ -1,9 +1,6 @@
-import type { Readable } from 'node:stream';
+import type { NodeResponse } from '../../bridge';
 import { HeaderName } from '../../constants';
-import type { NodeResponse } from '../../type';
-import {
-    extname, getCharsetForMimeType, getMimeType, isObject,
-} from '../../utils';
+import { extname, getCharsetForMimeType, getMimeType } from '../../utils';
 
 export function setResponseContentTypeByFileName(res: NodeResponse, fileName: string) {
     const ext = extname(fileName);
@@ -17,20 +14,6 @@ export function setResponseContentTypeByFileName(res: NodeResponse, fileName: st
             res.setHeader(HeaderName.CONTENT_TYPE, type);
         }
     }
-}
-
-export function isNodeStream(input: unknown) : input is Readable {
-    return isObject(input) &&
-        typeof input.pipe === 'function' &&
-        typeof input._read === 'function';
-}
-
-export function isWebStream(input: unknown) : input is ReadableStream {
-    return isObject(input) && typeof input.pipeTo === 'function';
-}
-
-export function isStream(data: any): data is Readable | ReadableStream {
-    return isNodeStream(data) || isWebStream(data);
 }
 
 /* istanbul ignore next */

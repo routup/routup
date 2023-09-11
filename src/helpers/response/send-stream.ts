@@ -1,10 +1,11 @@
-import type { Readable } from 'node:stream';
-import type { NodeResponse } from '../../type';
-import { isWebStream } from './utils';
+import type { Readable as NodeReadable } from 'stream';
+import type { NodeResponse } from '../../bridge';
+import type { NodeReadableStream, WebReadableStream } from '../../types';
+import { isWebStream } from '../../utils';
 
 export async function sendStream(
     res: NodeResponse,
-    stream: Readable | ReadableStream,
+    stream: NodeReadableStream | WebReadableStream,
     next?: (err?: Error) => Promise<unknown> | unknown,
 ) {
     if (isWebStream(stream)) {
@@ -35,7 +36,7 @@ export async function sendStream(
 
     return new Promise<void>((resolve, reject) => {
         stream.on('open', () => {
-            stream.pipe(res);
+            (stream as NodeReadable).pipe(res);
         });
 
         /* istanbul ignore next */

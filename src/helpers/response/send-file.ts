@@ -1,11 +1,11 @@
+import type { NodeResponse } from '../../bridge';
 import { HeaderName } from '../../constants';
-import type { NodeResponse } from '../../type';
-import { basename } from '../../utils';
+import { basename, isStream } from '../../utils';
 import { isResponseGone } from './gone';
 import { setResponseHeaderAttachment } from './header-attachment';
 import { send } from './send';
 import { sendStream } from './send-stream';
-import { isStream, setResponseContentTypeByFileName } from './utils';
+import { setResponseContentTypeByFileName } from './utils';
 
 export type SendFileContentOptions = {
     end?: number,

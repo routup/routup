@@ -1,6 +1,7 @@
+import { Buffer } from 'buffer';
+import type { NodeResponse } from '../../bridge';
 import { useConfig } from '../../config';
 import { HeaderName } from '../../constants';
-import type { NodeResponse } from '../../type';
 import { isResponseGone } from './gone';
 import { appendResponseHeaderDirective } from './header';
 import { setResponseHeaderContentType } from './header-content-type';

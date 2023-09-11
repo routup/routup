@@ -1,5 +1,7 @@
 import supertest from 'supertest';
-import { Router, send, useRequestMountPath } from '../../../../src';
+import {
+    Router, createNodeListener, send, useRequestMountPath,
+} from '../../../../src';
 
 describe('src/helpers/request/mount-path', () => {
     it('should get base-url with predefined path', async () => {
@@ -9,7 +11,7 @@ describe('src/helpers/request/mount-path', () => {
 
         router.get('', (req, res) => send(res, useRequestMountPath(req)));
 
-        const server = supertest(router.createListener());
+        const server = supertest(createNodeListener(router));
 
         const response = await server
             .get('/foo');
@@ -25,7 +27,7 @@ describe('src/helpers/request/mount-path', () => {
         const router = new Router();
         router.use('/foo', child);
 
-        const server = supertest(router.createListener());
+        const server = supertest(createNodeListener(router));
 
         const response = await server
             .get('/foo/bar');

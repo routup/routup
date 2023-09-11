@@ -1,5 +1,5 @@
 import supertest from 'supertest';
-import { Router, send } from '../../../src';
+import { Router, createNodeListener, send } from '../../../src';
 
 describe('routing/paths', () => {
     it('should handle path', async () => {
@@ -13,7 +13,7 @@ describe('routing/paths', () => {
             send(res, '/foo/bar/baz');
         });
 
-        const server = supertest(router.createListener());
+        const server = supertest(createNodeListener(router));
 
         let response = await server
             .get('/foo');
@@ -37,7 +37,7 @@ describe('routing/paths', () => {
             send(res, '/foo/bar');
         });
 
-        const server = supertest(router.createListener());
+        const server = supertest(createNodeListener(router));
 
         const response = await server
             .get('/foo/bar');
@@ -56,7 +56,7 @@ describe('routing/paths', () => {
         const router = new Router({ path: '/foo' });
         router.use(child);
 
-        const server = supertest(router.createListener());
+        const server = supertest(createNodeListener(router));
 
         const response = await server
             .get('/foo/bar/baz');
@@ -72,7 +72,7 @@ describe('routing/paths', () => {
             send(res, '/foo');
         });
 
-        const server = supertest(router.createListener());
+        const server = supertest(createNodeListener(router));
 
         let response = await server
             .get('/butterfly');

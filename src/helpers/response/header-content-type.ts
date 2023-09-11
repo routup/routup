@@ -1,5 +1,5 @@
+import type { NodeResponse } from '../../bridge';
 import { HeaderName } from '../../constants';
-import type { NodeResponse } from '../../type';
 import { getMimeType } from '../../utils';
 
 export function setResponseHeaderContentType(res: NodeResponse, input: string, ifNotExists?: boolean) {

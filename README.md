@@ -12,7 +12,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/routup/badge.svg)](https://snyk.io/test/github/Tada5hi/routup)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
-**Routup** is a lightweight, minimalistic and extendable http interface based routing framework.
+**Routup** is a lightweight, minimalistic, runtime agnostic and extendable http interface based routing framework.
 It uses node's vanilla request and response interfaces, which are injected into route handlers aka middlewares as function argument.
 
 Helpers provide additional functionalities to transform and interact with the request and manipulate the response upstream.
@@ -35,7 +35,7 @@ npm install routup --save
 
 ## Features
 
-- 🚀 high performance routing
+- 🚀 runtime agnostic (Node.JS, Bun, Deno, ...)
 - 🧰 response & request composables/helpers
 - 💼 extendable & compact
 - 🛫 named route parameters
@@ -52,9 +52,15 @@ To read the docs, visit [https://routup.net](https://routup.net)
 
 ## Usage
 
+**`NodeJs`**
+
 ```typescript
 import { createServer } from 'node:http';
-import { Router, send } from 'routup';
+import {
+    createNodeListener,
+    Router, 
+    send
+} from 'routup';
 
 const router = new Router();
 
@@ -62,8 +68,57 @@ router.get('/', (req, res) => {
     send(res, 'Hello World');
 });
 
-const server = createServer(router.createListener());
+const server = createServer(createNodeListener(router));
 server.listen(3000)
+```
+
+**`Bun`**
+
+```typescript
+import {
+    createWebListener,
+    Router, 
+    send
+} from 'routup';
+
+const router = new Router();
+
+router.get('/', (req, res) => {
+    send(res, 'Hello World');
+});
+
+Bun.serve({
+    fetch: createWebListener(router),
+    port: 3000,
+});
+```
+
+**`Deno`**
+
+```typescript
+import {
+    dispatchRawRequest,
+    Router,
+    send
+} from 'routup';
+
+const router = new Router();
+
+router.get('/', (req, res) => {
+    send(res, 'Hello World');
+});
+
+const server = Deno.listen({
+    port: 3000
+});
+for await (const conn of server) {
+    const httpConn = Deno.serveHttp(conn);
+
+    for await (const requestEvent of httpConn) {
+        const response = await dispatchWebRequest(requestEvent.request);
+        requestEvent.respondWith(response);
+    }
+}
 ```
 
 ## Plugins

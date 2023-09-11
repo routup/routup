@@ -1,5 +1,5 @@
 import Negotiator from 'negotiator';
-import type { NodeRequest } from '../../type';
+import type { NodeRequest } from '../../bridge';
 
 const NegotiatorSymbol = Symbol.for('ReqNegotiator');
 

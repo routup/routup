@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import { merge } from 'smob';
 import { isObject } from '../object';
 import { createEtag } from './module';

@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import { subtle } from 'uncrypto';
 import { type Stats } from 'node:fs';
 import { isObject } from '../object';

@@ -1,5 +1,5 @@
 import type { OutgoingHttpHeader } from 'node:http';
-import type { NodeResponse } from '../../type';
+import type { NodeResponse } from '../../bridge';
 
 export function appendResponseHeader(
     res: NodeResponse,

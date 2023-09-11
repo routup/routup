@@ -1,4 +1,4 @@
-import type { NodeRequest } from '../../type';
+import type { NodeRequest } from '../../bridge';
 
 const PathSymbol = Symbol.for('ReqPath');
 

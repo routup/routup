@@ -1,3 +1,5 @@
+export * from './cookie';
+export * from './header';
 export * from './etag';
 export * from './trust-proxy';
 export * from './is-instance';
@@ -5,5 +7,5 @@ export * from './mime';
 export * from './object';
 export * from './path';
 export * from './promise';
-export * from './request';
+export * from './stream';
 export * from './url';

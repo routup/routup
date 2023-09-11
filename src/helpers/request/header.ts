@@ -1,5 +1,5 @@
 import type { IncomingHttpHeaders } from 'node:http';
-import type { NodeRequest } from '../../type';
+import type { NodeRequest } from '../../bridge';
 
 export function getRequestHeader<K extends keyof IncomingHttpHeaders>(
     req: NodeRequest,

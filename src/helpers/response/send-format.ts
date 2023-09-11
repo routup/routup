@@ -1,4 +1,4 @@
-import type { NodeResponse } from '../../type';
+import type { NodeResponse } from '../../bridge';
 import { getRequestAcceptableContentType } from '../request';
 
 type ResponseFormats = {

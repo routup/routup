@@ -1,5 +1,5 @@
+import type { NodeRequest } from '../../bridge';
 import { HeaderName } from '../../constants';
-import type { NodeRequest } from '../../type';
 
 export function isRequestCacheable(req: NodeRequest, modifiedTime: string | Date) : boolean {
     const modifiedSince = req.headers[HeaderName.IF_MODIFIED_SINCE];

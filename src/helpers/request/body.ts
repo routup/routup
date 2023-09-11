@@ -1,5 +1,5 @@
 import { merge } from 'smob';
-import type { NodeRequest } from '../../type';
+import type { NodeRequest } from '../../bridge';
 import { isObject } from '../../utils';
 
 const BodySymbol = Symbol.for('ReqBody');

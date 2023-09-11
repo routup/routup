@@ -1,4 +1,4 @@
-import type { NodeResponse } from '../../type';
+import type { NodeResponse } from '../../bridge';
 import { send } from './send';
 
 export function sendAccepted(res: NodeResponse, chunk?: any) : Promise<void> {

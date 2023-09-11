@@ -1,9 +1,10 @@
 import supertest from 'supertest';
 import {
-    Router, send, setRequestEnv, useRequestEnv,
+    Router,
+    createNodeListener, send, setRequestEnv, useRequestEnv,
 } from '../../../src';
 import type {
-    DispatcherNext, Next, NodeRequest,
+    DispatcherNext, NodeNext, NodeRequest,
     NodeResponse,
 } from '../../../src';
 
@@ -21,7 +22,7 @@ describe('routing/middleware', () => {
             send(res, useRequestEnv(req, 'foo'));
         });
 
-        const server = supertest(router.createListener());
+        const server = supertest(createNodeListener(router));
 
         const response = await server
             .get('/');
@@ -41,7 +42,7 @@ describe('routing/middleware', () => {
             send(res, err.message);
         });
 
-        const server = supertest(router.createListener());
+        const server = supertest(createNodeListener(router));
 
         const response = await server
             .get('/');
@@ -78,7 +79,7 @@ describe('routing/middleware', () => {
             },
         );
 
-        const server = supertest(router.createListener());
+        const server = supertest(createNodeListener(router));
 
         let response = await server
             .get('/');

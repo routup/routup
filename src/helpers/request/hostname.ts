@@ -1,4 +1,4 @@
-import type { NodeRequest } from '../../type';
+import type { NodeRequest } from '../../bridge';
 import { useConfig } from '../../config';
 import { HeaderName } from '../../constants';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils';

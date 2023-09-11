@@ -1,18 +1,15 @@
-import type { RequestListener } from 'node:http';
 import { distinctArray, merge } from 'smob';
 import type {
-    DispatcherMeta,
-    NodeErrorHandler,
-    NodeHandler,
-    NodeRequest,
-
-    NodeResponse,
-
-} from '../type';
+    NodeErrorHandler, NodeHandler,
+} from '../bridge';
+import type {
+    Dispatcher, DispatcherEvent, DispatcherMeta, DispatcherNext,
+} from '../dispatcher';
 import {
     HeaderName,
     MethodName,
 } from '../constants';
+import { cloneDispatcherMeta, mergeDispatcherMetaParams } from '../dispatcher/utils';
 import {
     isResponseGone,
     send,
@@ -20,12 +17,9 @@ import {
 } from '../helpers';
 import {
     cleanDoubleSlashes,
-    createRequestTimeout,
     isInstance,
-
     withLeadingSlash,
     withoutTrailingSlash,
-
 } from '../utils';
 import type { Path, PathMatcherOptions } from '../path';
 import { PathMatcher, isPath } from '../path';
@@ -41,7 +35,7 @@ export function isRouterInstance(input: unknown) : input is Router {
     return isInstance(input, 'Router');
 }
 
-export class Router {
+export class Router implements Dispatcher {
     readonly '@instanceof' = Symbol.for('Router');
 
     /**
@@ -122,19 +116,6 @@ export class Router {
 
     // --------------------------------------------------
 
-    createListener() : RequestListener {
-        return (req, res) => {
-            if (this.timeout) {
-                createRequestTimeout(res, this.timeout);
-            }
-
-            Promise.resolve()
-                .then(() => this.dispatch(req, res));
-        };
-    }
-
-    // --------------------------------------------------
-
     matchPath(path: string) : boolean {
         if (this.pathMatcher) {
             return this.pathMatcher.test(path);
@@ -146,10 +127,9 @@ export class Router {
     // --------------------------------------------------
 
     dispatch(
-        req: NodeRequest,
-        res: NodeResponse,
+        event: DispatcherEvent,
         meta?: DispatcherMeta,
-        done?: (err?: Error) => Promise<any>,
+        done?: DispatcherNext,
     ) : Promise<void> {
         meta = meta || {};
 
@@ -162,36 +142,36 @@ export class Router {
             }
 
             if (typeof err !== 'undefined') {
-                if (!isResponseGone(res)) {
-                    res.statusCode = 400;
-                    res.end();
+                if (!isResponseGone(event.res)) {
+                    event.res.statusCode = 400;
+                    event.res.end();
                 }
 
                 return Promise.resolve();
             }
 
             if (
-                req.method &&
-                req.method.toLowerCase() === MethodName.OPTIONS
+                event.req.method &&
+                event.req.method.toLowerCase() === MethodName.OPTIONS
             ) {
                 const options = allowedMethods
                     .map((key) => key.toUpperCase())
                     .join(',');
 
-                res.setHeader(HeaderName.ALLOW, options);
+                event.res.setHeader(HeaderName.ALLOW, options);
 
-                return send(res, options);
+                return send(event.res, options);
             }
 
-            if (!isResponseGone(res)) {
-                res.statusCode = 404;
-                res.end();
+            if (!isResponseGone(event.res)) {
+                event.res.statusCode = 404;
+                event.res.end();
             }
 
             return Promise.resolve();
         };
 
-        let path = meta.path || useRequestPath(req);
+        let path = meta.path || useRequestPath(event.req);
 
         if (this.pathMatcher) {
             const output = this.pathMatcher.exec(path);
@@ -214,7 +194,7 @@ export class Router {
             meta.mountPath = '/';
         }
 
-        const next = (err?: Error) : Promise<void> => {
+        const next : DispatcherNext = (err?: Error) : Promise<void> => {
             if (index >= this.stack.length) {
                 if (err) {
                     return Promise.reject(err);
@@ -231,7 +211,7 @@ export class Router {
 
                 layer = this.stack[index];
 
-                if (isLayerInstance(layer)) {
+                if (layer instanceof Layer) {
                     if (!layer.isError() && err) {
                         continue;
                     }
@@ -247,12 +227,12 @@ export class Router {
                     match = layer.matchPath(path);
 
                     if (
-                        req.method &&
-                            !layer.matchMethod(req.method)
+                        event.req.method &&
+                            !layer.matchMethod(event.req.method)
                     ) {
                         match = false;
 
-                        if (req.method.toLowerCase() === MethodName.OPTIONS) {
+                        if (event.req.method.toLowerCase() === MethodName.OPTIONS) {
                             allowedMethods = distinctArray(merge(
                                 allowedMethods,
                                 layer.getMethods(),
@@ -270,26 +250,28 @@ export class Router {
                 return Promise.resolve();
             }
 
-            const layerMeta : DispatcherMeta = { ...meta };
+            const layerMeta = cloneDispatcherMeta(meta);
+            layerMeta.timeout = this.timeout;
 
             if (isLayerInstance(layer)) {
                 const output = layer.exec(path);
 
                 if (output) {
-                    layerMeta.params = merge(output.params, layerMeta.params || {});
+                    layerMeta.params = mergeDispatcherMetaParams(layerMeta.params, output.params);
                     layerMeta.mountPath = cleanDoubleSlashes(`${layerMeta.mountPath || ''}/${output.path}`);
                 }
             }
 
             if (err) {
                 if (isLayerInstance(layer) && layer.isError()) {
-                    return layer.dispatch(req, res, layerMeta, next, err);
+                    layerMeta.error = err;
+                    return layer.dispatch(event, layerMeta, next);
                 }
 
                 return next(err);
             }
 
-            return layer.dispatch(req, res, layerMeta, next);
+            return layer.dispatch(event, layerMeta, next);
         };
 
         return next()

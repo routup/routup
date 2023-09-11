@@ -1,5 +1,5 @@
 import { hasOwnProperty, merge } from 'smob';
-import type { NodeRequest } from '../../type';
+import type { NodeRequest } from '../../bridge';
 
 const envSymbol = Symbol.for('ReqEnv');
 

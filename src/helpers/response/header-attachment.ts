@@ -1,5 +1,5 @@
+import type { NodeResponse } from '../../bridge';
 import { HeaderName } from '../../constants';
-import type { NodeResponse } from '../../type';
 import { setResponseContentTypeByFileName } from './utils';
 
 export function setResponseHeaderAttachment(res: NodeResponse, filename?: string) {

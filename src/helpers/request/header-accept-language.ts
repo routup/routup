@@ -1,4 +1,4 @@
-import type { NodeRequest } from '../../type';
+import type { NodeRequest } from '../../bridge';
 import { useRequestNegotiator } from './negotiator';
 
 export function getRequestAcceptableLanguages(req: NodeRequest) : string[] {

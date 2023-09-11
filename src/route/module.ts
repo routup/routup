@@ -1,17 +1,16 @@
-import { hasOwnProperty, merge } from 'smob';
+import { hasOwnProperty } from 'smob';
+import type { NodeHandler } from '../bridge';
 import { MethodName } from '../constants';
 import type {
-    DispatcherMeta, DispatcherNext, NodeHandler, NodeRequest,
-
-    NodeResponse,
-
-} from '../type';
+    Dispatcher, DispatcherEvent, DispatcherMeta, DispatcherNext,
+} from '../dispatcher';
+import { cloneDispatcherMeta, mergeDispatcherMetaParams } from '../dispatcher/utils';
 import { Layer } from '../layer';
 import type { Path, PathMatcherOptions } from '../path';
 import { PathMatcher } from '../path';
 import type { RouteOptions } from './type';
 
-export class Route {
+export class Route implements Dispatcher {
     readonly '@instanceof' = Symbol.for('Route');
 
     public readonly path : Path;
@@ -72,17 +71,16 @@ export class Route {
     // --------------------------------------------------
 
     dispatch(
-        req: NodeRequest,
-        res: NodeResponse,
+        event: DispatcherEvent,
         meta: DispatcherMeta,
         done: DispatcherNext,
     ) : Promise<any> {
         /* istanbul ignore next */
-        if (!req.method) {
+        if (!event.req.method) {
             return done();
         }
 
-        let name = req.method.toLowerCase();
+        let name = event.req.method.toLowerCase();
 
         if (
             name === MethodName.HEAD &&
@@ -102,13 +100,11 @@ export class Route {
             return done();
         }
 
-        const layerMeta : DispatcherMeta = {
-            ...meta,
-        };
+        const layerMeta = cloneDispatcherMeta(meta);
 
         const output = this.pathMatcher.exec(meta.path);
         if (output) {
-            layerMeta.params = merge({}, (meta.params || {}), output.params);
+            layerMeta.params = mergeDispatcherMetaParams(layerMeta.params, output.params);
         }
 
         let index = -1;
@@ -129,7 +125,7 @@ export class Route {
                 return Promise.reject(err);
             }
 
-            return layer.dispatch(req, res, { ...layerMeta }, next);
+            return layer.dispatch(event, { ...layerMeta }, next);
         };
 
         return next()

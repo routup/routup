@@ -1,5 +1,5 @@
+import type { NodeRequest } from '../../bridge';
 import { HeaderName } from '../../constants';
-import type { NodeRequest } from '../../type';
 import { getMimeType } from '../../utils';
 import { getRequestHeader } from './header';
 

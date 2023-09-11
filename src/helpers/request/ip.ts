@@ -1,6 +1,6 @@
 import { all } from 'proxy-addr';
+import type { NodeRequest } from '../../bridge';
 import { useConfig } from '../../config';
-import type { NodeRequest } from '../../type';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils';
 import { buildTrustProxyFn } from '../../utils';
 

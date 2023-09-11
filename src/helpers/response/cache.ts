@@ -1,4 +1,4 @@
-import type { NodeResponse } from '../../type';
+import type { NodeResponse } from '../../bridge';
 
 export type ResponseCacheHeadersOptions = {
     maxAge?: number,

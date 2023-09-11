@@ -1,4 +1,4 @@
-import type { NodeResponse } from '../../type';
+import type { NodeResponse } from '../../bridge';
 
 const GoneSymbol = Symbol.for('ResGone');
 export function isResponseGone(res: NodeResponse) {

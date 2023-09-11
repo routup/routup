@@ -1,6 +1,6 @@
 import { merge } from 'smob';
+import type { NodeRequest } from '../../bridge';
 import { isObject } from '../../utils';
-import type { NodeRequest } from '../../type';
 
 const QuerySymbol = Symbol.for('ReqQuery');
 
