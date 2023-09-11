@@ -1,4 +1,3 @@
-import { GatewayTimeoutErrorOptions, NotFoundErrorOptions } from '@ebec/http';
 import supertest from 'supertest';
 import {
     Router, createNodeListener, send, useRequestParams,
@@ -59,7 +58,7 @@ describe('src/module', () => {
         const response = await server
             .get('/foo');
 
-        expect(response.statusCode).toEqual(NotFoundErrorOptions.statusCode);
+        expect(response.statusCode).toEqual(404);
     });
 
     it('should process with missing response', async () => {
@@ -74,7 +73,7 @@ describe('src/module', () => {
         const response = await server
             .get('/');
 
-        expect(response.statusCode).toEqual(GatewayTimeoutErrorOptions.statusCode);
+        expect(response.statusCode).toEqual(504);
     });
 
     it('should process with error thrown', async () => {
