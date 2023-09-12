@@ -64,9 +64,7 @@ import {
 
 const router = new Router();
 
-router.get('/', (req, res) => {
-    send(res, 'Hello World');
-});
+router.get('/', () => 'Hello World');
 
 const server = createServer(createNodeListener(router));
 server.listen(3000)
@@ -83,9 +81,7 @@ import {
 
 const router = new Router();
 
-router.get('/', (req, res) => {
-    send(res, 'Hello World');
-});
+router.get('/', () => 'Hello World');
 
 Bun.serve({
     fetch: createWebListener(router),
@@ -104,9 +100,7 @@ import {
 
 const router = new Router();
 
-router.get('/', (req, res) => {
-    send(res, 'Hello World');
-});
+router.get('/', () => 'Hello World');
 
 const server = Deno.listen({
     port: 3000
