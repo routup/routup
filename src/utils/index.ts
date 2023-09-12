@@ -9,3 +9,4 @@ export * from './path';
 export * from './promise';
 export * from './stream';
 export * from './url';
+export * from './web';

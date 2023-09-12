@@ -1,12 +1,15 @@
+import type { NodeResponse } from '../bridge';
 import type {
     Dispatcher, DispatcherEvent, DispatcherMeta, DispatcherNext,
 } from '../dispatcher';
 import {
-    send, setRequestMountPath, setRequestParams, setRequestRouterIds,
+    send, sendStream, sendWebBlob, sendWebResponse, setRequestMountPath, setRequestParams, setRequestRouterIds,
 } from '../helpers';
 import { PathMatcher } from '../path';
-import { findRouterOption } from '../router-options/module';
-import { isPromise } from '../utils';
+import { findRouterOption } from '../router-options';
+import {
+    isPromise, isStream, isWebBlob, isWebResponse,
+} from '../utils';
 import type { LayerOptions } from './type';
 
 export class Layer implements Dispatcher {
@@ -109,8 +112,7 @@ export class Layer implements Dispatcher {
                     handled = true;
                     unsubscribe();
 
-                    // todo: hadnle stream, web response, error,
-                    return send(event.res, data)
+                    return this.sendOutput(event.res, data)
                         .then(() => resolve())
                         .catch((e) => reject(e));
                 };
@@ -130,6 +132,26 @@ export class Layer implements Dispatcher {
                 nextPolyfill(error as Error);
             }
         });
+    }
+
+    protected sendOutput(res: NodeResponse, input: unknown) : Promise<any> {
+        if (input instanceof Error) {
+            return Promise.reject(input);
+        }
+
+        if (isStream(input)) {
+            return sendStream(res, input);
+        }
+
+        if (isWebBlob(input)) {
+            return sendWebBlob(res, input);
+        }
+
+        if (isWebResponse(input)) {
+            return sendWebResponse(res, input);
+        }
+
+        return send(res, input);
     }
 
     // --------------------------------------------------

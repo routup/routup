@@ -10,4 +10,6 @@ export * from './send-file';
 export * from './send-format';
 export * from './send-redirect';
 export * from './send-stream';
+export * from './send-web-response';
+export * from './send-web-blob';
 export * from './utils';
