@@ -56,8 +56,7 @@
         "proxy-addr": "^2.0.7",
         "readable-stream": "^4.4.2",
         "smob": "^1.4.0",
-        "uncrypto": "^0.1.3",
-        "zod": "^3.21.4"
+        "uncrypto": "^0.1.3"
     },
     "devDependencies": {
         "@rollup/plugin-commonjs": "^25.0.4",
