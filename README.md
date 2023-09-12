@@ -93,7 +93,7 @@ Bun.serve({
 
 ```typescript
 import {
-    dispatchRawRequest,
+    dispatchWebRequest,
     Router,
     send
 } from 'routup';
@@ -109,7 +109,10 @@ for await (const conn of server) {
     const httpConn = Deno.serveHttp(conn);
 
     for await (const requestEvent of httpConn) {
-        const response = await dispatchWebRequest(requestEvent.request);
+        const response = await dispatchWebRequest(
+            router, 
+            requestEvent.request
+        );
         requestEvent.respondWith(response);
     }
 }

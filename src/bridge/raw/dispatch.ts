@@ -1,8 +1,12 @@
 import type { Router } from '../../router';
 import { createNodeRequest, createNodeResponse } from '../node';
-import type { RawRequest, RawResponse } from './type';
+import type { DispatchRawRequestOptions, RawRequest, RawResponse } from './type';
 
-export async function dispatchRawRequest(router: Router, request: RawRequest) : Promise<RawResponse> {
+export async function dispatchRawRequest(
+    router: Router,
+    request: RawRequest,
+    options: DispatchRawRequestOptions = {},
+) : Promise<RawResponse> {
     const req = createNodeRequest({
         url: request.path,
         method: request.method,
@@ -15,14 +19,27 @@ export async function dispatchRawRequest(router: Router, request: RawRequest) : 
         req.headers[key] = value;
     });
 
-    await router.dispatch({ req, res });
+    try {
+        await router.dispatch({ req, res });
 
-    return {
-        status: res.statusCode,
-        statusMessage: res.statusMessage,
-        headers: res.getHeaders(),
-        body: (res as Record<string, any>).body,
-    };
+        return {
+            status: res.statusCode,
+            statusMessage: res.statusMessage,
+            headers: res.getHeaders(),
+            body: (res as Record<string, any>).body,
+        };
+    } catch (e) {
+        if (options.throwOnError) {
+            throw e;
+        }
+
+        return {
+            status: 404,
+            statusMessage: 'Not found',
+            headers: res.getHeaders(),
+            body: (res as Record<string, any>).body,
+        };
+    }
 }
 
 export function createRawRequestDispatcher(router: Router) {

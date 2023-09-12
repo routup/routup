@@ -1,4 +1,3 @@
-import type { Socket } from 'node:net';
 import type { IncomingMessage } from 'node:http';
 import type { Readable as NodeReadable } from 'node:stream';
 import { Readable } from 'readable-stream';
@@ -26,12 +25,6 @@ export function createNodeRequest(context: NodeRequestCreateContext) : IncomingM
     } else {
         readable = new Readable();
     }
-
-    const socket = new Proxy({}, {
-        get(_target: Record<string, any>, _p: string | symbol, _receiver: any): any {
-            throw new Error('The request was created from a web request and has no socket.');
-        },
-    }) as Socket;
 
     const headers : Record<string, string | string[] | undefined> = context.headers || {};
 
@@ -61,9 +54,19 @@ export function createNodeRequest(context: NodeRequestCreateContext) : IncomingM
         }
     }
 
+    Object.defineProperty(readable, 'connection', {
+        get() {
+            return {};
+        },
+    });
+
+    Object.defineProperty(readable, 'socket', {
+        get() {
+            return {};
+        },
+    });
+
     Object.assign(readable, {
-        connection: socket,
-        socket,
         aborted: false,
         complete: true,
         headers,
@@ -82,7 +85,7 @@ export function createNodeRequest(context: NodeRequestCreateContext) : IncomingM
         setTimeout(_msecs: number, _callback?: () => void) {
             return this as IncomingMessage;
         },
-    } satisfies Omit<IncomingMessage, keyof Readable>);
+    } satisfies Omit<IncomingMessage, keyof Readable | 'socket' | 'connection'>);
 
     return readable as IncomingMessage;
 }

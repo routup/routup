@@ -15,3 +15,7 @@ export type RawResponse = {
     headers: Record<string, RawResponseHeader>
     body?: ArrayBuffer;
 };
+
+export type DispatchRawRequestOptions = {
+    throwOnError?: boolean
+};
