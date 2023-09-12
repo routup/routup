@@ -1,3 +1,9 @@
+import {
+    BadRequestError,
+    NotFoundError,
+    extendsClientError,
+    extendsServerError,
+} from '@ebec/http';
 import { distinctArray, merge } from 'smob';
 import type {
     NodeErrorHandler, NodeHandler,
@@ -126,12 +132,11 @@ export class Router implements Dispatcher {
             }
 
             if (typeof err !== 'undefined') {
-                if (!isResponseGone(event.res)) {
-                    event.res.statusCode = 400;
-                    event.res.end();
+                if (extendsClientError(err) || extendsServerError(err)) {
+                    return Promise.reject(err);
                 }
 
-                return Promise.resolve();
+                return Promise.reject(new BadRequestError());
             }
 
             if (
@@ -147,12 +152,11 @@ export class Router implements Dispatcher {
                 return send(event.res, options);
             }
 
-            if (!isResponseGone(event.res)) {
-                event.res.statusCode = 404;
-                event.res.end();
+            if (isResponseGone(event.res)) {
+                return Promise.resolve();
             }
 
-            return Promise.resolve();
+            return Promise.reject(new NotFoundError());
         };
 
         let path = meta.path || useRequestPath(event.req);
