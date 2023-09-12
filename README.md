@@ -12,7 +12,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/routup/badge.svg)](https://snyk.io/test/github/Tada5hi/routup)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
-**Routup** is a lightweight, minimalistic, runtime agnostic and extendable http interface based routing framework.
+**Routup** is a lightweight, runtime agnostic and extendable routing framework.
 It uses node's vanilla request and response interfaces, which are injected into route handlers aka middlewares as function argument.
 
 Helpers provide additional functionalities to transform and interact with the request and manipulate the response upstream.
@@ -74,7 +74,7 @@ server.listen(3000)
 
 ```typescript
 import {
-    createWebListener,
+    dispatchWebRequest,
     Router, 
     send
 } from 'routup';
@@ -84,7 +84,9 @@ const router = new Router();
 router.get('/', () => 'Hello World');
 
 Bun.serve({
-    fetch: createWebListener(router),
+    async fetch(request) {
+        return dispatchWebRequest(router, request);
+    },
     port: 3000,
 });
 ```
