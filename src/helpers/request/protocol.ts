@@ -1,9 +1,10 @@
 import { hasOwnProperty } from 'smob';
 import type { NodeRequest } from '../../bridge';
-import { useConfig } from '../../config';
 import { HeaderName } from '../../constants';
+import { findRouterOption } from '../../router-options';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils';
 import { buildTrustProxyFn } from '../../utils';
+import { useRequestRouterIds } from './router';
 
 type RequestProtocolOptions = {
     trustProxy?: TrustProxyInput,
@@ -20,8 +21,10 @@ export function getRequestProtocol(
     if (typeof options.trustProxy !== 'undefined') {
         trustProxy = buildTrustProxyFn(options.trustProxy);
     } else {
-        const config = useConfig();
-        trustProxy = config.get('trustProxy');
+        trustProxy = findRouterOption(
+            'trustProxy',
+            useRequestRouterIds(req),
+        );
     }
 
     let protocol : string | undefined = options.default;

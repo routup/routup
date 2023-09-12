@@ -1,7 +1,23 @@
 import fs from 'node:fs';
-import { createEtag, generateETag } from '../../../src';
+import type { EtagFn } from '../../../src';
+import { buildEtagFn, createEtag, generateETag } from '../../../src';
 
 describe('src/utils/etag', () => {
+    it('should build etag fn', async () => {
+        const defaultFn : EtagFn = () => Promise.resolve(undefined);
+
+        let fn = buildEtagFn(defaultFn);
+        expect(fn).toEqual(defaultFn);
+
+        fn = buildEtagFn(false);
+        expect(fn).toBeDefined();
+        expect(await fn('foo')).toBeUndefined();
+
+        fn = buildEtagFn({ threshold: 10_000 });
+        expect(fn).toBeDefined();
+        expect(await fn('foo')).toBeUndefined();
+    });
+
     it('should generate etag', async () => {
         const stats = fs.statSync('test/data/dummy.json');
         expect(stats).toBeDefined();

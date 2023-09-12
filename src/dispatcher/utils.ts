@@ -9,7 +9,7 @@ export function cloneDispatcherMeta(input?: DispatcherMeta): DispatcherMeta {
         path: input.path,
         mountPath: input.mountPath,
         error: input.error,
-        timeout: input.timeout,
+        routerIds: [...input.routerIds || []],
         params: cloneDispatcherMetaParams(input.params),
     };
 }

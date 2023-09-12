@@ -35,9 +35,9 @@ export type DispatcherMeta = {
     error?: Error,
 
     /**
-     * Amount of seconds before a handler should expire.
+     * Ids of chained router instances.
      */
-    timeout?: number
+    routerIds?: number[]
 };
 
 export type DispatcherEvent = {

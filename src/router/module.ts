@@ -25,7 +25,8 @@ import type { Path, PathMatcherOptions } from '../path';
 import { PathMatcher, isPath } from '../path';
 import { Layer, isLayerInstance } from '../layer';
 import { Route, isRouteInstance } from '../route';
-import type { RouterOptions } from './type';
+import { setRouterOptions } from '../router-options';
+import type { RouterOptionsInput } from '../router-options';
 
 export function isRouterInstance(input: unknown) : input is Router {
     if (input instanceof Router) {
@@ -39,18 +40,16 @@ export class Router implements Dispatcher {
     readonly '@instanceof' = Symbol.for('Router');
 
     /**
+     * An identifier for the router instance.
+     */
+    readonly id : number;
+
+    /**
      * Array of mounted layers, routes & routers.
      *
      * @protected
      */
     protected stack : (Router | Route | Layer)[] = [];
-
-    /**
-     * Mount path of instance
-     *
-     * @protected
-     */
-    protected path : Path | undefined;
 
     /**
      * Path matcher for the current mount path.
@@ -64,54 +63,39 @@ export class Router implements Dispatcher {
      *
      * @protected
      */
-    protected pathMatcherOptions : PathMatcherOptions;
-
-    /**
-     * Timeout before the router decides to abort the request.
-     *
-     * @protected
-     */
-    protected timeout: number | undefined;
+    protected pathMatcherOptions : PathMatcherOptions | undefined;
 
     // --------------------------------------------------
 
-    constructor(ctx?: RouterOptions) {
-        ctx = ctx || {};
+    constructor(options: RouterOptionsInput = {}) {
+        this.id = Math.floor(Math.random() * Date.now());
 
-        this.pathMatcherOptions = {
-            end: false,
-            sensitive: true,
-            ...(ctx.pathMatcher || {}),
-        };
+        this.pathMatcherOptions = options.pathMatcher;
 
-        this.timeout = ctx.timeout;
+        this.setPath(options.path);
 
-        this.setPath(ctx.path || '/');
+        setRouterOptions(this.id, options);
     }
 
     // --------------------------------------------------
 
-    setPathMatcherOptions(input: PathMatcherOptions) {
-        this.pathMatcherOptions = input;
-
-        if (this.pathMatcher) {
-            this.pathMatcher.regexpOptions = this.pathMatcherOptions;
-        }
-    }
-
-    setPath(value: Path) {
+    setPath(value?: Path) {
         if (value === '/' || !isPath(value)) {
-            this.path = '/';
             return;
         }
 
+        let path : Path;
         if (typeof value === 'string') {
-            this.path = withLeadingSlash(withoutTrailingSlash(`${value}`));
+            path = withLeadingSlash(withoutTrailingSlash(`${value}`));
         } else {
-            this.path = value;
+            path = value;
         }
 
-        this.pathMatcher = new PathMatcher(this.path, this.pathMatcherOptions);
+        this.pathMatcher = new PathMatcher(path, {
+            end: false,
+            sensitive: false,
+            ...(this.pathMatcherOptions ? this.pathMatcherOptions : {}),
+        });
     }
 
     // --------------------------------------------------
@@ -190,6 +174,12 @@ export class Router implements Dispatcher {
 
         meta.path = path;
 
+        if (meta.routerIds) {
+            meta.routerIds.push(this.id);
+        } else {
+            meta.routerIds = [this.id];
+        }
+
         if (!meta.mountPath) {
             meta.mountPath = '/';
         }
@@ -251,8 +241,6 @@ export class Router implements Dispatcher {
             }
 
             const layerMeta = cloneDispatcherMeta(meta);
-            layerMeta.timeout = this.timeout;
-
             if (isLayerInstance(layer)) {
                 const output = layer.exec(path);
 
@@ -260,14 +248,18 @@ export class Router implements Dispatcher {
                     layerMeta.params = mergeDispatcherMetaParams(layerMeta.params, output.params);
                     layerMeta.mountPath = cleanDoubleSlashes(`${layerMeta.mountPath || ''}/${output.path}`);
                 }
+
+                if (layer.isError()) {
+                    if (err) {
+                        layerMeta.error = err;
+                        return layer.dispatch(event, layerMeta, next);
+                    }
+
+                    return next(err);
+                }
             }
 
             if (err) {
-                if (isLayerInstance(layer) && layer.isError()) {
-                    layerMeta.error = err;
-                    return layer.dispatch(event, layerMeta, next);
-                }
-
                 return next(err);
             }
 
@@ -302,7 +294,7 @@ export class Router implements Dispatcher {
         const route = new Route({
             path,
             pathMatcher: {
-                sensitive: this.pathMatcherOptions.sensitive,
+                ...(this.pathMatcherOptions ? { sensitive: this.pathMatcherOptions.sensitive } : {}),
             },
         });
         this.stack.push(route);
@@ -391,7 +383,6 @@ export class Router implements Dispatcher {
                 if (path) {
                     item.setPath(path);
                 }
-                item.setPathMatcherOptions(this.pathMatcherOptions);
                 this.stack.push(item);
                 continue;
             }
@@ -402,7 +393,7 @@ export class Router implements Dispatcher {
                     pathMatcher: {
                         strict: false,
                         end: false,
-                        sensitive: this.pathMatcherOptions.sensitive,
+                        ...(this.pathMatcherOptions ? { sensitive: this.pathMatcherOptions.sensitive } : {}),
                     },
                 }, item));
             }

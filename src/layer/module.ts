@@ -1,8 +1,11 @@
 import type {
     Dispatcher, DispatcherEvent, DispatcherMeta, DispatcherNext,
 } from '../dispatcher';
-import { send, setRequestMountPath, setRequestParams } from '../helpers';
+import {
+    send, setRequestMountPath, setRequestParams, setRequestRouterIds,
+} from '../helpers';
 import { PathMatcher } from '../path';
+import { findRouterOption } from '../router-options/module';
 import { isPromise } from '../utils';
 import type { LayerOptions } from './type';
 
@@ -38,6 +41,7 @@ export class Layer implements Dispatcher {
     ) : Promise<any> {
         setRequestParams(event.req, meta.params || {});
         setRequestMountPath(event.req, meta.mountPath || '/');
+        setRequestRouterIds(event.req, meta.routerIds || []);
 
         if (
             (this.fn.length !== 4 && meta.error) ||
@@ -46,13 +50,15 @@ export class Layer implements Dispatcher {
             return Promise.reject(meta.error);
         }
 
+        const timeout = findRouterOption('timeout', meta.routerIds);
+
         return new Promise<void>((resolve, reject) => {
-            let timeout : ReturnType<typeof setTimeout> | undefined;
+            let timeoutInstance : ReturnType<typeof setTimeout> | undefined;
             let handled = false;
 
             const unsubscribe = () => {
-                if (timeout) {
-                    clearTimeout(timeout);
+                if (timeoutInstance) {
+                    clearTimeout(timeoutInstance);
                 }
 
                 event.res.off('close', nextPolyfill);
@@ -75,15 +81,15 @@ export class Layer implements Dispatcher {
             event.res.once('close', nextPolyfill);
             event.res.once('error', nextPolyfill);
 
-            if (meta.timeout) {
-                timeout = setTimeout(() => {
+            if (timeout) {
+                timeoutInstance = setTimeout(() => {
                     handled = true;
                     unsubscribe();
 
                     event.res.statusCode = 504;
                     event.res.statusMessage = 'Gateway Timeout';
                     event.res.end();
-                }, meta.timeout);
+                }, timeout);
             }
 
             try {
@@ -103,6 +109,7 @@ export class Layer implements Dispatcher {
                     handled = true;
                     unsubscribe();
 
+                    // todo: hadnle stream, web response, error,
                     return send(event.res, data)
                         .then(() => resolve())
                         .catch((e) => reject(e));

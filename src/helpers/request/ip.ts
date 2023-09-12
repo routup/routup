@@ -1,8 +1,9 @@
 import { all } from 'proxy-addr';
 import type { NodeRequest } from '../../bridge';
-import { useConfig } from '../../config';
+import { findRouterOption } from '../../router-options';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils';
 import { buildTrustProxyFn } from '../../utils';
+import { useRequestRouterIds } from './router';
 
 type RequestIpOptions = {
     trustProxy?: TrustProxyInput
@@ -15,8 +16,10 @@ export function getRequestIP(req: NodeRequest, options?: RequestIpOptions) : str
     if (typeof options.trustProxy !== 'undefined') {
         trustProxy = buildTrustProxyFn(options.trustProxy);
     } else {
-        const config = useConfig();
-        trustProxy = config.get('trustProxy');
+        trustProxy = findRouterOption(
+            'trustProxy',
+            useRequestRouterIds(req),
+        );
     }
 
     const addrs = all(req, trustProxy);

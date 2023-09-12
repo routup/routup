@@ -1,8 +1,9 @@
 import type { NodeRequest } from '../../bridge';
-import { useConfig } from '../../config';
 import { HeaderName } from '../../constants';
+import { findRouterOption } from '../../router-options';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils';
 import { buildTrustProxyFn } from '../../utils';
+import { useRequestRouterIds } from './router';
 
 type RequestHostNameOptions = {
     trustProxy?: TrustProxyInput
@@ -15,8 +16,10 @@ export function getRequestHostName(req: NodeRequest, options?: RequestHostNameOp
     if (typeof options.trustProxy !== 'undefined') {
         trustProxy = buildTrustProxyFn(options.trustProxy);
     } else {
-        const config = useConfig();
-        trustProxy = config.get('trustProxy');
+        trustProxy = findRouterOption(
+            'trustProxy',
+            useRequestRouterIds(req),
+        );
     }
 
     let hostname = req.headers[HeaderName.X_FORWARDED_HOST];

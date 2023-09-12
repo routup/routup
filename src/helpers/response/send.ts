@@ -1,7 +1,8 @@
 import { Buffer } from 'buffer';
 import type { NodeResponse } from '../../bridge';
-import { useConfig } from '../../config';
 import { HeaderName } from '../../constants';
+import { findRouterOption } from '../../router-options';
+import { useRequestRouterIds } from '../request';
 import { isResponseGone } from './gone';
 import { appendResponseHeaderDirective } from './header';
 import { setResponseHeaderContentType } from './header-content-type';
@@ -57,10 +58,12 @@ export async function send(res: NodeResponse, chunk?: any) : Promise<void> {
         res.setHeader(HeaderName.CONTENT_LENGTH, `${len}`);
     }
 
-    const config = useConfig();
-    const etagFn = config.get('etag');
-
     if (typeof len !== 'undefined') {
+        const etagFn = findRouterOption(
+            'etag',
+            useRequestRouterIds(res.req),
+        );
+
         const chunkHash = await etagFn(chunk, encoding, len);
         if (isResponseGone(res)) {
             return Promise.resolve();

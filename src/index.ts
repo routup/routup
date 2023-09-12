@@ -1,5 +1,4 @@
 export * from './bridge';
-export * from './config';
 export * from './constants';
 export * from './dispatcher';
 export * from './helpers';
@@ -7,4 +6,5 @@ export * from './layer';
 export * from './path';
 export * from './route';
 export * from './router';
+export * from './router-options';
 export * from './utils';
