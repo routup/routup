@@ -13,10 +13,10 @@ const buildSendFileOptions = (
     attachment?: boolean,
 ) : SendFileOptions => ({
     name: filePath,
-    getStats() {
+    stats() {
         return fs.promises.stat(filePath);
     },
-    getContent(options) {
+    content(options) {
         return createReadStream(filePath, options);
     },
     attachment,

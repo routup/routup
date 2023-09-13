@@ -14,12 +14,13 @@ export type SendFileContentOptions = {
 
 export type SendFileStats = {
     size?: number,
-    mtime?: Date | number | string
+    mtime?: Date | number | string,
+    name?: string
 };
 
 export type SendFileOptions = {
-    getStats: () => Promise<SendFileStats> | SendFileStats,
-    getContent: (
+    stats: () => Promise<SendFileStats> | SendFileStats,
+    content: (
         options: SendFileContentOptions
     ) => Promise<unknown> | unknown
     attachment?: boolean,
@@ -33,7 +34,7 @@ export async function sendFile(
 ) : Promise<unknown> {
     let stats: SendFileStats;
     try {
-        stats = await options.getStats();
+        stats = await options.stats();
     } catch (e) {
         if (next) {
             return next(e as Error);
@@ -46,8 +47,10 @@ export async function sendFile(
         return Promise.reject(e);
     }
 
-    if (options.name) {
-        const fileName = basename(options.name);
+    const name = options.name || stats.name;
+
+    if (name) {
+        const fileName = basename(name);
 
         if (options.attachment) {
             const dispositionHeader = res.getHeader(HeaderName.CONTENT_DISPOSITION);
@@ -101,7 +104,7 @@ export async function sendFile(
     }
 
     try {
-        const content = await options.getContent(contentOptions);
+        const content = await options.content(contentOptions);
         if (isStream(content)) {
             return await sendStream(res, content, next);
         }
