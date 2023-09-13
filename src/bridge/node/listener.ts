@@ -7,8 +7,7 @@ import type { NodeRequest, NodeResponse } from './type';
 
 export function createNodeListener(router: Router): RequestListener {
     return (req: NodeRequest, res: NodeResponse) => {
-        Promise.resolve()
-            .then(() => dispatchNodeRequest(router, req, res))
+        dispatchNodeRequest(router, req, res)
             .catch((err) => {
                 res.statusCode = 400;
 

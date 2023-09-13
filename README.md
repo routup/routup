@@ -12,10 +12,14 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/routup/badge.svg)](https://snyk.io/test/github/Tada5hi/routup)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
-**Routup** is a lightweight, runtime agnostic and extendable routing framework.
+**Routup** is a lightweight, runtime agnostic and extendable routing library.
 It uses node's vanilla request and response interfaces, which are injected into route handlers aka middlewares as function argument.
-
 Helpers provide additional functionalities to transform and interact with the request and manipulate the response upstream.
+
+Use the same routing framework for each project, regardless of the runtime environment used (Node.Js, Bun, ... ) 🎉
+and is even **228%** faster than Express, for example.
+
+
 
 **Table of Contents**
 
@@ -24,6 +28,7 @@ Helpers provide additional functionalities to transform and interact with the re
 - [Documentation](#documentation)
 - [Usage](#usage)
 - [Plugins](#plugins)
+- [Benchmarks](#benchmarks)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -40,7 +45,7 @@ npm install routup --save
 - 💼 extendable & compact
 - 🛫 named route parameters
 - 📁 nestable routers
-- 🤝️ define one or many (error-) middlewares
+- 🤝️ define one or many (error-) middlewares (inc. express middlewares)
 - ✨ promise support for route- & middleware-handlers
 - 👕 TypeScript fully supported
 - 🤏 Minimalistic to fit into any solution with minimum overhead
@@ -137,6 +142,26 @@ typically http framework functions, which are not integrated in the main package
 | [rate-limit-redis](https://www.npmjs.com/package/@routup/rate-limit-redis) | Redis adapter for the rate-limit plugin.                               |
 | [static](https://www.npmjs.com/package/@routup/static)                     | Serve static files from a directory.                                   |
 | [swagger](https://www.npmjs.com/package/@routup/swagger)                   | Serve generated docs from URL or based on a JSON file.                 |
+
+## Benchmarks
+
+* CPUs:  `24`
+* RAM:  `63.9GB`
+* Node: `v18.16.0`
+* Date:  `Wed Sep 13 2023 15:11:58 GMT+0200 (Mitteleuropäische Sommerzeit) `
+* Method: `autocannon -c 100 -d 40 -p 10 localhost:3000` (two rounds; one to warm-up, one to measure)
+
+| Package    | Requests/s  |  Latency (ms) |   Throughput/MB |
+|:-----------|:-----------:|--------------:|----------------:|
+| http       |    61062    |         15.87 |           10.89 |
+| fastify    |    59679    |         16.26 |           10.70 |
+| koa        |    45763    |         21.35 |            8.16 |
+| **routup** |    43881    |         22.29 |            8.87 |
+| hapi       |    41374    |         23.67 |            7.38 |
+| express    |    13376    |         74.18 |            2.39 |
+
+Benchmarks were generated using autocannon. 
+To recreate the results, this can be done using the [benchmarks'](https://github.com/routup/benchmarks) repository.
 ## Contributing
 
 Before starting to work on a pull request, it is important to review the guidelines for

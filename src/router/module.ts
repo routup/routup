@@ -33,6 +33,7 @@ import { Layer, isLayerInstance } from '../layer';
 import { Route, isRouteInstance } from '../route';
 import { setRouterOptions } from '../router-options';
 import type { RouterOptionsInput } from '../router-options';
+import { generateRouterID } from './utils';
 
 export function isRouterInstance(input: unknown) : input is Router {
     if (input instanceof Router) {
@@ -74,8 +75,7 @@ export class Router implements Dispatcher {
     // --------------------------------------------------
 
     constructor(options: RouterOptionsInput = {}) {
-        this.id = Math.floor(Math.random() * Date.now());
-
+        this.id = generateRouterID();
         this.pathMatcherOptions = options.pathMatcher;
 
         this.setPath(options.path);
