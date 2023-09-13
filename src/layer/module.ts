@@ -1,6 +1,7 @@
 import type {
-    Dispatcher, DispatcherEvent, DispatcherMeta, DispatcherNext,
+    Dispatcher, DispatcherEvent, DispatcherMeta,
 } from '../dispatcher';
+import { createError } from '../error';
 import {
     send, sendStream, sendWebBlob, sendWebResponse,
 } from '../response';
@@ -43,8 +44,7 @@ export class Layer implements Dispatcher {
     dispatch(
         event: DispatcherEvent,
         meta: DispatcherMeta,
-        done: DispatcherNext,
-    ) : Promise<any> {
+    ) : Promise<boolean> {
         setRequestParams(event.req, meta.params || {});
         setRequestMountPath(event.req, meta.mountPath || '/');
         setRequestRouterIds(event.req, meta.routerIds || []);
@@ -58,7 +58,7 @@ export class Layer implements Dispatcher {
 
         const timeout = findRouterOption('timeout', meta.routerIds);
 
-        return new Promise<void>((resolve, reject) => {
+        return new Promise<boolean>((resolve, reject) => {
             let timeoutInstance : ReturnType<typeof setTimeout> | undefined;
             let handled = false;
 
@@ -67,11 +67,11 @@ export class Layer implements Dispatcher {
                     clearTimeout(timeoutInstance);
                 }
 
-                event.res.off('close', nextPolyfill);
-                event.res.off('error', nextPolyfill);
+                event.res.off('close', onFinished);
+                event.res.off('error', onFinished);
             };
 
-            const nextPolyfill = (err?: Error) => {
+            const shutdown = (dispatched: boolean, err?: Error) => {
                 if (handled) {
                     return;
                 }
@@ -79,13 +79,18 @@ export class Layer implements Dispatcher {
                 handled = true;
                 unsubscribe();
 
-                done(err)
-                    .then(() => resolve())
-                    .catch((e) => reject(e));
+                if (err) {
+                    reject(createError(err));
+                } else {
+                    resolve(dispatched);
+                }
             };
 
-            event.res.once('close', nextPolyfill);
-            event.res.once('error', nextPolyfill);
+            const onFinished = (err?: Error) => shutdown(true, err);
+            const onNext = (err?: Error) => shutdown(false, err);
+
+            event.res.once('close', onFinished);
+            event.res.once('error', onFinished);
 
             if (timeout) {
                 timeoutInstance = setTimeout(() => {
@@ -102,9 +107,9 @@ export class Layer implements Dispatcher {
                 let output: any;
 
                 if (meta.error) {
-                    output = this.fn(meta.error, event.req, event.res, nextPolyfill);
+                    output = this.fn(meta.error, event.req, event.res, onNext);
                 } else {
-                    output = this.fn(event.req, event.res, nextPolyfill);
+                    output = this.fn(event.req, event.res, onNext);
                 }
 
                 const handle = (data: any): Promise<void> => {
@@ -116,23 +121,23 @@ export class Layer implements Dispatcher {
                     unsubscribe();
 
                     return this.sendOutput(event.res, data)
-                        .then(() => resolve())
-                        .catch((e) => reject(e));
+                        .then(() => resolve(true))
+                        .catch((e) => reject(createError(e)));
                 };
 
                 if (isPromise(output)) {
                     output
                         .then((r) => handle(r))
-                        .catch((e) => reject(e));
+                        .catch((e) => reject(createError(e)));
 
                     return;
                 }
 
                 Promise.resolve()
                     .then(() => handle(output))
-                    .catch((e) => reject(e));
+                    .catch((e) => reject(createError(e)));
             } catch (error) {
-                nextPolyfill(error as Error);
+                onNext(error as Error);
             }
         });
     }

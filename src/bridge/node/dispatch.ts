@@ -5,6 +5,6 @@ export function dispatchNodeRequest(
     router: Router,
     req: Request,
     res: Response,
-): Promise<void> {
+): Promise<boolean> {
     return router.dispatch({ req, res });
 }

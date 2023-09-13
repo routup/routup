@@ -8,8 +8,18 @@ import { dispatchNodeRequest } from './dispatch';
 export function createNodeListener(router: Router): RequestListener {
     return (req: Request, res: Response) => {
         dispatchNodeRequest(router, req, res)
+            .then((dispatched) => {
+                if (dispatched) {
+                    return;
+                }
+
+                if (!isResponseGone(res)) {
+                    res.statusCode = 404;
+                    res.end();
+                }
+            })
             .catch((err) => {
-                res.statusCode = 400;
+                res.statusCode = 500;
 
                 if (extendsClientError(err) || extendsServerError(err)) {
                     const statusCode = err.getOption('statusCode');

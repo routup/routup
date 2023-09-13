@@ -11,7 +11,7 @@ export type RawResponseHeader = number | string | string[] | undefined;
 
 export type RawResponse = {
     status: number;
-    statusMessage: string;
+    statusMessage?: string;
     headers: Record<string, RawResponseHeader>
     body?: ArrayBuffer;
 };

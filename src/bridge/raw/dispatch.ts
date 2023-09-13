@@ -21,11 +21,18 @@ export async function dispatchRawRequest(
     });
 
     try {
-        await router.dispatch({ req, res });
+        const dispatched = await router.dispatch({ req, res });
+        if (dispatched) {
+            return {
+                status: res.statusCode,
+                statusMessage: res.statusMessage,
+                headers: res.getHeaders(),
+                body: (res as Record<string, any>).body,
+            };
+        }
 
         return {
-            status: res.statusCode,
-            statusMessage: res.statusMessage,
+            status: 404,
             headers: res.getHeaders(),
             body: (res as Record<string, any>).body,
         };
@@ -35,8 +42,7 @@ export async function dispatchRawRequest(
         }
 
         return {
-            status: 404,
-            statusMessage: 'Not found',
+            status: 500,
             headers: res.getHeaders(),
             body: (res as Record<string, any>).body,
         };

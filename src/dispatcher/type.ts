@@ -3,15 +3,9 @@ import type { Request, Response } from '../types';
 export interface Dispatcher {
     dispatch(
         event: DispatcherEvent,
-        meta: DispatcherMeta,
-        done: DispatcherNext,
-    ) : Promise<any>;
+        meta: DispatcherMeta
+    ) : Promise<boolean>;
 }
-
-/**
- * Callback fn to call the next item on the stack.
- */
-export type DispatcherNext = (err?: Error) => Promise<any>;
 
 export type DispatcherMeta = {
     /**

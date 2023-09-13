@@ -1,7 +1,7 @@
 import { hasOwnProperty } from 'smob';
 import { MethodName } from '../constants';
 import type {
-    Dispatcher, DispatcherEvent, DispatcherMeta, DispatcherNext,
+    Dispatcher, DispatcherEvent, DispatcherMeta,
 } from '../dispatcher';
 import { cloneDispatcherMeta, mergeDispatcherMetaParams } from '../dispatcher';
 import { Layer } from '../layer';
@@ -70,14 +70,13 @@ export class Route implements Dispatcher {
 
     // --------------------------------------------------
 
-    dispatch(
+    async dispatch(
         event: DispatcherEvent,
         meta: DispatcherMeta,
-        done: DispatcherNext,
-    ) : Promise<any> {
+    ) : Promise<boolean> {
         /* istanbul ignore next */
         if (!event.req.method) {
-            return done();
+            return false;
         }
 
         let name = event.req.method.toLowerCase();
@@ -97,7 +96,7 @@ export class Route implements Dispatcher {
             layers.length === 0 ||
             typeof meta.path === 'undefined'
         ) {
-            return done();
+            return false;
         }
 
         const layerMeta = cloneDispatcherMeta(meta);
@@ -107,30 +106,31 @@ export class Route implements Dispatcher {
             layerMeta.params = mergeDispatcherMetaParams(layerMeta.params, output.params);
         }
 
-        let index = -1;
-
-        const next : DispatcherNext = (err?: Error) : Promise<any> => {
-            index++;
-
-            if (index >= layers.length) {
-                if (err) {
-                    return Promise.reject(err);
-                }
-
-                return Promise.resolve();
-            }
-
-            const layer = layers[index];
+        let err : Error | undefined;
+        for (let i = 0; i < layers.length; i++) {
+            const layer = layers[i];
             if (err && !layer.isError()) {
-                return Promise.reject(err);
+                continue;
             }
 
-            return layer.dispatch(event, { ...layerMeta }, next);
-        };
+            try {
+                const dispatched = await layer.dispatch(event, { ...layerMeta });
 
-        return next()
-            .then(() => done())
-            .catch((err) => done(err));
+                if (dispatched) {
+                    return true;
+                }
+            } catch (e) {
+                if (e instanceof Error) {
+                    err = e;
+                }
+            }
+        }
+
+        if (err) {
+            throw err;
+        }
+
+        return false;
     }
 
     // --------------------------------------------------

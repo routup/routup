@@ -1,23 +1,11 @@
-import {
-    BadRequestError,
-    NotFoundError,
-    extendsClientError,
-    extendsServerError,
-} from '@ebec/http';
 import { distinctArray, merge } from 'smob';
+import { HeaderName, MethodName } from '../constants';
 import type {
-    Dispatcher, DispatcherEvent, DispatcherMeta, DispatcherNext,
+    Dispatcher, DispatcherEvent, DispatcherMeta,
 } from '../dispatcher';
-import {
-    HeaderName,
-    MethodName,
-} from '../constants';
-import { cloneDispatcherMeta, mergeDispatcherMetaParams } from '../dispatcher/utils';
-import {
-    isResponseGone,
-    send,
-} from '../response';
+import { cloneDispatcherMeta, mergeDispatcherMetaParams } from '../dispatcher';
 import { useRequestPath } from '../request';
+import { isResponseGone, send } from '../response';
 import type { ErrorHandler, Handler } from '../types';
 import {
     cleanDoubleSlashes,
@@ -114,48 +102,11 @@ export class Router implements Dispatcher {
 
     // --------------------------------------------------
 
-    dispatch(
+    async dispatch(
         event: DispatcherEvent,
-        meta?: DispatcherMeta,
-        done?: DispatcherNext,
-    ) : Promise<void> {
-        meta = meta || {};
-
-        let index = -1;
-
-        let allowedMethods : string[] = [];
-        const check = (err?: Error) : Promise<void> => {
-            if (typeof done !== 'undefined') {
-                return done(err);
-            }
-
-            if (typeof err !== 'undefined') {
-                if (extendsClientError(err) || extendsServerError(err)) {
-                    return Promise.reject(err);
-                }
-
-                return Promise.reject(new BadRequestError());
-            }
-
-            if (
-                event.req.method &&
-                event.req.method.toLowerCase() === MethodName.OPTIONS
-            ) {
-                const options = allowedMethods
-                    .map((key) => key.toUpperCase())
-                    .join(',');
-
-                event.res.setHeader(HeaderName.ALLOW, options);
-
-                return send(event.res, options);
-            }
-
-            if (isResponseGone(event.res)) {
-                return Promise.resolve();
-            }
-
-            return Promise.reject(new NotFoundError());
-        };
+        meta: DispatcherMeta = {},
+    ) : Promise<boolean> {
+        const allowedMethods : string[] = [];
 
         let path = meta.path || useRequestPath(event.req);
 
@@ -186,60 +137,42 @@ export class Router implements Dispatcher {
             meta.mountPath = '/';
         }
 
-        const next : DispatcherNext = (err?: Error) : Promise<void> => {
-            if (index >= this.stack.length) {
-                if (err) {
-                    return Promise.reject(err);
+        let err : Error | undefined;
+        let layer : Route | Router | Layer | undefined;
+        let match = false;
+
+        for (let i = 0; i < this.stack.length; i++) {
+            layer = this.stack[i];
+
+            if (layer instanceof Layer) {
+                if (!layer.isError() && err) {
+                    continue;
                 }
 
-                return Promise.resolve();
+                match = layer.matchPath(path);
             }
 
-            let layer : Route | Router | Layer | undefined;
-            let match = false;
+            if (isRouterInstance(layer)) {
+                match = layer.matchPath(path);
+            }
 
-            while (!match && index < this.stack.length) {
-                index++;
+            if (isRouteInstance(layer)) {
+                match = layer.matchPath(path);
 
-                layer = this.stack[index];
+                if (
+                    event.req.method &&
+                    !layer.matchMethod(event.req.method)
+                ) {
+                    match = false;
 
-                if (layer instanceof Layer) {
-                    if (!layer.isError() && err) {
-                        continue;
-                    }
-
-                    match = layer.matchPath(path);
-                }
-
-                if (isRouterInstance(layer)) {
-                    match = layer.matchPath(path);
-                }
-
-                if (isRouteInstance(layer)) {
-                    match = layer.matchPath(path);
-
-                    if (
-                        event.req.method &&
-                            !layer.matchMethod(event.req.method)
-                    ) {
-                        match = false;
-
-                        if (event.req.method.toLowerCase() === MethodName.OPTIONS) {
-                            allowedMethods = distinctArray(merge(
-                                allowedMethods,
-                                layer.getMethods(),
-                            ));
-                        }
+                    if (event.req.method.toLowerCase() === MethodName.OPTIONS) {
+                        allowedMethods.push(...layer.getMethods());
                     }
                 }
             }
 
-            if (!match || !layer) {
-                if (err) {
-                    return Promise.reject(err);
-                }
-
-                return Promise.resolve();
+            if (!match) {
+                continue;
             }
 
             const layerMeta = cloneDispatcherMeta(meta);
@@ -251,26 +184,47 @@ export class Router implements Dispatcher {
                     layerMeta.mountPath = cleanDoubleSlashes(`${layerMeta.mountPath || ''}/${output.path}`);
                 }
 
-                if (layer.isError()) {
-                    if (err) {
-                        layerMeta.error = err;
-                        return layer.dispatch(event, layerMeta, next);
-                    }
+                if (err) {
+                    layerMeta.error = err;
+                }
+            } else if (err) {
+                continue;
+            }
 
-                    return next(err);
+            try {
+                const dispatched = await layer.dispatch(event, layerMeta);
+                if (dispatched) {
+                    return true;
+                }
+            } catch (e) {
+                if (e instanceof Error) {
+                    err = e;
                 }
             }
+        }
 
-            if (err) {
-                return next(err);
+        if (err) {
+            throw err;
+        }
+
+        if (
+            event.req.method &&
+            event.req.method.toLowerCase() === MethodName.OPTIONS
+        ) {
+            const options = distinctArray(allowedMethods)
+                .map((key) => key.toUpperCase())
+                .join(',');
+
+            if (!isResponseGone(event.res)) {
+                event.res.setHeader(HeaderName.ALLOW, options);
+
+                await send(event.res, options);
             }
 
-            return layer.dispatch(event, layerMeta, next);
-        };
+            return true;
+        }
 
-        return next()
-            .then(() => check())
-            .catch((e) => check(e));
+        return false;
     }
 
     // --------------------------------------------------

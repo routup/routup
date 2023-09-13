@@ -88,7 +88,7 @@ describe('src/module', () => {
         const response = await server
             .get('/');
 
-        expect(response.statusCode).toEqual(400);
+        expect(response.statusCode).toEqual(500);
     });
 
     it('should process with async error thrown', async () => {
@@ -107,6 +107,6 @@ describe('src/module', () => {
         const response = await server
             .get('/');
 
-        expect(response.statusCode).toEqual(400);
+        expect(response.statusCode).toEqual(500);
     });
 });

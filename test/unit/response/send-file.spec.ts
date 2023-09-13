@@ -51,7 +51,7 @@ describe('src/helpers/response/send-file', () => {
         const response = await server
             .get('/');
 
-        expect(response.statusCode).toEqual(400);
+        expect(response.statusCode).toEqual(500);
     });
 
     it('should send file to download', async () => {
