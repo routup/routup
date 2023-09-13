@@ -6,9 +6,6 @@ import {
 } from '@ebec/http';
 import { distinctArray, merge } from 'smob';
 import type {
-    NodeErrorHandler, NodeHandler,
-} from '../bridge';
-import type {
     Dispatcher, DispatcherEvent, DispatcherMeta, DispatcherNext,
 } from '../dispatcher';
 import {
@@ -19,8 +16,9 @@ import { cloneDispatcherMeta, mergeDispatcherMetaParams } from '../dispatcher/ut
 import {
     isResponseGone,
     send,
-    useRequestPath,
-} from '../helpers';
+} from '../response';
+import { useRequestPath } from '../request';
+import type { ErrorHandler, Handler } from '../types';
 import {
     cleanDoubleSlashes,
     isInstance,
@@ -306,49 +304,49 @@ export class Router implements Dispatcher {
         return route;
     }
 
-    delete(path: Path, ...handlers: NodeHandler[]) : this {
+    delete(path: Path, ...handlers: Handler[]) : this {
         const route = this.route(path);
         route.delete(...handlers);
 
         return this;
     }
 
-    get(path: Path, ...handlers: NodeHandler[]) : this {
+    get(path: Path, ...handlers: Handler[]) : this {
         const route = this.route(path);
         route.get(...handlers);
 
         return this;
     }
 
-    post(path: Path, ...handlers: NodeHandler[]) : this {
+    post(path: Path, ...handlers: Handler[]) : this {
         const route = this.route(path);
         route.post(...handlers);
 
         return this;
     }
 
-    put(path: Path, ...handlers: NodeHandler[]) : this {
+    put(path: Path, ...handlers: Handler[]) : this {
         const route = this.route(path);
         route.put(...handlers);
 
         return this;
     }
 
-    patch(path: Path, ...handlers: NodeHandler[]) : this {
+    patch(path: Path, ...handlers: Handler[]) : this {
         const route = this.route(path);
         route.patch(...handlers);
 
         return this;
     }
 
-    head(path: Path, ...handlers: NodeHandler[]) : this {
+    head(path: Path, ...handlers: Handler[]) : this {
         const route = this.route(path);
         route.head(...handlers);
 
         return this;
     }
 
-    options(path: Path, ...handlers: NodeHandler[]) : this {
+    options(path: Path, ...handlers: Handler[]) : this {
         const route = this.route(path);
         route.options(...handlers);
 
@@ -359,15 +357,15 @@ export class Router implements Dispatcher {
 
     use(router: Router) : this;
 
-    use(handler: NodeHandler) : this;
+    use(handler: Handler) : this;
 
-    use(handler: NodeErrorHandler) : this;
+    use(handler: ErrorHandler) : this;
 
     use(path: Path, router: Router) : this;
 
-    use(path: Path, handler: NodeHandler) : this;
+    use(path: Path, handler: Handler) : this;
 
-    use(path: Path, handler: NodeErrorHandler) : this;
+    use(path: Path, handler: ErrorHandler) : this;
 
     use(...input: unknown[]) : this {
         /* istanbul ignore next */

@@ -1,5 +1,6 @@
+import { createRequest } from '../../request';
+import { createResponse } from '../../response';
 import type { Router } from '../../router';
-import { createNodeRequest, createNodeResponse } from '../node';
 import type { DispatchRawRequestOptions, RawRequest, RawResponse } from './type';
 
 export async function dispatchRawRequest(
@@ -7,12 +8,12 @@ export async function dispatchRawRequest(
     request: RawRequest,
     options: DispatchRawRequestOptions = {},
 ) : Promise<RawResponse> {
-    const req = createNodeRequest({
+    const req = createRequest({
         url: request.path,
         method: request.method,
         body: request.body,
     });
-    const res = createNodeResponse(req);
+    const res = createResponse(req);
 
     const headers = new Headers(request.headers);
     headers.forEach((value, key) => {

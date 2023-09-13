@@ -1,13 +1,13 @@
 import { hasOwnProperty } from 'smob';
-import type { NodeHandler } from '../bridge';
 import { MethodName } from '../constants';
 import type {
     Dispatcher, DispatcherEvent, DispatcherMeta, DispatcherNext,
 } from '../dispatcher';
-import { cloneDispatcherMeta, mergeDispatcherMetaParams } from '../dispatcher/utils';
+import { cloneDispatcherMeta, mergeDispatcherMetaParams } from '../dispatcher';
 import { Layer } from '../layer';
 import type { Path, PathMatcherOptions } from '../path';
 import { PathMatcher } from '../path';
+import type { Handler } from '../types';
 import type { RouteOptions } from './type';
 
 export class Route implements Dispatcher {
@@ -135,7 +135,7 @@ export class Route implements Dispatcher {
 
     // --------------------------------------------------
 
-    register(method: `${MethodName}`, ...handlers: NodeHandler[]) {
+    register(method: `${MethodName}`, ...handlers: Handler[]) {
         this.layers[method] = [];
 
         for (let i = 0; i < handlers.length; i++) {
@@ -151,31 +151,31 @@ export class Route implements Dispatcher {
         }
     }
 
-    get(...handlers: NodeHandler[]) {
+    get(...handlers: Handler[]) {
         return this.register(MethodName.GET, ...handlers);
     }
 
-    post(...handlers: NodeHandler[]) {
+    post(...handlers: Handler[]) {
         return this.register(MethodName.POST, ...handlers);
     }
 
-    put(...handlers: NodeHandler[]) {
+    put(...handlers: Handler[]) {
         return this.register(MethodName.PUT, ...handlers);
     }
 
-    patch(...handlers: NodeHandler[]) {
+    patch(...handlers: Handler[]) {
         return this.register(MethodName.PATCH, ...handlers);
     }
 
-    delete(...handlers: NodeHandler[]) {
+    delete(...handlers: Handler[]) {
         return this.register(MethodName.DELETE, ...handlers);
     }
 
-    head(...handlers: NodeHandler[]) {
+    head(...handlers: Handler[]) {
         return this.register(MethodName.HEAD, ...handlers);
     }
 
-    options(...handlers: NodeHandler[]) {
+    options(...handlers: Handler[]) {
         return this.register(MethodName.OPTIONS, ...handlers);
     }
 

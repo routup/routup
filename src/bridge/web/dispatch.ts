@@ -1,12 +1,13 @@
 import { MethodName } from '../../constants';
 import type { Router } from '../../router';
+import type { WebRequest } from '../../types';
 import { transformHeadersToTuples } from '../../utils';
 import { dispatchRawRequest } from '../raw';
 import type { DispatchWebRequestOptions } from './type';
 
 export async function dispatchWebRequest(
     router: Router,
-    request: Request,
+    request: WebRequest,
     options: DispatchWebRequestOptions = {},
 ) : Promise<Response> {
     const url = new URL(request.url);

@@ -1,7 +1,7 @@
 import type { RequestListener } from 'http';
-import type { NodeHandler } from '../src';
+import type { Handler } from '../src';
 
-export function createHandler(handler: NodeHandler) : RequestListener {
+export function createHandler(handler: Handler) : RequestListener {
     return (req, res) => {
         handler(req, res, () => {
             res.end();

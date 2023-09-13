@@ -1,12 +1,12 @@
 import { extendsClientError, extendsServerError } from '@ebec/http';
 import type { RequestListener } from 'node:http';
-import { isResponseGone } from '../../helpers';
+import { isResponseGone } from '../../response';
 import type { Router } from '../../router';
+import type { Request, Response } from '../../types';
 import { dispatchNodeRequest } from './dispatch';
-import type { NodeRequest, NodeResponse } from './type';
 
 export function createNodeListener(router: Router): RequestListener {
-    return (req: NodeRequest, res: NodeResponse) => {
+    return (req: Request, res: Response) => {
         dispatchNodeRequest(router, req, res)
             .catch((err) => {
                 res.statusCode = 400;

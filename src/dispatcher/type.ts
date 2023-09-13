@@ -1,4 +1,4 @@
-import type { NodeRequest, NodeResponse } from '../bridge';
+import type { Request, Response } from '../types';
 
 export interface Dispatcher {
     dispatch(
@@ -41,6 +41,6 @@ export type DispatcherMeta = {
 };
 
 export type DispatcherEvent = {
-    req: NodeRequest,
-    res: NodeResponse,
+    req: Request,
+    res: Response,
 };

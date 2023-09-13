@@ -1,12 +1,15 @@
-import type { NodeResponse } from '../bridge';
 import type {
     Dispatcher, DispatcherEvent, DispatcherMeta, DispatcherNext,
 } from '../dispatcher';
 import {
-    send, sendStream, sendWebBlob, sendWebResponse, setRequestMountPath, setRequestParams, setRequestRouterIds,
-} from '../helpers';
+    send, sendStream, sendWebBlob, sendWebResponse,
+} from '../response';
+import {
+    setRequestMountPath, setRequestParams, setRequestRouterIds,
+} from '../request';
 import { PathMatcher } from '../path';
 import { findRouterOption } from '../router-options';
+import type { Response } from '../types';
 import {
     isPromise, isStream, isWebBlob, isWebResponse,
 } from '../utils';
@@ -134,7 +137,7 @@ export class Layer implements Dispatcher {
         });
     }
 
-    protected sendOutput(res: NodeResponse, input: unknown) : Promise<any> {
+    protected sendOutput(res: Response, input: unknown) : Promise<any> {
         if (input instanceof Error) {
             return Promise.reject(input);
         }

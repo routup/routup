@@ -1,11 +1,11 @@
 import supertest from 'supertest';
 import {
-    Router,
-    createNodeListener, send, setRequestEnv, useRequestEnv,
+    Router, createNodeListener, send, setRequestEnv, useRequestEnv,
 } from '../../../src';
 import type {
-    DispatcherNext, NodeNext, NodeRequest,
-    NodeResponse,
+    Next,
+    Request,
+    Response,
 } from '../../../src';
 
 describe('routing/middleware', () => {
@@ -38,7 +38,7 @@ describe('routing/middleware', () => {
             throw new Error('ero');
         });
 
-        router.use((err: Error, req: NodeRequest, res: NodeResponse, next: DispatcherNext) => {
+        router.use((err: Error, req: Request, res: Response, next: Next) => {
             send(res, err.message);
         });
 
