@@ -16,8 +16,8 @@
 It uses node's vanilla request and response interfaces, which are injected into route handlers aka middlewares as function argument.
 Helpers provide additional functionalities to transform and interact with the request and manipulate the response upstream.
 
-Use the same routing framework for each project, regardless of the runtime environment used (Node.Js, Bun, ... ) 🎉
-and is even **228%** faster than Express, for example.
+Use the same routing framework for each project, regardless of the used runtime environment (Node.Js, Bun, ... ) 🎉.
+Besides, it is even **228%** faster than Express ([more](#benchmarks)).
 
 
 

@@ -40,11 +40,11 @@ export function hasLeadingSlash(input = ''): boolean {
 }
 
 export function withoutLeadingSlash(input = ''): string {
-    return (hasLeadingSlash(input) ? input.substr(1) : input) || '/';
+    return (hasLeadingSlash(input) ? input.substring(1) : input) || '/';
 }
 
 export function withLeadingSlash(input = ''): string {
-    return hasLeadingSlash(input) ? input : (`/${input}`);
+    return hasLeadingSlash(input) ? input : `/${input}`;
 }
 
 export function cleanDoubleSlashes(input = ''): string {
