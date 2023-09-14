@@ -1,7 +1,7 @@
-import { MethodName } from '../../constants';
-import type { Router } from '../../router';
-import type { WebRequest } from '../../types';
-import { transformHeadersToTuples } from '../../utils';
+import { MethodName } from '../../../constants';
+import type { Router } from '../../../router';
+import type { WebRequest } from '../../../types';
+import { transformHeadersToTuples } from '../../../utils';
 import { dispatchRawRequest } from '../raw';
 import type { DispatchWebRequestOptions } from './type';
 
@@ -11,12 +11,18 @@ export async function dispatchWebRequest(
     options: DispatchWebRequestOptions = {},
 ) : Promise<Response> {
     const url = new URL(request.url);
+    const headers : Record<string, string | string[]> = {};
+
+    request.headers.forEach((value, key) => {
+        headers[key] = value;
+    });
+
     const res = await dispatchRawRequest(
         router,
         {
             method: request.method,
             path: url.pathname + url.search,
-            headers: request.headers,
+            headers,
             body: request.body,
         },
         options,
@@ -40,4 +46,8 @@ export async function dispatchWebRequest(
         status: res.status,
         statusText: res.statusMessage,
     });
+}
+
+export function createWebDispatcher(router: Router) {
+    return async (request: WebRequest) => dispatchWebRequest(router, request);
 }

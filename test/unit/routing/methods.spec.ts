@@ -1,6 +1,6 @@
 import supertest from 'supertest';
 import {
-    HeaderName, Router, createNodeListener, send,
+    HeaderName, Router, createNodeDispatcher, send,
 } from '../../../src';
 
 describe('routing/methods', () => {
@@ -35,7 +35,7 @@ describe('routing/methods', () => {
             await send(res, 'options');
         });
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         let response = await server
             .delete('/delete');
@@ -102,7 +102,7 @@ describe('routing/methods', () => {
             await send(res, 'put');
         });
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         let response = await server
             .delete('/');
@@ -172,7 +172,7 @@ describe('routing/methods', () => {
             send(res, 'put');
         });
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         let response = await server
             .delete('/foo');

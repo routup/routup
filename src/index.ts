@@ -1,4 +1,3 @@
-export * from './bridge';
 export * from './constants';
 export * from './dispatcher';
 export * from './response';

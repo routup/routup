@@ -1,6 +1,6 @@
 import supertest from 'supertest';
 import {
-    Router, createNodeListener, send, useRequestParams,
+    Router, createNodeDispatcher, send, useRequestParams,
 } from '../../../src';
 
 describe('src/module', () => {
@@ -13,7 +13,7 @@ describe('src/module', () => {
 
         router.get('/sync', () => 'bar');
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         let response = await server
             .get('/async');
@@ -37,7 +37,7 @@ describe('src/module', () => {
             send(res, params.id);
         });
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         const response = await server
             .get('/param/abc');
@@ -53,7 +53,7 @@ describe('src/module', () => {
             send(res, 'foo');
         });
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         const response = await server
             .get('/foo');
@@ -68,7 +68,7 @@ describe('src/module', () => {
 
         router.get('/', async () => {});
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         const response = await server
             .get('/');
@@ -83,7 +83,7 @@ describe('src/module', () => {
             throw new Error('foo');
         });
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         const response = await server
             .get('/');
@@ -102,7 +102,7 @@ describe('src/module', () => {
             });
         });
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         const response = await server
             .get('/');

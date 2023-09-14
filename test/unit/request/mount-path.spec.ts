@@ -1,6 +1,6 @@
 import supertest from 'supertest';
 import {
-    Router, createNodeListener, send, useRequestMountPath,
+    Router, createNodeDispatcher, send, useRequestMountPath,
 } from '../../../src';
 import { createHandler } from '../../handler';
 
@@ -12,7 +12,7 @@ describe('src/helpers/request/query', () => {
 
         router.get('', (req, res) => send(res, useRequestMountPath(req)));
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         const response = await server
             .get('/foo');
@@ -28,7 +28,7 @@ describe('src/helpers/request/query', () => {
         const router = new Router();
         router.use('/foo', child);
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         const response = await server
             .get('/foo/bar');

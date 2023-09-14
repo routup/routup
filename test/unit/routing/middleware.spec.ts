@@ -1,6 +1,6 @@
 import supertest from 'supertest';
 import {
-    Router, createNodeListener, send, setRequestEnv, useRequestEnv,
+    Router, createNodeDispatcher, send, setRequestEnv, useRequestEnv,
 } from '../../../src';
 import type {
     Next,
@@ -22,7 +22,7 @@ describe('routing/middleware', () => {
             send(res, useRequestEnv(req, 'foo'));
         });
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         const response = await server
             .get('/');
@@ -42,7 +42,7 @@ describe('routing/middleware', () => {
             send(res, err.message);
         });
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         const response = await server
             .get('/');
@@ -79,7 +79,7 @@ describe('routing/middleware', () => {
             },
         );
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         let response = await server
             .get('/');

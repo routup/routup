@@ -2,23 +2,14 @@ import type { IncomingMessage } from 'node:http';
 import type { Readable as NodeReadable } from 'node:stream';
 import { Readable } from 'readable-stream';
 import type { ReadableStream as NodeWebReadableStream } from 'stream/web';
-import type { NodeReadableStream, WebReadableStream } from '../types';
-import { isNodeStream, isWebStream } from '../utils';
+import { isWebStream } from '../utils';
+import type { RequestCreateContext } from './types';
 
-type NodeRequestCreateContext = {
-    body?: null | Iterable<any> | AsyncIterable<any> | NodeReadableStream | WebReadableStream,
-    headers?: Record<string, string | string[]>,
-    method?: string,
-    url?: string
-};
-
-export function createRequest(context: NodeRequestCreateContext) : IncomingMessage {
+export function createRequest(context: RequestCreateContext) : IncomingMessage {
     let readable: NodeReadable;
     if (context.body) {
         if (isWebStream(context.body)) {
             readable = (Readable as unknown as typeof NodeReadable).fromWeb(context.body as NodeWebReadableStream);
-        } else if (isNodeStream(context.body)) {
-            readable = context.body;
         } else {
             readable = (Readable as unknown as typeof NodeReadable).from(context.body);
         }

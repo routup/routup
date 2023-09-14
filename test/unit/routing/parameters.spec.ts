@@ -1,7 +1,7 @@
 import supertest from 'supertest';
 import {
     Router,
-    createNodeListener, send, setRequestParam, useRequestParam, useRequestParams,
+    createNodeDispatcher, send, setRequestParam, useRequestParam, useRequestParams,
 } from '../../../src';
 import { createHandler } from '../../handler';
 
@@ -13,7 +13,7 @@ describe('routing/parameters', () => {
             send(res, useRequestParams(req));
         });
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         const response = await server
             .get('/123/run');
@@ -31,7 +31,7 @@ describe('routing/parameters', () => {
             send(res, useRequestParams(req));
         });
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         const response = await server
             .get('/123/run');

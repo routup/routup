@@ -60,10 +60,10 @@ To read the docs, visit [https://routup.net](https://routup.net)
 **`NodeJs`**
 
 ```typescript
-import { createServer } from 'node:http';
+import {createServer} from 'node:http';
 import {
-    createNodeListener,
-    Router, 
+    createNodeDispatcher,
+    Router,
     send
 } from 'routup';
 
@@ -71,7 +71,7 @@ const router = new Router();
 
 router.get('/', () => 'Hello World');
 
-const server = createServer(createNodeListener(router));
+const server = createServer(createNodeDispatcher(router));
 server.listen(3000)
 ```
 
@@ -79,8 +79,8 @@ server.listen(3000)
 
 ```typescript
 import {
-    dispatchWebRequest,
-    Router, 
+    createWebDispatcher,
+    Router,
     send
 } from 'routup';
 
@@ -88,9 +88,11 @@ const router = new Router();
 
 router.get('/', () => 'Hello World');
 
+const dispatch = createWebDispatcher(router);
+
 Bun.serve({
     async fetch(request) {
-        return dispatchWebRequest(router, request);
+        return dispatch(request);
     },
     port: 3000,
 });
@@ -100,7 +102,7 @@ Bun.serve({
 
 ```typescript
 import {
-    dispatchWebRequest,
+    createWebDispatcher,
     Router,
     send
 } from 'routup';
@@ -109,6 +111,8 @@ const router = new Router();
 
 router.get('/', () => 'Hello World');
 
+const dispatch = createWebDispatcher(router);
+
 const server = Deno.listen({
     port: 3000
 });
@@ -116,8 +120,7 @@ for await (const conn of server) {
     const httpConn = Deno.serveHttp(conn);
 
     for await (const requestEvent of httpConn) {
-        const response = await dispatchWebRequest(
-            router, 
+        const response = await dispatch(
             requestEvent.request
         );
         requestEvent.respondWith(response);

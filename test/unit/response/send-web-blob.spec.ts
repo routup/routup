@@ -1,5 +1,5 @@
 import supertest from 'supertest';
-import { HeaderName, Router, createNodeListener } from '../../../src';
+import { HeaderName, Router, createNodeDispatcher } from '../../../src';
 
 describe('src/helpers/response/send-web-blob', () => {
     it('should send', async () => {
@@ -12,7 +12,7 @@ describe('src/helpers/response/send-web-blob', () => {
             },
         ));
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         const response = await server.get('/');
 

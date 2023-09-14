@@ -5,7 +5,9 @@ import type { Writable as NodeWritable } from 'node:stream';
 import { Buffer } from 'buffer';
 import { Writable } from 'readable-stream';
 import { hasOwnProperty } from 'smob';
+import { HeaderName } from '../constants';
 import type { Request, Response } from '../types';
+import { splitCookiesString } from '../utils';
 
 type BufferEncoding =
     | 'ascii'
@@ -101,6 +103,10 @@ export function createResponse(request: Request) : Response {
         addTrailers(_headers: OutgoingHttpHeaders | ReadonlyArray<[string, string]>): void {
         },
         appendHeader(name: string, value: string | ReadonlyArray<string>): Response {
+            if (name === HeaderName.SET_COOKIE) {
+                value = splitCookiesString(value as string | string[]);
+            }
+
             name = name.toLowerCase();
             const current = headers[name];
             const all = [
@@ -134,6 +140,13 @@ export function createResponse(request: Request) : Response {
             delete headers[name.toLowerCase()];
         },
         setHeader(name: string, value: number | string | string[]): Response {
+            if (
+                name === HeaderName.SET_COOKIE &&
+                typeof value !== 'number'
+            ) {
+                value = splitCookiesString(value);
+            }
+
             headers[name.toLowerCase()] = value;
             return this as Response;
         },

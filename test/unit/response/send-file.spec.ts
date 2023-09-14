@@ -4,7 +4,7 @@ import supertest from 'supertest';
 import type { SendFileOptions } from '../../../src';
 import {
     HeaderName,
-    Router, createNodeListener, sendFile,
+    Router, createNodeDispatcher, sendFile,
 } from '../../../src';
 import { createHandler } from '../../handler';
 
@@ -46,7 +46,7 @@ describe('src/helpers/response/send-file', () => {
             ) => sendFile(res, buildSendFileOptions('test/data/foo.json')),
         );
 
-        const server = supertest(createNodeListener(router));
+        const server = supertest(createNodeDispatcher(router));
 
         const response = await server
             .get('/');
