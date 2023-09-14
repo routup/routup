@@ -1,4 +1,4 @@
-import { findRouterOption, setRouterOptions, unsetRouterOptions } from '../../../src';
+import { findRouterOption, setRouterOptions, unsetRouterOptions } from '../../../src/router-options';
 
 describe('src/config/**', () => {
     it('should use default values', () => {

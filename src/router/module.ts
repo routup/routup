@@ -6,6 +6,7 @@ import type {
 import { cloneDispatcherMeta, mergeDispatcherMetaParams } from '../dispatcher';
 import { useRequestPath } from '../request';
 import { isResponseGone, send } from '../response';
+import { transformRouterOptions } from '../router-options/transform';
 import type { ErrorHandler, Handler } from '../types';
 import {
     cleanDoubleSlashes,
@@ -66,7 +67,7 @@ export class Router implements Dispatcher {
 
         this.setPath(options.path);
 
-        setRouterOptions(this.id, options);
+        setRouterOptions(this.id, transformRouterOptions(options));
     }
 
     // --------------------------------------------------

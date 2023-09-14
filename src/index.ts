@@ -6,6 +6,4 @@ export * from './layer';
 export * from './path';
 export * from './route';
 export * from './router';
-export * from './router-options';
 export * from './types';
-export * from './utils';

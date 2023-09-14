@@ -1,7 +1,6 @@
 import { hasOwnProperty } from 'smob';
 import { buildEtagFn } from '../utils';
-import { transformRouterOptions } from './transform';
-import type { RouterOptions, RouterOptionsInput } from './type';
+import type { RouterOptions } from './type';
 
 const defaults : RouterOptions = {
     trustProxy: () => false,
@@ -12,8 +11,8 @@ const defaults : RouterOptions = {
 
 const instances : Record<number, Partial<RouterOptions>> = {};
 
-export function setRouterOptions(id: number, input: RouterOptionsInput) {
-    instances[id] = transformRouterOptions(input);
+export function setRouterOptions(id: number, input: Partial<RouterOptions>) {
+    instances[id] = input;
 }
 
 export function unsetRouterOptions(id: number) {

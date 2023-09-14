@@ -1,6 +1,6 @@
 import fs from 'node:fs';
-import type { EtagFn } from '../../../src';
-import { buildEtagFn, createEtag, generateETag } from '../../../src';
+import type { EtagFn } from '../../../src/utils';
+import { buildEtagFn, createEtag, generateETag } from '../../../src/utils';
 
 describe('src/utils/etag', () => {
     it('should build etag fn', async () => {

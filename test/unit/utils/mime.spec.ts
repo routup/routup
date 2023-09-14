@@ -1,4 +1,4 @@
-import { getCharsetForMimeType } from '../../../src';
+import { getCharsetForMimeType } from '../../../src/utils';
 
 describe('src/utils/mime', () => {
     it('should get charset for content type', () => {
