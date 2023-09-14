@@ -1,3 +1,49 @@
+# [2.0.0](https://github.com/routup/routup/compare/v1.0.3...v2.0.0) (2023-09-14)
+
+
+### Bug Fixes
+
+* call handler execution + send-file api ([91bd7dc](https://github.com/routup/routup/commit/91bd7dc68a96bdab6410b268dfd8133dbb84c426))
+* **deps:** buffer library for agnostic runtime ([e9b3843](https://github.com/routup/routup/commit/e9b3843a929d6b294f3ad9917ba008d15a15d6f0))
+* **deps:** remove zod library ([5fd2f04](https://github.com/routup/routup/commit/5fd2f049e4d1acb4ce99b25148ddd63b80aa510e))
+* dispatching raw/web request ([039ac84](https://github.com/routup/routup/commit/039ac842a21fc85726ec11ad874ebd53032e75eb))
+* minor bug fixes & dispatcher restructuring ([453b5a9](https://github.com/routup/routup/commit/453b5a98256515d116652857a2ac3ce7abc42dc7))
+* minor enhancements + added benchmark to README.md ([e7f5276](https://github.com/routup/routup/commit/e7f527688d4883ae2bb7fd73003bacb259b06066))
+* return promise.reject instead of throwing error ([a31c68e](https://github.com/routup/routup/commit/a31c68e3cbd1c3332b3b3196621170967e5189cb))
+* stricter conditions for call handler fn ([102e2b2](https://github.com/routup/routup/commit/102e2b2f299abc1b780b60e86edce01d786b4ffe))
+
+
+### Code Refactoring
+
+* prefixed node specific interfaces ([b6444e9](https://github.com/routup/routup/commit/b6444e9cef97e7cb39aa0ddfeac26cb2009842e4))
+
+
+### Features
+
+* better error handling for no matching route and unhandled error ([252b178](https://github.com/routup/routup/commit/252b17839c0da8f7f15a202ae2ac693ceec0f63f))
+* changed send-file options api ([8a6c328](https://github.com/routup/routup/commit/8a6c32816b9f6e1a6a6a1ee62f3af5b1d82394bf))
+* do not expose utils ([acd451c](https://github.com/routup/routup/commit/acd451c18c5220abbd8491ca0efffa389ed389a3))
+* gone utility helper ([dc4f83b](https://github.com/routup/routup/commit/dc4f83bed20a8a18003e5d4714b47d2a97e56ec5))
+* helpers to send web-{blob,response} ([2014da4](https://github.com/routup/routup/commit/2014da43281f251f988c077e74d70d5fa1016669))
+* make dispatch call stack async ([21b3388](https://github.com/routup/routup/commit/21b338838baa6040e3014e7b6810c5bb8fc403d1))
+* polyfill for node path basename & extname ([f3c4af7](https://github.com/routup/routup/commit/f3c4af73a38f0f95004c9291a82d5aa84c5914c0))
+* refactor configuration handling ([63a4101](https://github.com/routup/routup/commit/63a41012b4b89d6d09e119280e4e73bcf33ad085))
+* refactor dispatching requests; stack cb- to iteration-style ([7e97e8a](https://github.com/routup/routup/commit/7e97e8a0a16065336bc162efec075aa0878846c8))
+* remove dependence to createServer fn from node:http ([f0b45de](https://github.com/routup/routup/commit/f0b45de9f0bb1091f041260b8a6d95d8a776d761))
+* remove env property from options ([7cff979](https://github.com/routup/routup/commit/7cff9799aefaf0fe9ea320e2ee95d6b6b0830b00))
+* remove explicit URL import from node:url ([feb3d46](https://github.com/routup/routup/commit/feb3d46667537b894bb5f10f6447f8f3b763d323))
+* revert interface renaming + enhanced project structure ([bbab2bc](https://github.com/routup/routup/commit/bbab2bcb9d3e2cf2a29143d19c2650fdd38895bc))
+* rewrite to be runtime agnostic ([7680f6a](https://github.com/routup/routup/commit/7680f6a9ed0e6af8ccdda202522a0bc86ed05fff))
+* use async webcrypto api for etag generation ([eb805d5](https://github.com/routup/routup/commit/eb805d5e5f53cb6cb098c19a9b31c5fcbde79404))
+
+
+### BREAKING CHANGES
+
+* interface names changed
+* dispatch is now async
+* listen method removed
+* send, etag fn api changed
+
 ## [1.0.3](https://github.com/routup/routup/compare/v1.0.2...v1.0.3) (2023-09-03)
 
 
