@@ -57,6 +57,9 @@ To read the docs, visit [https://routup.net](https://routup.net)
 
 ## Usage
 
+It is possible to use Routup in any javascript runtime environment. Below are examples for Node.Js, Bun and Deno.
+There are different [dispatchers](https://routup.net/guide/dispatcher) how requests can be transmitted in different ways.
+
 **`NodeJs`**
 
 ```typescript
