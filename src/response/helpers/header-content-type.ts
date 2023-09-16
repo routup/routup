@@ -1,6 +1,6 @@
 import { HeaderName } from '../../constants';
-import type { Response } from '../../types';
 import { getMimeType } from '../../utils';
+import type { Response } from '../types';
 
 export function setResponseHeaderContentType(res: Response, input: string, ifNotExists?: boolean) {
     if (ifNotExists) {

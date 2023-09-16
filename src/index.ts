@@ -1,5 +1,6 @@
 export * from './constants';
 export * from './dispatcher';
+export * from './handler';
 export * from './response';
 export * from './request';
 export * from './layer';

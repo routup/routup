@@ -1,4 +1,4 @@
-import type { Request } from '../../types';
+import type { Request } from '../types';
 
 const ParamsSymbol = Symbol.for('ReqParams');
 

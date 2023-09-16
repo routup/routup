@@ -1,6 +1,6 @@
 import { HeaderName } from '../../constants';
-import type { Request } from '../../types';
 import { getMimeType } from '../../utils';
+import type { Request } from '../types';
 import { getRequestHeader } from './header';
 import { useRequestNegotiator } from './negotiator';
 

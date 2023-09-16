@@ -6,8 +6,9 @@ import { Buffer } from 'buffer';
 import { Writable } from 'readable-stream';
 import { hasOwnProperty } from 'smob';
 import { HeaderName } from '../constants';
-import type { Request, Response } from '../types';
+import type { Request } from '../request';
 import { splitCookiesString } from '../utils';
+import type { Response } from './types';
 
 type BufferEncoding =
     | 'ascii'

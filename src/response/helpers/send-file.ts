@@ -1,6 +1,6 @@
 import { HeaderName } from '../../constants';
-import type { Response } from '../../types';
 import { basename, isStream } from '../../utils';
+import type { Response } from '../types';
 import { isResponseGone } from './gone';
 import { setResponseHeaderAttachment } from './header-attachment';
 import { send } from './send';

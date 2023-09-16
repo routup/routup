@@ -1,4 +1,4 @@
-import type { Response } from '../../types';
+import type { Response } from '../types';
 
 const GoneSymbol = Symbol.for('ResGone');
 export function isResponseGone(res: Response) {

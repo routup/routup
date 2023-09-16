@@ -1,4 +1,4 @@
-import type { Response } from '../../types';
+import type { Response } from '../types';
 import { send } from './send';
 
 export function sendAccepted(res: Response, chunk?: any) : Promise<void> {

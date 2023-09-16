@@ -1,4 +1,5 @@
-import type { Response, WebBlob } from '../../types';
+import type { WebBlob } from '../../types';
+import type { Response } from '../types';
 import { setResponseHeaderContentType } from './header-content-type';
 import { sendStream } from './send-stream';
 

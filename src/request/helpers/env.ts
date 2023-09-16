@@ -1,6 +1,6 @@
 import { hasOwnProperty, merge } from 'smob';
 
-import type { Request } from '../../types';
+import type { Request } from '../types';
 
 const envSymbol = Symbol.for('ReqEnv');
 

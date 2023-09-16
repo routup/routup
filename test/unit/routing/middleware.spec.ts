@@ -1,11 +1,6 @@
 import supertest from 'supertest';
 import {
-    Router, createNodeDispatcher, send, setRequestEnv, useRequestEnv,
-} from '../../../src';
-import type {
-    Next,
-    Request,
-    Response,
+    Router, createNodeDispatcher, defineErrorHandler, send, setRequestEnv, useRequestEnv,
 } from '../../../src';
 
 describe('routing/middleware', () => {
@@ -38,9 +33,9 @@ describe('routing/middleware', () => {
             throw new Error('ero');
         });
 
-        router.use((err: Error, req: Request, res: Response, next: Next) => {
+        router.use(defineErrorHandler((err, req, res, next) => {
             send(res, err.message);
-        });
+        }));
 
         const server = supertest(createNodeDispatcher(router));
 

@@ -1,9 +1,9 @@
 import { hasOwnProperty } from 'smob';
 import { HeaderName } from '../../constants';
 import { findRouterOption } from '../../router-options';
-import type { Request } from '../../types';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils';
 import { buildTrustProxyFn } from '../../utils';
+import type { Request } from '../types';
 import { useRequestRouterIds } from './router';
 
 type RequestProtocolOptions = {

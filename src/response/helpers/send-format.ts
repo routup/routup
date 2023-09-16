@@ -1,5 +1,5 @@
-import type { Response } from '../../types';
 import { getRequestAcceptableContentType } from '../../request/helpers';
+import type { Response } from '../types';
 
 type ResponseFormats = {
     default: () => void,

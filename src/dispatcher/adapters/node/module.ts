@@ -1,7 +1,8 @@
 import type { RequestListener } from 'node:http';
+import type { Request } from '../../../request';
+import type { Response } from '../../../response';
 import { isResponseGone } from '../../../response';
 import type { Router } from '../../../router';
-import type { Request, Response } from '../../../types';
 
 export async function dispatchNodeRequest(
     router: Router,

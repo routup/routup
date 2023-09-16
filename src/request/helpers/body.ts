@@ -1,7 +1,7 @@
 import { merge } from 'smob';
 
-import type { Request } from '../../types';
 import { isObject } from '../../utils';
+import type { Request } from '../types';
 
 const BodySymbol = Symbol.for('ReqBody');
 

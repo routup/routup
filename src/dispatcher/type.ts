@@ -1,4 +1,5 @@
-import type { Request, Response } from '../types';
+import type { Request } from '../request';
+import type { Response } from '../response';
 
 export interface Dispatcher {
     dispatch(

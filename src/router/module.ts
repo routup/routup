@@ -4,10 +4,10 @@ import type {
     Dispatcher, DispatcherEvent, DispatcherMeta,
 } from '../dispatcher';
 import { cloneDispatcherMeta, mergeDispatcherMetaParams } from '../dispatcher';
+import type { ErrorHandler, Handler } from '../handler';
 import { useRequestPath } from '../request';
 import { isResponseGone, send } from '../response';
 import { transformRouterOptions } from '../router-options/transform';
-import type { ErrorHandler, Handler } from '../types';
 import {
     cleanDoubleSlashes,
     isInstance,

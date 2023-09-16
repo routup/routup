@@ -1,6 +1,7 @@
 import { HeaderName } from '../../constants';
-import type { Response, WebResponse } from '../../types';
+import type { WebResponse } from '../../types';
 import { splitCookiesString } from '../../utils';
+import type { Response } from '../types';
 import { sendStream } from './send-stream';
 
 export function sendWebResponse(res: Response, webResponse: WebResponse) : Promise<unknown> {

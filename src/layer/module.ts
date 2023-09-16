@@ -2,6 +2,7 @@ import type {
     Dispatcher, DispatcherEvent, DispatcherMeta,
 } from '../dispatcher';
 import { createError } from '../error';
+import type { Response } from '../response';
 import {
     send, sendStream, sendWebBlob, sendWebResponse,
 } from '../response';
@@ -10,7 +11,6 @@ import {
 } from '../request';
 import { PathMatcher } from '../path';
 import { findRouterOption } from '../router-options';
-import type { Response } from '../types';
 import {
     isPromise, isStream, isWebBlob, isWebResponse,
 } from '../utils';

@@ -1,4 +1,4 @@
-import type { Request } from '../../types';
+import type { Request } from '../types';
 import { useRequestNegotiator } from './negotiator';
 
 export function getRequestAcceptableCharsets(req: Request) : string[] {

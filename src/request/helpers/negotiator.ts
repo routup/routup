@@ -1,6 +1,6 @@
 import Negotiator from 'negotiator';
 
-import type { Request } from '../../types';
+import type { Request } from '../types';
 
 const NegotiatorSymbol = Symbol.for('ReqNegotiator');
 

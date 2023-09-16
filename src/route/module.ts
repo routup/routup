@@ -4,10 +4,10 @@ import type {
     Dispatcher, DispatcherEvent, DispatcherMeta,
 } from '../dispatcher';
 import { cloneDispatcherMeta, mergeDispatcherMetaParams } from '../dispatcher';
+import type { Handler } from '../handler';
 import { Layer } from '../layer';
 import type { Path, PathMatcherOptions } from '../path';
 import { PathMatcher } from '../path';
-import type { Handler } from '../types';
 import type { RouteOptions } from './type';
 
 export class Route implements Dispatcher {

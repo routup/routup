@@ -1,6 +1,6 @@
 import { HeaderName } from '../../constants';
-import type { Request } from '../../types';
 import { getMimeType } from '../../utils';
+import type { Request } from '../types';
 import { getRequestHeader } from './header';
 
 export function matchRequestContentType(req: Request, contentType: string) : boolean {

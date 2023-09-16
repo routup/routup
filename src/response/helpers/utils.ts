@@ -1,6 +1,6 @@
 import { HeaderName } from '../../constants';
-import type { Response } from '../../types';
 import { extname, getCharsetForMimeType, getMimeType } from '../../utils';
+import type { Response } from '../types';
 
 export function setResponseContentTypeByFileName(res: Response, fileName: string) {
     const ext = extname(fileName);

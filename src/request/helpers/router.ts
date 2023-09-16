@@ -1,4 +1,4 @@
-import type { Request } from '../../types';
+import type { Request } from '../types';
 
 const routerSymbol = Symbol.for('ReqRouterID');
 export function setRequestRouterIds(req: Request, ids: number[]) {

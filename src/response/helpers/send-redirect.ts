@@ -1,4 +1,4 @@
-import type { Response } from '../../types';
+import type { Response } from '../types';
 import { send } from './send';
 
 export function sendRedirect(res: Response, location: string, statusCode = 302): Promise<void> {

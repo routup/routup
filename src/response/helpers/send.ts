@@ -1,8 +1,8 @@
 import { Buffer } from 'buffer';
 import { HeaderName } from '../../constants';
 import { findRouterOption } from '../../router-options';
-import type { Response } from '../../types';
 import { useRequestRouterIds } from '../../request/helpers';
+import type { Response } from '../types';
 import { isResponseGone } from './gone';
 import { appendResponseHeaderDirective } from './header';
 import { setResponseHeaderContentType } from './header-content-type';
