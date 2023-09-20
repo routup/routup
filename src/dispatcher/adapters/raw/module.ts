@@ -1,4 +1,5 @@
 import { createRequest, useRequestPath } from '../../../request';
+import { isError } from '../../../error';
 import { createResponse } from '../../../response';
 import type { Router } from '../../../router';
 import { buildDispatcherMeta } from '../../utils';
@@ -36,6 +37,13 @@ export async function dispatchRawRequest(
         return output;
     };
 
+    const createRawResponse = (input: Partial<RawResponse> = {}) : RawResponse => ({
+        status: input.status || res.statusCode,
+        statusMessage: input.statusMessage || res.statusMessage,
+        headers: getHeaders(),
+        body: (res as Record<string, any>).body,
+    });
+
     try {
         const dispatched = await router.dispatch(
             { req, res },
@@ -44,29 +52,27 @@ export async function dispatchRawRequest(
             }),
         );
         if (dispatched) {
-            return {
-                status: res.statusCode,
-                statusMessage: res.statusMessage,
-                headers: getHeaders(),
-                body: (res as Record<string, any>).body,
-            };
+            return createRawResponse();
         }
 
-        return {
+        return createRawResponse({
             status: 404,
-            headers: getHeaders(),
-            body: (res as Record<string, any>).body,
-        };
+        });
     } catch (e) {
         if (options.throwOnError) {
             throw e;
         }
 
-        return {
+        if (isError(e)) {
+            return createRawResponse({
+                status: e.statusCode,
+                statusMessage: e.statusMessage,
+            });
+        }
+
+        return createRawResponse({
             status: 500,
-            headers: getHeaders(),
-            body: (res as Record<string, any>).body,
-        };
+        });
     }
 }
 

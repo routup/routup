@@ -1,3 +1,4 @@
+import { TooManyRequestsError } from '@ebec/http';
 import fs from 'node:fs';
 import {
     HeaderName, Router, createRawDispatcher, send, setResponseHeaderContentType,
@@ -51,6 +52,24 @@ describe('bridge/raw', () => {
 
         expect(response.headers).toBeDefined();
         expect(response.status).toEqual(404);
+    });
+
+    it('should dispatch request with error', async () => {
+        const router = new Router();
+
+        router.get('/', async () => {
+            throw new TooManyRequestsError();
+        });
+
+        const dispatch = createRawDispatcher(router);
+
+        const response = await dispatch({
+            method: 'GET',
+            path: '/',
+        });
+
+        expect(response.status).toEqual(429);
+        expect(response.statusMessage).toEqual('Too Many Requests');
     });
 
     it('should dispatch request with body', async () => {

@@ -1,5 +1,8 @@
+import { GatewayTimeoutError } from '@ebec/http';
 import { mergeDispatcherMetaParams } from '../dispatcher';
-import type { Dispatcher, DispatcherEvent, DispatcherMeta } from '../dispatcher';
+import type {
+    Dispatcher, DispatcherEvent, DispatcherMeta,
+} from '../dispatcher';
 import { createError } from '../error';
 import type { ErrorHandlerContext, HandlerContext } from '../handler';
 import {
@@ -128,12 +131,7 @@ export class Layer implements Dispatcher {
 
             if (timeout) {
                 timeoutInstance = setTimeout(() => {
-                    handled = true;
-                    unsubscribe();
-
-                    event.res.statusCode = 504;
-                    event.res.statusMessage = 'Gateway Timeout';
-                    event.res.end();
+                    onNext(new GatewayTimeoutError());
                 }, timeout);
             }
 
