@@ -1,15 +1,13 @@
-import type {
-    Dispatcher, DispatcherEvent, DispatcherMeta,
-} from '../dispatcher';
+import type { Dispatcher, DispatcherEvent, DispatcherMeta } from '../dispatcher';
 import { createError } from '../error';
+import { isErrorHandler } from '../handler';
+import { HandlerType } from '../handler/constants';
+import { PathMatcher } from '../path';
+import { setRequestMountPath, setRequestParams, setRequestRouterIds } from '../request';
 import type { Response } from '../response';
 import {
     send, sendStream, sendWebBlob, sendWebResponse,
 } from '../response';
-import {
-    setRequestMountPath, setRequestParams, setRequestRouterIds,
-} from '../request';
-import { PathMatcher } from '../path';
 import { findRouterOption } from '../router-options';
 import {
     isPromise, isStream, isWebBlob, isWebResponse,
@@ -19,7 +17,9 @@ import type { LayerOptions } from './type';
 export class Layer implements Dispatcher {
     readonly '@instanceof' = Symbol.for('Layer');
 
-    protected fn : CallableFunction;
+    protected handler : CallableFunction;
+
+    protected handlerType : HandlerType;
 
     protected pathMatcher : PathMatcher;
 
@@ -30,13 +30,20 @@ export class Layer implements Dispatcher {
         fn: CallableFunction,
     ) {
         this.pathMatcher = new PathMatcher(options.path, options.pathMatcher);
-        this.fn = fn;
+        this.handler = fn;
+        this.handlerType = isErrorHandler(this.handler) ?
+            HandlerType.ERROR :
+            HandlerType.DEFAULT;
     }
 
     // --------------------------------------------------
 
     isError() {
-        return this.fn.length === 4;
+        return this.handlerType === HandlerType.ERROR;
+    }
+
+    isDefault() {
+        return this.handlerType === HandlerType.DEFAULT;
     }
 
     // --------------------------------------------------
@@ -50,8 +57,8 @@ export class Layer implements Dispatcher {
         setRequestRouterIds(event.req, meta.routerIds || []);
 
         if (
-            (this.fn.length !== 4 && meta.error) ||
-            (this.fn.length === 4 && !meta.error)
+            (this.isDefault() && meta.error) ||
+            (this.isError() && !meta.error)
         ) {
             return Promise.reject(meta.error);
         }
@@ -107,9 +114,9 @@ export class Layer implements Dispatcher {
                 let output: any;
 
                 if (meta.error) {
-                    output = this.fn(meta.error, event.req, event.res, onNext);
+                    output = this.handler(meta.error, event.req, event.res, onNext);
                 } else {
-                    output = this.fn(event.req, event.res, onNext);
+                    output = this.handler(event.req, event.res, onNext);
                 }
 
                 const handle = (data: any): Promise<void> => {

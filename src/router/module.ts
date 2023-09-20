@@ -329,13 +329,13 @@ export class Router implements Dispatcher {
         }
 
         let path : Path | undefined;
-
-        if (isPath(input[0])) {
-            path = input.shift() as Path;
-        }
-
         for (let i = 0; i < input.length; i++) {
             const item = input[i];
+            if (isPath(item)) {
+                path = item;
+                continue;
+            }
+
             if (isRouterInstance(item)) {
                 if (path) {
                     item.setPath(path);
