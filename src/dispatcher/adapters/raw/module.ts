@@ -1,6 +1,7 @@
-import { createRequest } from '../../../request';
+import { createRequest, useRequestPath } from '../../../request';
 import { createResponse } from '../../../response';
 import type { Router } from '../../../router';
+import { buildDispatcherMeta } from '../../utils';
 import type {
     DispatchRawRequestOptions, RawRequest, RawResponse, RawResponseHeaders,
 } from './type';
@@ -36,7 +37,12 @@ export async function dispatchRawRequest(
     };
 
     try {
-        const dispatched = await router.dispatch({ req, res });
+        const dispatched = await router.dispatch(
+            { req, res },
+            buildDispatcherMeta({
+                path: useRequestPath(req),
+            }),
+        );
         if (dispatched) {
             return {
                 status: res.statusCode,

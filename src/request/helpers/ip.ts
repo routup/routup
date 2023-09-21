@@ -3,7 +3,7 @@ import { findRouterOption } from '../../router-options';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils';
 import { buildTrustProxyFn } from '../../utils';
 import type { Request } from '../types';
-import { useRequestRouterIds } from './router';
+import { useRequestRouterPath } from './router';
 
 type RequestIpOptions = {
     trustProxy?: TrustProxyInput
@@ -18,7 +18,7 @@ export function getRequestIP(req: Request, options?: RequestIpOptions) : string 
     } else {
         trustProxy = findRouterOption(
             'trustProxy',
-            useRequestRouterIds(req),
+            useRequestRouterPath(req),
         );
     }
 

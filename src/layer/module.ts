@@ -10,7 +10,7 @@ import {
     isHandler,
 } from '../handler';
 import { PathMatcher } from '../path';
-import { setRequestMountPath, setRequestParams, setRequestRouterIds } from '../request';
+import { setRequestMountPath, setRequestParams, setRequestRouterPath } from '../request';
 import type { Response } from '../response';
 import {
     send, sendStream, sendWebBlob, sendWebResponse,
@@ -69,11 +69,6 @@ export class Layer implements Dispatcher {
             this.handlerType === HandlerType.ERROR_CONTEXT;
     }
 
-    isDefault() {
-        return this.handlerType === HandlerType.DEFAULT ||
-            this.handlerType === HandlerType.DEFAULT_CONTEXT;
-    }
-
     // --------------------------------------------------
 
     dispatch(
@@ -81,25 +76,18 @@ export class Layer implements Dispatcher {
         meta: DispatcherMeta,
     ) : Promise<boolean> {
         let params : Record<string, any>;
-        const pathMatch = this.exec(meta.path || '/');
+        const pathMatch = this.exec(meta.path);
         if (pathMatch) {
             params = mergeDispatcherMetaParams(meta.params, pathMatch.params);
         } else {
-            params = meta.params || {};
+            params = meta.params;
         }
 
         setRequestParams(event.req, params);
-        setRequestMountPath(event.req, meta.mountPath || '/');
-        setRequestRouterIds(event.req, meta.routerIds || []);
+        setRequestMountPath(event.req, meta.mountPath);
+        setRequestRouterPath(event.req, meta.routerPath);
 
-        if (
-            (this.isDefault() && meta.error) ||
-            (this.isError() && !meta.error)
-        ) {
-            return Promise.reject(meta.error);
-        }
-
-        const timeout = findRouterOption('timeout', meta.routerIds);
+        const timeout = findRouterOption('timeout', meta.routerPath);
 
         return new Promise<boolean>((resolve, reject) => {
             let timeoutInstance : ReturnType<typeof setTimeout> | undefined;

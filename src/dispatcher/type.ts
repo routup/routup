@@ -12,17 +12,17 @@ export type DispatcherMeta = {
     /**
      * Params collected on path.
      */
-    params?: Record<string, any>,
+    params: Record<string, any>,
 
     /**
      * Path to check for the current instance.
      */
-    path?: string,
+    path: string,
 
     /**
      * The relative path on which the router is hung.
      */
-    mountPath?: string,
+    mountPath: string,
 
     /**
      * The error which occurred during a previous handler.
@@ -32,7 +32,7 @@ export type DispatcherMeta = {
     /**
      * Ids of chained router instances.
      */
-    routerIds?: number[]
+    routerPath: number[]
 };
 
 export type DispatcherEvent = {

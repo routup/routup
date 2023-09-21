@@ -4,7 +4,7 @@ import { findRouterOption } from '../../router-options';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils';
 import { buildTrustProxyFn } from '../../utils';
 import type { Request } from '../types';
-import { useRequestRouterIds } from './router';
+import { useRequestRouterPath } from './router';
 
 type RequestProtocolOptions = {
     trustProxy?: TrustProxyInput,
@@ -23,7 +23,7 @@ export function getRequestProtocol(
     } else {
         trustProxy = findRouterOption(
             'trustProxy',
-            useRequestRouterIds(req),
+            useRequestRouterPath(req),
         );
     }
 

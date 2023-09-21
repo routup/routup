@@ -10,12 +10,10 @@ describe('src/config/**', () => {
     });
 
     it('should apply and revoke values', () => {
-        const id = 1;
+        setRouterOptions(1, { subdomainOffset: 5 });
+        expect(findRouterOption('subdomainOffset', [1])).toEqual(5);
 
-        setRouterOptions(id, { subdomainOffset: 5 });
-        expect(findRouterOption('subdomainOffset', id)).toEqual(5);
-
-        unsetRouterOptions(id);
-        expect(findRouterOption('subdomainOffset', id)).toEqual(2);
+        unsetRouterOptions(1);
+        expect(findRouterOption('subdomainOffset', [1])).toEqual(2);
     });
 });

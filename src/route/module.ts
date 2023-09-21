@@ -93,8 +93,7 @@ export class Route implements Dispatcher {
         /* istanbul ignore next */
         if (
             typeof layers === 'undefined' ||
-            layers.length === 0 ||
-            typeof meta.path === 'undefined'
+            layers.length === 0
         ) {
             return false;
         }

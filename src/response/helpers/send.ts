@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer';
 import { HeaderName } from '../../constants';
 import { findRouterOption } from '../../router-options';
-import { useRequestRouterIds } from '../../request/helpers';
+import { useRequestRouterPath } from '../../request';
 import type { Response } from '../types';
 import { isResponseGone } from './gone';
 import { appendResponseHeaderDirective } from './header';
@@ -61,7 +61,7 @@ export async function send(res: Response, chunk?: any) : Promise<void> {
     if (typeof len !== 'undefined') {
         const etagFn = findRouterOption(
             'etag',
-            useRequestRouterIds(res.req),
+            useRequestRouterPath(res.req),
         );
 
         const chunkHash = await etagFn(chunk, encoding, len);

@@ -21,19 +21,18 @@ export function unsetRouterOptions(id: number) {
 
 export function findRouterOption<
 K extends keyof RouterOptions,
->(key: K, id?: number | number[]) : RouterOptions[K] {
-    if (!id) {
+>(key: K, path?: number[]) : RouterOptions[K] {
+    if (!path || path.length === 0) {
         return defaults[key];
     }
 
-    const ids = Array.isArray(id) ? id : [id];
-    if (ids.length > 0) {
-        for (let i = ids.length; i >= 0; i--) {
+    if (path.length > 0) {
+        for (let i = path.length; i >= 0; i--) {
             if (
-                hasOwnProperty(instances, ids[i]) &&
-                typeof instances[ids[i]][key] !== 'undefined'
+                hasOwnProperty(instances, path[i]) &&
+                typeof instances[path[i]][key] !== 'undefined'
             ) {
-                return instances[ids[i]][key] as RouterOptions[K];
+                return instances[path[i]][key] as RouterOptions[K];
             }
         }
     }

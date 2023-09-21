@@ -1,4 +1,4 @@
-import { distinctArray, merge } from 'smob';
+import { distinctArray } from 'smob';
 import { HeaderName, MethodName } from '../constants';
 import type { Dispatcher, DispatcherEvent, DispatcherMeta } from '../dispatcher';
 import { cloneDispatcherMeta } from '../dispatcher';
@@ -6,17 +6,17 @@ import type { ErrorHandler, Handler } from '../handler';
 import { Layer, isLayerInstance } from '../layer';
 import type { Path, PathMatcherOptions } from '../path';
 import { PathMatcher, isPath } from '../path';
-import { useRequestPath } from '../request';
 import { isResponseGone, send } from '../response';
 import { Route, isRouteInstance } from '../route';
 import type { RouterOptionsInput } from '../router-options';
 import { setRouterOptions } from '../router-options';
 import { transformRouterOptions } from '../router-options/transform';
 import { cleanDoubleSlashes, withLeadingSlash, withoutTrailingSlash } from '../utils';
+import { RouterSymbol } from './constants';
 import { generateRouterID, isRouterInstance } from './utils';
 
 export class Router implements Dispatcher {
-    readonly '@instanceof' = Symbol.for('Router');
+    readonly '@instanceof' = RouterSymbol;
 
     /**
      * An identifier for the router instance.
@@ -90,38 +90,29 @@ export class Router implements Dispatcher {
 
     async dispatch(
         event: DispatcherEvent,
-        meta: DispatcherMeta = {},
+        meta: DispatcherMeta,
     ) : Promise<boolean> {
         const allowedMethods : string[] = [];
 
-        let path = meta.path || useRequestPath(event.req);
-
         if (this.pathMatcher) {
-            const output = this.pathMatcher.exec(path);
+            const output = this.pathMatcher.exec(meta.path);
             if (typeof output !== 'undefined') {
-                meta.mountPath = cleanDoubleSlashes(`${meta.mountPath || ''}/${output.path}`);
+                meta.mountPath = cleanDoubleSlashes(`${meta.mountPath}/${output.path}`);
 
-                if (path === output.path) {
-                    path = '/';
+                if (meta.path === output.path) {
+                    meta.path = '/';
                 } else {
-                    path = withLeadingSlash(path.substring(output.path.length));
+                    meta.path = withLeadingSlash(meta.path.substring(output.path.length));
                 }
 
-                meta.params = merge(meta.params || {}, output.params);
+                meta.params = {
+                    ...meta.params,
+                    ...output.params,
+                };
             }
         }
 
-        meta.path = path;
-
-        if (meta.routerIds) {
-            meta.routerIds.push(this.id);
-        } else {
-            meta.routerIds = [this.id];
-        }
-
-        if (!meta.mountPath) {
-            meta.mountPath = '/';
-        }
+        meta.routerPath.push(this.id);
 
         let err : Error | undefined;
         let layer : Route | Router | Layer | undefined;
@@ -135,13 +126,13 @@ export class Router implements Dispatcher {
                     continue;
                 }
 
-                match = layer.matchPath(path);
+                match = layer.matchPath(meta.path);
             } else if (isRouteInstance(layer)) {
                 if (err) {
                     continue;
                 }
 
-                match = layer.matchPath(path);
+                match = layer.matchPath(meta.path);
 
                 if (
                     event.req.method &&
@@ -154,7 +145,7 @@ export class Router implements Dispatcher {
                     }
                 }
             } else if (isRouterInstance(layer)) {
-                match = layer.matchPath(path);
+                match = layer.matchPath(meta.path);
             }
 
             if (!match) {

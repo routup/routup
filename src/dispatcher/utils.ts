@@ -1,15 +1,21 @@
 import type { DispatcherMeta } from './type';
 
-export function cloneDispatcherMeta(input?: DispatcherMeta): DispatcherMeta {
-    if (!input) {
-        return {};
-    }
-
+export function buildDispatcherMeta(
+    input: Partial<DispatcherMeta>,
+): DispatcherMeta {
+    return {
+        mountPath: input.mountPath || '/',
+        params: input.params || {},
+        path: input.path || '/',
+        routerPath: [],
+    };
+}
+export function cloneDispatcherMeta(input: DispatcherMeta): DispatcherMeta {
     return {
         path: input.path,
         mountPath: input.mountPath,
         error: input.error,
-        routerIds: [...input.routerIds || []],
+        routerPath: [...input.routerPath],
         params: cloneDispatcherMetaParams(input.params),
     };
 }

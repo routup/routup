@@ -1,8 +1,10 @@
 import type { RequestListener } from 'node:http';
+import { useRequestPath } from '../../../request';
 import type { Request } from '../../../request';
 import type { Response } from '../../../response';
 import { isResponseGone } from '../../../response';
 import type { Router } from '../../../router';
+import { buildDispatcherMeta } from '../../utils';
 
 export async function dispatchNodeRequest(
     router: Router,
@@ -10,7 +12,12 @@ export async function dispatchNodeRequest(
     res: Response,
 ): Promise<void> {
     try {
-        const dispatched = await router.dispatch({ req, res });
+        const dispatched = await router.dispatch(
+            { req, res },
+            buildDispatcherMeta({
+                path: useRequestPath(req),
+            }),
+        );
         if (dispatched) {
             return;
         }
