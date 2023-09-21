@@ -1,34 +1,19 @@
 import { distinctArray, merge } from 'smob';
 import { HeaderName, MethodName } from '../constants';
-import type {
-    Dispatcher, DispatcherEvent, DispatcherMeta,
-} from '../dispatcher';
-import { cloneDispatcherMeta, mergeDispatcherMetaParams } from '../dispatcher';
+import type { Dispatcher, DispatcherEvent, DispatcherMeta } from '../dispatcher';
+import { cloneDispatcherMeta } from '../dispatcher';
 import type { ErrorHandler, Handler } from '../handler';
-import { useRequestPath } from '../request';
-import { isResponseGone, send } from '../response';
-import { transformRouterOptions } from '../router-options/transform';
-import {
-    cleanDoubleSlashes,
-    isInstance,
-    withLeadingSlash,
-    withoutTrailingSlash,
-} from '../utils';
+import { Layer, isLayerInstance } from '../layer';
 import type { Path, PathMatcherOptions } from '../path';
 import { PathMatcher, isPath } from '../path';
-import { Layer, isLayerInstance } from '../layer';
+import { useRequestPath } from '../request';
+import { isResponseGone, send } from '../response';
 import { Route, isRouteInstance } from '../route';
-import { setRouterOptions } from '../router-options';
 import type { RouterOptionsInput } from '../router-options';
-import { generateRouterID } from './utils';
-
-export function isRouterInstance(input: unknown) : input is Router {
-    if (input instanceof Router) {
-        return true;
-    }
-
-    return isInstance(input, 'Router');
-}
+import { setRouterOptions } from '../router-options';
+import { transformRouterOptions } from '../router-options/transform';
+import { cleanDoubleSlashes, withLeadingSlash, withoutTrailingSlash } from '../utils';
+import { generateRouterID, isRouterInstance } from './utils';
 
 export class Router implements Dispatcher {
     readonly '@instanceof' = Symbol.for('Router');
@@ -145,19 +130,17 @@ export class Router implements Dispatcher {
         for (let i = 0; i < this.stack.length; i++) {
             layer = this.stack[i];
 
-            if (layer instanceof Layer) {
+            if (isLayerInstance(layer)) {
                 if (!layer.isError() && err) {
                     continue;
                 }
 
                 match = layer.matchPath(path);
-            }
+            } else if (isRouteInstance(layer)) {
+                if (err) {
+                    continue;
+                }
 
-            if (isRouterInstance(layer)) {
-                match = layer.matchPath(path);
-            }
-
-            if (isRouteInstance(layer)) {
                 match = layer.matchPath(path);
 
                 if (
@@ -170,6 +153,8 @@ export class Router implements Dispatcher {
                         allowedMethods.push(...layer.getMethods());
                     }
                 }
+            } else if (isRouterInstance(layer)) {
+                match = layer.matchPath(path);
             }
 
             if (!match) {
@@ -177,19 +162,8 @@ export class Router implements Dispatcher {
             }
 
             const layerMeta = cloneDispatcherMeta(meta);
-            if (isLayerInstance(layer)) {
-                const output = layer.exec(path);
-
-                if (output) {
-                    layerMeta.params = mergeDispatcherMetaParams(layerMeta.params, output.params);
-                    layerMeta.mountPath = cleanDoubleSlashes(`${layerMeta.mountPath || ''}/${output.path}`);
-                }
-
-                if (err) {
-                    layerMeta.error = err;
-                }
-            } else if (err) {
-                continue;
+            if (err) {
+                layerMeta.error = err;
             }
 
             try {

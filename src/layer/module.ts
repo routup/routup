@@ -1,3 +1,4 @@
+import { mergeDispatcherMetaParams } from '../dispatcher';
 import type { Dispatcher, DispatcherEvent, DispatcherMeta } from '../dispatcher';
 import { createError } from '../error';
 import type { ErrorHandlerContext, HandlerContext } from '../handler';
@@ -16,7 +17,10 @@ import {
 } from '../response';
 import { findRouterOption } from '../router-options';
 import {
-    isPromise, isStream, isWebBlob, isWebResponse,
+    isPromise,
+    isStream,
+    isWebBlob,
+    isWebResponse,
 } from '../utils';
 import type { LayerOptions } from './type';
 
@@ -76,7 +80,15 @@ export class Layer implements Dispatcher {
         event: DispatcherEvent,
         meta: DispatcherMeta,
     ) : Promise<boolean> {
-        setRequestParams(event.req, meta.params || {});
+        let params : Record<string, any>;
+        const pathMatch = this.exec(meta.path || '/');
+        if (pathMatch) {
+            params = mergeDispatcherMetaParams(meta.params, pathMatch.params);
+        } else {
+            params = meta.params || {};
+        }
+
+        setRequestParams(event.req, params);
         setRequestMountPath(event.req, meta.mountPath || '/');
         setRequestRouterIds(event.req, meta.routerIds || []);
 
