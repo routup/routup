@@ -1,7 +1,13 @@
 import type { Dispatcher, DispatcherEvent, DispatcherMeta } from '../dispatcher';
 import { createError } from '../error';
-import { isErrorHandler } from '../handler';
-import { HandlerType } from '../handler/constants';
+import type { ErrorHandlerContext, HandlerContext } from '../handler';
+import {
+    HandlerType,
+    isContextHandler,
+    isErrorContextHandler,
+    isErrorHandler,
+    isHandler,
+} from '../handler';
 import { PathMatcher } from '../path';
 import { setRequestMountPath, setRequestParams, setRequestRouterIds } from '../request';
 import type { Response } from '../response';
@@ -31,19 +37,37 @@ export class Layer implements Dispatcher {
     ) {
         this.pathMatcher = new PathMatcher(options.path, options.pathMatcher);
         this.handler = fn;
-        this.handlerType = isErrorHandler(this.handler) ?
-            HandlerType.ERROR :
-            HandlerType.DEFAULT;
+
+        if (isHandler(fn)) {
+            this.handlerType = HandlerType.DEFAULT;
+            return;
+        }
+
+        if (isContextHandler(fn)) {
+            this.handlerType = HandlerType.DEFAULT_CONTEXT;
+            return;
+        }
+
+        if (isErrorHandler(fn)) {
+            this.handlerType = HandlerType.ERROR;
+            return;
+        }
+
+        if (isErrorContextHandler(fn)) {
+            this.handlerType = HandlerType.ERROR_CONTEXT;
+        }
     }
 
     // --------------------------------------------------
 
     isError() {
-        return this.handlerType === HandlerType.ERROR;
+        return this.handlerType === HandlerType.ERROR ||
+            this.handlerType === HandlerType.ERROR_CONTEXT;
     }
 
     isDefault() {
-        return this.handlerType === HandlerType.DEFAULT;
+        return this.handlerType === HandlerType.DEFAULT ||
+            this.handlerType === HandlerType.DEFAULT_CONTEXT;
     }
 
     // --------------------------------------------------
@@ -114,7 +138,22 @@ export class Layer implements Dispatcher {
                 let output: any;
 
                 if (meta.error) {
-                    output = this.handler(meta.error, event.req, event.res, onNext);
+                    if (this.handlerType === HandlerType.ERROR_CONTEXT) {
+                        output = this.handler({
+                            request: event.req,
+                            response: event.res,
+                            next: onNext,
+                            error: meta.error,
+                        } satisfies ErrorHandlerContext);
+                    } else {
+                        output = this.handler(meta.error, event.req, event.res, onNext);
+                    }
+                } else if (this.handlerType === HandlerType.DEFAULT_CONTEXT) {
+                    output = this.handler({
+                        request: event.req,
+                        response: event.res,
+                        next: onNext,
+                    } satisfies HandlerContext);
                 } else {
                     output = this.handler(event.req, event.res, onNext);
                 }
