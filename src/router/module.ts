@@ -1,4 +1,5 @@
 import { distinctArray } from 'smob';
+import { isError } from '../error';
 import { HeaderName, MethodName } from '../constants';
 import type { Dispatcher, DispatcherEvent, DispatcherMeta } from '../dispatcher';
 import { cloneDispatcherMeta } from '../dispatcher';
@@ -154,7 +155,7 @@ export class Router implements Dispatcher {
                     return true;
                 }
             } catch (e) {
-                if (e instanceof Error) {
+                if (isError(e)) {
                     err = e;
                 }
             }

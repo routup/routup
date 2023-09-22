@@ -1,9 +1,10 @@
+import { isError } from '@ebec/http/core';
 import { GatewayTimeoutError } from '@ebec/http';
+import { createError } from '../error';
 import { mergeDispatcherMetaParams } from '../dispatcher';
 import type {
     Dispatcher, DispatcherEvent, DispatcherMeta,
 } from '../dispatcher';
-import { createError } from '../error';
 import type { ErrorHandlerContext, HandlerContext } from '../handler';
 import {
     HandlerType,
@@ -190,8 +191,8 @@ export class Layer implements Dispatcher {
     }
 
     protected sendOutput(res: Response, input: unknown) : Promise<any> {
-        if (input instanceof Error) {
-            return Promise.reject(input);
+        if (isError(input)) {
+            return Promise.reject(createError(input));
         }
 
         if (isStream(input)) {
