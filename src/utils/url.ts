@@ -48,7 +48,11 @@ export function withLeadingSlash(input = ''): string {
 }
 
 export function cleanDoubleSlashes(input = ''): string {
-    return input.split('://')
-        .map((str) => str.replace(/\/{2,}/g, '/'))
-        .join('://');
+    if (input.indexOf('://') !== -1) {
+        return input.split('://')
+            .map((str) => cleanDoubleSlashes(str))
+            .join('://');
+    }
+
+    return input.replace(/\/+/g, '/');
 }

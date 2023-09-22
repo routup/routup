@@ -3,35 +3,27 @@ import { MethodName } from '../constants';
 import type {
     Dispatcher, DispatcherEvent, DispatcherMeta,
 } from '../dispatcher';
-import { cloneDispatcherMeta, mergeDispatcherMetaParams } from '../dispatcher';
+import { mergeDispatcherMetaParams } from '../dispatcher';
 import type { Handler } from '../handler';
 import { Layer } from '../layer';
-import type { Path, PathMatcherOptions } from '../path';
+import type { Path } from '../path';
 import { PathMatcher } from '../path';
-import type { RouteOptions } from './type';
+import { RouteSymbol } from './constants';
 
 export class Route implements Dispatcher {
-    readonly '@instanceof' = Symbol.for('Route');
+    readonly '@instanceof' = RouteSymbol;
 
     public readonly path : Path;
 
     protected pathMatcher : PathMatcher;
 
-    protected pathMatcherOptions : PathMatcherOptions;
-
     protected layers : Record<string, Layer[]> = {};
 
     // --------------------------------------------------
 
-    constructor(options: RouteOptions) {
-        this.path = options.path;
-
-        this.pathMatcherOptions = {
-            end: true,
-            strict: this.isStrictPath(),
-            ...options.pathMatcher,
-        };
-        this.pathMatcher = new PathMatcher(this.path, this.pathMatcherOptions);
+    constructor(path: Path) {
+        this.path = path;
+        this.pathMatcher = new PathMatcher(this.path);
     }
 
     // --------------------------------------------------
@@ -88,32 +80,28 @@ export class Route implements Dispatcher {
             name = MethodName.GET;
         }
 
-        const layers = this.layers[name];
-
         /* istanbul ignore next */
         if (
-            typeof layers === 'undefined' ||
-            layers.length === 0
+            typeof this.layers[name] === 'undefined' ||
+            this.layers[name].length === 0
         ) {
             return false;
         }
 
-        const layerMeta = cloneDispatcherMeta(meta);
-
         const output = this.pathMatcher.exec(meta.path);
         if (output) {
-            layerMeta.params = mergeDispatcherMetaParams(layerMeta.params, output.params);
+            meta.params = mergeDispatcherMetaParams(meta.params, output.params);
         }
 
         let err : Error | undefined;
-        for (let i = 0; i < layers.length; i++) {
-            const layer = layers[i];
+        for (let i = 0; i < this.layers[name].length; i++) {
+            const layer = this.layers[name][i];
             if (err && !layer.isError()) {
                 continue;
             }
 
             try {
-                const dispatched = await layer.dispatch(event, { ...layerMeta });
+                const dispatched = await layer.dispatch(event, meta);
 
                 if (dispatched) {
                     return true;
@@ -138,13 +126,7 @@ export class Route implements Dispatcher {
         this.layers[method] = [];
 
         for (let i = 0; i < handlers.length; i++) {
-            const layer = new Layer(
-                {
-                    path: this.path,
-                    pathMatcher: this.pathMatcherOptions,
-                },
-                handlers[i],
-            );
+            const layer = new Layer(handlers[i]);
 
             this.layers[method].push(layer);
         }
@@ -176,12 +158,5 @@ export class Route implements Dispatcher {
 
     options(...handlers: Handler[]) {
         return this.register(MethodName.OPTIONS, ...handlers);
-    }
-
-    // --------------------------------------------------
-
-    private isStrictPath() {
-        return typeof this.path !== 'string' ||
-            (this.path !== '/' && this.path.length !== 0);
     }
 }

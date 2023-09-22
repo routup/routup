@@ -12,61 +12,52 @@ function decodeParam(val: unknown) {
 }
 
 export class PathMatcher {
-    path: Path;
+    protected path: Path;
 
-    regexp : RegExp;
+    protected regexp : RegExp;
 
-    regexpKeys : Key[] = [];
+    protected regexpKeys : Key[] = [];
 
-    regexpOptions: PathMatcherOptions;
+    protected regexpOptions: PathMatcherOptions;
 
     constructor(path: Path, options?: PathMatcherOptions) {
         this.path = path;
-        this.regexpOptions = options || {};
 
-        if (path instanceof RegExp) {
-            this.regexp = path;
-        } else {
-            this.regexp = pathToRegexp(path, this.regexpKeys, options);
-        }
+        this.regexpOptions = options || {};
+        this.regexp = pathToRegexp(path, this.regexpKeys, options);
     }
 
     test(path: string) {
-        const fastSlash = this.path === '/' && this.regexpOptions.end === false;
-        if (fastSlash) {
-            return true;
-        }
-
         return this.regexp.test(path);
     }
 
     exec(path: string) : PathMatcherExecResult | undefined {
-        let match : RegExpExecArray | null = null;
-
-        const fastSlash = this.path === '/' && this.regexpOptions.end === false;
-        if (fastSlash) {
+        if (
+            this.path === '/' &&
+            this.regexpOptions.end === false
+        ) {
             return {
                 path: '/',
                 params: {},
             };
         }
 
-        match = this.regexp.exec(path);
+        if (this.path === '*') {
+            return {
+                path,
+                params: {
+                    0: decodeParam(path),
+                },
+            };
+        }
+
+        const match = this.regexp.exec(path);
 
         if (!match) {
             return undefined;
         }
 
-        if (this.path instanceof RegExp) {
-            return {
-                path,
-                params: {
-                    0: decodeParam(match[0]),
-                },
-            };
-        }
-
-        const output : Record<string, unknown> = {};
+        const params : Record<string, unknown> = {};
 
         for (let i = 1; i < match.length; i++) {
             const key = this.regexpKeys[i - 1];
@@ -74,13 +65,13 @@ export class PathMatcher {
             const val = decodeParam(match[i]);
 
             if (typeof val !== 'undefined') {
-                output[prop] = val;
+                params[prop] = val;
             }
         }
 
         return {
             path: match[0],
-            params: output,
+            params,
         };
     }
 }

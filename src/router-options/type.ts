@@ -1,4 +1,4 @@
-import type { Path, PathMatcherOptions } from '../path';
+import type { Path } from '../path';
 import type {
     EtagFn, EtagInput, TrustProxyFn, TrustProxyInput,
 } from '../utils';
@@ -11,13 +11,6 @@ export type RouterOptions = {
      * @default '/'
      */
     path?: Path,
-
-    /**
-     * Path matcher options.
-     *
-     * @default: {end: false}
-     */
-    pathMatcher?: PathMatcherOptions,
 
     /**
      * Milliseconds (ms) until a request handler execution should be canceled.

@@ -22,42 +22,46 @@ import {
     isWebBlob,
     isWebResponse,
 } from '../utils';
+import { LayerSymbol } from './constants';
 import type { LayerOptions } from './type';
 
 export class Layer implements Dispatcher {
-    readonly '@instanceof' = Symbol.for('Layer');
+    readonly '@instanceof' = LayerSymbol;
 
     protected handler : CallableFunction;
 
     protected handlerType : HandlerType;
 
-    protected pathMatcher : PathMatcher;
+    protected pathMatcher : PathMatcher | undefined;
 
     // --------------------------------------------------
 
     constructor(
-        options: LayerOptions,
-        fn: CallableFunction,
+        handler: CallableFunction,
+        options: LayerOptions = {},
     ) {
-        this.pathMatcher = new PathMatcher(options.path, options.pathMatcher);
-        this.handler = fn;
+        if (options.path) {
+            this.pathMatcher = new PathMatcher(options.path, options.pathMatcher);
+        }
 
-        if (isHandler(fn)) {
+        this.handler = handler;
+
+        if (isHandler(handler)) {
             this.handlerType = HandlerType.DEFAULT;
             return;
         }
 
-        if (isContextHandler(fn)) {
+        if (isContextHandler(handler)) {
             this.handlerType = HandlerType.DEFAULT_CONTEXT;
             return;
         }
 
-        if (isErrorHandler(fn)) {
+        if (isErrorHandler(handler)) {
             this.handlerType = HandlerType.ERROR;
             return;
         }
 
-        if (isErrorContextHandler(fn)) {
+        if (isErrorContextHandler(handler)) {
             this.handlerType = HandlerType.ERROR_CONTEXT;
         }
     }
@@ -75,15 +79,14 @@ export class Layer implements Dispatcher {
         event: DispatcherEvent,
         meta: DispatcherMeta,
     ) : Promise<boolean> {
-        let params : Record<string, any>;
-        const pathMatch = this.exec(meta.path);
-        if (pathMatch) {
-            params = mergeDispatcherMetaParams(meta.params, pathMatch.params);
-        } else {
-            params = meta.params;
+        if (this.pathMatcher) {
+            const pathMatch = this.pathMatcher.exec(meta.path);
+            if (pathMatch) {
+                meta.params = mergeDispatcherMetaParams(meta.params, pathMatch.params);
+            }
         }
 
-        setRequestParams(event.req, params);
+        setRequestParams(event.req, meta.params);
         setRequestMountPath(event.req, meta.mountPath);
         setRequestRouterPath(event.req, meta.routerPath);
 
@@ -211,10 +214,10 @@ export class Layer implements Dispatcher {
     // --------------------------------------------------
 
     matchPath(path: string) : boolean {
-        return this.pathMatcher.test(path);
-    }
+        if (!this.pathMatcher) {
+            return false;
+        }
 
-    exec(path: string) {
-        return this.pathMatcher.exec(path);
+        return this.pathMatcher.test(path);
     }
 }

@@ -4,7 +4,7 @@ import type { Dispatcher, DispatcherEvent, DispatcherMeta } from '../dispatcher'
 import { cloneDispatcherMeta } from '../dispatcher';
 import type { ErrorHandler, Handler } from '../handler';
 import { Layer, isLayerInstance } from '../layer';
-import type { Path, PathMatcherOptions } from '../path';
+import type { Path } from '../path';
 import { PathMatcher, isPath } from '../path';
 import { isResponseGone, send } from '../response';
 import { Route, isRouteInstance } from '../route';
@@ -37,18 +37,10 @@ export class Router implements Dispatcher {
      */
     protected pathMatcher : PathMatcher | undefined;
 
-    /**
-     * Path matcher options.
-     *
-     * @protected
-     */
-    protected pathMatcherOptions : PathMatcherOptions | undefined;
-
     // --------------------------------------------------
 
     constructor(options: RouterOptionsInput = {}) {
         this.id = generateRouterID();
-        this.pathMatcherOptions = options.pathMatcher;
 
         this.setPath(options.path);
 
@@ -71,8 +63,6 @@ export class Router implements Dispatcher {
 
         this.pathMatcher = new PathMatcher(path, {
             end: false,
-            sensitive: false,
-            ...(this.pathMatcherOptions ? this.pathMatcherOptions : {}),
         });
     }
 
@@ -115,50 +105,51 @@ export class Router implements Dispatcher {
         meta.routerPath.push(this.id);
 
         let err : Error | undefined;
-        let layer : Route | Router | Layer | undefined;
+        let item : Route | Router | Layer | undefined;
+        let itemMeta : DispatcherMeta;
         let match = false;
 
         for (let i = 0; i < this.stack.length; i++) {
-            layer = this.stack[i];
+            item = this.stack[i];
 
-            if (isLayerInstance(layer)) {
-                if (!layer.isError() && err) {
+            if (isLayerInstance(item)) {
+                if (!item.isError() && err) {
                     continue;
                 }
 
-                match = layer.matchPath(meta.path);
-            } else if (isRouteInstance(layer)) {
+                match = item.matchPath(meta.path);
+            } else if (isRouteInstance(item)) {
                 if (err) {
                     continue;
                 }
 
-                match = layer.matchPath(meta.path);
+                match = item.matchPath(meta.path);
 
                 if (
                     event.req.method &&
-                    !layer.matchMethod(event.req.method)
+                    !item.matchMethod(event.req.method)
                 ) {
                     match = false;
 
                     if (event.req.method.toLowerCase() === MethodName.OPTIONS) {
-                        allowedMethods.push(...layer.getMethods());
+                        allowedMethods.push(...item.getMethods());
                     }
                 }
-            } else if (isRouterInstance(layer)) {
-                match = layer.matchPath(meta.path);
+            } else if (isRouterInstance(item)) {
+                match = item.matchPath(meta.path);
             }
 
             if (!match) {
                 continue;
             }
 
-            const layerMeta = cloneDispatcherMeta(meta);
+            itemMeta = cloneDispatcherMeta(meta);
             if (err) {
-                layerMeta.error = err;
+                itemMeta.error = err;
             }
 
             try {
-                const dispatched = await layer.dispatch(event, layerMeta);
+                const dispatched = await item.dispatch(event, itemMeta);
                 if (dispatched) {
                     return true;
                 }
@@ -213,12 +204,7 @@ export class Router implements Dispatcher {
             return this.stack[index] as Route;
         }
 
-        const route = new Route({
-            path,
-            pathMatcher: {
-                ...(this.pathMatcherOptions ? { sensitive: this.pathMatcherOptions.sensitive } : {}),
-            },
-        });
+        const route = new Route(path);
         this.stack.push(route);
 
         return route;
@@ -310,14 +296,12 @@ export class Router implements Dispatcher {
             }
 
             if (typeof item === 'function') {
-                this.stack.push(new Layer({
+                this.stack.push(new Layer(item, {
                     path: path || '/',
                     pathMatcher: {
-                        strict: false,
                         end: false,
-                        ...(this.pathMatcherOptions ? { sensitive: this.pathMatcherOptions.sensitive } : {}),
                     },
-                }, item));
+                }));
             }
         }
 
