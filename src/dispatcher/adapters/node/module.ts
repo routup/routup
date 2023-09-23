@@ -1,6 +1,6 @@
 import type { RequestListener } from 'node:http';
-import { useRequestPath } from '../../../request';
 import { isError } from '../../../error';
+import { useRequestPath } from '../../../request';
 import type { Request } from '../../../request';
 import type { Response } from '../../../response';
 import { isResponseGone } from '../../../response';

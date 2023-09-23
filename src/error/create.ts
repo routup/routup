@@ -1,60 +1,22 @@
-import { sanitizeStatusCode, sanitizeStatusMessage } from '@ebec/http';
-import { hasOwnProperty } from 'smob';
-import { isError } from './check';
+import type { Input } from '@ebec/http';
+import { isError } from './is';
 import { RoutupError } from './module';
 
-export function createError(input: string | Record<string, any>) : RoutupError {
+/**
+ * Create an error instance from an options input or
+ * wrap an existing error.
+ * The wrapped error is accessible via the cause property
+ *
+ * @param input
+ */
+export function createError(input: Input) : RoutupError {
     if (isError(input)) {
         return input;
     }
 
     if (typeof input === 'string') {
-        return new RoutupError({
-            message: input,
-            expose: true,
-        });
+        return new RoutupError(input);
     }
 
-    let cause : unknown;
-    if (hasOwnProperty(input, 'cause')) {
-        cause = input.cause;
-    } else {
-        cause = input;
-    }
-
-    let code : undefined | string | number;
-    if (
-        typeof input.code === 'number' ||
-        typeof input.code === 'string'
-    ) {
-        code = input.code;
-    }
-
-    let statusCode : number | undefined;
-    if (typeof input.statusCode !== 'undefined') {
-        statusCode = sanitizeStatusCode(input.statusCode);
-    }
-
-    let statusMessage : string | undefined;
-    if (typeof input.statusMessage === 'string') {
-        statusMessage = sanitizeStatusMessage(input.statusMessage);
-    }
-
-    const error = new RoutupError({
-        code,
-        expose: false,
-        cause,
-        statusCode,
-        statusMessage,
-    });
-
-    if (typeof input.stack === 'string') {
-        error.stack = input.stack;
-    }
-
-    if (typeof input.message === 'string') {
-        error.message = input.message;
-    }
-
-    return error;
+    return new RoutupError({ cause: input }, input);
 }
