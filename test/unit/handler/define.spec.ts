@@ -1,7 +1,7 @@
 import {
-    defineContextHandler, defineErrorContextHandler, defineErrorHandler, defineHandler,
+    HANDLER_PROPERTY_TYPE_KEY, HandlerType, defineContextHandler, defineErrorContextHandler,
+    defineErrorHandler, defineHandler,
 } from '../../../src';
-import { HANDLER_PROPERTY_TYPE_KEY, HandlerType } from '../../../src/handler/constants';
 
 describe('src/handler/define', () => {
     it('should define handler', () => {

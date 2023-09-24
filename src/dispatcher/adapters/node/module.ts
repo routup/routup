@@ -1,4 +1,5 @@
 import type { RequestListener } from 'node:http';
+import { isError } from '../../../error';
 import { useRequestPath } from '../../../request';
 import type { Request } from '../../../request';
 import type { Response } from '../../../response';
@@ -28,7 +29,15 @@ export async function dispatchNodeRequest(
         }
     } catch (e) {
         if (!isResponseGone(res)) {
-            res.statusCode = 500;
+            if (isError(e)) {
+                res.statusCode = e.statusCode;
+                if (e.statusMessage) {
+                    res.statusMessage = e.statusMessage;
+                }
+            } else {
+                res.statusCode = 500;
+            }
+
             res.end();
         }
     }

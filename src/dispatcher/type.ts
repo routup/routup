@@ -1,3 +1,4 @@
+import type { ErrorProxy } from '../error';
 import type { Request } from '../request';
 import type { Response } from '../response';
 
@@ -27,7 +28,7 @@ export type DispatcherMeta = {
     /**
      * The error which occurred during a previous handler.
      */
-    error?: Error,
+    error?: ErrorProxy,
 
     /**
      * Ids of chained router instances.

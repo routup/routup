@@ -1,9 +1,10 @@
-import { hasOwnProperty } from 'smob';
 import { MethodName } from '../constants';
 import type {
     Dispatcher, DispatcherEvent, DispatcherMeta,
 } from '../dispatcher';
 import { mergeDispatcherMetaParams } from '../dispatcher';
+import type { ErrorProxy } from '../error';
+import { isError } from '../error';
 import type { Handler } from '../handler';
 import { Layer } from '../layer';
 import type { Path } from '../path';
@@ -37,12 +38,12 @@ export class Route implements Dispatcher {
 
         if (
             name === MethodName.HEAD &&
-            !hasOwnProperty(this.layers, name)
+            typeof this.layers[name] === 'undefined'
         ) {
             name = MethodName.GET;
         }
 
-        return Object.prototype.hasOwnProperty.call(this.layers, name);
+        return typeof this.layers[name] !== 'undefined';
     }
 
     // --------------------------------------------------
@@ -51,8 +52,8 @@ export class Route implements Dispatcher {
         const keys = Object.keys(this.layers);
 
         if (
-            hasOwnProperty(this.layers, MethodName.GET) &&
-            !hasOwnProperty(this.layers, MethodName.HEAD)
+            typeof this.layers[MethodName.GET] !== 'undefined' &&
+            typeof this.layers[MethodName.HEAD] === 'undefined'
         ) {
             keys.push(MethodName.HEAD);
         }
@@ -75,7 +76,7 @@ export class Route implements Dispatcher {
 
         if (
             name === MethodName.HEAD &&
-            !hasOwnProperty(this.layers, name)
+            typeof this.layers[name] === 'undefined'
         ) {
             name = MethodName.GET;
         }
@@ -93,7 +94,7 @@ export class Route implements Dispatcher {
             meta.params = mergeDispatcherMetaParams(meta.params, output.params);
         }
 
-        let err : Error | undefined;
+        let err : ErrorProxy | undefined;
         for (let i = 0; i < this.layers[name].length; i++) {
             const layer = this.layers[name][i];
             if (err && !layer.isError()) {
@@ -107,7 +108,7 @@ export class Route implements Dispatcher {
                     return true;
                 }
             } catch (e) {
-                if (e instanceof Error) {
+                if (isError(e)) {
                     err = e;
                 }
             }

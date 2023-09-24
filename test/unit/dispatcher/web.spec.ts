@@ -1,3 +1,4 @@
+import { BadRequestError } from '@ebec/http';
 import {
     HeaderName, Router, appendResponseHeader, createWebDispatcher, send,
 } from '../../../src';
@@ -30,6 +31,24 @@ describe('bridge/web', () => {
 
         const data = await response.text();
         expect(data).toEqual('/foo');
+    });
+
+    it('should dispatch request with error', async () => {
+        const router = new Router();
+
+        router.get('/foo', () => {
+            throw new BadRequestError();
+        });
+
+        const dispatch = createWebDispatcher(router);
+        const request = new Request(new URL('/foo', 'http://localhost/'), {
+            method: 'GET',
+            path: '/foo',
+        });
+        const response = await dispatch(request);
+
+        expect(response.status).toEqual(400);
+        expect(response.statusText).toEqual('Bad Request');
     });
 
     it('should split cookie string', async () => {
