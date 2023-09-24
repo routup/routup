@@ -12,7 +12,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/routup/badge.svg)](https://snyk.io/test/github/Tada5hi/routup)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
-**Routup** is a fast, lightweight, runtime agnostic and tree shakeable routing framework.
+**Routup** is a fast, lightweight, runtime agnostic and asynchronous routing framework.
 Helpers provide additional functionalities to interact with the request and manipulate the response.
 
 It can be used independently of the selected runtime environment (Node.Js, Bun, ... ) 🎉.
