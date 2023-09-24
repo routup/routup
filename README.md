@@ -63,16 +63,16 @@ There are different [dispatchers](https://routup.net/guide/dispatcher) how reque
 **`NodeJs`**
 
 ```typescript
-import {createServer} from 'node:http';
+import { createServer } from 'node:http';
 import {
     createNodeDispatcher,
-    Router,
-    send
+    defineHandler,
+    Router
 } from 'routup';
 
 const router = new Router();
 
-router.get('/', () => 'Hello World');
+router.get('/', defineHandler(() => 'Hello World'));
 
 const server = createServer(createNodeDispatcher(router));
 server.listen(3000)
@@ -83,13 +83,13 @@ server.listen(3000)
 ```typescript
 import {
     createWebDispatcher,
-    Router,
-    send
+    defineHandler,
+    Router
 } from 'routup';
 
 const router = new Router();
 
-router.get('/', () => 'Hello World');
+router.get('/', defineHandler(() => 'Hello World'));
 
 const dispatch = createWebDispatcher(router);
 
@@ -106,13 +106,13 @@ Bun.serve({
 ```typescript
 import {
     createWebDispatcher,
-    Router,
-    send
+    defineHandler,
+    Router
 } from 'routup';
 
 const router = new Router();
 
-router.get('/', () => 'Hello World');
+router.get('/', defineHandler(() => 'Hello World'));
 
 const dispatch = createWebDispatcher(router);
 
@@ -137,17 +137,17 @@ According to the fact that routup is a minimalistic framework,
 it depends on [plugins](https://github.com/routup/plugins) to cover some 
 typically http framework functions, which are not integrated in the main package.
 
-| Name                                                                       | Description                                                            |
-|----------------------------------------------------------------------------|------------------------------------------------------------------------|
-| [body](https://www.npmjs.com/package/@routup/body)                         | Read and parse the request body.                                       |
-| [cookie](https://www.npmjs.com/package/@routup/cookie)                     | Read and parse request cookies and serialize cookies for the response. |
-| [decorators](https://www.npmjs.com/package/@routup/decorators)             | Create request handlers with class-, method- & parameter-decorators.   |
-| [prometheus](https://www.npmjs.com/package/@routup/prometheus)             | Collect and serve metrics for prometheus.                              |
-| [query](https://www.npmjs.com/package/@routup/query)                       | Read and parse the query string of the request url.                    |
-| [rate-limit](https://www.npmjs.com/package/@routup/rate-limit)             | Rate limit incoming requests.                                          |
-| [rate-limit-redis](https://www.npmjs.com/package/@routup/rate-limit-redis) | Redis adapter for the rate-limit plugin.                               |
-| [static](https://www.npmjs.com/package/@routup/static)                     | Serve static files from a directory.                                   |
-| [swagger](https://www.npmjs.com/package/@routup/swagger)                   | Serve generated docs from URL or based on a JSON file.                 |
+| Name                                                                                          | Description                                                            |
+|-----------------------------------------------------------------------------------------------|------------------------------------------------------------------------|
+| [body](https://github.com/routup/plugins/tree/master/packages/body)                           | Read and parse the request body.                                       |
+| [cookie](https://github.com/routup/plugins/tree/master/packages/cookie)                       | Read and parse request cookies and serialize cookies for the response. |
+| [decorators](https://github.com/routup/plugins/tree/master/packages/decorators)               | Create request handlers with class-, method- & parameter-decorators.   |
+| [prometheus](https://github.com/routup/plugins/tree/master/packages/prometheus)               | Collect and serve metrics for prometheus.                              |
+| [query](https://github.com/routup/plugins/tree/master/packages/query)                         | Read and parse the query string of the request url.                    |
+| [rate-limit](https://github.com/routup/plugins/tree/master/packages/rate-limit)               | Rate limit incoming requests.                                          |
+| [rate-limit-redis](https://github.com/routup/plugins/tree/master/packages/rate-limit-redis)   | Redis adapter for the rate-limit plugin.                               |
+| [static](https://github.com/routup/plugins/tree/master/packages/static)                       | Serve static files from a directory.                                   |
+| [swagger](https://github.com/routup/plugins/tree/master/packages/swagger)                     | Serve generated docs from URL or based on a JSON file.                 |
 
 ## Benchmarks
 
