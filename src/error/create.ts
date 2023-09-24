@@ -1,22 +1,23 @@
 import type { Input } from '@ebec/http';
 import { isError } from './is';
-import { RoutupError } from './module';
+import { ErrorProxy } from './module';
 
 /**
- * Create an error instance from an options input or
- * wrap an existing error.
- * The wrapped error is accessible via the cause property
+ * Create an error proxy by
+ * - an existing error (accessible via cause property)
+ * - options
+ * - message
  *
  * @param input
  */
-export function createError(input: Input) : RoutupError {
+export function createError(input: Input) : ErrorProxy {
     if (isError(input)) {
         return input;
     }
 
     if (typeof input === 'string') {
-        return new RoutupError(input);
+        return new ErrorProxy(input);
     }
 
-    return new RoutupError({ cause: input }, input);
+    return new ErrorProxy({ cause: input }, input);
 }

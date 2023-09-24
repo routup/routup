@@ -1,9 +1,15 @@
 import { distinctArray } from 'smob';
+import type { ErrorProxy } from '../error';
 import { isError } from '../error';
 import { HeaderName, MethodName } from '../constants';
 import type { Dispatcher, DispatcherEvent, DispatcherMeta } from '../dispatcher';
 import { cloneDispatcherMeta } from '../dispatcher';
-import type { ErrorHandler, Handler } from '../handler';
+import type {
+    ContextHandler,
+    ErrorContextHandler,
+    ErrorHandler,
+    Handler,
+} from '../handler';
 import { Layer, isLayerInstance } from '../layer';
 import type { Path } from '../path';
 import { PathMatcher, isPath } from '../path';
@@ -105,7 +111,7 @@ export class Router implements Dispatcher {
 
         meta.routerPath.push(this.id);
 
-        let err : Error | undefined;
+        let err : ErrorProxy | undefined;
         let item : Route | Router | Layer | undefined;
         let itemMeta : DispatcherMeta;
         let match = false;
@@ -264,15 +270,15 @@ export class Router implements Dispatcher {
 
     use(router: Router) : this;
 
-    use(handler: Handler) : this;
+    use(handler: Handler | ContextHandler) : this;
 
-    use(handler: ErrorHandler) : this;
+    use(handler: ErrorHandler | ErrorContextHandler) : this;
 
     use(path: Path, router: Router) : this;
 
-    use(path: Path, handler: Handler) : this;
+    use(path: Path, handler: Handler | ContextHandler) : this;
 
-    use(path: Path, handler: ErrorHandler) : this;
+    use(path: Path, handler: ErrorHandler | ErrorContextHandler) : this;
 
     use(...input: unknown[]) : this {
         /* istanbul ignore next */

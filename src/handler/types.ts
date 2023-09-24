@@ -1,3 +1,4 @@
+import type { ErrorProxy } from '../error';
 import type { Request } from '../request';
 import type { Response } from '../response';
 import type { HANDLER_PROPERTY_TYPE_KEY, HandlerType } from './constants';
@@ -30,7 +31,7 @@ export interface ErrorHandler {
     [HANDLER_PROPERTY_TYPE_KEY]?: `${HandlerType.ERROR}`,
 
     (
-        err: Error,
+        err: ErrorProxy,
         req: Request,
         res: Response,
         next: Next
@@ -38,7 +39,7 @@ export interface ErrorHandler {
 }
 
 export type ErrorHandlerContext = HandlerContext & {
-    error: Error
+    error: ErrorProxy
 };
 
 export interface ErrorContextHandler {

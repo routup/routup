@@ -1,5 +1,5 @@
-import { RoutupError } from './module';
+import { ErrorProxy } from './module';
 
-export function isError(input: unknown) : input is RoutupError {
-    return input instanceof RoutupError;
+export function isError(input: unknown) : input is ErrorProxy {
+    return input instanceof ErrorProxy;
 }

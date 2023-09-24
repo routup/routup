@@ -3,6 +3,7 @@ import type {
     Dispatcher, DispatcherEvent, DispatcherMeta,
 } from '../dispatcher';
 import { mergeDispatcherMetaParams } from '../dispatcher';
+import type { ErrorProxy } from '../error';
 import { isError } from '../error';
 import type { Handler } from '../handler';
 import { Layer } from '../layer';
@@ -93,7 +94,7 @@ export class Route implements Dispatcher {
             meta.params = mergeDispatcherMetaParams(meta.params, output.params);
         }
 
-        let err : Error | undefined;
+        let err : ErrorProxy | undefined;
         for (let i = 0; i < this.layers[name].length; i++) {
             const layer = this.layers[name][i];
             if (err && !layer.isError()) {
