@@ -61,21 +61,6 @@ describe('src/module', () => {
         expect(response.statusCode).toEqual(404);
     });
 
-    it('should process with missing response', async () => {
-        const router = new Router({
-            timeout: 100,
-        });
-
-        router.get('/', async () => {});
-
-        const server = supertest(createNodeDispatcher(router));
-
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(504);
-    });
-
     it('should process with error thrown', async () => {
         const router = new Router();
 

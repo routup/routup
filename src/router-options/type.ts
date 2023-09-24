@@ -13,14 +13,6 @@ export type RouterOptions = {
     path?: Path,
 
     /**
-     * Milliseconds (ms) until a request handler execution should be canceled.
-     *
-     * @type number
-     * @default undefined
-     */
-    timeout?: number,
-
-    /**
      * default: 2
      */
     subdomainOffset: number,

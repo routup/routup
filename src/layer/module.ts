@@ -1,4 +1,3 @@
-import { GatewayTimeoutError } from '@ebec/http';
 import { createError } from '../error';
 import { mergeDispatcherMetaParams } from '../dispatcher';
 import type {
@@ -18,7 +17,6 @@ import type { Response } from '../response';
 import {
     send, sendStream, sendWebBlob, sendWebResponse,
 } from '../response';
-import { findRouterOption } from '../router-options';
 import {
     isPromise,
     isStream,
@@ -93,8 +91,6 @@ export class Layer implements Dispatcher {
         setRequestMountPath(event.req, meta.mountPath);
         setRequestRouterPath(event.req, meta.routerPath);
 
-        const timeout = findRouterOption('timeout', meta.routerPath);
-
         return new Promise<boolean>((resolve, reject) => {
             let timeoutInstance : ReturnType<typeof setTimeout> | undefined;
             let handled = false;
@@ -128,12 +124,6 @@ export class Layer implements Dispatcher {
 
             event.res.once('close', onFinished);
             event.res.once('error', onFinished);
-
-            if (timeout) {
-                timeoutInstance = setTimeout(() => {
-                    onNext(new GatewayTimeoutError());
-                }, timeout);
-            }
 
             try {
                 let output: any;
