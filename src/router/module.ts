@@ -4,17 +4,12 @@ import { isError } from '../error';
 import { HeaderName, MethodName } from '../constants';
 import type { Dispatcher, DispatcherEvent, DispatcherMeta } from '../dispatcher';
 import { cloneDispatcherMeta } from '../dispatcher';
-import type {
-    ContextHandler,
-    ErrorContextHandler,
-    ErrorHandler,
-    Handler,
-} from '../handler';
+import type { HandlerVariants } from '../handler';
+import type { LayerOptions } from '../layer';
 import { Layer, isLayerInstance } from '../layer';
 import type { Path } from '../path';
 import { PathMatcher, isPath } from '../path';
 import { isResponseGone, send } from '../response';
-import { Route, isRouteInstance } from '../route';
 import type { RouterOptionsInput } from '../router-options';
 import { setRouterOptions } from '../router-options';
 import { transformRouterOptions } from '../router-options/transform';
@@ -35,7 +30,7 @@ export class Router implements Dispatcher {
      *
      * @protected
      */
-    protected stack : (Router | Route | Layer)[] = [];
+    protected stack : (Router | Layer)[] = [];
 
     /**
      * Path matcher for the current mount path.
@@ -112,7 +107,7 @@ export class Router implements Dispatcher {
         meta.routerPath.push(this.id);
 
         let err : ErrorProxy | undefined;
-        let item : Route | Router | Layer | undefined;
+        let item : Router | Layer | undefined;
         let itemMeta : DispatcherMeta;
         let match = false;
 
@@ -125,21 +120,14 @@ export class Router implements Dispatcher {
                 }
 
                 match = item.matchPath(meta.path);
-            } else if (isRouteInstance(item)) {
-                if (err) {
-                    continue;
-                }
 
-                match = item.matchPath(meta.path);
+                if (match && event.req.method) {
+                    if (!item.matchMethod(event.req.method)) {
+                        match = false;
+                    }
 
-                if (
-                    event.req.method &&
-                    !item.matchMethod(event.req.method)
-                ) {
-                    match = false;
-
-                    if (event.req.method.toLowerCase() === MethodName.OPTIONS) {
-                        allowedMethods.push(...item.getMethods());
+                    if (item.method) {
+                        allowedMethods.push(item.method);
                     }
                 }
             } else if (isRouterInstance(item)) {
@@ -175,7 +163,13 @@ export class Router implements Dispatcher {
             event.req.method &&
             event.req.method.toLowerCase() === MethodName.OPTIONS
         ) {
-            const options = distinctArray(allowedMethods)
+            if (allowedMethods.indexOf(MethodName.GET) !== -1) {
+                allowedMethods.push(MethodName.HEAD);
+            }
+
+            distinctArray(allowedMethods);
+
+            const options = allowedMethods
                 .map((key) => key.toUpperCase())
                 .join(',');
 
@@ -193,75 +187,87 @@ export class Router implements Dispatcher {
 
     // --------------------------------------------------
 
-    route(
-        path: Path,
-    ) : Route {
-        if (
-            typeof path === 'string' &&
-            path.length > 0
-        ) {
-            path = withLeadingSlash(path);
+    route(options: LayerOptions) : this {
+        if (typeof options.path === 'string') {
+            if (options.path.length > 0) {
+                options.path = withLeadingSlash(options.path);
+            } else {
+                options.path = '/';
+            }
         }
 
-        const index = this.stack.findIndex(
-            (item) => isRouteInstance(item) && item.path === path,
-        );
-
-        if (index !== -1) {
-            return this.stack[index] as Route;
-        }
-
-        const route = new Route(path);
-        this.stack.push(route);
-
-        return route;
-    }
-
-    delete(path: Path, ...handlers: Handler[]) : this {
-        const route = this.route(path);
-        route.delete(...handlers);
+        const layer = new Layer(options);
+        this.stack.push(layer);
 
         return this;
     }
 
-    get(path: Path, ...handlers: Handler[]) : this {
-        const route = this.route(path);
-        route.get(...handlers);
+    delete(path: Path, handler: HandlerVariants) : this {
+        this.route({
+            path,
+            handler,
+            method: MethodName.DELETE,
+        });
 
         return this;
     }
 
-    post(path: Path, ...handlers: Handler[]) : this {
-        const route = this.route(path);
-        route.post(...handlers);
+    get(path: Path, handler: HandlerVariants) : this {
+        this.route({
+            path,
+            handler,
+            method: MethodName.GET,
+        });
 
         return this;
     }
 
-    put(path: Path, ...handlers: Handler[]) : this {
-        const route = this.route(path);
-        route.put(...handlers);
+    post(path: Path, handler: HandlerVariants) : this {
+        this.route({
+            path,
+            handler,
+            method: MethodName.POST,
+        });
 
         return this;
     }
 
-    patch(path: Path, ...handlers: Handler[]) : this {
-        const route = this.route(path);
-        route.patch(...handlers);
+    put(path: Path, handler: HandlerVariants) : this {
+        this.route({
+            path,
+            handler,
+            method: MethodName.PUT,
+        });
 
         return this;
     }
 
-    head(path: Path, ...handlers: Handler[]) : this {
-        const route = this.route(path);
-        route.head(...handlers);
+    patch(path: Path, handler: HandlerVariants) : this {
+        this.route({
+            path,
+            handler,
+            method: MethodName.PATCH,
+        });
 
         return this;
     }
 
-    options(path: Path, ...handlers: Handler[]) : this {
-        const route = this.route(path);
-        route.options(...handlers);
+    head(path: Path, handler: HandlerVariants) : this {
+        this.route({
+            path,
+            handler,
+            method: MethodName.HEAD,
+        });
+
+        return this;
+    }
+
+    options(path: Path, handler: HandlerVariants) : this {
+        this.route({
+            path,
+            handler,
+            method: MethodName.OPTIONS,
+        });
 
         return this;
     }
@@ -270,15 +276,11 @@ export class Router implements Dispatcher {
 
     use(router: Router) : this;
 
-    use(handler: Handler | ContextHandler) : this;
-
-    use(handler: ErrorHandler | ErrorContextHandler) : this;
+    use(handler: HandlerVariants) : this;
 
     use(path: Path, router: Router) : this;
 
-    use(path: Path, handler: Handler | ContextHandler) : this;
-
-    use(path: Path, handler: ErrorHandler | ErrorContextHandler) : this;
+    use(path: Path, handler: HandlerVariants) : this;
 
     use(...input: unknown[]) : this {
         /* istanbul ignore next */
@@ -303,11 +305,9 @@ export class Router implements Dispatcher {
             }
 
             if (typeof item === 'function') {
-                this.stack.push(new Layer(item, {
+                this.stack.push(new Layer({
+                    handler: item as HandlerVariants,
                     path: path || '/',
-                    pathMatcher: {
-                        end: false,
-                    },
                 }));
             }
         }

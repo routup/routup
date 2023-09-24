@@ -1,17 +1,23 @@
 import supertest from 'supertest';
 import {
-    Router, createNodeDispatcher, send, useRequestParams,
+    Router,
+    createNodeDispatcher,
+    defineHandler,
+    useRequestParams,
 } from '../../../src';
 
 describe('src/module', () => {
     it('should process async & sync handler', async () => {
         const router = new Router();
 
-        router.get('/async', async (req, res) => new Promise((resolve) => {
-            setTimeout(() => resolve('foo'), 0);
-        }));
+        router.get(
+            '/async',
+            defineHandler(async () => new Promise((resolve) => {
+                setTimeout(() => resolve('foo'), 0);
+            })),
+        );
 
-        router.get('/sync', () => 'bar');
+        router.get('/sync', defineHandler(() => 'bar'));
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -31,11 +37,11 @@ describe('src/module', () => {
     it('should process dynamic path', async () => {
         const router = new Router();
 
-        router.get('/param/:id', async (req, res) => {
+        router.get('/param/:id', defineHandler(async (req) => {
             const params = useRequestParams(req);
 
-            send(res, params.id);
-        });
+            return params.id;
+        }));
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -49,9 +55,10 @@ describe('src/module', () => {
     it('should process with no matching route', async () => {
         const router = new Router();
 
-        router.get('/param/:id', async (req, res) => {
-            send(res, 'foo');
-        });
+        router.get(
+            '/param/:id',
+            defineHandler(() => 'foo'),
+        );
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -80,7 +87,7 @@ describe('src/module', () => {
         const router = new Router();
 
         router.get('/', async () => {
-            await new Promise((resolve, reject) => {
+            await new Promise((_resolve, reject) => {
                 setTimeout(() => {
                     reject(new Error('bar'));
                 }, 0);

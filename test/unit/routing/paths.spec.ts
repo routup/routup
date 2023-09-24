@@ -1,17 +1,12 @@
 import supertest from 'supertest';
-import { Router, createNodeDispatcher, send } from '../../../src';
+import { Router, createNodeDispatcher } from '../../../src';
 
 describe('routing/paths', () => {
     it('should handle path', async () => {
         const router = new Router();
 
-        router.get('/foo', async (req, res) => {
-            send(res, '/foo');
-        });
-
-        router.get('/foo/bar/baz', async (req, res) => {
-            send(res, '/foo/bar/baz');
-        });
+        router.get('/foo', async () => '/foo');
+        router.get('/foo/bar/baz', async () => '/foo/bar/baz');
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -33,9 +28,7 @@ describe('routing/paths', () => {
             path: '/foo',
         });
 
-        router.get('/bar', async (req, res) => {
-            send(res, '/foo/bar');
-        });
+        router.get('/bar', async () => '/foo/bar');
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -49,9 +42,7 @@ describe('routing/paths', () => {
     it('should handle path for nested routers', async () => {
         const child = new Router({ path: '/bar' });
 
-        child.get('/baz', async (req, res) => {
-            send(res, '/foo/bar/baz');
-        });
+        child.get('/baz', async () => '/foo/bar/baz');
 
         const router = new Router({ path: '/foo' });
         router.use(child);
@@ -68,9 +59,7 @@ describe('routing/paths', () => {
     it('should handle regexp paths', async () => {
         const router = new Router();
 
-        router.get(/.*fly$/, async (req, res) => {
-            send(res, '/foo');
-        });
+        router.get(/.*fly$/, async () => '/foo');
 
         const server = supertest(createNodeDispatcher(router));
 

@@ -6,6 +6,5 @@ export * from './response';
 export * from './request';
 export * from './layer';
 export * from './path';
-export * from './route';
 export * from './router';
 export * from './types';

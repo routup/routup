@@ -1,16 +1,16 @@
 import supertest from 'supertest';
 import {
-    Router, createNodeDispatcher, send, useRequestMountPath,
+    Router, createNodeDispatcher, defineHandler, send, useRequestMountPath,
 } from '../../../src';
 import { createHandler } from '../../handler';
 
-describe('src/helpers/request/query', () => {
+describe('src/helpers/request/mount-path', () => {
     it('should get base-url with predefined path', async () => {
         const router = new Router({
             path: '/foo',
         });
 
-        router.get('', (req, res) => send(res, useRequestMountPath(req)));
+        router.get('', defineHandler((req, res) => send(res, useRequestMountPath(req))));
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -23,7 +23,7 @@ describe('src/helpers/request/query', () => {
 
     it('should get base url with nested router', async () => {
         const child = new Router();
-        child.get('/bar', (req, res) => send(res, useRequestMountPath(req)));
+        child.get('/bar', defineHandler((req, res) => send(res, useRequestMountPath(req))));
 
         const router = new Router();
         router.use('/foo', child);

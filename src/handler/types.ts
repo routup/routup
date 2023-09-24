@@ -47,3 +47,8 @@ export interface ErrorContextHandler {
 
     (context: ErrorHandlerContext) : unknown | Promise<unknown>;
 }
+
+export type HandlerVariants = Handler |
+ContextHandler |
+ErrorHandler |
+ErrorContextHandler;

@@ -26,6 +26,10 @@ export function cloneDispatcherMetaParams(input?: Record<string, any>) {
     }
 
     const keys = Object.keys(input);
+    if (keys.length === 0) {
+        return {};
+    }
+
     const output : Record<string, any> = {};
     for (let i = 0; i < keys.length; i++) {
         output[keys[i]] = input[keys[i]];
@@ -47,6 +51,10 @@ export function mergeDispatcherMetaParams(
     }
 
     const keys = Object.keys(t2);
+    if (keys.length === 0) {
+        return t1;
+    }
+
     for (let i = 0; i < keys.length; i++) {
         t1[keys[i]] = t2[keys[i]];
     }

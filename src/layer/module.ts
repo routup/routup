@@ -1,3 +1,4 @@
+import { MethodName } from '../constants';
 import { createError } from '../error';
 import { mergeDispatcherMetaParams } from '../dispatcher';
 import type {
@@ -35,34 +36,39 @@ export class Layer implements Dispatcher {
 
     protected pathMatcher : PathMatcher | undefined;
 
+    readonly method : `${MethodName}` | undefined;
+
     // --------------------------------------------------
 
-    constructor(
-        handler: CallableFunction,
-        options: LayerOptions = {},
-    ) {
+    constructor(options: LayerOptions) {
         if (options.path) {
-            this.pathMatcher = new PathMatcher(options.path, options.pathMatcher);
+            this.pathMatcher = new PathMatcher(options.path, {
+                end: !!options.method,
+            });
         }
 
-        this.handler = handler;
+        if (options.method) {
+            this.method = options.method;
+        }
 
-        if (isHandler(handler)) {
+        this.handler = options.handler;
+
+        if (isHandler(options.handler)) {
             this.handlerType = HandlerType.DEFAULT;
             return;
         }
 
-        if (isContextHandler(handler)) {
+        if (isContextHandler(options.handler)) {
             this.handlerType = HandlerType.DEFAULT_CONTEXT;
             return;
         }
 
-        if (isErrorHandler(handler)) {
+        if (isErrorHandler(options.handler)) {
             this.handlerType = HandlerType.ERROR;
             return;
         }
 
-        if (isErrorContextHandler(handler)) {
+        if (isErrorContextHandler(options.handler)) {
             this.handlerType = HandlerType.ERROR_CONTEXT;
         }
     }
@@ -207,5 +213,19 @@ export class Layer implements Dispatcher {
         }
 
         return this.pathMatcher.test(path);
+    }
+
+    matchMethod(method: string) : boolean {
+        if (!this.method) {
+            return true;
+        }
+
+        const name = method.toLowerCase();
+        if (name === this.method) {
+            return true;
+        }
+
+        return name === MethodName.HEAD &&
+            this.method === MethodName.GET;
     }
 }

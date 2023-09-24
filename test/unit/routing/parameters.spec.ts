@@ -1,7 +1,7 @@
 import supertest from 'supertest';
 import {
     Router,
-    createNodeDispatcher, send, setRequestParam, useRequestParam, useRequestParams,
+    createNodeDispatcher, defineHandler, send, setRequestParam, useRequestParam, useRequestParams,
 } from '../../../src';
 import { createHandler } from '../../handler';
 
@@ -9,9 +9,7 @@ describe('routing/parameters', () => {
     it('should capture parameters', async () => {
         const router = new Router();
 
-        router.get('/:id/:action', async (req, res) => {
-            send(res, useRequestParams(req));
-        });
+        router.get('/:id/:action', defineHandler(async (req) => useRequestParams(req)));
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -27,9 +25,7 @@ describe('routing/parameters', () => {
             path: '/:id',
         });
 
-        router.get('/:action', async (req, res) => {
-            send(res, useRequestParams(req));
-        });
+        router.get('/:action', defineHandler(async (req) => useRequestParams(req)));
 
         const server = supertest(createNodeDispatcher(router));
 
