@@ -47,13 +47,17 @@ export function createRequest(context: RequestCreateContext) : IncomingMessage {
 
     Object.defineProperty(readable, 'connection', {
         get() {
-            return {};
+            return {
+                remoteAddress: '127.0.0.1',
+            };
         },
     });
 
     Object.defineProperty(readable, 'socket', {
         get() {
-            return {};
+            return {
+                remoteAddress: '127.0.0.1',
+            };
         },
     });
 
