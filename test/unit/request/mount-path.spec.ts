@@ -1,8 +1,8 @@
 import supertest from 'supertest';
 import {
-    Router, createNodeDispatcher, defineHandler, send, useRequestMountPath,
+    Router, coreHandler, createNodeDispatcher, send, useRequestMountPath,
 } from '../../../src';
-import { createHandler } from '../../handler';
+import { createRequestListener } from '../../handler';
 
 describe('src/helpers/request/mount-path', () => {
     it('should get base-url with predefined path', async () => {
@@ -10,7 +10,7 @@ describe('src/helpers/request/mount-path', () => {
             path: '/foo',
         });
 
-        router.get('', defineHandler((req, res) => send(res, useRequestMountPath(req))));
+        router.get('', coreHandler((req, res) => send(res, useRequestMountPath(req))));
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -23,7 +23,7 @@ describe('src/helpers/request/mount-path', () => {
 
     it('should get base url with nested router', async () => {
         const child = new Router();
-        child.get('/bar', defineHandler((req, res) => send(res, useRequestMountPath(req))));
+        child.get('/bar', coreHandler((req, res) => send(res, useRequestMountPath(req))));
 
         const router = new Router();
         router.use('/foo', child);
@@ -39,7 +39,7 @@ describe('src/helpers/request/mount-path', () => {
 
     it('should get mount path', async () => {
         const server = supertest(
-            createHandler((req, res) => send(res, useRequestMountPath(req))),
+            createRequestListener((req, res) => send(res, useRequestMountPath(req))),
         );
 
         const response = await server

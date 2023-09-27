@@ -1,10 +1,10 @@
 import supertest from 'supertest';
 import { isRequestCacheable, send } from '../../../src';
-import { createHandler } from '../../handler';
+import { createRequestListener } from '../../handler';
 
 describe('src/helpers/request/cache', () => {
     it('should be cacheable', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             send(res, isRequestCacheable(req, new Date()));
         }));
 
@@ -17,7 +17,7 @@ describe('src/helpers/request/cache', () => {
     });
 
     it('should not be cacheable', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             send(res, isRequestCacheable(req, new Date()));
         }));
 

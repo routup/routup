@@ -1,10 +1,10 @@
 import supertest from 'supertest';
 import { HeaderName, getRequestHostName, send } from '../../../src';
-import { createHandler } from '../../handler';
+import { createRequestListener } from '../../handler';
 
 describe('src/helpers/request/hostname', () => {
     it('should determine hostname', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             send(res, getRequestHostName(req));
         }));
 
@@ -20,7 +20,7 @@ describe('src/helpers/request/hostname', () => {
     });
 
     it('should determine undefined hostname', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             req.headers[HeaderName.HOST] = undefined;
             send(res, getRequestHostName(req));
         }));
@@ -32,7 +32,7 @@ describe('src/helpers/request/hostname', () => {
     });
 
     it('should determine hostname for IPv6', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             send(res, getRequestHostName(req));
         }));
 
@@ -48,7 +48,7 @@ describe('src/helpers/request/hostname', () => {
     });
 
     it('should determine hostname with trust proxy', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             send(res, getRequestHostName(req, { trustProxy: true }));
         }));
 
@@ -72,7 +72,7 @@ describe('src/helpers/request/hostname', () => {
     });
 
     it('should determine hostname with trust proxy restriction', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             send(res, getRequestHostName(req, { trustProxy: '10.1.10.0' }));
         }));
 

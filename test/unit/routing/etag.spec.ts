@@ -1,6 +1,6 @@
 import supertest from 'supertest';
 import {
-    HeaderName, Router, createNodeDispatcher, defineHandler,
+    HeaderName, Router, coreHandler, createNodeDispatcher,
 } from '../../../src';
 
 describe('src/router', () => {
@@ -9,7 +9,7 @@ describe('src/router', () => {
             etag: false,
         });
 
-        router.get('/', defineHandler(() => 'Hello world!'));
+        router.get('/', coreHandler(() => 'Hello world!'));
 
         const server = supertest(createNodeDispatcher(router));
 

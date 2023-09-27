@@ -1,19 +1,33 @@
 import supertest from 'supertest';
 import {
-    HeaderName, Router, createNodeDispatcher,
+    HeaderName, Router, coreHandler, createNodeDispatcher,
 } from '../../../src';
 
 describe('routing/methods', () => {
+    it('should mount lazy handler with use method', async () => {
+        const router = new Router();
+
+        router.use('/foo', (_req: any, _res: any, _next: any) => { throw new Error('bar'); });
+        router.use((err, _req, _res, _next) => err.message);
+
+        const server = supertest(createNodeDispatcher(router));
+
+        const response = await server
+            .delete('/foo');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.text).toEqual('bar');
+    });
     it('should handle different methods', async () => {
         const router = new Router();
 
-        router.delete('/delete', async () => 'delete');
-        router.get('/get', async () => 'get');
-        router.patch('/patch', async () => 'patch');
-        router.post('/post', async () => 'post');
-        router.put('/put', async () => 'put');
-        router.head('/head', async () => null);
-        router.options('/options', async () => 'options');
+        router.delete('/delete', coreHandler(async () => 'delete'));
+        router.get('/get', coreHandler(async () => 'get'));
+        router.patch('/patch', coreHandler(async () => 'patch'));
+        router.post('/post', coreHandler(async () => 'post'));
+        router.put('/put', coreHandler(async () => 'put'));
+        router.head('/head', coreHandler(async () => null));
+        router.options('/options', coreHandler(async () => 'options'));
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -59,14 +73,40 @@ describe('routing/methods', () => {
         expect(response.text).toEqual('options');
     });
 
+    it('should define global head handler', async () => {
+        const router = new Router();
+        router.head(coreHandler(async () => 'HEAD'));
+
+        const server = supertest(createNodeDispatcher(router));
+
+        const response = await server
+            .head('/');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.text).toBeUndefined();
+    });
+
+    it('should define global options handler', async () => {
+        const router = new Router();
+        router.options(coreHandler(async () => 'options'));
+
+        const server = supertest(createNodeDispatcher(router));
+
+        const response = await server
+            .options('/');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.text).toEqual('options');
+    });
+
     it('should handle different methods on same path', async () => {
         const router = new Router();
 
-        router.delete('/', async () => 'delete');
-        router.get('/', async () => 'get');
-        router.patch('/', async () => 'patch');
-        router.post('/', async () => 'post');
-        router.put('/', async () => 'put');
+        router.delete(coreHandler(async () => 'delete'));
+        router.get(coreHandler(async () => 'get'));
+        router.patch(coreHandler(async () => 'patch'));
+        router.post(coreHandler(async () => 'post'));
+        router.put(coreHandler(async () => 'put'));
 
         const server = supertest(createNodeDispatcher(router));
 

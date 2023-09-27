@@ -1,16 +1,16 @@
 import supertest from 'supertest';
-import { Router, createNodeDispatcher } from '../../../src';
+import { Router, coreHandler, createNodeDispatcher } from '../../../src';
 
 describe('src/helpers/response/send-web-response', () => {
     it('should send', async () => {
         const router = new Router();
 
-        router.get('/', () => new Response(null, {
+        router.get('/', coreHandler(() => new Response(null, {
             status: 210,
             headers: {
                 foo: 'bar',
             },
-        }));
+        })));
 
         const server = supertest(createNodeDispatcher(router));
 

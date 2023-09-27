@@ -14,11 +14,11 @@ import {
     send,
     setRequestHeader,
 } from '../../../src';
-import { createHandler } from '../../handler';
+import { createRequestListener } from '../../handler';
 
 describe('src/helpers/request/header', () => {
     it('should set & get request header', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             setRequestHeader(req, 'accept-language', 'de');
 
             send(res, getRequestHeader(req, 'accept-language'));
@@ -32,7 +32,7 @@ describe('src/helpers/request/header', () => {
     });
 
     it('should get all covered accept header values', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             const accepts = getRequestAcceptableContentTypes(req);
 
             send(res, accepts);
@@ -47,7 +47,7 @@ describe('src/helpers/request/header', () => {
     });
 
     it('should get covered accept header value', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             const accepts = getRequestAcceptableContentType(req, 'json');
 
             send(res, accepts);
@@ -77,7 +77,7 @@ describe('src/helpers/request/header', () => {
     });
 
     it('should get covered accept header value for multiple options', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             const accepts = getRequestAcceptableContentType(req, ['text', 'json']);
 
             send(res, accepts);
@@ -92,7 +92,7 @@ describe('src/helpers/request/header', () => {
     });
 
     it('should get all covered accept charset header values', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             const accepts = getRequestAcceptableCharsets(req);
 
             send(res, accepts);
@@ -113,7 +113,7 @@ describe('src/helpers/request/header', () => {
     });
 
     it('should get covered accept charset header value', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             const accepts = getRequestAcceptableCharset(req, 'utf-8');
 
             send(res, accepts);
@@ -134,7 +134,7 @@ describe('src/helpers/request/header', () => {
     });
 
     it('should get all covered accept encoding header values', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             const accepts = getRequestAcceptableEncodings(req);
 
             send(res, accepts);
@@ -148,7 +148,7 @@ describe('src/helpers/request/header', () => {
     });
 
     it('should get all covered accept encoding header value', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             const accepts = getRequestAcceptableEncoding(req, 'gzip');
 
             send(res, accepts);
@@ -170,7 +170,7 @@ describe('src/helpers/request/header', () => {
     });
 
     it('should get all covered accept language header values', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             const accepts = getRequestAcceptableLanguages(req);
 
             send(res, accepts);
@@ -191,7 +191,7 @@ describe('src/helpers/request/header', () => {
     });
 
     it('should get covered accept language header value', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             const accepts = getRequestAcceptableLanguage(req, 'de');
 
             send(res, accepts);
@@ -213,7 +213,7 @@ describe('src/helpers/request/header', () => {
     });
 
     it('should get covered accept language header value for multiple options', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             const accepts = getRequestAcceptableLanguage(req, ['de', 'en']);
 
             send(res, accepts);
@@ -228,7 +228,7 @@ describe('src/helpers/request/header', () => {
     });
 
     it('should match request content type', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             if (matchRequestContentType(req, 'json')) {
                 send(res, 'true');
             } else {

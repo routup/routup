@@ -1,8 +1,8 @@
 import supertest from 'supertest';
 import {
     Router,
+    coreHandler,
     createNodeDispatcher,
-    defineHandler,
     useRequestParams,
 } from '../../../src';
 
@@ -12,12 +12,12 @@ describe('src/module', () => {
 
         router.get(
             '/async',
-            defineHandler(async () => new Promise((resolve) => {
+            coreHandler(async () => new Promise((resolve) => {
                 setTimeout(() => resolve('foo'), 0);
             })),
         );
 
-        router.get('/sync', defineHandler(() => 'bar'));
+        router.get('/sync', coreHandler(() => 'bar'));
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -37,7 +37,7 @@ describe('src/module', () => {
     it('should process dynamic path', async () => {
         const router = new Router();
 
-        router.get('/param/:id', defineHandler(async (req) => {
+        router.get('/param/:id', coreHandler(async (req) => {
             const params = useRequestParams(req);
 
             return params.id;
@@ -57,7 +57,7 @@ describe('src/module', () => {
 
         router.get(
             '/param/:id',
-            defineHandler(() => 'foo'),
+            coreHandler(() => 'foo'),
         );
 
         const server = supertest(createNodeDispatcher(router));
@@ -71,9 +71,9 @@ describe('src/module', () => {
     it('should process with error thrown', async () => {
         const router = new Router();
 
-        router.get('/', () => {
+        router.get('/', coreHandler(() => {
             throw new Error('foo');
-        });
+        }));
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -86,13 +86,13 @@ describe('src/module', () => {
     it('should process with async error thrown', async () => {
         const router = new Router();
 
-        router.get('/', async () => {
+        router.get(coreHandler(() => async () => {
             await new Promise((_resolve, reject) => {
                 setTimeout(() => {
                     reject(new Error('bar'));
                 }, 0);
             });
-        });
+        }));
 
         const server = supertest(createNodeDispatcher(router));
 

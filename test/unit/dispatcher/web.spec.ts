@@ -1,16 +1,17 @@
 import { BadRequestError } from '@ebec/http';
 import {
-    HeaderName, Router, appendResponseHeader, createWebDispatcher, send,
+    HeaderName,
+    Router,
+    appendResponseHeader,
+    coreHandler,
+    createWebDispatcher,
 } from '../../../src';
 
 describe('bridge/web', () => {
     it('should dispatch request', async () => {
         const router = new Router();
 
-        router.get('/foo', async (
-            _req,
-            res,
-        ) => send(res, '/foo'));
+        router.get('/foo', coreHandler(() => '/foo'));
 
         const dispatch = createWebDispatcher(router);
         const request = new Request(new URL('/foo', 'http://localhost/'), {
@@ -36,9 +37,9 @@ describe('bridge/web', () => {
     it('should dispatch request with error', async () => {
         const router = new Router();
 
-        router.get('/foo', () => {
+        router.get('/foo', coreHandler(() => {
             throw new BadRequestError();
-        });
+        }));
 
         const dispatch = createWebDispatcher(router);
         const request = new Request(new URL('/foo', 'http://localhost/'), {
@@ -54,16 +55,13 @@ describe('bridge/web', () => {
     it('should split cookie string', async () => {
         const router = new Router();
 
-        router.get('/', async (
-            _req,
-            res,
-        ) => {
+        router.get(coreHandler((_req, res) => {
             appendResponseHeader(res, HeaderName.SET_COOKIE, 'foo=bar, bar=baz');
             appendResponseHeader(res, HeaderName.SET_COOKIE, 'buz=boz');
             appendResponseHeader(res, HeaderName.SET_COOKIE, 'bir=baz');
 
-            return send(res);
-        });
+            return null;
+        }));
 
         const dispatch = createWebDispatcher(router);
         const request = new Request(new URL('/', 'http://localhost/'), {

@@ -38,9 +38,11 @@ npm install routup --save
 ## Features
 
 - 🚀 runtime agnostic (Node.JS, Bun, Deno, ...)
-- ✨ promise support for route- & middleware-handlers
+- ✨ promise support for handlers
 - 🧰 response & request helpers
-- 💼 different handler styles (spread & context)
+- 📝 different handler types (base & error) 
+- 🎨 different handler function styles (classic & context)
+- 🤝️ different handler declaration styles (shorthand & verbose)
 - 📁 nestable routers
 - 👕 TypeScript support
 - 🤏 minimalistic to fit into any solution with minimum overhead
@@ -52,39 +54,92 @@ To read the docs, visit [https://routup.net](https://routup.net)
 
 ## Usage
 
-It is possible to use Routup in any javascript runtime environment. Below are examples for Node.Js, Bun and Deno.
-There are different [dispatchers](https://routup.net/guide/dispatcher) how requests can be transmitted in different ways.
+The following examples are intended to give a small insight into the use of the framework.
+However, it is highly recommended to read the [documentation](https://routup.net), 
+as all concepts and basics are taught there.
 
-**`NodeJs`**
+### Handlers
+
+Both core and error handlers, can be defined in two different ways.
+
+**`Shorthand`**
+
+With the shorthand variant, 
+only the handler function is passed as argument to the **coreHandler** & **errorHandler** function.
 
 ```typescript
 import { createServer } from 'node:http';
 import {
+    coreHandler,
     createNodeDispatcher,
-    defineHandler,
-    Router
+    errorHandler,
+    Router,
+    useRequestParam
 } from 'routup';
 
 const router = new Router();
 
-router.get('/', defineHandler(() => 'Hello World'));
+router.get('/', coreHandler(() => 'Hello, World!'));
+router.get('/greet/:name', coreHandler((req) => `Hello, ${useRequestParam(req, 'name')}!`));
+router.use(errorHandler((err) => `An error with statusCode ${err.statusCode} occured.`));
 
 const server = createServer(createNodeDispatcher(router));
 server.listen(3000)
 ```
 
+**`Verbose`**
+
+The verbose variant is more complex, but offers the possibility to set additional information
+like **path**, **method**, ... in the handler definition.
+
+```typescript
+import { createServer } from 'node:http';
+import {
+    coreHandler,
+    createNodeDispatcher,
+    errorHandler,
+    Router,
+    useRequestParam
+} from 'routup';
+
+const router = new Router();
+
+router.get(coreHandler({
+    path: '/',
+    fn: () => 'Hello, World!',
+}));
+
+router.get(coreHandler({
+    path: '/greet/:name',
+    fn: (req) => `Hello, ${useRequestParam(req, 'name')}!`
+}))
+
+router.use(errorHandler({
+    fn: (err) => `An error with statusCode ${err.statusCode} occured.`
+}))
+
+const server = createServer(createNodeDispatcher(router));
+server.listen(3000)
+```
+
+### Runtimes
+
+It is possible to use any javascript runtime environment. Below are examples for Bun and Deno.
+These use the web dispatcher to submit requests based on the web api. Besides the node- & web-dispatcher, 
+there is also a plain dispatcher that underlies the web dispatcher, which can be controlled via a simple API.
+
 **`Bun`**
 
 ```typescript
 import {
+    coreHandler,
     createWebDispatcher,
-    defineHandler,
     Router
 } from 'routup';
 
 const router = new Router();
 
-router.get('/', defineHandler(() => 'Hello World'));
+router.get('/', coreHandler(() => 'Hello, World!'));
 
 const dispatch = createWebDispatcher(router);
 
@@ -100,14 +155,14 @@ Bun.serve({
 
 ```typescript
 import {
+    coreHandler,
     createWebDispatcher,
-    defineHandler,
     Router
 } from 'routup';
 
 const router = new Router();
 
-router.get('/', defineHandler(() => 'Hello World'));
+router.get('/', coreHandler(() => 'Hello, World!'));
 
 const dispatch = createWebDispatcher(router);
 

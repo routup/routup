@@ -4,8 +4,10 @@ import { isError } from '../error';
 import { HeaderName, MethodName } from '../constants';
 import type { Dispatcher, DispatcherEvent, DispatcherMeta } from '../dispatcher';
 import { cloneDispatcherMeta } from '../dispatcher';
-import type { HandlerVariants } from '../handler';
-import type { LayerOptions } from '../layer';
+import {
+    HandlerType, isCoreHandler, isErrorHandler, isHandlerConfig, toHandlerConfig,
+} from '../handler';
+import type { Handler, HandlerConfig } from '../handler';
 import { Layer, isLayerInstance } from '../layer';
 import type { Path } from '../path';
 import { PathMatcher, isPath } from '../path';
@@ -115,7 +117,10 @@ export class Router implements Dispatcher {
             item = this.stack[i];
 
             if (isLayerInstance(item)) {
-                if (!item.isError() && err) {
+                if (
+                    item.type !== HandlerType.ERROR &&
+                    err
+                ) {
                     continue;
                 }
 
@@ -187,87 +192,148 @@ export class Router implements Dispatcher {
 
     // --------------------------------------------------
 
-    route(options: LayerOptions) : this {
-        if (typeof options.path === 'string') {
-            if (options.path.length > 0) {
-                options.path = withLeadingSlash(options.path);
-            } else {
-                options.path = '/';
-            }
+    delete(handler: Handler | HandlerConfig) : this;
+
+    delete(path: Path, handler: Handler | HandlerConfig) : this;
+
+    delete(path: any, handler?: any) : this {
+        if (isPath(path)) {
+            this.use(toHandlerConfig(handler, {
+                method: MethodName.DELETE,
+                path,
+            }));
+
+            return this;
         }
 
-        const layer = new Layer(options);
-        this.stack.push(layer);
-
-        return this;
-    }
-
-    delete(path: Path, handler: HandlerVariants) : this {
-        this.route({
-            path,
-            handler,
+        this.use(toHandlerConfig(path, {
             method: MethodName.DELETE,
-        });
+        }));
 
         return this;
     }
 
-    get(path: Path, handler: HandlerVariants) : this {
-        this.route({
-            path,
-            handler,
+    get(handler: Handler | HandlerConfig) : this;
+
+    get(path: Path, handler: Handler | HandlerConfig) : this;
+
+    get(path: any, handler?: any) : this {
+        if (isPath(path)) {
+            this.use(toHandlerConfig(handler, {
+                method: MethodName.GET,
+                path,
+            }));
+
+            return this;
+        }
+
+        this.use(toHandlerConfig(path, {
             method: MethodName.GET,
-        });
+        }));
 
         return this;
     }
 
-    post(path: Path, handler: HandlerVariants) : this {
-        this.route({
-            path,
-            handler,
+    post(handler: Handler | HandlerConfig) : this;
+
+    post(path: Path, handler: Handler | HandlerConfig) : this;
+
+    post(path: any, handler?: any) : this {
+        if (isPath(path)) {
+            this.use(toHandlerConfig(handler, {
+                method: MethodName.POST,
+                path,
+            }));
+
+            return this;
+        }
+
+        this.use(toHandlerConfig(path, {
             method: MethodName.POST,
-        });
-
+        }));
         return this;
     }
 
-    put(path: Path, handler: HandlerVariants) : this {
-        this.route({
-            path,
-            handler,
+    put(handler: Handler | HandlerConfig) : this;
+
+    put(path: Path, handler: Handler | HandlerConfig) : this;
+
+    put(path: any, handler?: any) : this {
+        if (isPath(path)) {
+            this.use(toHandlerConfig(handler, {
+                method: MethodName.PUT,
+                path,
+            }));
+
+            return this;
+        }
+
+        this.use(toHandlerConfig(path, {
             method: MethodName.PUT,
-        });
+        }));
 
         return this;
     }
 
-    patch(path: Path, handler: HandlerVariants) : this {
-        this.route({
-            path,
-            handler,
+    patch(handler: Handler | HandlerConfig) : this;
+
+    patch(path: Path, handler: Handler | HandlerConfig) : this;
+
+    patch(path: any, handler?: any) : this {
+        if (isPath(path)) {
+            this.use(toHandlerConfig(handler, {
+                method: MethodName.PATCH,
+                path,
+            }));
+
+            return this;
+        }
+
+        this.use(toHandlerConfig(path, {
             method: MethodName.PATCH,
-        });
+        }));
 
         return this;
     }
 
-    head(path: Path, handler: HandlerVariants) : this {
-        this.route({
-            path,
-            handler,
+    head(handler: Handler | HandlerConfig) : this;
+
+    head(path: Path, handler: Handler | HandlerConfig) : this;
+
+    head(path: any, handler?: any) : this {
+        if (isPath(path)) {
+            this.use(toHandlerConfig(handler, {
+                method: MethodName.HEAD,
+                path,
+            }));
+
+            return this;
+        }
+
+        this.use(toHandlerConfig(path, {
             method: MethodName.HEAD,
-        });
+        }));
 
         return this;
     }
 
-    options(path: Path, handler: HandlerVariants) : this {
-        this.route({
-            path,
-            handler,
+    options(handler: Handler | HandlerConfig) : this;
+
+    options(path: Path, handler: Handler | HandlerConfig) : this;
+
+    options(path: any, handler?: any) : this {
+        if (isPath(path)) {
+            this.use(toHandlerConfig(handler, {
+                method: MethodName.OPTIONS,
+                path,
+            }));
+
+            return this;
+        }
+
+        this.use(toHandlerConfig(path, {
             method: MethodName.OPTIONS,
-        });
+        }));
 
         return this;
     }
@@ -276,11 +342,11 @@ export class Router implements Dispatcher {
 
     use(router: Router) : this;
 
-    use(handler: HandlerVariants) : this;
+    use(handler: HandlerConfig | Handler) : this;
 
     use(path: Path, router: Router) : this;
 
-    use(path: Path, handler: HandlerVariants) : this;
+    use(path: Path, handler: HandlerConfig | Handler) : this;
 
     use(...input: unknown[]) : this {
         /* istanbul ignore next */
@@ -292,7 +358,15 @@ export class Router implements Dispatcher {
         for (let i = 0; i < input.length; i++) {
             const item = input[i];
             if (isPath(item)) {
-                path = item;
+                if (typeof item === 'string') {
+                    if (item.length > 0) {
+                        path = withLeadingSlash(item);
+                    } else {
+                        path = '/';
+                    }
+                } else {
+                    path = item;
+                }
                 continue;
             }
 
@@ -304,11 +378,27 @@ export class Router implements Dispatcher {
                 continue;
             }
 
-            if (typeof item === 'function') {
+            if (isCoreHandler(item)) {
                 this.stack.push(new Layer({
-                    handler: item as HandlerVariants,
-                    path: path || '/',
+                    type: HandlerType.CORE,
+                    fn: item,
                 }));
+
+                continue;
+            }
+
+            if (isErrorHandler(item)) {
+                this.stack.push(new Layer({
+                    type: HandlerType.ERROR,
+                    fn: item,
+                }));
+
+                continue;
+            }
+
+            if (isHandlerConfig(item)) {
+                item.path = path || item.path;
+                this.stack.push(new Layer(item));
             }
         }
 

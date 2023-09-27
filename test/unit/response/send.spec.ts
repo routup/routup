@@ -2,11 +2,11 @@ import supertest from 'supertest';
 import {
     HeaderName, send, sendAccepted, sendCreated, sendRedirect,
 } from '../../../src';
-import { createHandler } from '../../handler';
+import { createRequestListener } from '../../handler';
 
 describe('src/helpers/response/send', () => {
     it('should send text as html', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             send(res, 'foo');
         }));
 
@@ -18,7 +18,7 @@ describe('src/helpers/response/send', () => {
     });
 
     it('should send redirect', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             sendRedirect(res, 'https://google.de');
         }));
 
@@ -31,7 +31,7 @@ describe('src/helpers/response/send', () => {
     });
 
     it('should send accepted response', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             sendAccepted(res);
         }));
 
@@ -42,7 +42,7 @@ describe('src/helpers/response/send', () => {
     });
 
     it('should send created response', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             sendCreated(res);
         }));
 

@@ -1,15 +1,15 @@
 import supertest from 'supertest';
 import {
     Router,
-    createNodeDispatcher, defineHandler, send, setRequestParam, useRequestParam, useRequestParams,
+    coreHandler, createNodeDispatcher, send, setRequestParam, useRequestParam, useRequestParams,
 } from '../../../src';
-import { createHandler } from '../../handler';
+import { createRequestListener } from '../../handler';
 
 describe('routing/parameters', () => {
     it('should capture parameters', async () => {
         const router = new Router();
 
-        router.get('/:id/:action', defineHandler(async (req) => useRequestParams(req)));
+        router.get('/:id/:action', coreHandler(async (req) => useRequestParams(req)));
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -25,7 +25,7 @@ describe('routing/parameters', () => {
             path: '/:id',
         });
 
-        router.get('/:action', defineHandler(async (req) => useRequestParams(req)));
+        router.get('/:action', coreHandler(async (req) => useRequestParams(req)));
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -37,7 +37,7 @@ describe('routing/parameters', () => {
     });
 
     it('should set and receive a single param on the fly', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             setRequestParam(req, 'foo', 'bar');
 
             send(res, useRequestParam(req, 'foo'));

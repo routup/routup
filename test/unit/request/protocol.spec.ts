@@ -1,10 +1,10 @@
 import supertest from 'supertest';
 import { HeaderName, getRequestProtocol, send } from '../../../src';
-import { createHandler } from '../../handler';
+import { createRequestListener } from '../../handler';
 
 describe('src/helpers/request/hostname', () => {
     it('should determine protocol', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             send(res, getRequestProtocol(req, { default: 'http', trustProxy: true }));
         }));
 
@@ -14,7 +14,7 @@ describe('src/helpers/request/hostname', () => {
     });
 
     it('should determine protocol of non-trusted', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             send(res, getRequestProtocol(req));
         }));
 

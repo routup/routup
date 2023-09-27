@@ -1,25 +1,23 @@
 import supertest from 'supertest';
 import {
     Router,
+    coreHandler,
     createNodeDispatcher,
-    defineContextHandler,
-    defineErrorContextHandler,
-    defineHandler,
-    send,
-    setRequestEnv, useRequestEnv,
+    errorHandler,
+    send, setRequestEnv, useRequestEnv,
 } from '../../../src';
 
 describe('routing/middleware', () => {
     it('should use middleware', async () => {
         const router = new Router();
 
-        router.use(defineContextHandler((context) => {
-            setRequestEnv(context.request, 'foo', 'bar');
+        router.use(coreHandler((req, _res, next) => {
+            setRequestEnv(req, 'foo', 'bar');
 
-            context.next();
+            next();
         }));
 
-        router.get('/', defineHandler((req, res) => {
+        router.get(coreHandler((req, res) => {
             send(res, useRequestEnv(req, 'foo'));
         }));
 
@@ -35,12 +33,12 @@ describe('routing/middleware', () => {
     it('should use error middleware', async () => {
         const router = new Router();
 
-        router.get('/', () => {
+        router.get(coreHandler(() => {
             throw new Error('ero');
-        });
+        }));
 
-        router.use(defineErrorContextHandler((context) => {
-            send(context.response, context.error.message);
+        router.use(errorHandler((err, _req, res) => {
+            send(res, err.message);
         }));
 
         const server = supertest(createNodeDispatcher(router));
@@ -55,28 +53,28 @@ describe('routing/middleware', () => {
     it('should use middleware on specific path', async () => {
         const router = new Router();
 
-        router.use('/foo', defineContextHandler((context) => {
-            setRequestEnv(context.request, 'foo', 'bar');
+        router.use('/foo', coreHandler((req, _res, next) => {
+            setRequestEnv(req, 'foo', 'bar');
 
-            context.next();
+            next();
         }));
 
-        router.get('/', defineHandler((req, res) => {
+        router.get('/', coreHandler((req, res) => {
             send(res, useRequestEnv(req, 'foo'));
         }));
 
-        router.get('/foo', defineHandler((req, res) => {
+        router.get('/foo', coreHandler((req, res) => {
             send(res, useRequestEnv(req, 'foo'));
         }));
 
-        router.use('/bar', defineHandler((req, _res, next) => {
+        router.use('/bar', coreHandler((req, _res, next) => {
             setRequestEnv(req, 'bar', 'baz');
             next();
         }));
 
         router.get(
             '/bar',
-            defineHandler((req, res) => {
+            coreHandler((req, res) => {
                 send(res, useRequestEnv(req, 'bar'));
             }),
         );

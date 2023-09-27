@@ -1,5 +1,5 @@
 import supertest from 'supertest';
-import { createHandler } from '../../handler';
+import { createRequestListener } from '../../handler';
 import {
     send,
     setRequestEnv,
@@ -9,7 +9,7 @@ import {
 
 describe('src/helpers/request/env', () => {
     it('set & get env param', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             setRequestEnv(req, 'bar', 'baz');
             setRequestEnv(req, 'foo', 'bar');
 
@@ -24,7 +24,7 @@ describe('src/helpers/request/env', () => {
     });
 
     it('set set & get env object', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             setRequestEnv(req, {
                 foo: 'bar',
                 bar: 'baz',
@@ -44,7 +44,7 @@ describe('src/helpers/request/env', () => {
     });
 
     it('should append env to request', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             setRequestEnv(req, {
                 foo: 'bar',
             });
@@ -67,7 +67,7 @@ describe('src/helpers/request/env', () => {
     });
 
     it('should overwrite env of request', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             setRequestEnv(req, {
                 foo: 'bar',
             });
@@ -89,7 +89,7 @@ describe('src/helpers/request/env', () => {
     });
 
     it('should unset env of request', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             setRequestEnv(req, {
                 foo: 'bar',
                 bar: 'baz',
@@ -110,7 +110,7 @@ describe('src/helpers/request/env', () => {
     });
 
     it('should use request env', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             send(res, useRequestEnv(req));
         }));
 

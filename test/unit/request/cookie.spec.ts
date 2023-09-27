@@ -7,11 +7,11 @@ import {
     useRequestCookie,
     useRequestCookies,
 } from '../../../src';
-import { createHandler } from '../../handler';
+import { createRequestListener } from '../../handler';
 
 describe('src/helpers/request/cookie', () => {
     it('should receive empty record', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             send(res, useRequestCookies(req));
         }));
 
@@ -22,7 +22,7 @@ describe('src/helpers/request/cookie', () => {
     });
 
     it('should set and get request cookies', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             setRequestCookies(req, {
                 foo: 'bar',
             });
@@ -37,7 +37,7 @@ describe('src/helpers/request/cookie', () => {
     });
 
     it('should extend request cookies', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             setRequestCookies(req, {
                 foo: 'bar',
             });

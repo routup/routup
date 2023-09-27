@@ -7,11 +7,11 @@ import {
     setResponseHeaderAttachment,
     setResponseHeaderContentType,
 } from '../../../src';
-import { createHandler } from '../../handler';
+import { createRequestListener } from '../../handler';
 
 describe('src/helpers/response/header', () => {
     it('should set header attachment', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((_req, res) => {
             setResponseHeaderAttachment(res);
 
             send(res);
@@ -25,7 +25,7 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should set header attachment by filename ', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((_req, res) => {
             setResponseHeaderAttachment(res, 'dummy.json');
 
             send(res);
@@ -40,7 +40,7 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should append value', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((_req, res) => {
             appendResponseHeader(res, HeaderName.SET_COOKIE, 'foo=bar; Path=/');
             appendResponseHeader(res, HeaderName.SET_COOKIE, 'bar=baz; Path=/');
 
@@ -58,7 +58,7 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should set header directive value', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((_req, res) => {
             appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, 'boundary=something');
 
             send(res);
@@ -72,7 +72,7 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should set multiple header directive values', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((_req, res) => {
             appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, [
                 'application/json',
                 'boundary=something',
@@ -89,7 +89,7 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should append single header directive value', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((_req, res) => {
             setResponseHeaderAttachment(res, 'dummy.json');
             appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, 'boundary=something');
 
@@ -104,7 +104,7 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should append multiple header directive values', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((_req, res) => {
             setResponseHeaderAttachment(res, 'dummy.json');
             appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, [
                 'charset=utf-8',
@@ -122,7 +122,7 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should set response content type', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((_req, res) => {
             setResponseHeaderContentType(res, 'application/json');
             setResponseHeaderContentType(res, 'text/html', true);
 
@@ -137,7 +137,7 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should overwrite response content-type', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((_req, res) => {
             setResponseHeaderContentType(res, 'application/json');
             setResponseHeaderContentType(res, 'text/html');
 

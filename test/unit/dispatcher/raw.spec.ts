@@ -1,7 +1,7 @@
 import { TooManyRequestsError } from '@ebec/http';
 import fs from 'node:fs';
 import {
-    HeaderName, Router, createRawDispatcher, send, setResponseHeaderContentType,
+    HeaderName, Router, coreHandler, createRawDispatcher, send, setResponseHeaderContentType,
 } from '../../../src';
 
 function transformArrayBufferToString(input?: ArrayBuffer) {
@@ -16,10 +16,7 @@ describe('bridge/raw', () => {
     it('should dispatch request', async () => {
         const router = new Router();
 
-        router.get('/foo', async (
-            _req,
-            res,
-        ) => send(res, '/foo'));
+        router.get('/foo', coreHandler(() => '/foo'));
 
         const dispatch = createRawDispatcher(router);
 
@@ -38,10 +35,7 @@ describe('bridge/raw', () => {
     it('should not dispatch request', async () => {
         const router = new Router();
 
-        router.get('/', async (
-            _req,
-            res,
-        ) => send(res));
+        router.get('/', coreHandler(() => null));
 
         const dispatch = createRawDispatcher(router);
 
@@ -57,9 +51,9 @@ describe('bridge/raw', () => {
     it('should dispatch request with error', async () => {
         const router = new Router();
 
-        router.get('/', async () => {
+        router.get('/', coreHandler(async () => {
             throw new TooManyRequestsError();
-        });
+        }));
 
         const dispatch = createRawDispatcher(router);
 
@@ -75,7 +69,7 @@ describe('bridge/raw', () => {
     it('should dispatch request with body', async () => {
         const router = new Router();
 
-        router.post('/foo', async (
+        router.post('/foo', coreHandler(async (
             req,
             res,
         ) => {
@@ -92,7 +86,7 @@ describe('bridge/raw', () => {
             });
 
             req.read();
-        });
+        }));
 
         const stream = fs.createReadStream('test/data/dummy.json');
         const dispatch = createRawDispatcher(router);

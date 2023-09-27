@@ -4,9 +4,9 @@ import supertest from 'supertest';
 import type { SendFileOptions } from '../../../src';
 import {
     HeaderName,
-    Router, createNodeDispatcher, sendFile,
+    Router, coreHandler, createNodeDispatcher, sendFile,
 } from '../../../src';
-import { createHandler } from '../../handler';
+import { createRequestListener } from '../../handler';
 
 const buildSendFileOptions = (
     filePath: string,
@@ -23,7 +23,7 @@ const buildSendFileOptions = (
 });
 describe('src/helpers/response/send-file', () => {
     it('should send file', async () => {
-        const server = supertest(createHandler((_req, res) => {
+        const server = supertest(createRequestListener((_req, res) => {
             sendFile(res, buildSendFileOptions('test/data/dummy.json'));
         }));
 
@@ -38,13 +38,10 @@ describe('src/helpers/response/send-file', () => {
     it('should not send file promise', async () => {
         const router = new Router();
 
-        router.get(
-            '/',
-            (
-                _req,
-                res,
-            ) => sendFile(res, buildSendFileOptions('test/data/foo.json')),
-        );
+        router.get(coreHandler((
+            _req,
+            res,
+        ) => sendFile(res, buildSendFileOptions('test/data/foo.json'))));
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -55,7 +52,7 @@ describe('src/helpers/response/send-file', () => {
     });
 
     it('should send file to download', async () => {
-        const server = supertest(createHandler((_req, res) => {
+        const server = supertest(createRequestListener((_req, res) => {
             sendFile(res, buildSendFileOptions('test/data/dummy.json', true));
         }));
 
@@ -69,7 +66,7 @@ describe('src/helpers/response/send-file', () => {
     });
 
     it('should shrink end of range if it results in an overflow', async () => {
-        const server = supertest(createHandler((_req, res) => {
+        const server = supertest(createRequestListener((_req, res) => {
             sendFile(res, buildSendFileOptions('test/data/dummy.txt'));
         }));
 
@@ -87,7 +84,7 @@ describe('src/helpers/response/send-file', () => {
     });
 
     it('should throw error when start range exceeds file size', async () => {
-        const server = supertest(createHandler((_req, res) => {
+        const server = supertest(createRequestListener((_req, res) => {
             sendFile(res, buildSendFileOptions('test/data/dummy.txt'));
         }));
 

@@ -4,13 +4,9 @@ import { mergeDispatcherMetaParams } from '../dispatcher';
 import type {
     Dispatcher, DispatcherEvent, DispatcherMeta,
 } from '../dispatcher';
-import type { ErrorHandlerContext, HandlerContext } from '../handler';
+import type { HandlerConfig } from '../handler';
 import {
     HandlerType,
-    isContextHandler,
-    isErrorContextHandler,
-    isErrorHandler,
-    isHandler,
 } from '../handler';
 import { PathMatcher } from '../path';
 import { setRequestMountPath, setRequestParams, setRequestRouterPath } from '../request';
@@ -25,59 +21,40 @@ import {
     isWebResponse,
 } from '../utils';
 import { LayerSymbol } from './constants';
-import type { LayerOptions } from './type';
 
 export class Layer implements Dispatcher {
     readonly '@instanceof' = LayerSymbol;
 
-    protected handler : CallableFunction;
-
-    protected handlerType : HandlerType;
+    protected handler : HandlerConfig;
 
     protected pathMatcher : PathMatcher | undefined;
 
-    readonly method : `${MethodName}` | undefined;
-
     // --------------------------------------------------
 
-    constructor(options: LayerOptions) {
-        if (options.path) {
-            this.pathMatcher = new PathMatcher(options.path, {
-                end: !!options.method,
+    constructor(handler: HandlerConfig) {
+        this.handler = handler;
+
+        if (handler.path) {
+            this.pathMatcher = new PathMatcher(handler.path, {
+                end: !!handler.method,
             });
-        }
-
-        if (options.method) {
-            this.method = options.method;
-        }
-
-        this.handler = options.handler;
-
-        if (isHandler(options.handler)) {
-            this.handlerType = HandlerType.DEFAULT;
-            return;
-        }
-
-        if (isContextHandler(options.handler)) {
-            this.handlerType = HandlerType.DEFAULT_CONTEXT;
-            return;
-        }
-
-        if (isErrorHandler(options.handler)) {
-            this.handlerType = HandlerType.ERROR;
-            return;
-        }
-
-        if (isErrorContextHandler(options.handler)) {
-            this.handlerType = HandlerType.ERROR_CONTEXT;
         }
     }
 
     // --------------------------------------------------
 
-    isError() {
-        return this.handlerType === HandlerType.ERROR ||
-            this.handlerType === HandlerType.ERROR_CONTEXT;
+    get type() {
+        return this.handler.type;
+    }
+
+    get path() {
+        return this.handler.path;
+    }
+
+    get method() {
+        return this.handler.method ?
+            this.handler.method.toLowerCase() :
+            undefined;
     }
 
     // --------------------------------------------------
@@ -131,42 +108,31 @@ export class Layer implements Dispatcher {
             event.res.once('close', onFinished);
             event.res.once('error', onFinished);
 
-            try {
-                let output: any;
-
-                if (meta.error) {
-                    if (this.handlerType === HandlerType.ERROR_CONTEXT) {
-                        output = this.handler({
-                            request: event.req,
-                            response: event.res,
-                            next: onNext,
-                            error: meta.error,
-                        } satisfies ErrorHandlerContext);
-                    } else {
-                        output = this.handler(meta.error, event.req, event.res, onNext);
-                    }
-                } else if (this.handlerType === HandlerType.DEFAULT_CONTEXT) {
-                    output = this.handler({
-                        request: event.req,
-                        response: event.res,
-                        next: onNext,
-                    } satisfies HandlerContext);
-                } else {
-                    output = this.handler(event.req, event.res, onNext);
+            const handle = (data: any): Promise<void> => {
+                if (typeof data === 'undefined' || handled) {
+                    return Promise.resolve();
                 }
 
-                const handle = (data: any): Promise<void> => {
-                    if (typeof data === 'undefined' || handled) {
-                        return Promise.resolve();
+                handled = true;
+                unsubscribe();
+
+                return this.sendOutput(event.res, data)
+                    .then(() => resolve(true))
+                    .catch((e) => reject(createError(e)));
+            };
+
+            try {
+                let output: unknown;
+
+                if (
+                    this.handler.type === HandlerType.ERROR
+                ) {
+                    if (meta.error) {
+                        output = this.handler.fn(meta.error, event.req, event.res, onNext);
                     }
-
-                    handled = true;
-                    unsubscribe();
-
-                    return this.sendOutput(event.res, data)
-                        .then(() => resolve(true))
-                        .catch((e) => reject(createError(e)));
-                };
+                } else {
+                    output = this.handler.fn(event.req, event.res, onNext);
+                }
 
                 if (isPromise(output)) {
                     output
@@ -209,7 +175,7 @@ export class Layer implements Dispatcher {
 
     matchPath(path: string) : boolean {
         if (!this.pathMatcher) {
-            return false;
+            return true;
         }
 
         return this.pathMatcher.test(path);

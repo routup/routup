@@ -2,11 +2,11 @@ import supertest from 'supertest';
 import {
     extendRequestBody, send, setRequestBody, useRequestBody,
 } from '../../../src';
-import { createHandler } from '../../handler';
+import { createRequestListener } from '../../handler';
 
 describe('src/module', () => {
     it('should get body', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             setRequestBody(req, { foo: 'bar' });
 
             setRequestBody(req, { bar: 'baz' });
@@ -24,7 +24,7 @@ describe('src/module', () => {
     });
 
     it('should get empty body', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             send(res, useRequestBody(req));
         }));
 
@@ -36,7 +36,7 @@ describe('src/module', () => {
     });
 
     it('should get body param', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             setRequestBody(req, 'foo', 'bar');
 
             setRequestBody(req, 'foo', 'baz');
@@ -52,7 +52,7 @@ describe('src/module', () => {
     });
 
     it('should get empty body param', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             send(res, useRequestBody(req, 'foo'));
         }));
 

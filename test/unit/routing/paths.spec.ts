@@ -1,12 +1,14 @@
 import supertest from 'supertest';
-import { Router, createNodeDispatcher } from '../../../src';
+import {
+    Router, coreHandler, createNodeDispatcher, useRequestPath,
+} from '../../../src';
 
 describe('routing/paths', () => {
     it('should handle path', async () => {
         const router = new Router();
 
-        router.get('/foo', async () => '/foo');
-        router.get('/foo/bar/baz', async () => '/foo/bar/baz');
+        router.get('/foo', coreHandler(async () => '/foo'));
+        router.get('/foo/bar/baz', coreHandler(async () => '/foo/bar/baz'));
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -28,7 +30,7 @@ describe('routing/paths', () => {
             path: '/foo',
         });
 
-        router.get('/bar', async () => '/foo/bar');
+        router.get('/bar', coreHandler(() => '/foo/bar'));
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -42,7 +44,7 @@ describe('routing/paths', () => {
     it('should handle path for nested routers', async () => {
         const child = new Router({ path: '/bar' });
 
-        child.get('/baz', async () => '/foo/bar/baz');
+        child.get('/baz', coreHandler(() => '/foo/bar/baz'));
 
         const router = new Router({ path: '/foo' });
         router.use(child);
@@ -59,7 +61,7 @@ describe('routing/paths', () => {
     it('should handle regexp paths', async () => {
         const router = new Router();
 
-        router.get(/.*fly$/, async () => '/foo');
+        router.get(/.*fly$/, coreHandler((req) => useRequestPath(req)));
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -67,7 +69,13 @@ describe('routing/paths', () => {
             .get('/butterfly');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('/foo');
+        expect(response.text).toEqual('/butterfly');
+
+        response = await server
+            .get('/dragonfly');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.text).toEqual('/dragonfly');
 
         response = await server
             .get('/dragonflyman');

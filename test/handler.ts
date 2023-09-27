@@ -1,7 +1,7 @@
 import type { RequestListener } from 'http';
-import type { Handler } from '../src';
+import type { CoreHandler } from '../src';
 
-export function createHandler(handler: Handler) : RequestListener {
+export function createRequestListener(handler: CoreHandler) : RequestListener {
     return (req, res) => {
         handler(req, res, () => {
             res.end();

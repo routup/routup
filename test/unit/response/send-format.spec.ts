@@ -3,11 +3,11 @@ import supertest from 'supertest';
 import {
     HeaderName, send, sendAccepted, sendCreated, sendFile, sendFormat, sendRedirect,
 } from '../../../src';
-import { createHandler } from '../../handler';
+import { createRequestListener } from '../../handler';
 
 describe('src/helpers/response/send-format', () => {
     it('should send format depending on accept header', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             sendFormat(res, {
                 'text/html': () => {
                     send(res, 'text');

@@ -1,12 +1,12 @@
 import supertest from 'supertest';
 import { HeaderName, send, setResponseCacheHeaders } from '../../../src';
-import { createHandler } from '../../handler';
+import { createRequestListener } from '../../handler';
 
 describe('src/helpers/response/cache', () => {
     it('should determine if request is cacheable', async () => {
         const date = new Date();
 
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((_req, res) => {
             setResponseCacheHeaders(res, {
                 maxAge: 3600,
                 modifiedTime: date,

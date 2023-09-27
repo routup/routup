@@ -1,16 +1,18 @@
 import supertest from 'supertest';
-import { HeaderName, Router, createNodeDispatcher } from '../../../src';
+import {
+    HeaderName, Router, coreHandler, createNodeDispatcher,
+} from '../../../src';
 
 describe('src/helpers/response/send-web-blob', () => {
     it('should send', async () => {
         const router = new Router();
 
-        router.get('/', () => new Blob(
+        router.get('/', coreHandler(() => new Blob(
             ['<q id="a"><span id="b">hey!</span></q>'],
             {
                 type: 'text/html',
             },
-        ));
+        )));
 
         const server = supertest(createNodeDispatcher(router));
 

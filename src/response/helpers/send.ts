@@ -16,11 +16,9 @@ export async function send(res: Response, chunk?: any) : Promise<void> {
         case 'boolean':
         case 'number':
         case 'object': {
-            if (chunk === null) {
-                chunk = '';
-            } else if (Buffer.isBuffer(chunk)) {
+            if (Buffer.isBuffer(chunk)) {
                 setResponseHeaderContentType(res, 'bin', true);
-            } else {
+            } else if (chunk !== null) {
                 chunk = JSON.stringify(chunk);
 
                 setResponseHeaderContentType(res, 'application/json', true);
@@ -41,7 +39,10 @@ export async function send(res: Response, chunk?: any) : Promise<void> {
 
     // populate Content-Length
     let len : number | undefined;
-    if (chunk !== undefined) {
+    if (
+        chunk !== undefined &&
+        chunk !== null
+    ) {
         if (Buffer.isBuffer(chunk)) {
             // get length of Buffer
             len = chunk.length;
@@ -83,14 +84,12 @@ export async function send(res: Response, chunk?: any) : Promise<void> {
         res.removeHeader(HeaderName.CONTENT_TYPE);
         res.removeHeader(HeaderName.CONTENT_LENGTH);
         res.removeHeader(HeaderName.TRANSFER_ENCODING);
-        chunk = '';
     }
 
     // alter headers for 205
     if (res.statusCode === 205) {
         res.setHeader(HeaderName.CONTENT_LENGTH, 0);
         res.removeHeader(HeaderName.TRANSFER_ENCODING);
-        chunk = '';
     }
 
     if (isResponseGone(res)) {
@@ -104,12 +103,16 @@ export async function send(res: Response, chunk?: any) : Promise<void> {
         return Promise.resolve();
     }
 
+    if (typeof chunk === 'undefined' || chunk === null) {
+        res.end();
+        return Promise.resolve();
+    }
+
     if (typeof encoding !== 'undefined') {
         res.end(chunk, encoding);
         return Promise.resolve();
     }
 
     res.end(chunk);
-
     return Promise.resolve();
 }

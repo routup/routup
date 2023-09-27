@@ -4,11 +4,11 @@ import {
     hasRequestQuery,
     send, setRequestQuery, useRequestQuery,
 } from '../../../src';
-import { createHandler } from '../../handler';
+import { createRequestListener } from '../../handler';
 
 describe('src/helpers/request/query', () => {
     it('should receive empty record', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             send(res, useRequestQuery(req));
         }));
 
@@ -19,7 +19,7 @@ describe('src/helpers/request/query', () => {
     });
 
     it('should set and get request queries', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             setRequestQuery(req, {
                 foo: 'bar',
             });
@@ -34,7 +34,7 @@ describe('src/helpers/request/query', () => {
     });
 
     it('should extend request query', async () => {
-        const server = supertest(createHandler((req, res) => {
+        const server = supertest(createRequestListener((req, res) => {
             setRequestQuery(req, {
                 foo: 'bar',
             });
