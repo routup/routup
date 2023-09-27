@@ -41,7 +41,6 @@ npm install routup --save
 - ✨ promise support for handlers
 - 🧰 response & request helpers
 - 📝 different handler types (base & error) 
-- 🎨 different handler function styles (classic & context)
 - 🤝️ different handler declaration styles (shorthand & verbose)
 - 📁 nestable routers
 - 👕 TypeScript support
