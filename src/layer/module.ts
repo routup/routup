@@ -4,7 +4,7 @@ import { mergeDispatcherMetaParams } from '../dispatcher';
 import type {
     Dispatcher, DispatcherEvent, DispatcherMeta,
 } from '../dispatcher';
-import type { HandlerConfig } from '../handler';
+import type { Handler } from '../handler';
 import {
     HandlerType,
 } from '../handler';
@@ -25,13 +25,13 @@ import { LayerSymbol } from './constants';
 export class Layer implements Dispatcher {
     readonly '@instanceof' = LayerSymbol;
 
-    protected handler : HandlerConfig;
+    protected handler : Handler;
 
     protected pathMatcher : PathMatcher | undefined;
 
     // --------------------------------------------------
 
-    constructor(handler: HandlerConfig) {
+    constructor(handler: Handler) {
         this.handler = handler;
 
         if (handler.path) {

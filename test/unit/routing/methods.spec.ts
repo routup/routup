@@ -4,20 +4,6 @@ import {
 } from '../../../src';
 
 describe('routing/methods', () => {
-    it('should mount lazy handler with use method', async () => {
-        const router = new Router();
-
-        router.use('/foo', (_req: any, _res: any, _next: any) => { throw new Error('bar'); });
-        router.use((err, _req, _res, _next) => err.message);
-
-        const server = supertest(createNodeDispatcher(router));
-
-        const response = await server
-            .delete('/foo');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('bar');
-    });
     it('should handle different methods', async () => {
         const router = new Router();
 

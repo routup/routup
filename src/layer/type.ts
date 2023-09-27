@@ -1,9 +1,9 @@
 import type { MethodName } from '../constants';
-import type { Handler } from '../handler';
+import type { HandlerFn } from '../handler';
 import type { Path } from '../path';
 
 export type LayerOptions = {
-    handler: Handler,
+    handler: HandlerFn,
     method?: `${MethodName}`
     path?: Path,
 };
