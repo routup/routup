@@ -73,7 +73,7 @@
         "@types/negotiator": "^0.6.1",
         "@types/node": "^20.7.0",
         "@types/proxy-addr": "^2.0.1",
-        "@types/readable-stream": "^4.0.2",
+        "@types/readable-stream": "^4.0.3",
         "@types/supertest": "^2.0.13",
         "cross-env": "^7.0.3",
         "jest": "^29.7.0",
