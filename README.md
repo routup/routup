@@ -38,9 +38,10 @@ npm install routup --save
 ## Features
 
 - 🚀 runtime agnostic (Node.JS, Bun, Deno, ...)
-- ✨ promise support for handlers
-- 🧰 response & request helpers
-- 📝 different handler types (base & error) 
+- 📝 different handler types (base & error)
+- ✨ promise (async) support for core- & error-handlers
+- 🔌 powerful plugin system
+- 🧰 tree shakeable response & request helpers
 - 🤝️ different handler declaration styles (shorthand & verbose)
 - 📁 nestable routers
 - 👕 TypeScript support

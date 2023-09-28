@@ -11,12 +11,14 @@ import type { Handler } from '../handler';
 import { Layer, isLayerInstance } from '../layer';
 import type { Path } from '../path';
 import { PathMatcher, isPath } from '../path';
+import { isPluginInstallContext } from '../plugin';
 import { isResponseGone, send } from '../response';
 import type { RouterOptionsInput } from '../router-options';
 import { setRouterOptions } from '../router-options';
 import { transformRouterOptions } from '../router-options/transform';
 import { cleanDoubleSlashes, withLeadingSlash, withoutTrailingSlash } from '../utils';
 import { RouterSymbol } from './constants';
+import type { Plugin, PluginInstallContext, PluginOptions } from '../plugin';
 import { generateRouterID, isRouterInstance } from './utils';
 
 export class Router implements Dispatcher {
@@ -26,6 +28,11 @@ export class Router implements Dispatcher {
      * An identifier for the router instance.
      */
     readonly id : number;
+
+    /**
+     * A label for the router instance.
+     */
+    readonly name?: string;
 
     /**
      * Array of mounted layers, routes & routers.
@@ -45,6 +52,7 @@ export class Router implements Dispatcher {
 
     constructor(options: RouterOptionsInput = {}) {
         this.id = generateRouterID();
+        this.name = options.name;
 
         this.setPath(options.path);
 
@@ -368,19 +376,20 @@ export class Router implements Dispatcher {
             return this;
         }
 
+        const modifyPath = (input?: Path) => {
+            if (typeof input === 'string') {
+                return withLeadingSlash(input);
+            }
+
+            return input;
+        };
+
         let path : Path | undefined;
         for (let i = 0; i < input.length; i++) {
             const item = input[i];
+
             if (isPath(item)) {
-                if (typeof item === 'string') {
-                    if (item.length > 0) {
-                        path = withLeadingSlash(item);
-                    } else {
-                        path = '/';
-                    }
-                } else {
-                    path = item;
-                }
+                path = modifyPath(item);
                 continue;
             }
 
@@ -393,11 +402,47 @@ export class Router implements Dispatcher {
             }
 
             if (isHandler(item)) {
-                item.path = path || item.path;
+                item.path = path || modifyPath(item.path);
                 this.stack.push(new Layer(item));
             }
         }
 
         return this;
+    }
+
+    // --------------------------------------------------
+    install<Options extends PluginOptions = PluginOptions>(
+        plugin: Plugin<Options>,
+        context: PluginInstallContext<Options> | Options,
+    ) : this {
+        if (isPluginInstallContext(context)) {
+            const name = context.name || plugin.name;
+
+            if (context.path) {
+                const router = new Router({ name });
+                plugin.install(router, context.options);
+
+                this.use(context.path, router);
+
+                return this;
+            }
+
+            plugin.install(this, context.options);
+            return this;
+        }
+
+        plugin.install(this, context);
+        return this;
+    }
+
+    uninstall(name: string) : void {
+        const index = this.stack.findIndex(
+            (el) => isRouterInstance(el) &&
+                el.name === name,
+        );
+
+        if (index !== -1) {
+            this.stack.splice(index, 1);
+        }
     }
 }

@@ -13,6 +13,11 @@ export type RouterOptions = {
     path?: Path,
 
     /**
+     * Name of the router.
+     */
+    name?: string,
+
+    /**
      * default: 2
      */
     subdomainOffset: number,
