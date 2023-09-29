@@ -1,3 +1,35 @@
+# [3.0.0-alpha.1](https://github.com/routup/routup/compare/v2.0.0...v3.0.0-alpha.1) (2023-09-29)
+
+
+### Bug Fixes
+
+* cleanup router, route & layer ([78aa73d](https://github.com/routup/routup/commit/78aa73d0e2661ab43abe7d52adc01dfd6f7c220f))
+* **deps:** bump smob from 1.4.0 to 1.4.1 ([#382](https://github.com/routup/routup/issues/382)) ([c3a19eb](https://github.com/routup/routup/commit/c3a19ebebe52626a4dc6b5c9df1d4983a0876eed))
+* remove undocumented timeout router option ([c4b2bae](https://github.com/routup/routup/commit/c4b2baeb7fa25ac2fc5940079d09023d3cdc26b8))
+* set remote address for mock request ([5649d9e](https://github.com/routup/routup/commit/5649d9ec98e8426fc1315fad7d94dcc44862f278))
+
+
+### Features
+
+* add define (error-) handler helpers for intellisense ([2318115](https://github.com/routup/routup/commit/2318115c18955dea7e890344555dc43208200555))
+* context (error-) handler style ([72af754](https://github.com/routup/routup/commit/72af754000eb1987229d721626bad1bcf20d0e56))
+* implemented plugin system ([808dd72](https://github.com/routup/routup/commit/808dd727fb6102dc22ae18f62daab4d5633d0111))
+* implicit and explicit handler definition variant ([02caec8](https://github.com/routup/routup/commit/02caec8992f204667a512db5e5cc5b6fdaa57b52))
+* recognize handlers by type property in addition to the number of fn arguments ([86dcc18](https://github.com/routup/routup/commit/86dcc18a153c2200dbe012debab6cab45a6e570b))
+* remove implicit handler recognition ([8d623f1](https://github.com/routup/routup/commit/8d623f1acc855c1a6288abaa20314b6eb68f04f8))
+* remove route interface between router and layer ([b149002](https://github.com/routup/routup/commit/b1490027a8d59bb5a7ab7faa6180024d4ecaef9f))
+* wrap any error like object & extract error information ([#377](https://github.com/routup/routup/issues/377)) ([59f2a72](https://github.com/routup/routup/commit/59f2a72e7c4e9ffbd7031fdab613d08da2ede1a4))
+
+
+### Performance Improvements
+
+* use typeof instead of instanceof for instance check ([c98a070](https://github.com/routup/routup/commit/c98a07025b2941f0afbbac6f369fa9977d564ad9))
+
+
+### BREAKING CHANGES
+
+* handler must be defined with helper fn
+
 # [2.0.0](https://github.com/routup/routup/compare/v1.0.3...v2.0.0) (2023-09-14)
 
 
