@@ -1,3 +1,10 @@
+# [3.0.0-alpha.2](https://github.com/routup/routup/compare/v3.0.0-alpha.1...v3.0.0-alpha.2) (2023-09-29)
+
+
+### Bug Fixes
+
+* don't pass plugin options as extra fn argument ([d05e4c9](https://github.com/routup/routup/commit/d05e4c985eb9a0567f73d7500a2abf892b5d2cd9))
+
 # [3.0.0-alpha.1](https://github.com/routup/routup/compare/v2.0.0...v3.0.0-alpha.1) (2023-09-29)
 
 
