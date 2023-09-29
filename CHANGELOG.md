@@ -1,3 +1,15 @@
+# [3.0.0-alpha.3](https://github.com/routup/routup/compare/v3.0.0-alpha.2...v3.0.0-alpha.3) (2023-09-29)
+
+
+### Features
+
+* remove body-, cookie- & query-helper ([bcc0347](https://github.com/routup/routup/commit/bcc0347045bf2997c1c1fff02f5cba09cda25fed))
+
+
+### BREAKING CHANGES
+
+* removed request helper fns
+
 # [3.0.0-alpha.2](https://github.com/routup/routup/compare/v3.0.0-alpha.1...v3.0.0-alpha.2) (2023-09-29)
 
 
