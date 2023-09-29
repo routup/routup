@@ -11,14 +11,14 @@ import type { Handler } from '../handler';
 import { Layer, isLayerInstance } from '../layer';
 import type { Path } from '../path';
 import { PathMatcher, isPath } from '../path';
-import { isPluginInstallContext } from '../plugin';
+import { isPlugin } from '../plugin';
 import { isResponseGone, send } from '../response';
 import type { RouterOptionsInput } from '../router-options';
 import { setRouterOptions } from '../router-options';
 import { transformRouterOptions } from '../router-options/transform';
 import { cleanDoubleSlashes, withLeadingSlash, withoutTrailingSlash } from '../utils';
 import { RouterSymbol } from './constants';
-import type { Plugin, PluginInstallContext, PluginOptions } from '../plugin';
+import type { Plugin, PluginInstallContext } from '../plugin';
 import { generateRouterID, isRouterInstance } from './utils';
 
 export class Router implements Dispatcher {
@@ -366,16 +366,15 @@ export class Router implements Dispatcher {
 
     use(handler: Handler) : this;
 
+    use(plugin: Plugin) : this;
+
     use(path: Path, router: Router) : this;
 
     use(path: Path, handler: Handler) : this;
 
-    use(...input: unknown[]) : this {
-        /* istanbul ignore next */
-        if (input.length === 0) {
-            return this;
-        }
+    use(path: Path, plugin: Plugin) : this;
 
+    use(...input: unknown[]) : this {
         const modifyPath = (input?: Path) => {
             if (typeof input === 'string') {
                 return withLeadingSlash(input);
@@ -405,44 +404,36 @@ export class Router implements Dispatcher {
                 item.path = path || modifyPath(item.path);
                 this.stack.push(new Layer(item));
             }
+
+            if (isPlugin(item)) {
+                if (path) {
+                    this.install(item, { path });
+                } else {
+                    this.install(item);
+                }
+            }
         }
 
         return this;
     }
 
     // --------------------------------------------------
-    install<Options extends PluginOptions = PluginOptions>(
-        plugin: Plugin<Options>,
-        context: PluginInstallContext<Options> | Options,
+    install(
+        plugin: Plugin,
+        context: PluginInstallContext = {},
     ) : this {
-        if (isPluginInstallContext(context)) {
-            const name = context.name || plugin.name;
+        const name = context.name || plugin.name;
 
-            if (context.path) {
-                const router = new Router({ name });
-                plugin.install(router, context.options);
+        if (context.path) {
+            const router = new Router({ name });
+            plugin.install(router);
 
-                this.use(context.path, router);
+            this.use(context.path, router);
 
-                return this;
-            }
-
-            plugin.install(this, context.options);
             return this;
         }
 
-        plugin.install(this, context);
+        plugin.install(this);
         return this;
-    }
-
-    uninstall(name: string) : void {
-        const index = this.stack.findIndex(
-            (el) => isRouterInstance(el) &&
-                el.name === name,
-        );
-
-        if (index !== -1) {
-            this.stack.splice(index, 1);
-        }
     }
 }

@@ -2,13 +2,9 @@ import type { Path } from '../path';
 import type { Router } from '../router';
 
 export type PluginOptions = Record<string | symbol, any>;
-export type PluginInstallFn<
-    Options extends PluginOptions = PluginOptions,
-> = (router: Router, options: Options) => any;
+export type PluginInstallFn = (router: Router) => any;
 
-export type Plugin<
-    Options extends PluginOptions = PluginOptions,
-> = {
+export type Plugin = {
     /**
      * The name of the plugin.
      */
@@ -20,10 +16,10 @@ export type Plugin<
     /**
      * The installation function called on registration.
      */
-    install: PluginInstallFn<Options>
+    install: PluginInstallFn
 };
 
-export type PluginInstallContext<Options = any> = {
+export type PluginInstallContext = {
     /**
      * The name property overwrites the name defined by the plugin.
      */
@@ -32,8 +28,4 @@ export type PluginInstallContext<Options = any> = {
      * By specifying a path, the plugin will be installed as a child router.
      */
     path?: Path,
-    /**
-     * Pass options to the plugin installation routine.
-     */
-    options: Options
 };

@@ -1,11 +1,10 @@
-import { isPath } from '../path';
 import { isObject } from '../utils';
 import type {
-    PluginInstallContext,
+    Plugin,
 } from './types';
 
-export function isPluginInstallContext(input: unknown): input is PluginInstallContext {
-    if (!isObject(input) || !isObject(input.options)) {
+export function isPlugin(input: unknown): input is Plugin {
+    if (!isObject(input)) {
         return false;
     }
 
@@ -16,6 +15,13 @@ export function isPluginInstallContext(input: unknown): input is PluginInstallCo
         return false;
     }
 
-    return typeof input.path === 'undefined' ||
-        isPath(input.path);
+    if (
+        typeof input.install !== 'function' ||
+        input.install.length !== 1
+    ) {
+        return false;
+    }
+
+    return typeof input.version === 'undefined' ||
+        typeof input.version === 'string';
 }
