@@ -1,6 +1,4 @@
-export * from './body';
 export * from './cache';
-export * from './cookie';
 export * from './env';
 export * from './header';
 export * from './header-accept';
@@ -15,5 +13,4 @@ export * from './negotiator';
 export * from './params';
 export * from './path';
 export * from './protocol';
-export * from './query';
 export * from './router';
