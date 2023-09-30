@@ -61,6 +61,8 @@ as all concepts and basics are taught there.
 ### Handlers
 
 Both core and error handlers, can be defined in two different ways.
+Core handler functions can have up to 3 arguments (req, res, next) whereas error handler functions can have up to 4 arguments (err, req, res, next).
+This should be familiar to anyone who has used express before.
 
 **`Shorthand`**
 
