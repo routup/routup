@@ -418,22 +418,21 @@ export class Router implements Dispatcher {
     }
 
     // --------------------------------------------------
-    install(
+    protected install(
         plugin: Plugin,
         context: PluginInstallContext = {},
     ) : this {
         const name = context.name || plugin.name;
 
+        const router = new Router({ name });
+        plugin.install(router);
+
         if (context.path) {
-            const router = new Router({ name });
-            plugin.install(router);
-
             this.use(context.path, router);
-
-            return this;
+        } else {
+            this.use(router);
         }
 
-        plugin.install(this);
         return this;
     }
 }
