@@ -50,7 +50,7 @@
     },
     "homepage": "https://github.com/routup/routup#readme",
     "dependencies": {
-        "@ebec/http": "^2.2.1",
+        "@ebec/http": "^2.2.2",
         "buffer": "^6.0.3",
         "mime-explorer": "^1.0.0",
         "negotiator": "^0.6.3",
