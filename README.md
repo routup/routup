@@ -189,17 +189,17 @@ According to the fact that routup is a minimalistic framework,
 it depends on [plugins](https://github.com/routup/plugins) to cover some 
 typically http framework functions, which are not integrated in the main package.
 
-| Name                                                                                          | Description                                                            |
-|-----------------------------------------------------------------------------------------------|------------------------------------------------------------------------|
-| [body](https://github.com/routup/plugins/tree/master/packages/body)                           | Read and parse the request body.                                       |
-| [cookie](https://github.com/routup/plugins/tree/master/packages/cookie)                       | Read and parse request cookies and serialize cookies for the response. |
-| [decorators](https://github.com/routup/plugins/tree/master/packages/decorators)               | Create request handlers with class-, method- & parameter-decorators.   |
-| [prometheus](https://github.com/routup/plugins/tree/master/packages/prometheus)               | Collect and serve metrics for prometheus.                              |
-| [query](https://github.com/routup/plugins/tree/master/packages/query)                         | Read and parse the query string of the request url.                    |
-| [rate-limit](https://github.com/routup/plugins/tree/master/packages/rate-limit)               | Rate limit incoming requests.                                          |
-| [rate-limit-redis](https://github.com/routup/plugins/tree/master/packages/rate-limit-redis)   | Redis adapter for the rate-limit plugin.                               |
-| [static](https://github.com/routup/plugins/tree/master/packages/static)                       | Serve static files from a directory.                                   |
-| [swagger](https://github.com/routup/plugins/tree/master/packages/swagger)                     | Serve generated docs from URL or based on a JSON file.                 |
+| Name                                                                                        | Description                                                            |
+|---------------------------------------------------------------------------------------------|------------------------------------------------------------------------|
+| [assets](https://github.com/routup/plugins/tree/master/packages/assets)                     | Serve static files from a directory.                                   |
+| [body](https://github.com/routup/plugins/tree/master/packages/body)                         | Read and parse the request body.                                       |
+| [cookie](https://github.com/routup/plugins/tree/master/packages/cookie)                     | Read and parse request cookies and serialize cookies for the response. |
+| [decorators](https://github.com/routup/plugins/tree/master/packages/decorators)             | Create request handlers with class-, method- & parameter-decorators.   |
+| [prometheus](https://github.com/routup/plugins/tree/master/packages/prometheus)             | Collect and serve metrics for prometheus.                              |
+| [query](https://github.com/routup/plugins/tree/master/packages/query)                       | Read and parse the query string of the request url.                    |
+| [rate-limit](https://github.com/routup/plugins/tree/master/packages/rate-limit)             | Rate limit incoming requests.                                          |
+| [rate-limit-redis](https://github.com/routup/plugins/tree/master/packages/rate-limit-redis) | Redis adapter for the rate-limit plugin.                               |
+| [swagger](https://github.com/routup/plugins/tree/master/packages/swagger)                   | Serve generated docs from URL or based on a JSON file.                 |
 
 ## Benchmarks
 
