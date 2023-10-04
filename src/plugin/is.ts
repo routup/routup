@@ -15,13 +15,6 @@ export function isPlugin(input: unknown): input is Plugin {
         return false;
     }
 
-    if (
-        typeof input.install !== 'function' ||
-        input.install.length !== 1
-    ) {
-        return false;
-    }
-
-    return typeof input.version === 'undefined' ||
-        typeof input.version === 'string';
+    return typeof input.install === 'function' &&
+        input.install.length === 1;
 }

@@ -200,164 +200,98 @@ export class Router implements Dispatcher {
 
     // --------------------------------------------------
 
-    delete(handler: Handler) : this;
+    delete(...handlers: Handler[]) : this;
 
-    delete(path: Path, handler: Handler) : this;
+    delete(path: Path, ...handlers: Handler[]) : this;
 
-    delete(path: any, handler?: any) : this {
-        if (isPath(path)) {
-            this.use({
-                ...handler,
-                method: MethodName.DELETE,
-                path,
-            });
-
-            return this;
-        }
-
-        this.use({
-            ...path,
-            method: MethodName.DELETE,
-        });
+    delete(...input: (Path | Handler)[]) : this {
+        this.useForMethod(MethodName.DELETE, ...input);
 
         return this;
     }
 
-    get(handler: Handler) : this;
+    get(...handlers: Handler[]) : this;
 
-    get(path: Path, handler: Handler) : this;
+    get(path: Path, ...handlers: Handler[]) : this;
 
-    get(path: any, handler?: any) : this {
-        if (isPath(path)) {
-            this.use({
-                ...handler,
-                method: MethodName.GET,
-                path,
-            });
-
-            return this;
-        }
-
-        this.use({
-            ...path,
-            method: MethodName.GET,
-        });
+    get(...input: (Path | Handler)[]) : this {
+        this.useForMethod(MethodName.GET, ...input);
 
         return this;
     }
 
-    post(handler: Handler) : this;
+    post(...handlers: Handler[]) : this;
 
-    post(path: Path, handler: Handler) : this;
+    post(path: Path, ...handlers: Handler[]) : this;
 
-    post(path: any, handler?: any) : this {
-        if (isPath(path)) {
-            this.use({
-                ...handler,
-                method: MethodName.POST,
-                path,
-            });
-
-            return this;
-        }
-
-        this.use({
-            ...path,
-            method: MethodName.POST,
-        });
-        return this;
-    }
-
-    put(handler: Handler) : this;
-
-    put(path: Path, handler: Handler) : this;
-
-    put(path: any, handler?: any) : this {
-        if (isPath(path)) {
-            this.use({
-                ...handler,
-                method: MethodName.PUT,
-                path,
-            });
-
-            return this;
-        }
-
-        this.use({
-            ...path,
-            method: MethodName.PUT,
-        });
+    post(...input: (Path | Handler)[]) : this {
+        this.useForMethod(MethodName.POST, ...input);
 
         return this;
     }
 
-    patch(handler: Handler) : this;
+    put(...handlers: Handler[]) : this;
 
-    patch(path: Path, handler: Handler) : this;
+    put(path: Path, ...handlers: Handler[]) : this;
 
-    patch(path: any, handler?: any) : this {
-        if (isPath(path)) {
-            this.use({
-                ...handler,
-                method: MethodName.PATCH,
-                path,
-            });
-
-            return this;
-        }
-
-        this.use({
-            ...path,
-            method: MethodName.PATCH,
-        });
+    put(...input: (Path | Handler)[]) : this {
+        this.useForMethod(MethodName.PUT, ...input);
 
         return this;
     }
 
-    head(handler: Handler) : this;
+    patch(...handlers: Handler[]) : this;
 
-    head(path: Path, handler: Handler) : this;
+    patch(path: Path, ...handlers: Handler[]) : this;
 
-    head(path: any, handler?: any) : this {
-        if (isPath(path)) {
-            this.use({
-                ...handler,
-                method: MethodName.HEAD,
-                path,
-            });
-
-            return this;
-        }
-
-        this.use({
-            ...path,
-            method: MethodName.HEAD,
-        });
+    patch(...input: (Path | Handler)[]) : this {
+        this.useForMethod(MethodName.PATCH, ...input);
 
         return this;
     }
 
-    options(handler: Handler) : this;
+    head(...handlers: Handler[]) : this;
 
-    options(path: Path, handler: Handler) : this;
+    head(path: Path, ...handlers: Handler[]) : this;
 
-    options(path: any, handler?: any) : this {
-        if (isPath(path)) {
-            this.use({
-                ...handler,
-                method: MethodName.OPTIONS,
-                path,
-            });
-
-            return this;
-        }
-
-        this.use({
-            ...path,
-            method: MethodName.OPTIONS,
-        });
+    head(...input: (Path | Handler)[]) : this {
+        this.useForMethod(MethodName.HEAD, ...input);
 
         return this;
+    }
+
+    options(...handlers: Handler[]) : this;
+
+    options(path: Path, ...handlers: Handler[]) : this;
+
+    options(...input: (Path | Handler)[]) : this {
+        this.useForMethod(MethodName.OPTIONS, ...input);
+
+        return this;
+    }
+
+    // --------------------------------------------------
+
+    protected useForMethod(
+        method: `${MethodName}`,
+        ...input: (Path | Handler)[]
+    ) {
+        const base : Partial<Handler> = {
+            method,
+        };
+
+        for (let i = 0; i < input.length; i++) {
+            const element = input[i];
+            if (isPath(element)) {
+                base.path = element;
+                continue;
+            }
+
+            this.use({
+                ...base,
+                ...element,
+            });
+        }
     }
 
     // --------------------------------------------------
@@ -403,6 +337,7 @@ export class Router implements Dispatcher {
             if (isHandler(item)) {
                 item.path = path || modifyPath(item.path);
                 this.stack.push(new Layer(item));
+                continue;
             }
 
             if (isPlugin(item)) {

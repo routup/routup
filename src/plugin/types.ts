@@ -1,7 +1,6 @@
 import type { Path } from '../path';
 import type { Router } from '../router';
 
-export type PluginOptions = Record<string | symbol, any>;
 export type PluginInstallFn = (router: Router) => any;
 
 export type Plugin = {
@@ -9,10 +8,6 @@ export type Plugin = {
      * The name of the plugin.
      */
     name: string,
-    /**
-     *  The supported routup (semver) version.
-     */
-    version?: string,
     /**
      * The installation function called on registration.
      */
