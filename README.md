@@ -192,6 +192,7 @@ typically http framework functions, which are not integrated in the main package
 | Name                                                                                        | Description                                                            |
 |---------------------------------------------------------------------------------------------|------------------------------------------------------------------------|
 | [assets](https://github.com/routup/plugins/tree/master/packages/assets)                     | Serve static files from a directory.                                   |
+| [basic](https://github.com/routup/plugins/tree/master/packages/basic)                       | Bundle of the body, cookie and query plugin.                           |
 | [body](https://github.com/routup/plugins/tree/master/packages/body)                         | Read and parse the request body.                                       |
 | [cookie](https://github.com/routup/plugins/tree/master/packages/cookie)                     | Read and parse request cookies and serialize cookies for the response. |
 | [decorators](https://github.com/routup/plugins/tree/master/packages/decorators)             | Create request handlers with class-, method- & parameter-decorators.   |
