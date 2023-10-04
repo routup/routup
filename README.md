@@ -210,14 +210,14 @@ typically http framework functions, which are not integrated in the main package
 * Date:  `Wed Sep 13 2023 15:11:58 GMT+0200 (Mitteleuropäische Sommerzeit) `
 * Method: `autocannon -c 100 -d 40 -p 10 localhost:3000` (two rounds; one to warm-up, one to measure)
 
-| Package    | Requests/s  |  Latency (ms) |   Throughput/MB |
-|:-----------|:-----------:|--------------:|----------------:|
-| http       |    61062    |         15.87 |           10.89 |
-| fastify    |    59679    |         16.26 |           10.70 |
-| koa        |    45763    |         21.35 |            8.16 |
-| **routup** |    43881    |         22.29 |            8.87 |
-| hapi       |    41374    |         23.67 |            7.38 |
-| express    |    13376    |         74.18 |            2.39 |
+| Package    | Requests/s  | Latency (ms) | Throughput/MB |
+|:-----------|:-----------:|-------------:|--------------:|
+| http       |    61062    |        15.87 |         10.89 |
+| fastify    |    59679    |        16.26 |         10.70 |
+| koa        |    45763    |        21.35 |          8.16 |
+| **routup** |    44588    |        21.91 |          9.02 |
+| hapi       |    41374    |        23.67 |          7.38 |
+| express    |    13376    |        74.18 |          2.39 |
 
 Benchmarks were generated using autocannon. 
 To recreate the results, this can be done using the [benchmarks'](https://github.com/routup/benchmarks) repository.
