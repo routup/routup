@@ -1,3 +1,41 @@
+# [3.0.0](https://github.com/routup/routup/compare/v2.0.0...v3.0.0) (2023-10-04)
+
+
+### Bug Fixes
+
+* cleanup router, route & layer ([78aa73d](https://github.com/routup/routup/commit/78aa73d0e2661ab43abe7d52adc01dfd6f7c220f))
+* **deps:** bump @ebec/http from 2.2.1 to 2.2.2 ([#402](https://github.com/routup/routup/issues/402)) ([737be95](https://github.com/routup/routup/commit/737be95464ed9380ad6e95531cd3ba70a5b73bc2))
+* **deps:** bump smob from 1.4.0 to 1.4.1 ([#382](https://github.com/routup/routup/issues/382)) ([c3a19eb](https://github.com/routup/routup/commit/c3a19ebebe52626a4dc6b5c9df1d4983a0876eed))
+* don't pass plugin options as extra fn argument ([d05e4c9](https://github.com/routup/routup/commit/d05e4c985eb9a0567f73d7500a2abf892b5d2cd9))
+* remove undocumented timeout router option ([c4b2bae](https://github.com/routup/routup/commit/c4b2baeb7fa25ac2fc5940079d09023d3cdc26b8))
+* set remote address for mock request ([5649d9e](https://github.com/routup/routup/commit/5649d9ec98e8426fc1315fad7d94dcc44862f278))
+
+
+### Features
+
+* add define (error-) handler helpers for intellisense ([2318115](https://github.com/routup/routup/commit/2318115c18955dea7e890344555dc43208200555))
+* allways create new router instance on plugin installation ([e77022f](https://github.com/routup/routup/commit/e77022f55992f79fd6aa639d424443db0bbcedee))
+* argument overloading for http method handler registration ([72393c4](https://github.com/routup/routup/commit/72393c4b5cac92e0cda7900b3803101e92b91a62))
+* context (error-) handler style ([72af754](https://github.com/routup/routup/commit/72af754000eb1987229d721626bad1bcf20d0e56))
+* implemented plugin system ([808dd72](https://github.com/routup/routup/commit/808dd727fb6102dc22ae18f62daab4d5633d0111))
+* implicit and explicit handler definition variant ([02caec8](https://github.com/routup/routup/commit/02caec8992f204667a512db5e5cc5b6fdaa57b52))
+* recognize handlers by type property in addition to the number of fn arguments ([86dcc18](https://github.com/routup/routup/commit/86dcc18a153c2200dbe012debab6cab45a6e570b))
+* remove body-, cookie- & query-helper ([bcc0347](https://github.com/routup/routup/commit/bcc0347045bf2997c1c1fff02f5cba09cda25fed))
+* remove implicit handler recognition ([8d623f1](https://github.com/routup/routup/commit/8d623f1acc855c1a6288abaa20314b6eb68f04f8))
+* remove route interface between router and layer ([b149002](https://github.com/routup/routup/commit/b1490027a8d59bb5a7ab7faa6180024d4ecaef9f))
+* wrap any error like object & extract error information ([#377](https://github.com/routup/routup/issues/377)) ([59f2a72](https://github.com/routup/routup/commit/59f2a72e7c4e9ffbd7031fdab613d08da2ede1a4))
+
+
+### Performance Improvements
+
+* use typeof instead of instanceof for instance check ([c98a070](https://github.com/routup/routup/commit/c98a07025b2941f0afbbac6f369fa9977d564ad9))
+
+
+### BREAKING CHANGES
+
+* removed request helper fns
+* handler must be defined with helper fn
+
 # [3.0.0-alpha.3](https://github.com/routup/routup/compare/v3.0.0-alpha.2...v3.0.0-alpha.3) (2023-09-29)
 
 
