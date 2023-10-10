@@ -5,7 +5,7 @@ import type { Request } from '../../../request';
 import type { Response } from '../../../response';
 import { isResponseGone } from '../../../response';
 import type { Router } from '../../../router';
-import { buildDispatcherMeta } from '../../utils';
+import { buildDispatcherMeta } from '../../meta';
 
 export async function dispatchNodeRequest(
     router: Router,
@@ -13,12 +13,14 @@ export async function dispatchNodeRequest(
     res: Response,
 ): Promise<void> {
     try {
-        const dispatched = await router.dispatch(
-            { req, res },
-            buildDispatcherMeta({
+        const dispatched = await router.dispatch({
+            req,
+            res,
+            meta: buildDispatcherMeta({
                 path: useRequestPath(req),
             }),
-        );
+        });
+
         if (dispatched) {
             return;
         }

@@ -1,4 +1,5 @@
 import type { Input } from '@ebec/http';
+import { isObject } from '../utils';
 import { isError } from './is';
 import { ErrorProxy } from './module';
 
@@ -10,13 +11,17 @@ import { ErrorProxy } from './module';
  *
  * @param input
  */
-export function createError(input: Input) : ErrorProxy {
+export function createError(input: Input | unknown) : ErrorProxy {
     if (isError(input)) {
         return input;
     }
 
     if (typeof input === 'string') {
         return new ErrorProxy(input);
+    }
+
+    if (!isObject(input)) {
+        return new ErrorProxy();
     }
 
     return new ErrorProxy({ cause: input }, input);

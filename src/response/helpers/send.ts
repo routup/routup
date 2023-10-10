@@ -67,7 +67,7 @@ export async function send(res: Response, chunk?: any) : Promise<void> {
 
         const chunkHash = await etagFn(chunk, encoding, len);
         if (isResponseGone(res)) {
-            return Promise.resolve();
+            return;
         }
 
         if (typeof chunkHash === 'string') {
@@ -93,26 +93,25 @@ export async function send(res: Response, chunk?: any) : Promise<void> {
     }
 
     if (isResponseGone(res)) {
-        return Promise.resolve();
+        return;
     }
 
     if (res.req.method === 'HEAD') {
         // skip body for HEAD
         res.end();
 
-        return Promise.resolve();
+        return;
     }
 
     if (typeof chunk === 'undefined' || chunk === null) {
         res.end();
-        return Promise.resolve();
+        return;
     }
 
     if (typeof encoding !== 'undefined') {
         res.end(chunk, encoding);
-        return Promise.resolve();
+        return;
     }
 
     res.end(chunk);
-    return Promise.resolve();
 }

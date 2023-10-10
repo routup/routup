@@ -7,7 +7,7 @@ export async function sendStream(
     res: Response,
     stream: NodeReadableStream | WebReadableStream,
     next?: (err?: Error) => Promise<unknown> | unknown,
-) {
+) : Promise<unknown> {
     if (isWebStream(stream)) {
         return stream
             .pipeTo(

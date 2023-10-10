@@ -8,6 +8,15 @@ import {
     HandlerType, isHandler,
 } from '../handler';
 import type { Handler } from '../handler';
+import type {
+    HookErrorFn,
+    HookEventFn,
+    HookFn,
+} from '../hook';
+import {
+    HookManager,
+    HookName,
+} from '../hook';
 import { Layer, isLayerInstance } from '../layer';
 import type { Path } from '../path';
 import { PathMatcher, isPath } from '../path';
@@ -48,11 +57,20 @@ export class Router implements Dispatcher {
      */
     protected pathMatcher : PathMatcher | undefined;
 
+    /**
+     * A hook manager.
+     *
+     * @protected
+     */
+    protected hookManager: HookManager;
+
     // --------------------------------------------------
 
     constructor(options: RouterOptionsInput = {}) {
         this.id = generateRouterID();
         this.name = options.name;
+
+        this.hookManager = new HookManager();
 
         this.setPath(options.path);
 
@@ -92,34 +110,50 @@ export class Router implements Dispatcher {
 
     async dispatch(
         event: DispatcherEvent,
-        meta: DispatcherMeta,
     ) : Promise<boolean> {
         const allowedMethods : string[] = [];
 
         if (this.pathMatcher) {
-            const output = this.pathMatcher.exec(meta.path);
+            const output = this.pathMatcher.exec(event.meta.path);
             if (typeof output !== 'undefined') {
-                meta.mountPath = cleanDoubleSlashes(`${meta.mountPath}/${output.path}`);
+                event.meta.mountPath = cleanDoubleSlashes(`${event.meta.mountPath}/${output.path}`);
 
-                if (meta.path === output.path) {
-                    meta.path = '/';
+                if (event.meta.path === output.path) {
+                    event.meta.path = '/';
                 } else {
-                    meta.path = withLeadingSlash(meta.path.substring(output.path.length));
+                    event.meta.path = withLeadingSlash(event.meta.path.substring(output.path.length));
                 }
 
-                meta.params = {
-                    ...meta.params,
+                event.meta.params = {
+                    ...event.meta.params,
                     ...output.params,
                 };
             }
         }
 
-        meta.routerPath.push(this.id);
+        event.meta.routerPath.push(this.id);
 
         let err : ErrorProxy | undefined;
+        let dispatched : boolean | undefined;
+
+        try {
+            dispatched = await this.hookManager.callEventHook(HookName.DISPATCH_START, event);
+        } catch (e) {
+            if (isError(e)) {
+                err = e;
+            }
+        }
+
+        if (dispatched) {
+            await this.hookManager.callEventHook(HookName.DISPATCH_END, event);
+
+            return true;
+        }
+
         let item : Router | Layer | undefined;
         let itemMeta : DispatcherMeta;
         let match = false;
+        let isLayer = false;
 
         for (let i = 0; i < this.stack.length; i++) {
             item = this.stack[i];
@@ -132,7 +166,7 @@ export class Router implements Dispatcher {
                     continue;
                 }
 
-                match = item.matchPath(meta.path);
+                match = item.matchPath(event.meta.path);
 
                 if (match && event.req.method) {
                     if (!item.matchMethod(event.req.method)) {
@@ -143,33 +177,64 @@ export class Router implements Dispatcher {
                         allowedMethods.push(item.method);
                     }
                 }
+
+                isLayer = true;
             } else if (isRouterInstance(item)) {
-                match = item.matchPath(meta.path);
+                match = item.matchPath(event.meta.path);
+
+                isLayer = false;
             }
 
             if (!match) {
                 continue;
             }
 
-            itemMeta = cloneDispatcherMeta(meta);
+            itemMeta = cloneDispatcherMeta(event.meta);
             if (err) {
                 itemMeta.error = err;
             }
 
             try {
-                const dispatched = await item.dispatch(event, itemMeta);
-                if (dispatched) {
-                    return true;
+                if (isLayer) {
+                    dispatched = await this.hookManager.callEventHook(HookName.HANDLER_BEFORE, event);
+                }
+
+                if (!dispatched) {
+                    dispatched = await item.dispatch({
+                        ...event,
+                        meta: itemMeta,
+                    });
+
+                    if (isLayer) {
+                        if (dispatched) {
+                            await this.hookManager.callEventHook(HookName.HANDLER_AFTER, event);
+                        } else {
+                            dispatched = await this.hookManager.callEventHook(HookName.HANDLER_AFTER, event);
+                        }
+                    }
                 }
             } catch (e) {
                 if (isError(e)) {
-                    err = e;
+                    dispatched = await this.hookManager.callErrorHook(HookName.ERROR, event, e);
+
+                    if (!dispatched) {
+                        err = e;
+                    }
                 }
+            }
+
+            if (dispatched) {
+                await this.hookManager.callEventHook(HookName.DISPATCH_END, event);
+
+                return true;
             }
         }
 
         if (err) {
-            throw err;
+            dispatched = await this.hookManager.callErrorHook(HookName.DISPATCH_FAIL, event, err);
+            if (!dispatched) {
+                throw err;
+            }
         }
 
         if (
@@ -191,6 +256,8 @@ export class Router implements Dispatcher {
 
                 await send(event.res, options);
             }
+
+            await this.hookManager.callEventHook(HookName.DISPATCH_END, event);
 
             return true;
         }
@@ -368,6 +435,54 @@ export class Router implements Dispatcher {
             this.use(router);
         }
 
+        return this;
+    }
+
+    //---------------------------------------------------------------------------------
+
+    /**
+     * Add a hook listener.
+     *
+     * @param name
+     * @param fn
+     */
+
+    on(
+        name: `${HookName.DISPATCH_START}` |
+            `${HookName.DISPATCH_END}` |
+            `${HookName.ERROR}` |
+            `${HookName.HANDLER_AFTER}`,
+        fn: HookEventFn
+    ) : number;
+
+    on(
+        name: `${HookName.DISPATCH_FAIL}` |
+            `${HookName.ERROR}`,
+        fn: HookErrorFn
+    ) : number;
+
+    on(name: `${HookName}`, fn: HookFn) : number {
+        return this.hookManager.addListener(name, fn);
+    }
+
+    /**
+     * Remove single or all hook listeners.
+     *
+     * @param name
+     */
+
+    off(name: `${HookName}`) : this;
+
+    off(name: `${HookName}`, fn: HookFn | number) : this;
+
+    off(name: `${HookName}`, fn?: HookFn | number) : this {
+        if (typeof fn === 'undefined') {
+            this.hookManager.removeListener(name);
+
+            return this;
+        }
+
+        this.hookManager.removeListener(name, fn);
         return this;
     }
 }

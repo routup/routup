@@ -1,42 +1,5 @@
-import type { ErrorProxy } from '../error';
-import type { Request } from '../request';
-import type { Response } from '../response';
+import type { DispatcherEvent } from './event';
 
 export interface Dispatcher {
-    dispatch(
-        event: DispatcherEvent,
-        meta: DispatcherMeta
-    ) : Promise<boolean>;
+    dispatch(event: DispatcherEvent) : Promise<boolean>;
 }
-
-export type DispatcherMeta = {
-    /**
-     * Params collected on path.
-     */
-    params: Record<string, any>,
-
-    /**
-     * Path to check for the current instance.
-     */
-    path: string,
-
-    /**
-     * The relative path on which the router is hung.
-     */
-    mountPath: string,
-
-    /**
-     * The error which occurred during a previous handler.
-     */
-    error?: ErrorProxy,
-
-    /**
-     * Ids of chained router instances.
-     */
-    routerPath: number[]
-};
-
-export type DispatcherEvent = {
-    req: Request,
-    res: Response,
-};
