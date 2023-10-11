@@ -1,4 +1,5 @@
 export enum HookName {
+    MATCH = 'match',
     ERROR = 'error',
 
     DISPATCH_START = 'dispatchStart',
@@ -7,7 +8,4 @@ export enum HookName {
 
     HANDLER_BEFORE = 'handlerBefore',
     HANDLER_AFTER = 'HandlerAfter',
-
-    // HANDLER_MATCH = 'handlerMatch', // todo: implement route match hook
-    // ROUTER_MATCH = 'routerMatch',
 }

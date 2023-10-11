@@ -2,8 +2,12 @@ import { dispatch } from '../dispatcher';
 import type { DispatcherEvent } from '../dispatcher';
 import type { ErrorProxy } from '../error';
 import { createError } from '../error';
+import type { HandlerMatch } from '../handler';
+import type { RouterMatch } from '../router';
 import { HookName } from './constants';
-import type { HookErrorFn, HookEventFn, HookFn } from './types';
+import type {
+    HookErrorFn, HookEventFn, HookFn, HookMatchFn,
+} from './types';
 
 export class HookManager {
     protected items : Record<string, (undefined | HookFn)[]>;
@@ -46,6 +50,54 @@ export class HookManager {
         }
     }
 
+    async callMatchHook(
+        event: DispatcherEvent,
+        match: RouterMatch | HandlerMatch,
+    ) : Promise<boolean> {
+        const items = this.items[HookName.MATCH] || [];
+        if (items.length === 0) {
+            return false;
+        }
+
+        let dispatched = false;
+
+        try {
+            for (let i = 0; i < items.length; i++) {
+                const hook = items[i] as HookMatchFn;
+                if (!hook) {
+                    continue;
+                }
+
+                dispatched = await dispatch(event, (next) => {
+                    Promise.resolve()
+                        .then(() => hook(event, match))
+                        .then(() => next())
+                        .catch((err) => next(err));
+                });
+
+                if (dispatched) {
+                    return true;
+                }
+            }
+        } catch (e) {
+            const error = createError(e);
+
+            const dispatched = await this.callErrorHook(
+                HookName.ERROR,
+                event,
+                error,
+            );
+
+            if (dispatched) {
+                return true;
+            }
+
+            throw error;
+        }
+
+        return false;
+    }
+
     /**
      * @throws ErrorProxy
      *
@@ -85,7 +137,7 @@ export class HookManager {
             const error = createError(e);
 
             const dispatched = await this.callErrorHook(
-                name === HookName.DISPATCH_FAIL ? HookName.DISPATCH_FAIL : HookName.ERROR,
+                HookName.ERROR,
                 event,
                 error,
             );

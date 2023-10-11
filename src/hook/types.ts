@@ -1,10 +1,12 @@
 import type { DispatcherEvent } from '../dispatcher';
 import type { ErrorProxy } from '../error';
-import type { Layer } from '../layer';
-import type { Router } from '../router';
+import type { HandlerMatch } from '../handler';
+import type { RouterMatch } from '../router';
 
-export type HookErrorFn = (event: DispatcherEvent, input: ErrorProxy) => Promise<unknown> | unknown;
+// todo: change event and error argument position?
+export type HookErrorFn = (event: DispatcherEvent, error: ErrorProxy) => Promise<unknown> | unknown;
 export type HookEventFn = (event: DispatcherEvent) => Promise<unknown> | unknown;
-export type HookMatchFn = (element: Layer | Router) => Promise<unknown> | unknown;
+// todo: change event and match argument position?
+export type HookMatchFn = (event: DispatcherEvent, match: RouterMatch | HandlerMatch) => Promise<unknown> | unknown;
 
 export type HookFn = HookErrorFn | HookEventFn | HookMatchFn;

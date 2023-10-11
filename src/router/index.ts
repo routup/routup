@@ -1,2 +1,2 @@
 export * from './module';
-export { isRouterInstance } from './utils';
+export * from './types';

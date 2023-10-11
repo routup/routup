@@ -1,6 +1,7 @@
 import { createError } from '../../error';
 import { setRequestMountPath, setRequestParams, setRequestRouterPath } from '../../request';
 import {
+    isResponseGone,
     send, sendStream, sendWebBlob, sendWebResponse,
 } from '../../response';
 import {
@@ -77,7 +78,10 @@ export function dispatch(
             handled = true;
             unsubscribe();
 
-            await sendData(event, data);
+            if (!isResponseGone(event.res)) {
+                await sendData(event, data);
+            }
+
             return true;
         };
 
