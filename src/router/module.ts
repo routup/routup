@@ -141,7 +141,7 @@ export class Router implements Dispatcher {
         let dispatched : boolean | undefined;
 
         try {
-            dispatched = await this.hookManager.callEventHook(HookName.DISPATCH_START, event);
+            dispatched = await this.hookManager.triggerEventHook(HookName.DISPATCH_START, event);
         } catch (e) {
             if (isError(e)) {
                 err = e;
@@ -149,7 +149,7 @@ export class Router implements Dispatcher {
         }
 
         if (dispatched) {
-            await this.hookManager.callEventHook(HookName.DISPATCH_END, event);
+            await this.hookManager.triggerEventHook(HookName.DISPATCH_END, event);
 
             return true;
         }
@@ -180,7 +180,7 @@ export class Router implements Dispatcher {
                 }
 
                 if (match) {
-                    dispatched = await this.hookManager.callMatchHook(
+                    dispatched = await this.hookManager.triggerMatchHook(
                         event,
                         {
                             type: 'handler',
@@ -196,7 +196,7 @@ export class Router implements Dispatcher {
                 match = item.matchPath(event.meta.path);
 
                 if (match) {
-                    dispatched = await this.hookManager.callMatchHook(
+                    dispatched = await this.hookManager.triggerMatchHook(
                         event,
                         {
                             type: 'router',
@@ -214,7 +214,7 @@ export class Router implements Dispatcher {
             }
 
             if (dispatched) {
-                await this.hookManager.callEventHook(HookName.DISPATCH_END, event);
+                await this.hookManager.triggerEventHook(HookName.DISPATCH_END, event);
 
                 return true;
             }
@@ -226,7 +226,7 @@ export class Router implements Dispatcher {
 
             try {
                 if (isLayer) {
-                    dispatched = await this.hookManager.callEventHook(HookName.HANDLER_BEFORE, event);
+                    dispatched = await this.hookManager.triggerEventHook(HookName.HANDLER_BEFORE, event);
                 }
 
                 if (!dispatched) {
@@ -236,12 +236,12 @@ export class Router implements Dispatcher {
                     });
 
                     if (isLayer) {
-                        dispatched = (await this.hookManager.callEventHook(HookName.HANDLER_AFTER, event)) || dispatched;
+                        dispatched = (await this.hookManager.triggerEventHook(HookName.HANDLER_AFTER, event)) || dispatched;
                     }
                 }
             } catch (e) {
                 if (isError(e)) {
-                    dispatched = await this.hookManager.callErrorHook(HookName.ERROR, event, e);
+                    dispatched = await this.hookManager.triggerErrorHook(HookName.ERROR, event, e);
 
                     if (!dispatched) {
                         err = e;
@@ -250,14 +250,14 @@ export class Router implements Dispatcher {
             }
 
             if (dispatched) {
-                await this.hookManager.callEventHook(HookName.DISPATCH_END, event);
+                await this.hookManager.triggerEventHook(HookName.DISPATCH_END, event);
 
                 return true;
             }
         }
 
         if (err) {
-            dispatched = await this.hookManager.callErrorHook(HookName.DISPATCH_FAIL, event, err);
+            dispatched = await this.hookManager.triggerErrorHook(HookName.DISPATCH_FAIL, event, err);
             if (!dispatched) {
                 throw err;
             }
@@ -283,7 +283,7 @@ export class Router implements Dispatcher {
                 await send(event.res, options);
             }
 
-            await this.hookManager.callEventHook(HookName.DISPATCH_END, event);
+            await this.hookManager.triggerEventHook(HookName.DISPATCH_END, event);
 
             return true;
         }

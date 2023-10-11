@@ -50,7 +50,7 @@ export class HookManager {
         }
     }
 
-    async callMatchHook(
+    async triggerMatchHook(
         event: DispatcherEvent,
         match: RouterMatch | HandlerMatch,
     ) : Promise<boolean> {
@@ -82,7 +82,7 @@ export class HookManager {
         } catch (e) {
             const error = createError(e);
 
-            const dispatched = await this.callErrorHook(
+            const dispatched = await this.triggerErrorHook(
                 HookName.ERROR,
                 event,
                 error,
@@ -104,7 +104,7 @@ export class HookManager {
      * @param name
      * @param event
      */
-    async callEventHook(
+    async triggerEventHook(
         name: `${HookName}`,
         event: DispatcherEvent,
     ) : Promise<boolean> {
@@ -136,7 +136,7 @@ export class HookManager {
         } catch (e) {
             const error = createError(e);
 
-            const dispatched = await this.callErrorHook(
+            const dispatched = await this.triggerErrorHook(
                 HookName.ERROR,
                 event,
                 error,
@@ -152,7 +152,7 @@ export class HookManager {
         return false;
     }
 
-    async callErrorHook(
+    async triggerErrorHook(
         name: `${HookName.DISPATCH_FAIL}` | `${HookName.ERROR}`,
         event: DispatcherEvent,
         input: ErrorProxy,
