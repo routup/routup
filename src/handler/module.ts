@@ -1,6 +1,8 @@
 import { MethodName } from '../constants';
 import type { Dispatcher, DispatcherEvent } from '../dispatcher';
 import { dispatch, mergeDispatcherMetaParams } from '../dispatcher';
+import { isError } from '../error';
+import { HookManager, HookName } from '../hook';
 import type { Path } from '../path';
 import { PathMatcher } from '../path';
 import { HandlerSymbol, HandlerType } from './constants';
@@ -11,13 +13,17 @@ export class Handler implements Dispatcher {
 
     readonly config: HandlerConfig;
 
+    protected hookManager : HookManager;
+
     protected pathMatcher: PathMatcher | undefined;
 
     // --------------------------------------------------
 
     constructor(handler: HandlerConfig) {
         this.config = handler;
+        this.hookManager = new HookManager();
 
+        this.mountHooks();
         this.setPath(handler.path);
     }
 
@@ -39,7 +45,7 @@ export class Handler implements Dispatcher {
 
     // --------------------------------------------------
 
-    dispatch(event: DispatcherEvent): Promise<boolean> {
+    async dispatch(event: DispatcherEvent): Promise<boolean> {
         if (this.pathMatcher) {
             const pathMatch = this.pathMatcher.exec(event.meta.path);
             if (pathMatch) {
@@ -47,22 +53,36 @@ export class Handler implements Dispatcher {
             }
         }
 
-        // todo: catch thrown error and call handler hook
+        let dispatched : boolean;
 
-        return dispatch(event, (done) => {
-            // todo: call custom handler before hook
-            if (this.config.type === HandlerType.ERROR) {
-                if (event.meta.error) {
-                    return this.config.fn(event.meta.error, event.req, event.res, done);
+        dispatched = await this.hookManager.callEventHook(HookName.HANDLER_BEFORE, event);
+        if (dispatched) {
+            return true;
+        }
+
+        try {
+            dispatched = await dispatch(event, (done) => {
+                if (this.config.type === HandlerType.ERROR) {
+                    if (event.meta.error) {
+                        return this.config.fn(event.meta.error, event.req, event.res, done);
+                    }
+                } else {
+                    return this.config.fn(event.req, event.res, done);
                 }
-            } else {
-                return this.config.fn(event.req, event.res, done);
+
+                return undefined;
+            });
+        } catch (e) {
+            if (isError(e)) {
+                dispatched = await this.hookManager.callErrorHook(HookName.ERROR, event, e);
+
+                if (!dispatched) {
+                    throw e;
+                }
             }
+        }
 
-            // todo: call custom handler after hook
-
-            return undefined;
-        });
+        return (await this.hookManager.callEventHook(HookName.HANDLER_AFTER, event)) || dispatched;
     }
 
     // --------------------------------------------------
@@ -106,5 +126,21 @@ export class Handler implements Dispatcher {
 
     setMethod(method?: `${MethodName}`) : void {
         this.config.method = method;
+    }
+
+    // --------------------------------------------------
+
+    protected mountHooks() {
+        if (this.config.onBefore) {
+            this.hookManager.addListener(HookName.HANDLER_BEFORE, this.config.onBefore);
+        }
+
+        if (this.config.onAfter) {
+            this.hookManager.addListener(HookName.HANDLER_AFTER, this.config.onAfter);
+        }
+
+        if (this.config.onError) {
+            this.hookManager.addListener(HookName.ERROR, this.config.onError);
+        }
     }
 }

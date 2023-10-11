@@ -6,17 +6,17 @@ import type { HandlerMatch } from '../handler';
 import type { RouterMatch } from '../router';
 import { HookName } from './constants';
 import type {
-    HookErrorFn, HookEventFn, HookFn, HookMatchFn,
+    HookErrorListener, HookEventListener, HookListener, HookMatchListener,
 } from './types';
 
 export class HookManager {
-    protected items : Record<string, (undefined | HookFn)[]>;
+    protected items : Record<string, (undefined | HookListener)[]>;
 
     constructor() {
         this.items = {};
     }
 
-    addListener(name: `${HookName}`, fn: HookFn) : number {
+    addListener(name: `${HookName}`, fn: HookListener) : number {
         this.items[name] = this.items[name] || [];
         this.items[name].push(fn);
 
@@ -25,9 +25,9 @@ export class HookManager {
 
     removeListener(name: `${HookName}`) : void;
 
-    removeListener(name: `${HookName}`, fn: HookFn | number) : void;
+    removeListener(name: `${HookName}`, fn: HookListener | number) : void;
 
-    removeListener(name: `${HookName}`, fn?: HookFn | number) : void {
+    removeListener(name: `${HookName}`, fn?: HookListener | number) : void {
         if (!this.items[name]) {
             return;
         }
@@ -63,7 +63,7 @@ export class HookManager {
 
         try {
             for (let i = 0; i < items.length; i++) {
-                const hook = items[i] as HookMatchFn;
+                const hook = items[i] as HookMatchListener;
                 if (!hook) {
                     continue;
                 }
@@ -117,7 +117,7 @@ export class HookManager {
 
         try {
             for (let i = 0; i < items.length; i++) {
-                const hook = items[i] as HookEventFn;
+                const hook = items[i] as HookEventListener;
                 if (!hook) {
                     continue;
                 }
@@ -157,7 +157,7 @@ export class HookManager {
         event: DispatcherEvent,
         input: ErrorProxy,
     ) : Promise<boolean> {
-        const items = (this.items[name] || []) as HookErrorFn[];
+        const items = (this.items[name] || []) as HookErrorListener[];
         if (items.length === 0) {
             return false;
         }

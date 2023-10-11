@@ -10,9 +10,9 @@ import {
 } from '../handler';
 import type { HandlerConfig } from '../handler';
 import type {
-    HookErrorFn,
-    HookEventFn,
-    HookFn,
+    HookErrorListener,
+    HookEventListener,
+    HookListener,
 } from '../hook';
 import {
     HookManager,
@@ -236,11 +236,7 @@ export class Router implements Dispatcher {
                     });
 
                     if (isLayer) {
-                        if (dispatched) {
-                            await this.hookManager.callEventHook(HookName.HANDLER_AFTER, event);
-                        } else {
-                            dispatched = await this.hookManager.callEventHook(HookName.HANDLER_AFTER, event);
-                        }
+                        dispatched = (await this.hookManager.callEventHook(HookName.HANDLER_AFTER, event)) || dispatched;
                     }
                 }
             } catch (e) {
@@ -507,16 +503,16 @@ export class Router implements Dispatcher {
             `${HookName.DISPATCH_END}` |
             `${HookName.ERROR}` |
             `${HookName.HANDLER_AFTER}`,
-        fn: HookEventFn
+        fn: HookEventListener
     ) : number;
 
     on(
         name: `${HookName.DISPATCH_FAIL}` |
             `${HookName.ERROR}`,
-        fn: HookErrorFn
+        fn: HookErrorListener
     ) : number;
 
-    on(name: `${HookName}`, fn: HookFn) : number {
+    on(name: `${HookName}`, fn: HookListener) : number {
         return this.hookManager.addListener(name, fn);
     }
 
@@ -528,9 +524,9 @@ export class Router implements Dispatcher {
 
     off(name: `${HookName}`) : this;
 
-    off(name: `${HookName}`, fn: HookFn | number) : this;
+    off(name: `${HookName}`, fn: HookListener | number) : this;
 
-    off(name: `${HookName}`, fn?: HookFn | number) : this {
+    off(name: `${HookName}`, fn?: HookListener | number) : this {
         if (typeof fn === 'undefined') {
             this.hookManager.removeListener(name);
 
