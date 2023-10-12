@@ -70,8 +70,8 @@ export class HookManager {
 
                 dispatched = await dispatch(event, (next) => {
                     Promise.resolve()
-                        .then(() => hook(event, match))
-                        .then(() => next())
+                        .then(() => hook(match, event, next))
+                        .then((r) => r)
                         .catch((err) => next(err));
                 });
 
@@ -124,8 +124,8 @@ export class HookManager {
 
                 dispatched = await dispatch(event, (next) => {
                     Promise.resolve()
-                        .then(() => hook(event))
-                        .then(() => next())
+                        .then(() => hook(event, next))
+                        .then((r) => r)
                         .catch((err) => next(err));
                 });
 
@@ -170,12 +170,11 @@ export class HookManager {
                 continue;
             }
 
-            dispatched = await dispatch(event, (next) => {
-                Promise.resolve()
-                    .then(() => hook(event, input))
-                    .then(() => next())
-                    .catch((err) => next(err));
-            });
+            dispatched = await dispatch(event, (next) => Promise.resolve()
+                .then(() => hook(input, event, next))
+                .then((r) => r)
+                .catch((err) => next(err)));
+
             if (dispatched) {
                 return true;
             }

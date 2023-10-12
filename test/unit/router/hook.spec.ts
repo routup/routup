@@ -1,5 +1,7 @@
 import supertest from 'supertest';
-import { Router, coreHandler, createNodeDispatcher } from '../../../src';
+import {
+    Router, coreHandler, createNodeDispatcher,
+} from '../../../src';
 import { HookName } from '../../../src/hook';
 
 type HookMountOutput = {
@@ -11,7 +13,12 @@ function mountHooks(router: Router) : HookMountOutput {
     for (let i = 0; i < keys.length; i++) {
         const key = keys[i] as `${HookName}`;
         const fn = jest.fn();
-        router.on(key as any, fn);
+        router.on(key as any, (...args: any[]) => {
+            fn();
+
+            // call next fn
+            return args.pop()();
+        });
 
         output[key] = fn;
     }
@@ -20,7 +27,7 @@ function mountHooks(router: Router) : HookMountOutput {
 }
 
 describe('src/router/hooks', () => {
-    it('should subscribe to request/response hook', async () => {
+    it('should trigger non error hooks', async () => {
         const router = new Router();
         router.use(coreHandler(() => 'Hello, World!'));
 
@@ -42,7 +49,7 @@ describe('src/router/hooks', () => {
         expect(hooks[HookName.HANDLER_AFTER]).toHaveBeenCalled();
     });
 
-    it('should subscribe to error hook', async () => {
+    it('should trigger error hook', async () => {
         const router = new Router();
         router.use(coreHandler(() => {
             throw new Error('Hello, World!');
@@ -63,5 +70,25 @@ describe('src/router/hooks', () => {
         expect(hooks[HookName.DISPATCH_FAIL]).toHaveBeenCalled();
         expect(hooks[HookName.HANDLER_BEFORE]).toHaveBeenCalled();
         expect(hooks[HookName.HANDLER_AFTER]).not.toHaveBeenCalled();
+    });
+
+    it('should trigger handler error hook', async () => {
+        const router = new Router();
+        router.use(coreHandler({
+            fn: () => {
+                throw new Error('Hello, World!');
+            },
+            onError(error) {
+                return `Error: ${error.message}`;
+            },
+        }));
+
+        const server = supertest(createNodeDispatcher(router));
+
+        const response = await server
+            .get('/');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.text).toEqual('Error: Hello, World!');
     });
 });
