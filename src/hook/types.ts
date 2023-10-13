@@ -27,3 +27,5 @@ export type HookMatchListener = (
 export type HookListener = HookErrorListener |
 HookDefaultListener |
 HookMatchListener;
+
+export type HookListenerUnsubscribe = () => void;

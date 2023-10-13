@@ -12,6 +12,8 @@ import type {
     HookDefaultListener,
     HookErrorListener,
     HookListener,
+
+    HookListenerUnsubscribe,
 } from '../hook';
 import {
     HookManager,
@@ -495,20 +497,20 @@ export class Router implements Dispatcher {
             `${HookName.HANDLER_BEFORE}` |
             `${HookName.HANDLER_AFTER}`,
         fn: HookDefaultListener
-    ) : number;
+    ) : HookListenerUnsubscribe;
 
     on(
         name: `${HookName.MATCH}`,
         fn: HookErrorListener
-    ) : number;
+    ) : HookListenerUnsubscribe;
 
     on(
         name: `${HookName.DISPATCH_FAIL}` |
             `${HookName.ERROR}`,
         fn: HookErrorListener
-    ) : number;
+    ) : HookListenerUnsubscribe;
 
-    on(name: `${HookName}`, fn: HookListener) : number {
+    on(name: `${HookName}`, fn: HookListener) : HookListenerUnsubscribe {
         return this.hookManager.addListener(name, fn);
     }
 
@@ -520,9 +522,9 @@ export class Router implements Dispatcher {
 
     off(name: `${HookName}`) : this;
 
-    off(name: `${HookName}`, fn: HookListener | number) : this;
+    off(name: `${HookName}`, fn: HookListener) : this;
 
-    off(name: `${HookName}`, fn?: HookListener | number) : this {
+    off(name: `${HookName}`, fn?: HookListener) : this {
         if (typeof fn === 'undefined') {
             this.hookManager.removeListener(name);
 

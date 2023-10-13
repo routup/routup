@@ -4,12 +4,13 @@ import { createError } from '../error';
 import type { Next } from '../handler';
 import { HookName } from './constants';
 import type {
-    HookDefaultListener, HookErrorListener, HookListener, HookMatchListener,
+    HookDefaultListener,
+    HookErrorListener, HookListener, HookListenerUnsubscribe, HookMatchListener,
 } from './types';
 import { isHookForErrorListener, isHookForMatchListener } from './utils';
 
 export class HookManager {
-    protected items : Record<string, (undefined | HookListener)[]>;
+    protected items : Record<string, HookListener[]>;
 
     // --------------------------------------------------
 
@@ -19,18 +20,23 @@ export class HookManager {
 
     // --------------------------------------------------
 
-    addListener(name: `${HookName}`, fn: HookListener) : number {
+    addListener(
+        name: `${HookName}`,
+        fn: HookListener,
+    ) : HookListenerUnsubscribe {
         this.items[name] = this.items[name] || [];
         this.items[name].push(fn);
 
-        return this.items[name].length - 1;
+        return () => {
+            this.removeListener(name, fn);
+        };
     }
 
     removeListener(name: `${HookName}`) : void;
 
-    removeListener(name: `${HookName}`, fn: HookListener | number) : void;
+    removeListener(name: `${HookName}`, fn: HookListener) : void;
 
-    removeListener(name: `${HookName}`, fn?: HookListener | number) : void {
+    removeListener(name: `${HookName}`, fn?: HookListener) : void {
         if (!this.items[name]) {
             return;
         }
@@ -40,15 +46,10 @@ export class HookManager {
             return;
         }
 
-        if (typeof fn === 'number') {
-            this.items[name][fn] = undefined;
-            return;
-        }
-
         if (typeof fn === 'function') {
             const index = this.items[name].indexOf(fn);
             if (index !== -1) {
-                this.items[name][index] = undefined;
+                this.items[name].splice(index, 1);
             }
         }
     }
@@ -99,9 +100,6 @@ export class HookManager {
         try {
             for (let i = 0; i < items.length; i++) {
                 const hook = items[i] as HookDefaultListener;
-                if (!hook) {
-                    continue;
-                }
 
                 dispatched = await dispatch(
                     event,

@@ -168,8 +168,8 @@ describe('src/router/hooks', () => {
             next();
         };
 
-        const index = router.on(HookName.DISPATCH_START, fn);
-        router.off(HookName.DISPATCH_START, index);
+        const unsubscribe = router.on(HookName.DISPATCH_START, fn);
+        unsubscribe();
 
         const server = supertest(createNodeDispatcher(router));
 
