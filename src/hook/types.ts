@@ -10,7 +10,7 @@ export type HookErrorListener = (
     next: Next
 ) => Promise<unknown> | unknown;
 
-export type HookEventListener = (
+export type HookDefaultListener = (
     event: DispatcherEvent,
     next: Next
 ) => Promise<unknown> | unknown;
@@ -23,5 +23,5 @@ export type HookMatchListener = (
 ) => Promise<unknown> | unknown;
 
 export type HookListener = HookErrorListener |
-HookEventListener |
+HookDefaultListener |
 HookMatchListener;

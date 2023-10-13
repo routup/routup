@@ -11,6 +11,7 @@ import { ErrorProxy } from './module';
  *
  * @param input
  */
+// todo: rename to createDispatcherError
 export function createError(input: Input | unknown) : ErrorProxy {
     if (isError(input)) {
         return input;

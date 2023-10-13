@@ -6,7 +6,7 @@ import type { HandlerMatch } from '../handler';
 import type { RouterMatch } from '../router';
 import { HookName } from './constants';
 import type {
-    HookErrorListener, HookEventListener, HookListener, HookMatchListener,
+    HookDefaultListener, HookErrorListener, HookListener, HookMatchListener,
 } from './types';
 
 export class HookManager {
@@ -117,7 +117,7 @@ export class HookManager {
 
         try {
             for (let i = 0; i < items.length; i++) {
-                const hook = items[i] as HookEventListener;
+                const hook = items[i] as HookDefaultListener;
                 if (!hook) {
                     continue;
                 }

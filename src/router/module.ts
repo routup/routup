@@ -10,8 +10,8 @@ import {
 } from '../handler';
 import type { HandlerConfig } from '../handler';
 import type {
+    HookDefaultListener,
     HookErrorListener,
-    HookEventListener,
     HookListener,
 } from '../hook';
 import {
@@ -503,7 +503,7 @@ export class Router implements Dispatcher {
             `${HookName.DISPATCH_END}` |
             `${HookName.ERROR}` |
             `${HookName.HANDLER_AFTER}`,
-        fn: HookEventListener
+        fn: HookDefaultListener
     ) : number;
 
     on(

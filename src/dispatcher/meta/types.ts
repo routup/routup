@@ -1,5 +1,7 @@
 import type { ErrorProxy } from '../../error';
 
+// todo: add method property.
+
 export type DispatcherMeta = {
     /**
      * Params collected on path.
