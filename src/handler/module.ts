@@ -55,7 +55,7 @@ export class Handler implements Dispatcher {
 
         let dispatched : boolean;
 
-        dispatched = await this.hookManager.triggerEventHook(HookName.HANDLER_BEFORE, event);
+        dispatched = await this.hookManager.trigger(HookName.HANDLER_BEFORE, event);
         if (dispatched) {
             return true;
         }
@@ -74,15 +74,19 @@ export class Handler implements Dispatcher {
             });
         } catch (e) {
             if (isError(e)) {
-                dispatched = await this.hookManager.triggerErrorHook(HookName.ERROR, event, e);
+                event.meta.error = e;
 
-                if (!dispatched) {
+                dispatched = await this.hookManager.trigger(HookName.ERROR, event);
+
+                if (dispatched) {
+                    event.meta.error = undefined;
+                } else {
                     throw e;
                 }
             }
         }
 
-        return (await this.hookManager.triggerEventHook(HookName.HANDLER_AFTER, event)) || dispatched;
+        return (await this.hookManager.trigger(HookName.HANDLER_AFTER, event)) || dispatched;
     }
 
     // --------------------------------------------------

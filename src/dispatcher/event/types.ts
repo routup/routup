@@ -4,8 +4,17 @@ import type { Response } from '../../response';
 import type { Router } from '../../router';
 import type { DispatcherMeta } from '../meta';
 
-// todo: change to { type: 'router' | 'handler', data: {} }
-export type DispatcherMatch = Router | Handler;
+export type DispatcherRouterMatch = {
+    type: 'router',
+    data: Router
+};
+
+export type DispatcherHandlerMatch = {
+    type: 'handler',
+    data: Handler
+};
+
+export type DispatcherMatch = DispatcherRouterMatch | DispatcherHandlerMatch;
 
 export type DispatcherEvent = {
     // todo: rename to request?

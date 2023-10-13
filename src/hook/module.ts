@@ -1,20 +1,23 @@
 import { dispatch } from '../dispatcher';
 import type { DispatcherEvent } from '../dispatcher';
-import type { ErrorProxy } from '../error';
 import { createError } from '../error';
-import type { HandlerMatch } from '../handler';
-import type { RouterMatch } from '../router';
+import type { Next } from '../handler';
 import { HookName } from './constants';
 import type {
     HookDefaultListener, HookErrorListener, HookListener, HookMatchListener,
 } from './types';
+import { isHookForErrorListener, isHookForMatchListener } from './utils';
 
 export class HookManager {
     protected items : Record<string, (undefined | HookListener)[]>;
 
+    // --------------------------------------------------
+
     constructor() {
         this.items = {};
     }
+
+    // --------------------------------------------------
 
     addListener(name: `${HookName}`, fn: HookListener) : number {
         this.items[name] = this.items[name] || [];
@@ -50,53 +53,7 @@ export class HookManager {
         }
     }
 
-    async triggerMatchHook(
-        event: DispatcherEvent,
-        match: RouterMatch | HandlerMatch,
-    ) : Promise<boolean> {
-        const items = this.items[HookName.MATCH] || [];
-        if (items.length === 0) {
-            return false;
-        }
-
-        let dispatched = false;
-
-        try {
-            for (let i = 0; i < items.length; i++) {
-                const hook = items[i] as HookMatchListener;
-                if (!hook) {
-                    continue;
-                }
-
-                dispatched = await dispatch(event, (next) => {
-                    Promise.resolve()
-                        .then(() => hook(match, event, next))
-                        .then((r) => r)
-                        .catch((err) => next(err));
-                });
-
-                if (dispatched) {
-                    return true;
-                }
-            }
-        } catch (e) {
-            const error = createError(e);
-
-            const dispatched = await this.triggerErrorHook(
-                HookName.ERROR,
-                event,
-                error,
-            );
-
-            if (dispatched) {
-                return true;
-            }
-
-            throw error;
-        }
-
-        return false;
-    }
+    // --------------------------------------------------
 
     /**
      * @throws ErrorProxy
@@ -104,7 +61,7 @@ export class HookManager {
      * @param name
      * @param event
      */
-    async triggerEventHook(
+    async trigger(
         name: `${HookName}`,
         event: DispatcherEvent,
     ) : Promise<boolean> {
@@ -115,6 +72,30 @@ export class HookManager {
 
         let dispatched = false;
 
+        let triggerListener : (listener: HookListener, next: Next) => unknown;
+        if (isHookForMatchListener(name)) {
+            triggerListener = (listener, next) => {
+                if (event.match) {
+                    return (listener as HookMatchListener)(event.match, event.req, event.res, next);
+                }
+
+                return undefined;
+            };
+        } else if (isHookForErrorListener(name)) {
+            triggerListener = (listener, next) => {
+                if (event.meta.error) {
+                    return (listener as HookErrorListener)(event.meta.error, event.req, event.res, next);
+                }
+
+                return undefined;
+            };
+        } else {
+            triggerListener = (
+                listener,
+                next,
+            ) => (listener as HookDefaultListener)(event.req, event.res, next);
+        }
+
         try {
             for (let i = 0; i < items.length; i++) {
                 const hook = items[i] as HookDefaultListener;
@@ -122,62 +103,38 @@ export class HookManager {
                     continue;
                 }
 
-                dispatched = await dispatch(event, (next) => {
-                    Promise.resolve()
-                        .then(() => hook(event, next))
-                        .then((r) => r)
-                        .catch((err) => next(err));
-                });
+                dispatched = await dispatch(
+                    event,
+                    (next) => Promise.resolve()
+                        .then(() => triggerListener(hook, next))
+                        .catch((err) => next(err)),
+                );
 
                 if (dispatched) {
+                    event.meta.error = undefined;
                     return true;
                 }
             }
         } catch (e) {
             const error = createError(e);
 
-            const dispatched = await this.triggerErrorHook(
-                HookName.ERROR,
-                event,
-                error,
-            );
+            if (!isHookForErrorListener(name)) {
+                event.meta.error = error;
 
-            if (dispatched) {
-                return true;
+                const dispatched = await this.trigger(
+                    HookName.ERROR,
+                    event,
+                );
+
+                if (dispatched) {
+                    event.meta.error = undefined;
+                    return true;
+                }
+
+                throw error;
             }
 
             throw error;
-        }
-
-        return false;
-    }
-
-    async triggerErrorHook(
-        name: `${HookName.DISPATCH_FAIL}` | `${HookName.ERROR}`,
-        event: DispatcherEvent,
-        input: ErrorProxy,
-    ) : Promise<boolean> {
-        const items = (this.items[name] || []) as HookErrorListener[];
-        if (items.length === 0) {
-            return false;
-        }
-
-        let dispatched = false;
-
-        for (let i = 0; i < items.length; i++) {
-            const hook = items[i];
-            if (!hook) {
-                continue;
-            }
-
-            dispatched = await dispatch(event, (next) => Promise.resolve()
-                .then(() => hook(input, event, next))
-                .then((r) => r)
-                .catch((err) => next(err)));
-
-            if (dispatched) {
-                return true;
-            }
         }
 
         return false;

@@ -1,5 +1,4 @@
 import { distinctArray } from 'smob';
-import type { ErrorProxy } from '../error';
 import { isError } from '../error';
 import { HeaderName, MethodName } from '../constants';
 import type { Dispatcher, DispatcherEvent, DispatcherMeta } from '../dispatcher';
@@ -137,19 +136,18 @@ export class Router implements Dispatcher {
 
         event.meta.routerPath.push(this.id);
 
-        let err : ErrorProxy | undefined;
         let dispatched : boolean | undefined;
 
         try {
-            dispatched = await this.hookManager.triggerEventHook(HookName.DISPATCH_START, event);
+            dispatched = await this.hookManager.trigger(HookName.DISPATCH_START, event);
         } catch (e) {
             if (isError(e)) {
-                err = e;
+                event.meta.error = e;
             }
         }
 
         if (dispatched) {
-            await this.hookManager.triggerEventHook(HookName.DISPATCH_END, event);
+            await this.hookManager.trigger(HookName.DISPATCH_END, event);
 
             return true;
         }
@@ -163,7 +161,7 @@ export class Router implements Dispatcher {
             item = this.stack[i];
 
             if (isHandler(item)) {
-                if (item.type !== HandlerType.ERROR && err) {
+                if (item.type !== HandlerType.ERROR && event.meta.error) {
                     continue;
                 }
 
@@ -180,15 +178,10 @@ export class Router implements Dispatcher {
                 }
 
                 if (match) {
-                    dispatched = await this.hookManager.triggerMatchHook(
-                        event,
-                        {
-                            type: 'handler',
-                            method: item.method,
-                            path: event.meta.path,
-                            element: item,
-                        },
-                    );
+                    event.match = {
+                        type: 'handler',
+                        data: item,
+                    };
                 }
 
                 isLayer = true;
@@ -196,14 +189,10 @@ export class Router implements Dispatcher {
                 match = item.matchPath(event.meta.path);
 
                 if (match) {
-                    dispatched = await this.hookManager.triggerMatchHook(
-                        event,
-                        {
-                            type: 'router',
-                            path: event.meta.path,
-                            element: item,
-                        },
-                    );
+                    event.match = {
+                        type: 'router',
+                        data: item,
+                    };
                 }
 
                 isLayer = false;
@@ -213,20 +202,18 @@ export class Router implements Dispatcher {
                 continue;
             }
 
+            dispatched = await this.hookManager.trigger(HookName.MATCH, event);
             if (dispatched) {
-                await this.hookManager.triggerEventHook(HookName.DISPATCH_END, event);
+                await this.hookManager.trigger(HookName.DISPATCH_END, event);
 
                 return true;
             }
 
             itemMeta = cloneDispatcherMeta(event.meta);
-            if (err) {
-                itemMeta.error = err;
-            }
 
             try {
                 if (isLayer) {
-                    dispatched = await this.hookManager.triggerEventHook(HookName.HANDLER_BEFORE, event);
+                    dispatched = await this.hookManager.trigger(HookName.HANDLER_BEFORE, event);
                 }
 
                 if (!dispatched) {
@@ -236,30 +223,34 @@ export class Router implements Dispatcher {
                     });
 
                     if (isLayer) {
-                        dispatched = (await this.hookManager.triggerEventHook(HookName.HANDLER_AFTER, event)) || dispatched;
+                        dispatched = (await this.hookManager.trigger(HookName.HANDLER_AFTER, event)) || dispatched;
                     }
                 }
             } catch (e) {
                 if (isError(e)) {
-                    dispatched = await this.hookManager.triggerErrorHook(HookName.ERROR, event, e);
+                    event.meta.error = e;
 
-                    if (!dispatched) {
-                        err = e;
+                    dispatched = await this.hookManager.trigger(HookName.ERROR, event);
+                    if (dispatched) {
+                        event.meta.error = undefined;
                     }
                 }
             }
 
             if (dispatched) {
-                await this.hookManager.triggerEventHook(HookName.DISPATCH_END, event);
+                await this.hookManager.trigger(HookName.DISPATCH_END, event);
 
                 return true;
             }
         }
 
-        if (err) {
-            dispatched = await this.hookManager.triggerErrorHook(HookName.DISPATCH_FAIL, event, err);
-            if (!dispatched) {
-                throw err;
+        if (event.meta.error) {
+            dispatched = await this.hookManager.trigger(HookName.DISPATCH_FAIL, event);
+            if (dispatched) {
+                event.meta.error = undefined;
+            } else {
+                // eslint-disable-next-line @typescript-eslint/no-throw-literal
+                throw event.meta.error;
             }
         }
 
@@ -283,7 +274,7 @@ export class Router implements Dispatcher {
                 await send(event.res, options);
             }
 
-            await this.hookManager.triggerEventHook(HookName.DISPATCH_END, event);
+            await this.hookManager.trigger(HookName.DISPATCH_END, event);
 
             return true;
         }
@@ -501,9 +492,14 @@ export class Router implements Dispatcher {
     on(
         name: `${HookName.DISPATCH_START}` |
             `${HookName.DISPATCH_END}` |
-            `${HookName.ERROR}` |
+            `${HookName.HANDLER_BEFORE}` |
             `${HookName.HANDLER_AFTER}`,
         fn: HookDefaultListener
+    ) : number;
+
+    on(
+        name: `${HookName.MATCH}`,
+        fn: HookErrorListener
     ) : number;
 
     on(

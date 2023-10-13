@@ -1,24 +1,26 @@
-import type { DispatcherEvent } from '../dispatcher';
+import type { DispatcherMatch } from '../dispatcher';
 import type { ErrorProxy } from '../error';
-import type { HandlerMatch, Next } from '../handler';
-import type { RouterMatch } from '../router';
+import type { Next } from '../handler';
+import type { Request } from '../request';
+import type { Response } from '../response';
 
-// todo: change event and error argument position?
 export type HookErrorListener = (
     error: ErrorProxy,
-    event: DispatcherEvent,
+    req: Request,
+    res: Response,
     next: Next
 ) => Promise<unknown> | unknown;
 
 export type HookDefaultListener = (
-    event: DispatcherEvent,
+    req: Request,
+    res: Response,
     next: Next
 ) => Promise<unknown> | unknown;
 
-// todo: change event and match argument position?
 export type HookMatchListener = (
-    match: RouterMatch | HandlerMatch,
-    event: DispatcherEvent,
+    match: DispatcherMatch,
+    req: Request,
+    res: Response,
     next: Next
 ) => Promise<unknown> | unknown;
 
