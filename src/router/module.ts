@@ -13,7 +13,7 @@ import type {
     HookErrorListener,
     HookListener,
 
-    HookListenerUnsubscribe,
+    HookUnsubscribeFn,
 } from '../hook';
 import {
     HookManager,
@@ -497,20 +497,20 @@ export class Router implements Dispatcher {
             `${HookName.HANDLER_BEFORE}` |
             `${HookName.HANDLER_AFTER}`,
         fn: HookDefaultListener
-    ) : HookListenerUnsubscribe;
+    ) : HookUnsubscribeFn;
 
     on(
         name: `${HookName.MATCH}`,
         fn: HookErrorListener
-    ) : HookListenerUnsubscribe;
+    ) : HookUnsubscribeFn;
 
     on(
         name: `${HookName.DISPATCH_FAIL}` |
             `${HookName.ERROR}`,
         fn: HookErrorListener
-    ) : HookListenerUnsubscribe;
+    ) : HookUnsubscribeFn;
 
-    on(name: `${HookName}`, fn: HookListener) : HookListenerUnsubscribe {
+    on(name: `${HookName}`, fn: HookListener) : HookUnsubscribeFn {
         return this.hookManager.addListener(name, fn);
     }
 

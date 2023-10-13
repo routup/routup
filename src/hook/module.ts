@@ -5,7 +5,7 @@ import type { Next } from '../handler';
 import { HookName } from './constants';
 import type {
     HookDefaultListener,
-    HookErrorListener, HookListener, HookListenerUnsubscribe, HookMatchListener,
+    HookErrorListener, HookListener, HookMatchListener, HookUnsubscribeFn,
 } from './types';
 import { isHookForErrorListener, isHookForMatchListener } from './utils';
 
@@ -23,7 +23,7 @@ export class HookManager {
     addListener(
         name: `${HookName}`,
         fn: HookListener,
-    ) : HookListenerUnsubscribe {
+    ) : HookUnsubscribeFn {
         this.items[name] = this.items[name] || [];
         this.items[name].push(fn);
 
@@ -52,6 +52,10 @@ export class HookManager {
                 this.items[name].splice(index, 1);
             }
         }
+
+        if (this.items[name].length === 0) {
+            delete this.items[name];
+        }
     }
 
     // --------------------------------------------------
@@ -66,8 +70,7 @@ export class HookManager {
         name: `${HookName}`,
         event: DispatcherEvent,
     ) : Promise<boolean> {
-        const items = this.items[name] || [];
-        if (items.length === 0) {
+        if (!this.items[name] || this.items[name].length === 0) {
             return false;
         }
 
@@ -98,8 +101,8 @@ export class HookManager {
         }
 
         try {
-            for (let i = 0; i < items.length; i++) {
-                const hook = items[i] as HookDefaultListener;
+            for (let i = 0; i < this.items[name].length; i++) {
+                const hook = this.items[name][i] as HookDefaultListener;
 
                 dispatched = await dispatch(
                     event,

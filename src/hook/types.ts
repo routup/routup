@@ -28,4 +28,4 @@ export type HookListener = HookErrorListener |
 HookDefaultListener |
 HookMatchListener;
 
-export type HookListenerUnsubscribe = () => void;
+export type HookUnsubscribeFn = () => void;
