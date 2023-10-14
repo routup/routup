@@ -2,7 +2,7 @@ import type { Request } from '../../request';
 import type { Response } from '../../response';
 import type { HandlerType } from '../constants';
 import type { Next } from '../types';
-import type { HandlerBase } from '../types-base';
+import type { HandlerBaseConfig } from '../types-base';
 
 export type CoreHandlerFn = (
     req: Request,
@@ -10,7 +10,7 @@ export type CoreHandlerFn = (
     next: Next
 ) => unknown | Promise<unknown>;
 
-export type CoreHandler = HandlerBase & {
+export type CoreHandlerConfig = HandlerBaseConfig & {
     type: `${HandlerType.CORE}`,
     fn: CoreHandlerFn
 };

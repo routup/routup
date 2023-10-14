@@ -3,7 +3,7 @@ import type { Request } from '../../request';
 import type { Response } from '../../response';
 import type { HandlerType } from '../constants';
 import type { Next } from '../types';
-import type { HandlerBase } from '../types-base';
+import type { HandlerBaseConfig } from '../types-base';
 
 export type ErrorHandlerFn = (
     err: ErrorProxy,
@@ -12,7 +12,7 @@ export type ErrorHandlerFn = (
     next: Next
 ) => unknown | Promise<unknown>;
 
-export type ErrorHandler = HandlerBase & {
+export type ErrorHandlerConfig = HandlerBaseConfig & {
     type: `${HandlerType.ERROR}`,
     fn: ErrorHandlerFn
 };

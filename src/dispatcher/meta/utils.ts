@@ -1,4 +1,16 @@
-import type { DispatcherMeta } from './type';
+import { isObject } from '../../utils';
+import type { DispatcherMeta } from './types';
+
+export function isDispatcherMeta(input: unknown) : input is DispatcherMeta {
+    if (!isObject(input)) {
+        return false;
+    }
+
+    return typeof input.mountPath === 'string' &&
+        typeof input.path === 'string' &&
+        isObject(input.params) &&
+        Array.isArray(input.routerPath);
+}
 
 export function buildDispatcherMeta(
     input: Partial<DispatcherMeta>,
@@ -10,6 +22,7 @@ export function buildDispatcherMeta(
         routerPath: [],
     };
 }
+
 export function cloneDispatcherMeta(input: DispatcherMeta): DispatcherMeta {
     return {
         path: input.path,
@@ -30,7 +43,7 @@ export function cloneDispatcherMetaParams(input?: Record<string, any>) {
         return {};
     }
 
-    const output : Record<string, any> = {};
+    const output: Record<string, any> = {};
     for (let i = 0; i < keys.length; i++) {
         output[keys[i]] = input[keys[i]];
     }
@@ -41,7 +54,7 @@ export function cloneDispatcherMetaParams(input?: Record<string, any>) {
 export function mergeDispatcherMetaParams(
     t1?: Record<string, any>,
     t2?: Record<string, any>,
-) : Record<string, any> {
+): Record<string, any> {
     if (!t1 && !t2) {
         return {};
     }

@@ -4,7 +4,7 @@ import { splitCookiesString } from '../../utils';
 import type { Response } from '../types';
 import { sendStream } from './send-stream';
 
-export function sendWebResponse(res: Response, webResponse: WebResponse) : Promise<unknown> {
+export async function sendWebResponse(res: Response, webResponse: WebResponse) : Promise<void> {
     if (webResponse.redirected) {
         res.setHeader(HeaderName.LOCATION, webResponse.url);
     }
@@ -26,7 +26,8 @@ export function sendWebResponse(res: Response, webResponse: WebResponse) : Promi
     });
 
     if (webResponse.body) {
-        return sendStream(res, webResponse.body);
+        await sendStream(res, webResponse.body);
+        return Promise.resolve();
     }
 
     res.end();

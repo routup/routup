@@ -4,7 +4,6 @@ export * from './error';
 export * from './handler';
 export * from './response';
 export * from './request';
-export * from './layer';
 export * from './path';
 export * from './plugin';
 export * from './router';

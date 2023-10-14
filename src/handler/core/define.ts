@@ -1,19 +1,22 @@
 import { HandlerType } from '../constants';
 import type {
-    CoreHandler,
+    CoreHandlerConfig,
     CoreHandlerFn,
 } from './types';
 
-export function coreHandler(input: Omit<CoreHandler, | 'type'>) : CoreHandler;
+export function coreHandler(input: Omit<CoreHandlerConfig, | 'type'>) : CoreHandlerConfig;
 
-export function coreHandler(input: CoreHandlerFn) : CoreHandler;
-export function coreHandler(input: any) : CoreHandler {
+export function coreHandler(input: CoreHandlerFn) : CoreHandlerConfig;
+export function coreHandler(input: any) : CoreHandlerConfig {
     if (typeof input === 'function') {
+        // todo: create Handler
         return {
             type: HandlerType.CORE,
             fn: input,
         };
     }
+
+    // todo: create Handler
     return {
         type: HandlerType.CORE,
         ...input,
