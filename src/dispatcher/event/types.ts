@@ -1,3 +1,4 @@
+import type { MethodName } from '../../constants';
 import type { RoutupError } from '../../error';
 import type { Handler } from '../../handler';
 import type { Request } from '../../request';
@@ -28,7 +29,7 @@ export type DispatcherEvent = {
     match?: DispatcherMatch,
 
     /**
-     * Params collected on path.
+     * Params collected during execution.
      */
     params: Record<string, any>,
 
@@ -36,6 +37,11 @@ export type DispatcherEvent = {
      * Path to check for the current instance.
      */
     path: string,
+
+    /**
+     * HTTP Method used for the request.
+     */
+    method: `${MethodName}`,
 
     /**
      * The relative path on which the router is hung.

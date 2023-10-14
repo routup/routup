@@ -1,7 +1,9 @@
-import { createRequest } from '../../../request';
+import { MethodName } from '../../../constants';
 import { isError } from '../../../error';
+import { createRequest } from '../../../request';
 import { createResponse } from '../../../response';
 import type { Router } from '../../../router';
+import { toMethodName } from '../../../utils';
 import { createDispatcherEvent } from '../../event';
 import type {
     DispatchRawRequestOptions, RawRequest, RawResponse, RawResponseHeaders,
@@ -12,9 +14,11 @@ export async function dispatchRawRequest(
     request: RawRequest,
     options: DispatchRawRequestOptions = {},
 ) : Promise<RawResponse> {
+    const method = toMethodName(request.method, MethodName.GET);
+
     const req = createRequest({
         url: request.path,
-        method: request.method,
+        method,
         body: request.body,
         headers: request.headers,
     });
@@ -49,6 +53,7 @@ export async function dispatchRawRequest(
             req,
             res,
             path: request.path,
+            method,
         });
 
         const dispatched = await router.dispatch(event);

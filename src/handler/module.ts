@@ -5,17 +5,20 @@ import { isError } from '../error';
 import { HookManager, HookName } from '../hook';
 import type { Path } from '../path';
 import { PathMatcher } from '../path';
+import { toMethodName } from '../utils';
 import { HandlerSymbol, HandlerType } from './constants';
 import type { HandlerConfig } from './types';
 
 export class Handler implements Dispatcher {
     readonly '@instanceof' = HandlerSymbol;
 
-    readonly config: HandlerConfig;
+    protected config: HandlerConfig;
 
     protected hookManager : HookManager;
 
     protected pathMatcher: PathMatcher | undefined;
+
+    protected _method: MethodName | undefined;
 
     // --------------------------------------------------
 
@@ -38,9 +41,12 @@ export class Handler implements Dispatcher {
     }
 
     get method() {
-        return this.config.method ?
-            this.config.method.toLowerCase() :
-            undefined;
+        if (this._method || !this.config.method) {
+            return this._method;
+        }
+
+        this._method = toMethodName(this.config.method);
+        return this._method;
     }
 
     // --------------------------------------------------
@@ -117,22 +123,20 @@ export class Handler implements Dispatcher {
 
     // --------------------------------------------------
 
-    matchMethod(method: string): boolean {
-        if (!this.method) {
-            return true;
-        }
-
-        const name = method.toLowerCase();
-        if (name === this.method) {
-            return true;
-        }
-
-        return name === MethodName.HEAD &&
-            this.method === MethodName.GET;
+    matchMethod(method: `${MethodName}`): boolean {
+        return !this.method ||
+            method === this.method ||
+            (
+                method === MethodName.HEAD &&
+                this.method === MethodName.GET
+            );
     }
 
-    setMethod(method?: `${MethodName}`) : void {
+    setMethod(input?: `${MethodName}`) : void {
+        const method = toMethodName(input);
+
         this.config.method = method;
+        this._method = method;
     }
 
     // --------------------------------------------------

@@ -1,7 +1,7 @@
 import { MethodName } from '../../../constants';
 import type { Router } from '../../../router';
 import type { WebRequest } from '../../../types';
-import { transformHeadersToTuples } from '../../../utils';
+import { toMethodName, transformHeadersToTuples } from '../../../utils';
 import { dispatchRawRequest } from '../raw';
 import type { DispatchWebRequestOptions } from './type';
 
@@ -17,10 +17,12 @@ export async function dispatchWebRequest(
         headers[key] = value;
     });
 
+    const method = toMethodName(request.method, MethodName.GET);
+
     const res = await dispatchRawRequest(
         router,
         {
-            method: request.method,
+            method,
             path: url.pathname + url.search,
             headers,
             body: request.body,
@@ -30,7 +32,7 @@ export async function dispatchWebRequest(
 
     let body : BodyInit | null | undefined;
     if (
-        request.method === MethodName.HEAD ||
+        method === MethodName.HEAD ||
         res.status === 304 ||
         res.status === 101 ||
         res.status === 204 ||

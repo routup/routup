@@ -96,7 +96,10 @@ export async function send(res: Response, chunk?: any) : Promise<void> {
         return;
     }
 
-    if (res.req.method === 'HEAD') {
+    if (
+        res.req.method === 'HEAD' ||
+        res.req.method === 'head'
+    ) {
         // skip body for HEAD
         res.end();
 

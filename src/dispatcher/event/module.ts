@@ -1,3 +1,4 @@
+import { MethodName } from '../../constants';
 import { nextPlaceholder } from '../../utils';
 import type { DispatcherEvent } from './types';
 
@@ -7,6 +8,7 @@ export function createDispatcherEvent(
     input: DispatcherEventCreateContext,
 ) : DispatcherEvent {
     return {
+        method: MethodName.GET,
         mountPath: '/',
         params: {},
         path: '/',

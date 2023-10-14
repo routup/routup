@@ -167,8 +167,8 @@ export class Router implements Dispatcher {
 
                 match = item.matchPath(event.path);
 
-                if (match && event.req.method) {
-                    if (!item.matchMethod(event.req.method)) {
+                if (match) {
+                    if (!item.matchMethod(event.method)) {
                         match = false;
                     }
 
@@ -253,10 +253,7 @@ export class Router implements Dispatcher {
             }
         }
 
-        if (
-            event.req.method &&
-            event.req.method.toLowerCase() === MethodName.OPTIONS
-        ) {
+        if (event.method && event.method === MethodName.OPTIONS) {
             if (allowedMethods.indexOf(MethodName.GET) !== -1) {
                 allowedMethods.push(MethodName.HEAD);
             }
@@ -356,7 +353,7 @@ export class Router implements Dispatcher {
     // --------------------------------------------------
 
     protected useForMethod(
-        method: `${MethodName}`,
+        method: MethodName,
         ...input: (Path | Handler | HandlerConfig)[]
     ) {
         let path : Path | undefined;
