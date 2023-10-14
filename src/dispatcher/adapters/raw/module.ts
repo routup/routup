@@ -50,8 +50,8 @@ export async function dispatchRawRequest(
 
     try {
         const event = createDispatcherEvent({
-            req,
-            res,
+            request: req,
+            response: res,
             path: request.path,
             method,
         });

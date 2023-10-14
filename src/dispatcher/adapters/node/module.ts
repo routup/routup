@@ -16,8 +16,8 @@ export async function dispatchNodeRequest(
 ): Promise<void> {
     try {
         const event = createDispatcherEvent({
-            req,
-            res,
+            request: req,
+            response: res,
             path: useRequestPath(req),
             method: toMethodName(req.method, MethodName.GET),
         });

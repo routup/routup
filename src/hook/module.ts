@@ -126,7 +126,7 @@ export class HookManager {
     private triggerListener(name: `${HookName}`, event: DispatcherEvent, listener: HookListener) {
         if (isHookForMatchListener(name)) {
             if (event.match) {
-                return (listener as HookMatchListener)(event.match, event.req, event.res, event.next);
+                return (listener as HookMatchListener)(event.match, event.request, event.response, event.next);
             }
 
             return undefined;
@@ -134,12 +134,12 @@ export class HookManager {
 
         if (isHookForErrorListener(name)) {
             if (event.error) {
-                return (listener as HookErrorListener)(event.error, event.req, event.res, event.next);
+                return (listener as HookErrorListener)(event.error, event.request, event.response, event.next);
             }
 
             return undefined;
         }
 
-        return (listener as HookDefaultListener)(event.req, event.res, event.next);
+        return (listener as HookDefaultListener)(event.request, event.response, event.next);
     }
 }

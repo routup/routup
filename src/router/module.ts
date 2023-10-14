@@ -264,10 +264,10 @@ export class Router implements Dispatcher {
                 .map((key) => key.toUpperCase())
                 .join(',');
 
-            if (!isResponseGone(event.res)) {
-                event.res.setHeader(HeaderName.ALLOW, options);
+            if (!isResponseGone(event.response)) {
+                event.response.setHeader(HeaderName.ALLOW, options);
 
-                await send(event.res, options);
+                await send(event.response, options);
             }
 
             await this.hookManager.trigger(HookName.DISPATCH_END, event);

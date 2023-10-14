@@ -73,10 +73,10 @@ export class Handler implements Dispatcher {
             dispatched = await dispatch(event, (done) => {
                 if (this.config.type === HandlerType.ERROR) {
                     if (event.error) {
-                        return this.config.fn(event.error, event.req, event.res, done);
+                        return this.config.fn(event.error, event.request, event.response, done);
                     }
                 } else {
-                    return this.config.fn(event.req, event.res, done);
+                    return this.config.fn(event.request, event.response, done);
                 }
 
                 return undefined;

@@ -18,12 +18,18 @@ export type DispatcherHandlerMatch = {
 
 export type DispatcherMatch = DispatcherRouterMatch | DispatcherHandlerMatch;
 
+// todo: add type for DispatcherDefaultEvent | DispatcherErrorEvent ?
+//  distinguish by type property ( 'default' | 'error' )
 export type DispatcherEvent = {
-    // todo: rename to request?
-    req: Request,
+    /**
+     * Request Object.
+     */
+    request: Request,
 
-    // todo: rename to response?
-    res: Response,
+    /**
+     * Response Object.
+     */
+    response: Response,
 
     // todo: set router as match on initial dispatch process -> non optional
     match?: DispatcherMatch,
