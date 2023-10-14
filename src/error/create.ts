@@ -1,29 +1,28 @@
 import type { Input } from '@ebec/http';
 import { isObject } from '../utils';
 import { isError } from './is';
-import { ErrorProxy } from './module';
+import { RoutupError } from './module';
 
 /**
- * Create an error proxy by
+ * Create an internal error object by
  * - an existing error (accessible via cause property)
  * - options
  * - message
  *
  * @param input
  */
-// todo: rename to createDispatcherError
-export function createError(input: Input | unknown) : ErrorProxy {
+export function createError(input: Input | unknown) : RoutupError {
     if (isError(input)) {
         return input;
     }
 
     if (typeof input === 'string') {
-        return new ErrorProxy(input);
+        return new RoutupError(input);
     }
 
     if (!isObject(input)) {
-        return new ErrorProxy();
+        return new RoutupError();
     }
 
-    return new ErrorProxy({ cause: input }, input);
+    return new RoutupError({ cause: input }, input);
 }

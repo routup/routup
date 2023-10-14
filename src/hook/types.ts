@@ -1,11 +1,11 @@
 import type { DispatcherMatch } from '../dispatcher';
-import type { ErrorProxy } from '../error';
+import type { RoutupError } from '../error';
 import type { Next } from '../handler';
 import type { Request } from '../request';
 import type { Response } from '../response';
 
 export type HookErrorListener = (
-    error: ErrorProxy,
+    error: RoutupError,
     req: Request,
     res: Response,
     next: Next

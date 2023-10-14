@@ -1,6 +1,5 @@
-import { ErrorProxy } from './module';
+import { RoutupError } from './module';
 
-// todo: rename to isDispatcherError
-export function isError(input: unknown) : input is ErrorProxy {
-    return input instanceof ErrorProxy;
+export function isError(input: unknown) : input is RoutupError {
+    return input instanceof RoutupError;
 }

@@ -1,4 +1,4 @@
-import type { ErrorProxy } from '../../error';
+import type { RoutupError } from '../../error';
 import type { Handler } from '../../handler';
 import type { Request } from '../../request';
 import type { Response } from '../../response';
@@ -45,7 +45,7 @@ export type DispatcherEvent = {
     /**
      * The error which occurred during a previous handler.
      */
-    error?: ErrorProxy,
+    error?: RoutupError,
 
     /**
      * Ids of chained router instances.

@@ -1,9 +1,9 @@
 import { InternalServerError, NotFoundError } from '@ebec/http';
-import { ErrorProxy, createError } from '../../../src';
+import { RoutupError, createError } from '../../../src';
 
 describe('src/error/create', () => {
     it('should not recreate error', () => {
-        const foo = new ErrorProxy('foo');
+        const foo = new RoutupError('foo');
         const error = createError(foo);
         expect(error).toEqual(foo);
     });
