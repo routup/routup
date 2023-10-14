@@ -1,7 +1,7 @@
 import type { Request } from '../../request';
 import type { Response } from '../../response';
+import type { Next } from '../../types';
 import type { HandlerType } from '../constants';
-import type { Next } from '../types';
 import type { HandlerBaseConfig } from '../types-base';
 
 export type CoreHandlerFn = (

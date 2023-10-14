@@ -3,6 +3,7 @@ import type { Handler } from '../../handler';
 import type { Request } from '../../request';
 import type { Response } from '../../response';
 import type { Router } from '../../router';
+import type { Next } from '../../types';
 
 export type DispatcherRouterMatch = {
     type: 'router',
@@ -16,7 +17,6 @@ export type DispatcherHandlerMatch = {
 
 export type DispatcherMatch = DispatcherRouterMatch | DispatcherHandlerMatch;
 
-// todo: add next/passThrough property.
 export type DispatcherEvent = {
     // todo: rename to request?
     req: Request,
@@ -43,9 +43,15 @@ export type DispatcherEvent = {
     mountPath: string,
 
     /**
-     * The error which occurred during a previous handler.
+     * The error which occurred during the dispatch process.
      */
     error?: RoutupError,
+
+    /**
+     * Signal that the request hasn't been handled.
+     * Therefore, the request must be passed to the next handler or router in the chain.
+     */
+    next: Next,
 
     /**
      * Ids of chained router instances.

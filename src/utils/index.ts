@@ -4,6 +4,7 @@ export * from './etag';
 export * from './trust-proxy';
 export * from './is-instance';
 export * from './mime';
+export * from './next';
 export * from './object';
 export * from './path';
 export * from './promise';

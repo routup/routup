@@ -1,3 +1,4 @@
+import { nextPlaceholder } from '../../utils';
 import type { DispatcherEvent } from './types';
 
 type DispatcherEventCreateContext = Pick<DispatcherEvent, 'req' | 'res'> &
@@ -10,6 +11,7 @@ export function createDispatcherEvent(
         params: {},
         path: '/',
         routerPath: [],
+        next: nextPlaceholder,
         ...input,
     };
 }

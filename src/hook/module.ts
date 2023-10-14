@@ -1,7 +1,8 @@
 import { dispatch } from '../dispatcher';
 import type { DispatcherEvent } from '../dispatcher';
 import { createError } from '../error';
-import type { Next } from '../handler';
+
+import { nextPlaceholder } from '../utils';
 import { HookName } from './constants';
 import type {
     HookDefaultListener,
@@ -61,7 +62,7 @@ export class HookManager {
     // --------------------------------------------------
 
     /**
-     * @throws ErrorProxy
+     * @throws RoutupError
      *
      * @param name
      * @param event
@@ -76,30 +77,6 @@ export class HookManager {
 
         let dispatched = false;
 
-        let triggerListener : (listener: HookListener, next: Next) => unknown;
-        if (isHookForMatchListener(name)) {
-            triggerListener = (listener, next) => {
-                if (event.match) {
-                    return (listener as HookMatchListener)(event.match, event.req, event.res, next);
-                }
-
-                return undefined;
-            };
-        } else if (isHookForErrorListener(name)) {
-            triggerListener = (listener, next) => {
-                if (event.error) {
-                    return (listener as HookErrorListener)(event.error, event.req, event.res, next);
-                }
-
-                return undefined;
-            };
-        } else {
-            triggerListener = (
-                listener,
-                next,
-            ) => (listener as HookDefaultListener)(event.req, event.res, next);
-        }
-
         try {
             for (let i = 0; i < this.items[name].length; i++) {
                 const hook = this.items[name][i] as HookDefaultListener;
@@ -107,9 +84,14 @@ export class HookManager {
                 dispatched = await dispatch(
                     event,
                     (next) => Promise.resolve()
-                        .then(() => triggerListener(hook, next))
+                        .then(() => {
+                            event.next = next;
+                            return this.triggerListener(name, event, hook);
+                        })
                         .catch((err) => next(err)),
                 );
+
+                event.next = nextPlaceholder;
 
                 if (dispatched) {
                     event.error = undefined;
@@ -139,5 +121,25 @@ export class HookManager {
         }
 
         return false;
+    }
+
+    private triggerListener(name: `${HookName}`, event: DispatcherEvent, listener: HookListener) {
+        if (isHookForMatchListener(name)) {
+            if (event.match) {
+                return (listener as HookMatchListener)(event.match, event.req, event.res, event.next);
+            }
+
+            return undefined;
+        }
+
+        if (isHookForErrorListener(name)) {
+            if (event.error) {
+                return (listener as HookErrorListener)(event.error, event.req, event.res, event.next);
+            }
+
+            return undefined;
+        }
+
+        return (listener as HookDefaultListener)(event.req, event.res, event.next);
     }
 }

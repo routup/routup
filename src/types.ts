@@ -8,3 +8,5 @@ export type WebReadableStream = globalThis.ReadableStream | ReadableStream;
 export type WebResponse = globalThis.Response;
 export type WebRequest = globalThis.Request;
 export type WebBlob = globalThis.Blob;
+
+export type Next = (err?: Error) => void;
