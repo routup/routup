@@ -1,8 +1,8 @@
-import { createRequest, useRequestPath } from '../../../request';
+import { createRequest } from '../../../request';
 import { isError } from '../../../error';
 import { createResponse } from '../../../response';
 import type { Router } from '../../../router';
-import { buildDispatcherMeta } from '../../meta';
+import { createDispatcherEvent } from '../../event';
 import type {
     DispatchRawRequestOptions, RawRequest, RawResponse, RawResponseHeaders,
 } from './type';
@@ -45,15 +45,13 @@ export async function dispatchRawRequest(
     });
 
     try {
-        const dispatched = await router.dispatch(
-            {
-                req,
-                res,
-                meta: buildDispatcherMeta({
-                    path: useRequestPath(req),
-                }),
-            },
-        );
+        const event = createDispatcherEvent({
+            req,
+            res,
+            path: request.path,
+        });
+
+        const dispatched = await router.dispatch(event);
 
         if (dispatched) {
             return createRawResponse();

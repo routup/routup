@@ -1,6 +1,6 @@
 import { MethodName } from '../constants';
 import type { Dispatcher, DispatcherEvent } from '../dispatcher';
-import { dispatch, mergeDispatcherMetaParams } from '../dispatcher';
+import { dispatch } from '../dispatcher';
 import { isError } from '../error';
 import { HookManager, HookName } from '../hook';
 import type { Path } from '../path';
@@ -47,9 +47,12 @@ export class Handler implements Dispatcher {
 
     async dispatch(event: DispatcherEvent): Promise<boolean> {
         if (this.pathMatcher) {
-            const pathMatch = this.pathMatcher.exec(event.meta.path);
+            const pathMatch = this.pathMatcher.exec(event.path);
             if (pathMatch) {
-                event.meta.params = mergeDispatcherMetaParams(event.meta.params, pathMatch.params);
+                event.params = {
+                    ...event.params,
+                    ...pathMatch.params,
+                };
             }
         }
 
@@ -63,8 +66,8 @@ export class Handler implements Dispatcher {
         try {
             dispatched = await dispatch(event, (done) => {
                 if (this.config.type === HandlerType.ERROR) {
-                    if (event.meta.error) {
-                        return this.config.fn(event.meta.error, event.req, event.res, done);
+                    if (event.error) {
+                        return this.config.fn(event.error, event.req, event.res, done);
                     }
                 } else {
                     return this.config.fn(event.req, event.res, done);
@@ -74,12 +77,12 @@ export class Handler implements Dispatcher {
             });
         } catch (e) {
             if (isError(e)) {
-                event.meta.error = e;
+                event.error = e;
 
                 dispatched = await this.hookManager.trigger(HookName.ERROR, event);
 
                 if (dispatched) {
-                    event.meta.error = undefined;
+                    event.error = undefined;
                 } else {
                     throw e;
                 }

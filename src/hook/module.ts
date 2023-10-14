@@ -87,8 +87,8 @@ export class HookManager {
             };
         } else if (isHookForErrorListener(name)) {
             triggerListener = (listener, next) => {
-                if (event.meta.error) {
-                    return (listener as HookErrorListener)(event.meta.error, event.req, event.res, next);
+                if (event.error) {
+                    return (listener as HookErrorListener)(event.error, event.req, event.res, next);
                 }
 
                 return undefined;
@@ -112,7 +112,7 @@ export class HookManager {
                 );
 
                 if (dispatched) {
-                    event.meta.error = undefined;
+                    event.error = undefined;
                     return true;
                 }
             }
@@ -120,7 +120,7 @@ export class HookManager {
             const error = createError(e);
 
             if (!isHookForErrorListener(name)) {
-                event.meta.error = error;
+                event.error = error;
 
                 const dispatched = await this.trigger(
                     HookName.ERROR,
@@ -128,7 +128,7 @@ export class HookManager {
                 );
 
                 if (dispatched) {
-                    event.meta.error = undefined;
+                    event.error = undefined;
                     return true;
                 }
 

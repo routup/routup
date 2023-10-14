@@ -1,8 +1,7 @@
 import { distinctArray } from 'smob';
 import { isError } from '../error';
 import { HeaderName, MethodName } from '../constants';
-import type { Dispatcher, DispatcherEvent, DispatcherMeta } from '../dispatcher';
-import { cloneDispatcherMeta } from '../dispatcher';
+import type { Dispatcher, DispatcherEvent } from '../dispatcher';
 import {
     Handler,
     HandlerType, isHandler, isHandlerConfig,
@@ -119,24 +118,24 @@ export class Router implements Dispatcher {
         const allowedMethods : string[] = [];
 
         if (this.pathMatcher) {
-            const output = this.pathMatcher.exec(event.meta.path);
+            const output = this.pathMatcher.exec(event.path);
             if (typeof output !== 'undefined') {
-                event.meta.mountPath = cleanDoubleSlashes(`${event.meta.mountPath}/${output.path}`);
+                event.mountPath = cleanDoubleSlashes(`${event.mountPath}/${output.path}`);
 
-                if (event.meta.path === output.path) {
-                    event.meta.path = '/';
+                if (event.path === output.path) {
+                    event.path = '/';
                 } else {
-                    event.meta.path = withLeadingSlash(event.meta.path.substring(output.path.length));
+                    event.path = withLeadingSlash(event.path.substring(output.path.length));
                 }
 
-                event.meta.params = {
-                    ...event.meta.params,
+                event.params = {
+                    ...event.params,
                     ...output.params,
                 };
             }
         }
 
-        event.meta.routerPath.push(this.id);
+        event.routerPath.push(this.id);
 
         let dispatched : boolean | undefined;
 
@@ -144,7 +143,7 @@ export class Router implements Dispatcher {
             dispatched = await this.hookManager.trigger(HookName.DISPATCH_START, event);
         } catch (e) {
             if (isError(e)) {
-                event.meta.error = e;
+                event.error = e;
             }
         }
 
@@ -155,7 +154,6 @@ export class Router implements Dispatcher {
         }
 
         let item : Router | Handler | undefined;
-        let itemMeta : DispatcherMeta;
         let match = false;
         let isLayer = false;
 
@@ -163,11 +161,11 @@ export class Router implements Dispatcher {
             item = this.stack[i];
 
             if (isHandler(item)) {
-                if (item.type !== HandlerType.ERROR && event.meta.error) {
+                if (item.type !== HandlerType.ERROR && event.error) {
                     continue;
                 }
 
-                match = item.matchPath(event.meta.path);
+                match = item.matchPath(event.path);
 
                 if (match && event.req.method) {
                     if (!item.matchMethod(event.req.method)) {
@@ -188,7 +186,7 @@ export class Router implements Dispatcher {
 
                 isLayer = true;
             } else {
-                match = item.matchPath(event.meta.path);
+                match = item.matchPath(event.path);
 
                 if (match) {
                     event.match = {
@@ -211,18 +209,13 @@ export class Router implements Dispatcher {
                 return true;
             }
 
-            itemMeta = cloneDispatcherMeta(event.meta);
-
             try {
                 if (isLayer) {
                     dispatched = await this.hookManager.trigger(HookName.HANDLER_BEFORE, event);
                 }
 
                 if (!dispatched) {
-                    dispatched = await item.dispatch({
-                        ...event,
-                        meta: itemMeta,
-                    });
+                    dispatched = await item.dispatch(event);
 
                     if (isLayer) {
                         dispatched = (await this.hookManager.trigger(HookName.HANDLER_AFTER, event)) || dispatched;
@@ -230,13 +223,17 @@ export class Router implements Dispatcher {
                 }
             } catch (e) {
                 if (isError(e)) {
-                    event.meta.error = e;
+                    event.error = e;
 
                     dispatched = await this.hookManager.trigger(HookName.ERROR, event);
                     if (dispatched) {
-                        event.meta.error = undefined;
+                        event.error = undefined;
                     }
                 }
+            }
+
+            if (!isLayer) {
+                event.routerPath.pop();
             }
 
             if (dispatched) {
@@ -246,13 +243,13 @@ export class Router implements Dispatcher {
             }
         }
 
-        if (event.meta.error) {
+        if (event.error) {
             dispatched = await this.hookManager.trigger(HookName.DISPATCH_FAIL, event);
             if (dispatched) {
-                event.meta.error = undefined;
+                event.error = undefined;
             } else {
                 // eslint-disable-next-line @typescript-eslint/no-throw-literal
-                throw event.meta.error;
+                throw event.error;
             }
         }
 
