@@ -1,22 +1,8 @@
 import type { MethodName } from '../../constants';
 import type { RoutupError } from '../../error';
-import type { Handler } from '../../handler';
 import type { Request } from '../../request';
 import type { Response } from '../../response';
-import type { Router } from '../../router';
 import type { Next } from '../../types';
-
-export type DispatcherRouterMatch = {
-    type: 'router',
-    data: Router
-};
-
-export type DispatcherHandlerMatch = {
-    type: 'handler',
-    data: Handler
-};
-
-export type DispatcherMatch = DispatcherRouterMatch | DispatcherHandlerMatch;
 
 // todo: add type for DispatcherDefaultEvent | DispatcherErrorEvent ?
 //  distinguish by type property ( 'default' | 'error' )
@@ -30,9 +16,6 @@ export type DispatcherEvent = {
      * Response Object.
      */
     response: Response,
-
-    // todo: set router as match on initial dispatch process -> non optional
-    match?: DispatcherMatch,
 
     /**
      * Params collected during execution.

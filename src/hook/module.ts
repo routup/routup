@@ -6,9 +6,8 @@ import { nextPlaceholder } from '../utils';
 import { HookName } from './constants';
 import type {
     HookDefaultListener,
-    HookErrorListener, HookListener, HookMatchListener, HookUnsubscribeFn,
+    HookErrorListener, HookListener, HookUnsubscribeFn,
 } from './types';
-import { isHookForErrorListener, isHookForMatchListener } from './utils';
 
 export class HookManager {
     protected items : Record<string, HookListener[]>;
@@ -101,7 +100,7 @@ export class HookManager {
         } catch (e) {
             const error = createError(e);
 
-            if (!isHookForErrorListener(name)) {
+            if (!this.isErrorListenerHook(name)) {
                 event.error = error;
 
                 const dispatched = await this.trigger(
@@ -124,15 +123,7 @@ export class HookManager {
     }
 
     private triggerListener(name: `${HookName}`, event: DispatcherEvent, listener: HookListener) {
-        if (isHookForMatchListener(name)) {
-            if (event.match) {
-                return (listener as HookMatchListener)(event.match, event.request, event.response, event.next);
-            }
-
-            return undefined;
-        }
-
-        if (isHookForErrorListener(name)) {
+        if (this.isErrorListenerHook(name)) {
             if (event.error) {
                 return (listener as HookErrorListener)(event.error, event.request, event.response, event.next);
             }
@@ -141,5 +132,10 @@ export class HookManager {
         }
 
         return (listener as HookDefaultListener)(event.request, event.response, event.next);
+    }
+
+    private isErrorListenerHook(input: `${HookName}`) {
+        return input === HookName.ERROR ||
+            input === HookName.DISPATCH_FAIL;
     }
 }
