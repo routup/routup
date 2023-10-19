@@ -1,4 +1,5 @@
 import supertest from 'supertest';
+import type { RoutingEvent } from '../../../src';
 import {
     Router, coreHandler, createNodeDispatcher,
 } from '../../../src';
@@ -14,11 +15,11 @@ function mountHooks(router: Router) : HookMountOutput {
     for (let i = 0; i < keys.length; i++) {
         const key = keys[i] as `${HookName}`;
         const fn = jest.fn();
-        router.on(key as any, (...args: any[]) => {
+        router.on(key as any, (event: RoutingEvent) => {
             fn();
 
             // call next fn
-            return args.pop()();
+            event.next();
         });
 
         output[key] = fn;
@@ -105,7 +106,7 @@ describe('src/router/hooks', () => {
         router.use(coreHandler(() => 'Hello, World!'));
 
         const fnJest = jest.fn();
-        const fn : HookDefaultListener = (_req, _res, next) => {
+        const fn : HookDefaultListener = ({ next }) => {
             fnJest();
 
             next();
@@ -130,7 +131,7 @@ describe('src/router/hooks', () => {
         router.use(coreHandler(() => 'Hello, World!'));
 
         router.on(HookName.DISPATCH_START, () => { throw new Error('dispatch start failed!'); });
-        router.on(HookName.ERROR, (error) => error.message);
+        router.on(HookName.ERROR, ({ error }) => error.message);
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -146,7 +147,7 @@ describe('src/router/hooks', () => {
         router.use(coreHandler(() => 'Hello, World!'));
 
         router.on(HookName.MATCH, () => { throw new Error('match failed!'); });
-        router.on(HookName.ERROR, (error) => error.message);
+        router.on(HookName.ERROR, ({ error }) => error.message);
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -162,7 +163,7 @@ describe('src/router/hooks', () => {
         router.use(coreHandler(() => 'Hello, World!'));
 
         const fnJest = jest.fn();
-        const fn : HookDefaultListener = (_req, _res, next) => {
+        const fn : HookDefaultListener = ({ next }) => {
             fnJest();
 
             next();
@@ -188,7 +189,7 @@ describe('src/router/hooks', () => {
             fn: () => {
                 throw new Error('Hello, World!');
             },
-            onError(error) {
+            onError({ error }) {
                 return `Error: ${error.message}`;
             },
         }));
@@ -210,11 +211,11 @@ describe('src/router/hooks', () => {
 
         router.use(coreHandler({
             fn: () => 'Hello, World!',
-            onBefore(_req, _res, next) {
+            onBefore({ next }) {
                 onBefore();
                 next();
             },
-            onAfter(_req, _res, next) {
+            onAfter({ next }) {
                 onAfter();
                 next();
             },

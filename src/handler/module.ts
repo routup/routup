@@ -1,7 +1,9 @@
 import { MethodName } from '../constants';
-import type { Dispatcher, DispatcherEvent } from '../dispatcher';
+import type { Dispatcher } from '../dispatcher';
 import { dispatch } from '../dispatcher';
-import { isError } from '../error';
+import type { RoutupError } from '../error';
+import type { RoutingErrorEvent, RoutingEvent } from '../event';
+import { isRoutingErrorEvent, isRoutingEvent } from '../event';
 import { HookManager, HookName } from '../hook';
 import type { Path } from '../path';
 import { PathMatcher } from '../path';
@@ -51,7 +53,7 @@ export class Handler implements Dispatcher {
 
     // --------------------------------------------------
 
-    async dispatch(event: DispatcherEvent): Promise<boolean> {
+    async dispatch(event: RoutingEvent | RoutingErrorEvent): Promise<void> {
         if (this.pathMatcher) {
             const pathMatch = this.pathMatcher.exec(event.path);
             if (pathMatch) {
@@ -62,40 +64,64 @@ export class Handler implements Dispatcher {
             }
         }
 
-        let dispatched : boolean;
+        return this.executePipelineStart(event);
+    }
 
-        dispatched = await this.hookManager.trigger(HookName.HANDLER_BEFORE, event);
-        if (dispatched) {
-            return true;
-        }
-
+    async executePipelineStart(event: RoutingEvent | RoutingErrorEvent) : Promise<void> {
         try {
-            dispatched = await dispatch(event, (done) => {
-                if (this.config.type === HandlerType.ERROR) {
-                    if (event.error) {
-                        return this.config.fn(event.error, event.request, event.response, done);
-                    }
-                } else {
+            await this.hookManager.trigger(HookName.HANDLER_BEFORE, event);
+            if (event.dispatched) {
+                return await Promise.resolve();
+            }
+
+            return await this.executePipelineMain(event);
+        } catch (e) {
+            event.error = e as RoutupError;
+
+            return this.executePipelineMain(event);
+        }
+    }
+
+    async executePipelineMain(event: RoutingEvent | RoutingErrorEvent) : Promise<void> {
+        try {
+            event.dispatched = await dispatch(event, (done) => {
+                if (
+                    isRoutingErrorEvent(event) &&
+                    this.config.type === HandlerType.ERROR
+                ) {
+                    return this.config.fn(event.error, event.request, event.response, done);
+                }
+
+                if (
+                    isRoutingEvent(event) &&
+                    this.config.type === HandlerType.CORE
+                ) {
                     return this.config.fn(event.request, event.response, done);
                 }
 
                 return undefined;
             });
         } catch (e) {
-            if (isError(e)) {
-                event.error = e;
+            event.error = e as RoutupError;
 
-                dispatched = await this.hookManager.trigger(HookName.ERROR, event);
-
-                if (dispatched) {
-                    event.error = undefined;
-                } else {
-                    throw e;
-                }
+            try {
+                await this.hookManager.trigger(HookName.ERROR, event);
+            } catch (e) {
+                event.error = e as RoutupError;
+                return Promise.resolve();
             }
         }
 
-        return (await this.hookManager.trigger(HookName.HANDLER_AFTER, event)) || dispatched;
+        return this.executePipelineAfter(event);
+    }
+
+    async executePipelineAfter(event: RoutingEvent | RoutingErrorEvent) : Promise<void> {
+        try {
+            return await this.hookManager.trigger(HookName.HANDLER_BEFORE, event);
+        } catch (e) {
+            event.error = e as RoutupError;
+            return Promise.resolve();
+        }
     }
 
     // --------------------------------------------------

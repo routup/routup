@@ -1,13 +1,13 @@
 import type { RequestListener } from 'node:http';
 import { MethodName } from '../../../constants';
 import { isError } from '../../../error';
+import { createRoutingEvent } from '../../../event';
 import type { Request } from '../../../request';
 import { useRequestPath } from '../../../request';
 import type { Response } from '../../../response';
 import { isResponseGone } from '../../../response';
 import type { Router } from '../../../router';
 import { toMethodName } from '../../../utils';
-import { createDispatcherEvent } from '../../event';
 
 export async function dispatchNodeRequest(
     router: Router,
@@ -15,16 +15,16 @@ export async function dispatchNodeRequest(
     res: Response,
 ): Promise<void> {
     try {
-        const event = createDispatcherEvent({
+        const event = createRoutingEvent({
             request: req,
             response: res,
             path: useRequestPath(req),
             method: toMethodName(req.method, MethodName.GET),
         });
 
-        const dispatched = await router.dispatch(event);
+        await router.dispatch(event);
 
-        if (dispatched) {
+        if (event.dispatched) {
             return;
         }
 

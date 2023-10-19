@@ -1,12 +1,18 @@
 import { dispatch } from '../dispatcher';
-import type { DispatcherEvent } from '../dispatcher';
+import { isRoutingErrorEvent } from '../event';
+import type {
+    RoutingErrorEvent,
+    RoutingEvent,
+} from '../event';
 import { createError } from '../error';
 
 import { nextPlaceholder } from '../utils';
 import { HookName } from './constants';
 import type {
     HookDefaultListener,
-    HookErrorListener, HookListener, HookUnsubscribeFn,
+    HookErrorListener,
+    HookListener,
+    HookUnsubscribeFn,
 } from './types';
 
 export class HookManager {
@@ -68,19 +74,17 @@ export class HookManager {
      */
     async trigger(
         name: `${HookName}`,
-        event: DispatcherEvent,
-    ) : Promise<boolean> {
+        event: RoutingEvent | RoutingErrorEvent,
+    ) : Promise<void> {
         if (!this.items[name] || this.items[name].length === 0) {
-            return false;
+            return Promise.resolve();
         }
-
-        let dispatched = false;
 
         try {
             for (let i = 0; i < this.items[name].length; i++) {
                 const hook = this.items[name][i] as HookDefaultListener;
 
-                dispatched = await dispatch(
+                event.dispatched = await dispatch(
                     event,
                     (next) => Promise.resolve()
                         .then(() => {
@@ -92,9 +96,8 @@ export class HookManager {
 
                 event.next = nextPlaceholder;
 
-                if (dispatched) {
-                    event.error = undefined;
-                    return true;
+                if (event.dispatched) {
+                    return await Promise.resolve();
                 }
             }
         } catch (e) {
@@ -103,35 +106,27 @@ export class HookManager {
             if (!this.isErrorListenerHook(name)) {
                 event.error = error;
 
-                const dispatched = await this.trigger(
-                    HookName.ERROR,
-                    event,
-                );
-
-                if (dispatched) {
-                    event.error = undefined;
-                    return true;
-                }
-
-                throw error;
+                return this.trigger(HookName.ERROR, event);
             }
-
-            throw error;
         }
 
-        return false;
+        return Promise.resolve();
     }
 
-    private triggerListener(name: `${HookName}`, event: DispatcherEvent, listener: HookListener) {
+    private triggerListener(
+        name: `${HookName}`,
+        event: RoutingEvent | RoutingErrorEvent,
+        listener: HookListener,
+    ) {
         if (this.isErrorListenerHook(name)) {
-            if (event.error) {
-                return (listener as HookErrorListener)(event.error, event.request, event.response, event.next);
+            if (isRoutingErrorEvent(event)) {
+                return (listener as HookErrorListener)(event);
             }
 
             return undefined;
         }
 
-        return (listener as HookDefaultListener)(event.request, event.response, event.next);
+        return (listener as HookDefaultListener)(event);
     }
 
     private isErrorListenerHook(input: `${HookName}`) {

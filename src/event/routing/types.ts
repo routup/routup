@@ -4,9 +4,7 @@ import type { Request } from '../../request';
 import type { Response } from '../../response';
 import type { Next } from '../../types';
 
-// todo: add type for DispatcherDefaultEvent | DispatcherErrorEvent ?
-//  distinguish by type property ( 'default' | 'error' )
-export type DispatcherEvent = {
+export type RoutingEvent = {
     /**
      * Request Object.
      */
@@ -38,9 +36,9 @@ export type DispatcherEvent = {
     mountPath: string,
 
     /**
-     * The error which occurred during the dispatch process.
+     * Ids of chained router instances.
      */
-    error?: RoutupError,
+    routerPath: number[],
 
     /**
      * Signal that the request hasn't been handled.
@@ -49,7 +47,19 @@ export type DispatcherEvent = {
     next: Next,
 
     /**
-     * Ids of chained router instances.
+     * Indicates if the routing event has been dispatched.
      */
-    routerPath: number[]
+    dispatched: boolean
+
+    /**
+     * Track the occurred error during the dispatch process.
+     */
+    error?: RoutupError
+};
+
+export type RoutingErrorEvent = RoutingEvent & {
+    /**
+     * Track the occurred error during the dispatch process.
+     */
+    error: RoutupError
 };

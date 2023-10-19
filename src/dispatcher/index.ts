@@ -1,3 +1,3 @@
 export * from './adapters';
-export * from './event';
-export * from './type';
+export * from './dispatch';
+export * from './types';

@@ -1,13 +1,15 @@
 import { MethodName } from '../../constants';
 import { nextPlaceholder } from '../../utils';
-import type { DispatcherEvent } from './types';
+import type { RoutingEvent } from './types';
 
-type DispatcherEventCreateContext = Pick<DispatcherEvent, 'request' | 'response'> &
-Partial<Omit<DispatcherEvent, 'request' | 'response'>>;
-export function createDispatcherEvent(
+type DispatcherEventCreateContext = Pick<RoutingEvent, 'request' | 'response'> &
+Partial<Omit<RoutingEvent, 'request' | 'response'>>;
+
+export function createRoutingEvent(
     input: DispatcherEventCreateContext,
-) : DispatcherEvent {
+): RoutingEvent {
     return {
+        dispatched: false,
         method: MethodName.GET,
         mountPath: '/',
         params: {},

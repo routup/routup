@@ -1,10 +1,11 @@
 import { MethodName } from '../../../constants';
 import { isError } from '../../../error';
+import { createRoutingEvent } from '../../../event';
 import { createRequest } from '../../../request';
 import { createResponse } from '../../../response';
 import type { Router } from '../../../router';
 import { toMethodName } from '../../../utils';
-import { createDispatcherEvent } from '../../event';
+
 import type {
     DispatchRawRequestOptions, RawRequest, RawResponse, RawResponseHeaders,
 } from './type';
@@ -49,16 +50,16 @@ export async function dispatchRawRequest(
     });
 
     try {
-        const event = createDispatcherEvent({
+        const event = createRoutingEvent({
             request: req,
             response: res,
             path: request.path,
             method,
         });
 
-        const dispatched = await router.dispatch(event);
+        await router.dispatch(event);
 
-        if (dispatched) {
+        if (event.dispatched) {
             return createRawResponse();
         }
 

@@ -1,6 +1,7 @@
 export * from './constants';
 export * from './dispatcher';
 export * from './error';
+export * from './event';
 export * from './handler';
 export * from './response';
 export * from './request';

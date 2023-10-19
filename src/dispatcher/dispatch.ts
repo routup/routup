@@ -1,15 +1,15 @@
-import { createError } from '../../error';
-import { setRequestMountPath, setRequestParams, setRequestRouterPath } from '../../request';
+import { createError } from '../error';
+import { setRequestMountPath, setRequestParams, setRequestRouterPath } from '../request';
 import {
     isResponseGone,
     send, sendStream, sendWebBlob, sendWebResponse,
-} from '../../response';
+} from '../response';
 import {
     isPromise, isStream, isWebBlob, isWebResponse,
-} from '../../utils';
-import type { DispatcherEvent } from './types';
+} from '../utils';
+import type { RoutingEvent } from '../event';
 
-async function sendData(event: DispatcherEvent, chunk: unknown) {
+async function sendData(event: RoutingEvent, chunk: unknown) {
     if (chunk instanceof Error) {
         return Promise.reject(createError(chunk));
     }
@@ -34,7 +34,7 @@ async function sendData(event: DispatcherEvent, chunk: unknown) {
 
 type DispatchTargetFn = (next: (err?: Error) => any) => unknown;
 export function dispatch(
-    event: DispatcherEvent,
+    event: RoutingEvent,
     target: DispatchTargetFn,
 ): Promise<boolean> {
     setRequestParams(event.request, event.params);
