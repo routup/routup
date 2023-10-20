@@ -1,5 +1,5 @@
 import type { DispatcherEvent } from '../dispatcher';
-import { dispatch } from '../dispatcher';
+import { dispatch, isDispatcherErrorEvent } from '../dispatcher';
 import type { RoutupError } from '../error';
 
 import { nextPlaceholder } from '../utils';
@@ -117,14 +117,14 @@ export class HookManager {
 
     private triggerListener(name: `${HookName}`, event: DispatcherEvent, listener: HookListener) {
         if (this.isErrorListenerHook(name)) {
-            if (event.error) {
-                return (listener as HookErrorListener)(event.error, event.request, event.response, event.next);
+            if (isDispatcherErrorEvent(event)) {
+                return (listener as HookErrorListener)(event);
             }
 
             return undefined;
         }
 
-        return (listener as HookDefaultListener)(event.request, event.response, event.next);
+        return (listener as HookDefaultListener)(event);
     }
 
     private isErrorListenerHook(input: `${HookName}`) {

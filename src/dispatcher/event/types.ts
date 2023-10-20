@@ -64,3 +64,7 @@ export type DispatcherEvent = {
      */
     methodsAllowed: string[],
 };
+
+export type DispatcherErrorEvent = DispatcherEvent & {
+    error: RoutupError
+};

@@ -1,20 +1,7 @@
-import type { RoutupError } from '../error';
-import type { Request } from '../request';
-import type { Response } from '../response';
-import type { Next } from '../types';
+import type { DispatcherErrorEvent, DispatcherEvent } from '../dispatcher';
 
-export type HookErrorListener = (
-    error: RoutupError,
-    req: Request,
-    res: Response,
-    next: Next
-) => Promise<unknown> | unknown;
-
-export type HookDefaultListener = (
-    req: Request,
-    res: Response,
-    next: Next
-) => Promise<unknown> | unknown;
+export type HookErrorListener = (event: DispatcherErrorEvent) => Promise<unknown> | unknown;
+export type HookDefaultListener = (event: DispatcherEvent) => Promise<unknown> | unknown;
 
 export type HookListener = HookErrorListener | HookDefaultListener;
 
