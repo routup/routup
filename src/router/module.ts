@@ -1,34 +1,27 @@
 import { distinctArray } from 'smob';
-import { isError } from '../error';
 import { HeaderName, MethodName } from '../constants';
 import type { Dispatcher, DispatcherEvent } from '../dispatcher';
-import {
-    Handler,
-    HandlerType, isHandler, isHandlerConfig,
-} from '../handler';
+import type { RoutupError } from '../error';
 import type { HandlerConfig } from '../handler';
-import type {
-    HookDefaultListener,
-    HookErrorListener,
-    HookListener,
-
-    HookUnsubscribeFn,
-} from '../hook';
 import {
-    HookManager,
-    HookName,
+    Handler, HandlerType, isHandler, isHandlerConfig,
+} from '../handler';
+import type {
+    HookDefaultListener, HookErrorListener, HookListener, HookUnsubscribeFn,
 } from '../hook';
+import { HookManager, HookName } from '../hook';
 import type { Path } from '../path';
 import { PathMatcher, isPath } from '../path';
+import type { Plugin, PluginInstallContext } from '../plugin';
 import { isPlugin } from '../plugin';
-import { isResponseGone, send } from '../response';
+import { send } from '../response';
 import type { RouterOptionsInput } from '../router-options';
 import { setRouterOptions } from '../router-options';
 import { transformRouterOptions } from '../router-options/transform';
 import { cleanDoubleSlashes, withLeadingSlash, withoutTrailingSlash } from '../utils';
-import { RouterSymbol } from './constants';
-import type { Plugin, PluginInstallContext } from '../plugin';
-import { generateRouterID, isRouterInstance } from './utils';
+import { RouterPipelineStep, RouterSymbol } from './constants';
+import type { RouterPipelineContext } from './types';
+import { generateRouterID, isRouterInstance, isRouterPipelineStepValid } from './utils';
 
 export class Router implements Dispatcher {
     readonly '@instanceof' = RouterSymbol;
@@ -112,11 +105,200 @@ export class Router implements Dispatcher {
 
     // --------------------------------------------------
 
+    async executePipelineStep(context: RouterPipelineContext) : Promise<void> {
+        switch (context.step) {
+            case RouterPipelineStep.START: {
+                return this.executePipelineStepStart(context);
+            }
+            case RouterPipelineStep.LOOKUP: {
+                return this.executePipelineStepLookup(context);
+            }
+            case RouterPipelineStep.CHILD_BEFORE: {
+                return this.executePipelineStepChildBefore(context);
+            }
+            case RouterPipelineStep.CHILD_DISPATCH: {
+                return this.executePipelineStepChildDispatch(context);
+            }
+            case RouterPipelineStep.CHILD_AFTER: {
+                return this.executePipelineStepChildAfter(context);
+            }
+            case RouterPipelineStep.FINISH:
+            default: {
+                return this.executePipelineStepFinish(context);
+            }
+        }
+    }
+
+    async executePipelineHook(context: RouterPipelineContext, hook: HookName) : Promise<void> {
+        return this.hookManager.trigger(hook, context.event)
+            .catch((e) => {
+                context.event.error = e as RoutupError;
+            });
+    }
+
+    async executePipelineStepStart(context: RouterPipelineContext) : Promise<void> {
+        return this.executePipelineHook(context, HookName.DISPATCH_START)
+            .then(() => {
+                if (context.event.dispatched) {
+                    context.step = RouterPipelineStep.FINISH;
+                } else {
+                    context.step++;
+                }
+
+                return this.executePipelineStep(context);
+            });
+    }
+
+    async executePipelineStepLookup(context: RouterPipelineContext) : Promise<void> {
+        if (
+            context.event.dispatched ||
+            context.stackIndex >= this.stack.length
+        ) {
+            context.step = RouterPipelineStep.FINISH;
+            return this.executePipelineStep(context);
+        }
+
+        let match : boolean;
+
+        const item = this.stack[context.stackIndex];
+
+        if (isHandler(item)) {
+            if (
+                (context.event.error && item.type === HandlerType.CORE) ||
+                (!context.event.error && item.type === HandlerType.ERROR)
+            ) {
+                context.stackIndex++;
+                return this.executePipelineStepLookup(context);
+            }
+
+            match = item.matchPath(context.event.path);
+
+            if (match) {
+                if (item.method) {
+                    context.event.methodsAllowed.push(item.method);
+                }
+
+                if (item.matchMethod(context.event.method)) {
+                    await this.executePipelineHook(context, HookName.MATCH);
+
+                    context.step++;
+                    if (!isRouterPipelineStepValid(context.step)) {
+                        context.step = RouterPipelineStep.FINISH;
+                    }
+
+                    return this.executePipelineStep(context);
+                }
+            }
+
+            context.stackIndex++;
+            return this.executePipelineStepLookup(context);
+        }
+
+        match = item.matchPath(context.event.path);
+
+        if (match) {
+            await this.executePipelineHook(context, HookName.MATCH);
+
+            context.step++;
+            if (!isRouterPipelineStepValid(context.step)) {
+                context.step = RouterPipelineStep.FINISH;
+            }
+
+            return this.executePipelineStep(context);
+        }
+
+        context.stackIndex++;
+        return this.executePipelineStepLookup(context);
+    }
+
+    async executePipelineStepChildBefore(context: RouterPipelineContext) : Promise<void> {
+        return this.executePipelineHook(context, HookName.HANDLER_BEFORE)
+            .then(() => {
+                if (context.event.dispatched) {
+                    context.step = RouterPipelineStep.FINISH;
+                } else {
+                    context.step++;
+                }
+
+                return this.executePipelineStep(context);
+            });
+    }
+
+    async executePipelineStepChildAfter(context: RouterPipelineContext) : Promise<void> {
+        return this.executePipelineHook(context, HookName.HANDLER_AFTER)
+            .then(() => {
+                if (context.event.dispatched) {
+                    context.step = RouterPipelineStep.FINISH;
+                } else {
+                    context.step = RouterPipelineStep.LOOKUP;
+                }
+
+                return this.executePipelineStep(context);
+            });
+    }
+
+    async executePipelineStepChildDispatch(context: RouterPipelineContext) : Promise<void> {
+        if (
+            context.event.dispatched ||
+            typeof this.stack[context.stackIndex] === 'undefined'
+        ) {
+            context.step = RouterPipelineStep.FINISH;
+            return this.executePipelineStep(context);
+        }
+
+        try {
+            await this.stack[context.stackIndex].dispatch(context.event);
+        } catch (e) {
+            context.event.error = e as RoutupError;
+
+            await this.executePipelineHook(context, HookName.ERROR);
+        }
+
+        context.stackIndex++;
+        context.step++;
+
+        return this.executePipelineStep(context);
+    }
+
+    async executePipelineStepFinish(context: RouterPipelineContext) : Promise<void> {
+        if (context.event.error) {
+            await this.executePipelineHook(context, HookName.DISPATCH_FAIL);
+        }
+
+        if (context.event.error || context.event.dispatched) {
+            return this.executePipelineHook(context, HookName.DISPATCH_END);
+        }
+
+        if (
+            !context.event.dispatched &&
+            context.event.method &&
+            context.event.method === MethodName.OPTIONS
+        ) {
+            if (context.event.methodsAllowed.indexOf(MethodName.GET) !== -1) {
+                context.event.methodsAllowed.push(MethodName.HEAD);
+            }
+
+            distinctArray(context.event.methodsAllowed);
+
+            const options = context.event.methodsAllowed
+                .map((key) => key.toUpperCase())
+                .join(',');
+
+            context.event.response.setHeader(HeaderName.ALLOW, options);
+
+            await send(context.event.response, options);
+
+            context.event.dispatched = true;
+        }
+
+        return this.executePipelineHook(context, HookName.DISPATCH_END);
+    }
+
+    // --------------------------------------------------
+
     async dispatch(
         event: DispatcherEvent,
-    ) : Promise<boolean> {
-        const allowedMethods : string[] = [];
-
+    ) : Promise<void> {
         if (this.pathMatcher) {
             const output = this.pathMatcher.exec(event.path);
             if (typeof output !== 'undefined') {
@@ -135,133 +317,18 @@ export class Router implements Dispatcher {
             }
         }
 
+        const context : RouterPipelineContext = {
+            step: RouterPipelineStep.START,
+            event,
+            stackIndex: 0,
+        };
+
         event.routerPath.push(this.id);
 
-        let dispatched : boolean | undefined;
-
-        try {
-            dispatched = await this.hookManager.trigger(HookName.DISPATCH_START, event);
-        } catch (e) {
-            if (isError(e)) {
-                event.error = e;
-            }
-        }
-
-        if (dispatched) {
-            await this.hookManager.trigger(HookName.DISPATCH_END, event);
-
-            return true;
-        }
-
-        let item : Router | Handler | undefined;
-        let match = false;
-        let isLayer = false;
-
-        for (let i = 0; i < this.stack.length; i++) {
-            item = this.stack[i];
-
-            if (isHandler(item)) {
-                if (item.type !== HandlerType.ERROR && event.error) {
-                    continue;
-                }
-
-                match = item.matchPath(event.path);
-
-                if (match) {
-                    if (!item.matchMethod(event.method)) {
-                        match = false;
-                    }
-
-                    if (item.method) {
-                        allowedMethods.push(item.method);
-                    }
-                }
-
-                isLayer = true;
-            } else {
-                match = item.matchPath(event.path);
-
-                isLayer = false;
-            }
-
-            if (!match) {
-                continue;
-            }
-
-            dispatched = await this.hookManager.trigger(HookName.MATCH, event);
-            if (dispatched) {
-                await this.hookManager.trigger(HookName.DISPATCH_END, event);
-
-                return true;
-            }
-
-            try {
-                if (isLayer) {
-                    dispatched = await this.hookManager.trigger(HookName.HANDLER_BEFORE, event);
-                }
-
-                if (!dispatched) {
-                    dispatched = await item.dispatch(event);
-
-                    if (isLayer) {
-                        dispatched = (await this.hookManager.trigger(HookName.HANDLER_AFTER, event)) || dispatched;
-                    }
-                }
-            } catch (e) {
-                if (isError(e)) {
-                    event.error = e;
-
-                    dispatched = await this.hookManager.trigger(HookName.ERROR, event);
-                    if (dispatched) {
-                        event.error = undefined;
-                    }
-                }
-            }
-
-            if (!isLayer) {
-                event.routerPath.pop();
-            }
-
-            if (dispatched) {
-                await this.hookManager.trigger(HookName.DISPATCH_END, event);
-
-                return true;
-            }
-        }
-
-        if (event.error) {
-            dispatched = await this.hookManager.trigger(HookName.DISPATCH_FAIL, event);
-            if (dispatched) {
-                event.error = undefined;
-            } else {
-                // eslint-disable-next-line @typescript-eslint/no-throw-literal
-                throw event.error;
-            }
-        }
-
-        if (event.method && event.method === MethodName.OPTIONS) {
-            if (allowedMethods.indexOf(MethodName.GET) !== -1) {
-                allowedMethods.push(MethodName.HEAD);
-            }
-
-            distinctArray(allowedMethods);
-
-            const options = allowedMethods
-                .map((key) => key.toUpperCase())
-                .join(',');
-
-            if (!isResponseGone(event.response)) {
-                event.response.setHeader(HeaderName.ALLOW, options);
-
-                await send(event.response, options);
-            }
-
-            await this.hookManager.trigger(HookName.DISPATCH_END, event);
-
-            return true;
-        }
-
-        return false;
+        return this.executePipelineStepStart(context)
+            .then(() => {
+                context.event.routerPath.pop();
+            });
     }
 
     // --------------------------------------------------

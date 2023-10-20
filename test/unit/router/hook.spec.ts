@@ -43,11 +43,11 @@ describe('src/router/hooks', () => {
         expect(response.text).toEqual('Hello, World!');
 
         expect(hooks[HookName.ERROR]).not.toHaveBeenCalled();
-        expect(hooks[HookName.DISPATCH_START]).toHaveBeenCalled();
-        expect(hooks[HookName.DISPATCH_END]).toHaveBeenCalled();
+        expect(hooks[HookName.DISPATCH_START]).toHaveBeenCalledTimes(1);
+        expect(hooks[HookName.DISPATCH_END]).toHaveBeenCalledTimes(1);
         expect(hooks[HookName.DISPATCH_FAIL]).not.toHaveBeenCalled();
-        expect(hooks[HookName.HANDLER_BEFORE]).toHaveBeenCalled();
-        expect(hooks[HookName.HANDLER_AFTER]).toHaveBeenCalled();
+        expect(hooks[HookName.HANDLER_BEFORE]).toHaveBeenCalledTimes(1);
+        expect(hooks[HookName.HANDLER_AFTER]).toHaveBeenCalledTimes(1);
     });
 
     it('should trigger error hook', async () => {
@@ -65,12 +65,12 @@ describe('src/router/hooks', () => {
 
         expect(response.statusCode).toEqual(500);
 
-        expect(hooks[HookName.ERROR]).toHaveBeenCalled();
-        expect(hooks[HookName.DISPATCH_START]).toHaveBeenCalled();
-        expect(hooks[HookName.DISPATCH_END]).not.toHaveBeenCalled();
-        expect(hooks[HookName.DISPATCH_FAIL]).toHaveBeenCalled();
-        expect(hooks[HookName.HANDLER_BEFORE]).toHaveBeenCalled();
-        expect(hooks[HookName.HANDLER_AFTER]).not.toHaveBeenCalled();
+        expect(hooks[HookName.ERROR]).toHaveBeenCalledTimes(1);
+        expect(hooks[HookName.DISPATCH_START]).toHaveBeenCalledTimes(1);
+        expect(hooks[HookName.DISPATCH_END]).toHaveBeenCalledTimes(1);
+        expect(hooks[HookName.DISPATCH_FAIL]).toHaveBeenCalledTimes(1);
+        expect(hooks[HookName.HANDLER_BEFORE]).toHaveBeenCalledTimes(1);
+        expect(hooks[HookName.HANDLER_AFTER]).toHaveBeenCalledTimes(1);
     });
 
     it('should remove multiple hooks', async () => {

@@ -48,8 +48,19 @@ export type DispatcherEvent = {
      */
     next: Next,
 
+    // todo: this should maybe be a dynamic getter to the request object.
+    /**
+     * Indicate if the request has already been dispatched.
+     */
+    dispatched: boolean,
+
     /**
      * Ids of chained router instances.
      */
-    routerPath: number[]
+    routerPath: number[],
+
+    /**
+     * Collected methods during dispatch process.
+     */
+    methodsAllowed: string[],
 };

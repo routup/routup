@@ -7,6 +7,20 @@ import {
 } from '../../../src';
 
 describe('src/module', () => {
+    it('should send hello world', async () => {
+        const router = new Router();
+
+        router.use(coreHandler(() => 'Hello, World!'));
+
+        const server = supertest(createNodeDispatcher(router));
+
+        const response = await server
+            .get('/');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.text).toEqual('Hello, World!');
+    });
+
     it('should process async & sync handler', async () => {
         const router = new Router();
 

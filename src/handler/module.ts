@@ -51,7 +51,7 @@ export class Handler implements Dispatcher {
 
     // --------------------------------------------------
 
-    async dispatch(event: DispatcherEvent): Promise<boolean> {
+    async dispatch(event: DispatcherEvent): Promise<void> {
         if (this.pathMatcher) {
             const pathMatch = this.pathMatcher.exec(event.path);
             if (pathMatch) {
@@ -62,15 +62,13 @@ export class Handler implements Dispatcher {
             }
         }
 
-        let dispatched : boolean;
-
-        dispatched = await this.hookManager.trigger(HookName.HANDLER_BEFORE, event);
-        if (dispatched) {
-            return true;
+        await this.hookManager.trigger(HookName.HANDLER_BEFORE, event);
+        if (event.dispatched) {
+            return Promise.resolve();
         }
 
         try {
-            dispatched = await dispatch(event, (done) => {
+            event.dispatched = await dispatch(event, (done) => {
                 if (this.config.type === HandlerType.ERROR) {
                     if (event.error) {
                         return this.config.fn(event.error, event.request, event.response, done);
@@ -85,9 +83,9 @@ export class Handler implements Dispatcher {
             if (isError(e)) {
                 event.error = e;
 
-                dispatched = await this.hookManager.trigger(HookName.ERROR, event);
+                await this.hookManager.trigger(HookName.ERROR, event);
 
-                if (dispatched) {
+                if (event.dispatched) {
                     event.error = undefined;
                 } else {
                     throw e;
@@ -95,7 +93,7 @@ export class Handler implements Dispatcher {
             }
         }
 
-        return (await this.hookManager.trigger(HookName.HANDLER_AFTER, event)) || dispatched;
+        return this.hookManager.trigger(HookName.HANDLER_AFTER, event);
     }
 
     // --------------------------------------------------

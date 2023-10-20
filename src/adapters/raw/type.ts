@@ -1,4 +1,4 @@
-import type { RequestBody, RequestHeaders } from '../../../request';
+import type { RequestBody, RequestHeaders } from '../../request';
 
 export type RawRequest = {
     method: string;

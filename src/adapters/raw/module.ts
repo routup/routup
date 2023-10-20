@@ -1,18 +1,16 @@
-import { MethodName } from '../../../constants';
-import { isError } from '../../../error';
-import { createRequest } from '../../../request';
-import { createResponse } from '../../../response';
-import type { Router } from '../../../router';
-import { toMethodName } from '../../../utils';
-import { createDispatcherEvent } from '../../event';
+import { MethodName } from '../../constants';
+import { createRequest } from '../../request';
+import { createResponse } from '../../response';
+import type { Router } from '../../router';
+import { toMethodName } from '../../utils';
+import { createDispatcherEvent } from '../../dispatcher';
 import type {
-    DispatchRawRequestOptions, RawRequest, RawResponse, RawResponseHeaders,
+    RawRequest, RawResponse, RawResponseHeaders,
 } from './type';
 
 export async function dispatchRawRequest(
     router: Router,
     request: RawRequest,
-    options: DispatchRawRequestOptions = {},
 ) : Promise<RawResponse> {
     const method = toMethodName(request.method, MethodName.GET);
 
@@ -48,39 +46,29 @@ export async function dispatchRawRequest(
         body: (res as Record<string, any>).body,
     });
 
-    try {
-        const event = createDispatcherEvent({
-            request: req,
-            response: res,
-            path: request.path,
-            method,
-        });
+    const event = createDispatcherEvent({
+        request: req,
+        response: res,
+        path: request.path,
+        method,
+    });
 
-        const dispatched = await router.dispatch(event);
+    await router.dispatch(event);
 
-        if (dispatched) {
-            return createRawResponse();
-        }
+    if (event.dispatched) {
+        return createRawResponse();
+    }
 
+    if (event.error) {
         return createRawResponse({
-            status: 404,
-        });
-    } catch (e) {
-        if (options.throwOnError) {
-            throw e;
-        }
-
-        if (isError(e)) {
-            return createRawResponse({
-                status: e.statusCode,
-                statusMessage: e.statusMessage,
-            });
-        }
-
-        return createRawResponse({
-            status: 500,
+            status: event.error.statusCode,
+            statusMessage: event.error.statusMessage,
         });
     }
+
+    return createRawResponse({
+        status: 404,
+    });
 }
 
 export function createRawDispatcher(router: Router) {

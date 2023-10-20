@@ -1,4 +1,4 @@
-import type { RawResponseHeader } from '../dispatcher';
+import type { RawResponseHeader } from './type';
 
 export function transformHeaderToTuples(key: string, value: RawResponseHeader) {
     const output : [string, string][] = [];
