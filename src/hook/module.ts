@@ -1,12 +1,11 @@
-import { dispatch } from '../dispatcher';
 import type { DispatcherEvent } from '../dispatcher';
-import { createError } from '../error';
+import { dispatch } from '../dispatcher';
+import type { RoutupError } from '../error';
 
 import { nextPlaceholder } from '../utils';
 import { HookName } from './constants';
 import type {
-    HookDefaultListener,
-    HookErrorListener, HookListener, HookUnsubscribeFn,
+    HookDefaultListener, HookErrorListener, HookListener, HookUnsubscribeFn,
 } from './types';
 
 export class HookManager {
@@ -99,11 +98,9 @@ export class HookManager {
                 }
             }
         } catch (e) {
-            const error = createError(e);
+            event.error = e as RoutupError;
 
             if (!this.isErrorListenerHook(name)) {
-                event.error = error;
-
                 await this.trigger(
                     HookName.ERROR,
                     event,
@@ -113,14 +110,8 @@ export class HookManager {
                     if (event.error) {
                         event.error = undefined;
                     }
-
-                    return;
                 }
-
-                throw error;
             }
-
-            throw error;
         }
     }
 

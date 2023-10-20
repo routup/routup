@@ -21,7 +21,7 @@ import { transformRouterOptions } from '../router-options/transform';
 import { cleanDoubleSlashes, withLeadingSlash, withoutTrailingSlash } from '../utils';
 import { RouterPipelineStep, RouterSymbol } from './constants';
 import type { RouterPipelineContext } from './types';
-import { generateRouterID, isRouterInstance, isRouterPipelineStepValid } from './utils';
+import { generateRouterID, isRouterInstance } from './utils';
 
 export class Router implements Dispatcher {
     readonly '@instanceof' = RouterSymbol;
@@ -105,7 +105,7 @@ export class Router implements Dispatcher {
 
     // --------------------------------------------------
 
-    async executePipelineStep(context: RouterPipelineContext) : Promise<void> {
+    protected async executePipelineStep(context: RouterPipelineContext) : Promise<void> {
         switch (context.step) {
             case RouterPipelineStep.START: {
                 return this.executePipelineStepStart(context);
@@ -129,15 +129,8 @@ export class Router implements Dispatcher {
         }
     }
 
-    async executePipelineHook(context: RouterPipelineContext, hook: HookName) : Promise<void> {
-        return this.hookManager.trigger(hook, context.event)
-            .catch((e) => {
-                context.event.error = e as RoutupError;
-            });
-    }
-
-    async executePipelineStepStart(context: RouterPipelineContext) : Promise<void> {
-        return this.executePipelineHook(context, HookName.DISPATCH_START)
+    protected async executePipelineStepStart(context: RouterPipelineContext) : Promise<void> {
+        return this.hookManager.trigger(HookName.DISPATCH_START, context.event)
             .then(() => {
                 if (context.event.dispatched) {
                     context.step = RouterPipelineStep.FINISH;
@@ -149,7 +142,7 @@ export class Router implements Dispatcher {
             });
     }
 
-    async executePipelineStepLookup(context: RouterPipelineContext) : Promise<void> {
+    protected async executePipelineStepLookup(context: RouterPipelineContext) : Promise<void> {
         if (
             context.event.dispatched ||
             context.stackIndex >= this.stack.length
@@ -179,12 +172,9 @@ export class Router implements Dispatcher {
                 }
 
                 if (item.matchMethod(context.event.method)) {
-                    await this.executePipelineHook(context, HookName.MATCH);
+                    await this.hookManager.trigger(HookName.MATCH, context.event);
 
                     context.step++;
-                    if (!isRouterPipelineStepValid(context.step)) {
-                        context.step = RouterPipelineStep.FINISH;
-                    }
 
                     return this.executePipelineStep(context);
                 }
@@ -197,12 +187,9 @@ export class Router implements Dispatcher {
         match = item.matchPath(context.event.path);
 
         if (match) {
-            await this.executePipelineHook(context, HookName.MATCH);
+            await this.hookManager.trigger(HookName.MATCH, context.event);
 
             context.step++;
-            if (!isRouterPipelineStepValid(context.step)) {
-                context.step = RouterPipelineStep.FINISH;
-            }
 
             return this.executePipelineStep(context);
         }
@@ -211,8 +198,8 @@ export class Router implements Dispatcher {
         return this.executePipelineStepLookup(context);
     }
 
-    async executePipelineStepChildBefore(context: RouterPipelineContext) : Promise<void> {
-        return this.executePipelineHook(context, HookName.HANDLER_BEFORE)
+    protected async executePipelineStepChildBefore(context: RouterPipelineContext) : Promise<void> {
+        return this.hookManager.trigger(HookName.HANDLER_BEFORE, context.event)
             .then(() => {
                 if (context.event.dispatched) {
                     context.step = RouterPipelineStep.FINISH;
@@ -224,8 +211,8 @@ export class Router implements Dispatcher {
             });
     }
 
-    async executePipelineStepChildAfter(context: RouterPipelineContext) : Promise<void> {
-        return this.executePipelineHook(context, HookName.HANDLER_AFTER)
+    protected async executePipelineStepChildAfter(context: RouterPipelineContext) : Promise<void> {
+        return this.hookManager.trigger(HookName.HANDLER_AFTER, context.event)
             .then(() => {
                 if (context.event.dispatched) {
                     context.step = RouterPipelineStep.FINISH;
@@ -237,7 +224,7 @@ export class Router implements Dispatcher {
             });
     }
 
-    async executePipelineStepChildDispatch(context: RouterPipelineContext) : Promise<void> {
+    protected async executePipelineStepChildDispatch(context: RouterPipelineContext) : Promise<void> {
         if (
             context.event.dispatched ||
             typeof this.stack[context.stackIndex] === 'undefined'
@@ -251,7 +238,7 @@ export class Router implements Dispatcher {
         } catch (e) {
             context.event.error = e as RoutupError;
 
-            await this.executePipelineHook(context, HookName.ERROR);
+            await this.hookManager.trigger(HookName.ERROR, context.event);
         }
 
         context.stackIndex++;
@@ -260,13 +247,13 @@ export class Router implements Dispatcher {
         return this.executePipelineStep(context);
     }
 
-    async executePipelineStepFinish(context: RouterPipelineContext) : Promise<void> {
+    protected async executePipelineStepFinish(context: RouterPipelineContext) : Promise<void> {
         if (context.event.error) {
-            await this.executePipelineHook(context, HookName.DISPATCH_FAIL);
+            await this.hookManager.trigger(HookName.DISPATCH_FAIL, context.event);
         }
 
         if (context.event.error || context.event.dispatched) {
-            return this.executePipelineHook(context, HookName.DISPATCH_END);
+            return this.hookManager.trigger(HookName.DISPATCH_END, context.event);
         }
 
         if (
@@ -291,7 +278,7 @@ export class Router implements Dispatcher {
             context.event.dispatched = true;
         }
 
-        return this.executePipelineHook(context, HookName.DISPATCH_END);
+        return this.hookManager.trigger(HookName.DISPATCH_END, context.event);
     }
 
     // --------------------------------------------------
