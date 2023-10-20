@@ -1,14 +1,12 @@
-import { MethodName } from '../../../constants';
-import type { Router } from '../../../router';
-import type { WebRequest } from '../../../types';
-import { toMethodName, transformHeadersToTuples } from '../../../utils';
-import { dispatchRawRequest } from '../raw';
-import type { DispatchWebRequestOptions } from './type';
+import { MethodName } from '../../constants';
+import type { Router } from '../../router';
+import type { WebRequest } from '../../types';
+import { toMethodName } from '../../utils';
+import { dispatchRawRequest, transformHeadersToTuples } from '../raw';
 
 export async function dispatchWebRequest(
     router: Router,
     request: WebRequest,
-    options: DispatchWebRequestOptions = {},
 ) : Promise<Response> {
     const url = new URL(request.url);
     const headers : Record<string, string | string[]> = {};
@@ -27,7 +25,6 @@ export async function dispatchWebRequest(
             headers,
             body: request.body,
         },
-        options,
     );
 
     let body : BodyInit | null | undefined;

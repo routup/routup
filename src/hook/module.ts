@@ -1,12 +1,11 @@
-import { dispatch } from '../dispatcher';
 import type { DispatcherEvent } from '../dispatcher';
-import { createError } from '../error';
+import { dispatch } from '../dispatcher';
+import type { RoutupError } from '../error';
 
 import { nextPlaceholder } from '../utils';
 import { HookName } from './constants';
 import type {
-    HookDefaultListener,
-    HookErrorListener, HookListener, HookUnsubscribeFn,
+    HookDefaultListener, HookErrorListener, HookListener, HookUnsubscribeFn,
 } from './types';
 
 export class HookManager {
@@ -69,18 +68,16 @@ export class HookManager {
     async trigger(
         name: `${HookName}`,
         event: DispatcherEvent,
-    ) : Promise<boolean> {
+    ) : Promise<void> {
         if (!this.items[name] || this.items[name].length === 0) {
-            return false;
+            return;
         }
-
-        let dispatched = false;
 
         try {
             for (let i = 0; i < this.items[name].length; i++) {
                 const hook = this.items[name][i] as HookDefaultListener;
 
-                dispatched = await dispatch(
+                event.dispatched = await dispatch(
                     event,
                     (next) => Promise.resolve()
                         .then(() => {
@@ -92,34 +89,30 @@ export class HookManager {
 
                 event.next = nextPlaceholder;
 
-                if (dispatched) {
-                    event.error = undefined;
-                    return true;
+                if (event.dispatched) {
+                    if (event.error) {
+                        event.error = undefined;
+                    }
+
+                    return;
                 }
             }
         } catch (e) {
-            const error = createError(e);
+            event.error = e as RoutupError;
 
             if (!this.isErrorListenerHook(name)) {
-                event.error = error;
-
-                const dispatched = await this.trigger(
+                await this.trigger(
                     HookName.ERROR,
                     event,
                 );
 
-                if (dispatched) {
-                    event.error = undefined;
-                    return true;
+                if (event.dispatched) {
+                    if (event.error) {
+                        event.error = undefined;
+                    }
                 }
-
-                throw error;
             }
-
-            throw error;
         }
-
-        return false;
     }
 
     private triggerListener(name: `${HookName}`, event: DispatcherEvent, listener: HookListener) {

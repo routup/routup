@@ -9,6 +9,8 @@ export function createDispatcherEvent(
 ) : DispatcherEvent {
     return {
         method: MethodName.GET,
+        methodsAllowed: [],
+        dispatched: false,
         mountPath: '/',
         params: {},
         path: '/',
