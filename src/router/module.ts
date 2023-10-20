@@ -177,23 +177,9 @@ export class Router implements Dispatcher {
                     }
                 }
 
-                if (match) {
-                    event.match = {
-                        type: 'handler',
-                        data: item,
-                    };
-                }
-
                 isLayer = true;
             } else {
                 match = item.matchPath(event.path);
-
-                if (match) {
-                    event.match = {
-                        type: 'router',
-                        data: item,
-                    };
-                }
 
                 isLayer = false;
             }
