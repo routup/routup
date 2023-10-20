@@ -199,7 +199,7 @@ export class Router implements Dispatcher {
     }
 
     protected async executePipelineStepChildBefore(context: RouterPipelineContext) : Promise<void> {
-        return this.hookManager.trigger(HookName.HANDLER_BEFORE, context.event)
+        return this.hookManager.trigger(HookName.CHILD_BEFORE, context.event)
             .then(() => {
                 if (context.event.dispatched) {
                     context.step = RouterPipelineStep.FINISH;
@@ -212,7 +212,7 @@ export class Router implements Dispatcher {
     }
 
     protected async executePipelineStepChildAfter(context: RouterPipelineContext) : Promise<void> {
-        return this.hookManager.trigger(HookName.HANDLER_AFTER, context.event)
+        return this.hookManager.trigger(HookName.CHILD_AFTER, context.event)
             .then(() => {
                 if (context.event.dispatched) {
                     context.step = RouterPipelineStep.FINISH;
@@ -528,8 +528,8 @@ export class Router implements Dispatcher {
     on(
         name: `${HookName.DISPATCH_START}` |
             `${HookName.DISPATCH_END}` |
-            `${HookName.HANDLER_BEFORE}` |
-            `${HookName.HANDLER_AFTER}`,
+            `${HookName.CHILD_BEFORE}` |
+            `${HookName.CHILD_AFTER}`,
         fn: HookDefaultListener
     ) : HookUnsubscribeFn;
 

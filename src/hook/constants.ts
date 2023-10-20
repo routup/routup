@@ -6,6 +6,6 @@ export enum HookName {
     DISPATCH_END = 'dispatchEnd',
     DISPATCH_FAIL = 'dispatchFail',
 
-    HANDLER_BEFORE = 'handlerBefore',
-    HANDLER_AFTER = 'HandlerAfter',
+    CHILD_BEFORE = 'childBefore',
+    CHILD_AFTER = 'childAfter',
 }
