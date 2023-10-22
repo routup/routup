@@ -174,7 +174,11 @@ export class Router implements Dispatcher {
                 if (item.matchMethod(context.event.method)) {
                     await this.hookManager.trigger(HookName.CHILD_MATCH, context.event);
 
-                    context.step++;
+                    if (context.event.dispatched) {
+                        context.step = RouterPipelineStep.FINISH;
+                    } else {
+                        context.step++;
+                    }
 
                     return this.executePipelineStep(context);
                 }
@@ -189,7 +193,11 @@ export class Router implements Dispatcher {
         if (match) {
             await this.hookManager.trigger(HookName.CHILD_MATCH, context.event);
 
-            context.step++;
+            if (context.event.dispatched) {
+                context.step = RouterPipelineStep.FINISH;
+            } else {
+                context.step++;
+            }
 
             return this.executePipelineStep(context);
         }
