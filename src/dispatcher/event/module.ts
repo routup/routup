@@ -23,7 +23,7 @@ export class DispatchEvent {
     params: Record<string, any>;
 
     /**
-     * Path to check for the current instance.
+     * Request path.
      */
     path: string;
 
@@ -49,7 +49,7 @@ export class DispatchEvent {
     next: Next;
 
     /**
-     * Indicate if the request has already been dispatched.
+     * Indicate if the request has already been dispatched/send.
      */
     protected _dispatched: boolean;
 

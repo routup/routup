@@ -62,7 +62,7 @@ export class Handler implements Dispatcher {
             }
         }
 
-        await this.hookManager.trigger(HookName.CHILD_BEFORE, event);
+        await this.hookManager.trigger(HookName.CHILD_DISPATCH_BEFORE, event);
         if (event.dispatched) {
             return Promise.resolve();
         }
@@ -93,7 +93,7 @@ export class Handler implements Dispatcher {
             }
         }
 
-        return this.hookManager.trigger(HookName.CHILD_AFTER, event);
+        return this.hookManager.trigger(HookName.CHILD_DISPATCH_AFTER, event);
     }
 
     // --------------------------------------------------
@@ -141,11 +141,11 @@ export class Handler implements Dispatcher {
 
     protected mountHooks() {
         if (this.config.onBefore) {
-            this.hookManager.addListener(HookName.CHILD_BEFORE, this.config.onBefore);
+            this.hookManager.addListener(HookName.CHILD_DISPATCH_BEFORE, this.config.onBefore);
         }
 
         if (this.config.onAfter) {
-            this.hookManager.addListener(HookName.CHILD_AFTER, this.config.onAfter);
+            this.hookManager.addListener(HookName.CHILD_DISPATCH_AFTER, this.config.onAfter);
         }
 
         if (this.config.onError) {

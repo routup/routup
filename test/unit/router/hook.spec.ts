@@ -47,8 +47,8 @@ describe('src/router/hooks', () => {
         expect(hooks[HookName.DISPATCH_START]).toHaveBeenCalledTimes(1);
         expect(hooks[HookName.DISPATCH_END]).toHaveBeenCalledTimes(1);
         expect(hooks[HookName.DISPATCH_FAIL]).not.toHaveBeenCalled();
-        expect(hooks[HookName.CHILD_BEFORE]).toHaveBeenCalledTimes(1);
-        expect(hooks[HookName.CHILD_AFTER]).toHaveBeenCalledTimes(1);
+        expect(hooks[HookName.CHILD_DISPATCH_BEFORE]).toHaveBeenCalledTimes(1);
+        expect(hooks[HookName.CHILD_DISPATCH_AFTER]).toHaveBeenCalledTimes(1);
     });
 
     it('should trigger error hook', async () => {
@@ -70,8 +70,8 @@ describe('src/router/hooks', () => {
         expect(hooks[HookName.DISPATCH_START]).toHaveBeenCalledTimes(1);
         expect(hooks[HookName.DISPATCH_END]).toHaveBeenCalledTimes(1);
         expect(hooks[HookName.DISPATCH_FAIL]).toHaveBeenCalledTimes(1);
-        expect(hooks[HookName.CHILD_BEFORE]).toHaveBeenCalledTimes(1);
-        expect(hooks[HookName.CHILD_AFTER]).toHaveBeenCalledTimes(1);
+        expect(hooks[HookName.CHILD_DISPATCH_BEFORE]).toHaveBeenCalledTimes(1);
+        expect(hooks[HookName.CHILD_DISPATCH_AFTER]).toHaveBeenCalledTimes(1);
     });
 
     it('should remove multiple hooks', async () => {
@@ -97,8 +97,8 @@ describe('src/router/hooks', () => {
         expect(hooks[HookName.DISPATCH_START]).not.toHaveBeenCalled();
         expect(hooks[HookName.DISPATCH_END]).not.toHaveBeenCalled();
         expect(hooks[HookName.DISPATCH_FAIL]).not.toHaveBeenCalled();
-        expect(hooks[HookName.CHILD_BEFORE]).not.toHaveBeenCalled();
-        expect(hooks[HookName.CHILD_AFTER]).not.toHaveBeenCalled();
+        expect(hooks[HookName.CHILD_DISPATCH_BEFORE]).not.toHaveBeenCalled();
+        expect(hooks[HookName.CHILD_DISPATCH_AFTER]).not.toHaveBeenCalled();
     });
 
     it('should remove single hook', async () => {
@@ -146,7 +146,7 @@ describe('src/router/hooks', () => {
         const router = new Router();
         router.use(coreHandler(() => 'Hello, World!'));
 
-        router.on(HookName.MATCH, () => { throw new Error('match failed!'); });
+        router.on(HookName.CHILD_MATCH, () => { throw new Error('match failed!'); });
         router.on(HookName.ERROR, ({ error }) => error.message);
 
         const server = supertest(createNodeDispatcher(router));

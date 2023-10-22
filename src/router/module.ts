@@ -172,7 +172,7 @@ export class Router implements Dispatcher {
                 }
 
                 if (item.matchMethod(context.event.method)) {
-                    await this.hookManager.trigger(HookName.MATCH, context.event);
+                    await this.hookManager.trigger(HookName.CHILD_MATCH, context.event);
 
                     context.step++;
 
@@ -187,7 +187,7 @@ export class Router implements Dispatcher {
         match = item.matchPath(context.event.path);
 
         if (match) {
-            await this.hookManager.trigger(HookName.MATCH, context.event);
+            await this.hookManager.trigger(HookName.CHILD_MATCH, context.event);
 
             context.step++;
 
@@ -199,7 +199,7 @@ export class Router implements Dispatcher {
     }
 
     protected async executePipelineStepChildBefore(context: RouterPipelineContext) : Promise<void> {
-        return this.hookManager.trigger(HookName.CHILD_BEFORE, context.event)
+        return this.hookManager.trigger(HookName.CHILD_DISPATCH_BEFORE, context.event)
             .then(() => {
                 if (context.event.dispatched) {
                     context.step = RouterPipelineStep.FINISH;
@@ -212,7 +212,7 @@ export class Router implements Dispatcher {
     }
 
     protected async executePipelineStepChildAfter(context: RouterPipelineContext) : Promise<void> {
-        return this.hookManager.trigger(HookName.CHILD_AFTER, context.event)
+        return this.hookManager.trigger(HookName.CHILD_DISPATCH_AFTER, context.event)
             .then(() => {
                 if (context.event.dispatched) {
                     context.step = RouterPipelineStep.FINISH;
@@ -528,13 +528,13 @@ export class Router implements Dispatcher {
     on(
         name: `${HookName.DISPATCH_START}` |
             `${HookName.DISPATCH_END}` |
-            `${HookName.CHILD_BEFORE}` |
-            `${HookName.CHILD_AFTER}`,
+            `${HookName.CHILD_DISPATCH_BEFORE}` |
+            `${HookName.CHILD_DISPATCH_AFTER}`,
         fn: HookDefaultListener
     ) : HookUnsubscribeFn;
 
     on(
-        name: `${HookName.MATCH}`,
+        name: `${HookName.CHILD_MATCH}`,
         fn: HookErrorListener
     ) : HookUnsubscribeFn;
 
