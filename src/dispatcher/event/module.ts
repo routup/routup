@@ -1,21 +1,86 @@
 import { MethodName } from '../../constants';
+import type { RoutupError } from '../../error';
+import type { Request } from '../../request';
+import type { Response } from '../../response';
+import type { Next } from '../../types';
 import { nextPlaceholder } from '../../utils';
-import type { DispatcherEvent } from './types';
+import type { DispatcherEventCreateContext } from './types';
 
-type DispatcherEventCreateContext = Pick<DispatcherEvent, 'request' | 'response'> &
-Partial<Omit<DispatcherEvent, 'request' | 'response'>>;
-export function createDispatcherEvent(
-    input: DispatcherEventCreateContext,
-) : DispatcherEvent {
-    return {
-        method: MethodName.GET,
-        methodsAllowed: [],
-        dispatched: false,
-        mountPath: '/',
-        params: {},
-        path: '/',
-        routerPath: [],
-        next: nextPlaceholder,
-        ...input,
-    };
+export class DispatcherEvent {
+    /**
+     * Request Object.
+     */
+    request: Request;
+
+    /**
+     * Response Object.
+     */
+    response: Response;
+
+    /**
+     * Params collected during execution.
+     */
+    params: Record<string, any>;
+
+    /**
+     * Path to check for the current instance.
+     */
+    path: string;
+
+    /**
+     * HTTP Method used for the request.
+     */
+    method: `${MethodName}`;
+
+    /**
+     * The relative path on which the router is hung.
+     */
+    mountPath: string;
+
+    /**
+     * The error which occurred during the dispatch process.
+     */
+    error?: RoutupError;
+
+    /**
+     * Signal that the request hasn't been handled.
+     * Therefore, the request must be passed to the next handler or router in the chain.
+     */
+    next: Next;
+
+    /**
+     * Indicate if the request has already been dispatched.
+     */
+    protected _dispatched: boolean;
+
+    /**
+     * Ids of chained router instances.
+     */
+    routerPath: number[];
+
+    /**
+     * Collected methods during dispatch process.
+     */
+    methodsAllowed: string[];
+
+    constructor(context: DispatcherEventCreateContext) {
+        this.request = context.request;
+        this.response = context.response;
+
+        this.method = context.method || MethodName.GET;
+        this.methodsAllowed = [];
+        this.mountPath = '/';
+        this.params = {};
+        this.path = context.path || '/';
+        this.routerPath = [];
+        this.next = nextPlaceholder;
+    }
+
+    get dispatched() {
+        return this._dispatched || this.response.writableEnded || this.response.headersSent;
+    }
+
+    set dispatched(value: boolean) {
+        this._dispatched = value;
+    }
 }

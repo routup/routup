@@ -3,7 +3,6 @@ import { MethodName } from '../../constants';
 import type { Request } from '../../request';
 import { useRequestPath } from '../../request';
 import type { Response } from '../../response';
-import { isResponseGone } from '../../response';
 import type { Router } from '../../router';
 import { toMethodName } from '../../utils';
 import { createDispatcherEvent } from '../../dispatcher';
@@ -22,7 +21,7 @@ export async function dispatchNodeRequest(
 
     await router.dispatch(event);
 
-    if (event.dispatched || isResponseGone(event.response)) {
+    if (event.dispatched) {
         return;
     }
 

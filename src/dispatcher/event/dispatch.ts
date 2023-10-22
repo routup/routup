@@ -1,13 +1,12 @@
 import { createError } from '../../error';
 import { setRequestMountPath, setRequestParams, setRequestRouterPath } from '../../request';
 import {
-    isResponseGone,
     send, sendStream, sendWebBlob, sendWebResponse,
 } from '../../response';
 import {
     isPromise, isStream, isWebBlob, isWebResponse,
 } from '../../utils';
-import type { DispatcherEvent } from './types';
+import type { DispatcherEvent } from './module';
 
 async function sendData(event: DispatcherEvent, chunk: unknown) {
     if (chunk instanceof Error) {
@@ -78,7 +77,7 @@ export function dispatch(
             handled = true;
             unsubscribe();
 
-            if (!isResponseGone(event.response)) {
+            if (!event.dispatched) {
                 await sendData(event, data);
             }
 
