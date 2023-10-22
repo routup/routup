@@ -1,3 +1,28 @@
+# [3.1.0](https://github.com/routup/routup/compare/v3.0.0...v3.1.0) (2023-10-22)
+
+
+### Bug Fixes
+
+* check dispatched status after hook execution ([1be1d9e](https://github.com/routup/routup/commit/1be1d9eb3ee13197231c6ee9aad0dc6b6c910bf8))
+* **deps:** bump @ebec/http to v2.3.0 & check for inherited properties ([e8495f0](https://github.com/routup/routup/commit/e8495f0b9494117dcb1fc3700eb129802b16ea05))
+* remove dispatch fail hook ([05342d0](https://github.com/routup/routup/commit/05342d0dc255114900d133cf51ad5f4bb60c9f09))
+* remove match hook type ([64eaeb6](https://github.com/routup/routup/commit/64eaeb6c5453ee684b0402aedb72e9f1c01003fc))
+* rename error-proxy to routup-error ([4a6e1b2](https://github.com/routup/routup/commit/4a6e1b29c9ce77c3a818a67612b389beb038d9e6))
+* rename handler hooks to child ([888a57d](https://github.com/routup/routup/commit/888a57ddcb7049006308a5d8d8a8df96a5350424))
+
+
+### Features
+
+* contextualize hook listeners ([7c3a7ce](https://github.com/routup/routup/commit/7c3a7ceae05372d8023bccb6495569466bc976d6))
+* dispatch pipeline ([#420](https://github.com/routup/routup/issues/420)) ([321b811](https://github.com/routup/routup/commit/321b81169476781c97c1ea64082bb5d34e3d57cb))
+* dispatcher event attribute to call next router/handler ([0a1efa7](https://github.com/routup/routup/commit/0a1efa71113217c5ffe6bbd9e97f4449379051a5))
+* dynamic getter/setter for event dispatched property ([34f0750](https://github.com/routup/routup/commit/34f0750fcd4a8baebf4b7d9adc323be0e1119b7b))
+* hook system ([#411](https://github.com/routup/routup/issues/411)) ([137b2fa](https://github.com/routup/routup/commit/137b2faea9c20637015726c8044500255d424333))
+* merge dispatcher-event & dispatcher-meta ([ad0afab](https://github.com/routup/routup/commit/ad0afabc729e186c3c7f062c6431c8bb1e41448d))
+* method name enum to uppercase & add method property to dispatcher event ([709666e](https://github.com/routup/routup/commit/709666eaea6a0b7f4c5731a969905683c857583f))
+* renamed dispatcher event properties: req -> request, res -> response ([36a2401](https://github.com/routup/routup/commit/36a2401bc9dfee2d3d10d9d3a1821fd173282627))
+* return handler instance on define handler usage ([84dfdd1](https://github.com/routup/routup/commit/84dfdd133ac09e0513778eda3edbfbcfceb29920))
+
 # [3.0.0](https://github.com/routup/routup/compare/v2.0.0...v3.0.0) (2023-10-04)
 
 
