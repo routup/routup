@@ -40,6 +40,7 @@ npm install routup --save
 - 🚀 runtime agnostic (Node.JS, Bun, Deno, ...)
 - 📝 different handler types (base & error)
 - ✨ promise (async) support for core- & error-handlers
+- 📌 robust hook system
 - 🔌 powerful plugin system
 - 🧰 tree shakeable response & request helpers
 - 🤝️ different handler declaration styles (shorthand & verbose)
