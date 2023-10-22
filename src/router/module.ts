@@ -248,16 +248,13 @@ export class Router implements Dispatcher {
     }
 
     protected async executePipelineStepFinish(context: RouterPipelineContext) : Promise<void> {
-        if (context.event.error) {
-            await this.hookManager.trigger(HookName.DISPATCH_FAIL, context.event);
-        }
-
         if (context.event.error || context.event.dispatched) {
             return this.hookManager.trigger(HookName.DISPATCH_END, context.event);
         }
 
         if (
             !context.event.dispatched &&
+            context.event.routerPath.length === 1 &&
             context.event.method &&
             context.event.method === MethodName.OPTIONS
         ) {
@@ -539,8 +536,7 @@ export class Router implements Dispatcher {
     ) : HookUnsubscribeFn;
 
     on(
-        name: `${HookName.DISPATCH_FAIL}` |
-            `${HookName.ERROR}`,
+        name: `${HookName.ERROR}`,
         fn: HookErrorListener
     ) : HookUnsubscribeFn;
 

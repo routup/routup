@@ -3,7 +3,6 @@ export enum HookName {
 
     DISPATCH_START = 'dispatchStart',
     DISPATCH_END = 'dispatchEnd',
-    DISPATCH_FAIL = 'dispatchFail',
 
     CHILD_MATCH = 'childMatch',
     CHILD_DISPATCH_BEFORE = 'childDispatchBefore',

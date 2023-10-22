@@ -46,7 +46,6 @@ describe('src/router/hooks', () => {
         expect(hooks[HookName.ERROR]).not.toHaveBeenCalled();
         expect(hooks[HookName.DISPATCH_START]).toHaveBeenCalledTimes(1);
         expect(hooks[HookName.DISPATCH_END]).toHaveBeenCalledTimes(1);
-        expect(hooks[HookName.DISPATCH_FAIL]).not.toHaveBeenCalled();
         expect(hooks[HookName.CHILD_DISPATCH_BEFORE]).toHaveBeenCalledTimes(1);
         expect(hooks[HookName.CHILD_DISPATCH_AFTER]).toHaveBeenCalledTimes(1);
     });
@@ -69,7 +68,6 @@ describe('src/router/hooks', () => {
         expect(hooks[HookName.ERROR]).toHaveBeenCalledTimes(1);
         expect(hooks[HookName.DISPATCH_START]).toHaveBeenCalledTimes(1);
         expect(hooks[HookName.DISPATCH_END]).toHaveBeenCalledTimes(1);
-        expect(hooks[HookName.DISPATCH_FAIL]).toHaveBeenCalledTimes(1);
         expect(hooks[HookName.CHILD_DISPATCH_BEFORE]).toHaveBeenCalledTimes(1);
         expect(hooks[HookName.CHILD_DISPATCH_AFTER]).toHaveBeenCalledTimes(1);
     });
@@ -96,7 +94,6 @@ describe('src/router/hooks', () => {
         expect(hooks[HookName.ERROR]).not.toHaveBeenCalled();
         expect(hooks[HookName.DISPATCH_START]).not.toHaveBeenCalled();
         expect(hooks[HookName.DISPATCH_END]).not.toHaveBeenCalled();
-        expect(hooks[HookName.DISPATCH_FAIL]).not.toHaveBeenCalled();
         expect(hooks[HookName.CHILD_DISPATCH_BEFORE]).not.toHaveBeenCalled();
         expect(hooks[HookName.CHILD_DISPATCH_AFTER]).not.toHaveBeenCalled();
     });

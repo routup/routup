@@ -128,7 +128,6 @@ export class HookManager {
     }
 
     private isErrorListenerHook(input: `${HookName}`) {
-        return input === HookName.ERROR ||
-            input === HookName.DISPATCH_FAIL;
+        return input === HookName.ERROR;
     }
 }
