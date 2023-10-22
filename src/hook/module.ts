@@ -1,4 +1,4 @@
-import type { DispatcherEvent } from '../dispatcher';
+import type { DispatchEvent } from '../dispatcher';
 import { dispatch, isDispatcherErrorEvent } from '../dispatcher';
 import type { RoutupError } from '../error';
 
@@ -67,7 +67,7 @@ export class HookManager {
      */
     async trigger(
         name: `${HookName}`,
-        event: DispatcherEvent,
+        event: DispatchEvent,
     ) : Promise<void> {
         if (!this.items[name] || this.items[name].length === 0) {
             return;
@@ -115,7 +115,7 @@ export class HookManager {
         }
     }
 
-    private triggerListener(name: `${HookName}`, event: DispatcherEvent, listener: HookListener) {
+    private triggerListener(name: `${HookName}`, event: DispatchEvent, listener: HookListener) {
         if (this.isErrorListenerHook(name)) {
             if (isDispatcherErrorEvent(event)) {
                 return (listener as HookErrorListener)(event);

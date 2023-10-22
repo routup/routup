@@ -1,5 +1,5 @@
 import { MethodName } from '../constants';
-import type { Dispatcher, DispatcherEvent } from '../dispatcher';
+import type { DispatchEvent, Dispatcher } from '../dispatcher';
 import { dispatch } from '../dispatcher';
 import { isError } from '../error';
 import { HookManager, HookName } from '../hook';
@@ -51,7 +51,7 @@ export class Handler implements Dispatcher {
 
     // --------------------------------------------------
 
-    async dispatch(event: DispatcherEvent): Promise<void> {
+    async dispatch(event: DispatchEvent): Promise<void> {
         if (this.pathMatcher) {
             const pathMatch = this.pathMatcher.exec(event.path);
             if (pathMatch) {

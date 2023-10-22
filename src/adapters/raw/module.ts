@@ -3,7 +3,7 @@ import { createRequest } from '../../request';
 import { createResponse } from '../../response';
 import type { Router } from '../../router';
 import { toMethodName } from '../../utils';
-import { createDispatcherEvent } from '../../dispatcher';
+import { DispatchEvent } from '../../dispatcher';
 import type {
     RawRequest, RawResponse, RawResponseHeaders,
 } from './type';
@@ -46,7 +46,7 @@ export async function dispatchRawRequest(
         body: (res as Record<string, any>).body,
     });
 
-    const event = createDispatcherEvent({
+    const event = new DispatchEvent({
         request: req,
         response: res,
         path: request.path,

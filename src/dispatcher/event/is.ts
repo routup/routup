@@ -1,8 +1,8 @@
-import type { DispatcherErrorEvent } from './error';
-import type { DispatcherEvent } from './module';
+import type { DispatchErrorEvent } from './error';
+import type { DispatchEvent } from './module';
 
 export function isDispatcherErrorEvent(
-    event: DispatcherEvent | DispatcherErrorEvent,
-) : event is DispatcherErrorEvent {
+    event: DispatchEvent | DispatchErrorEvent,
+) : event is DispatchErrorEvent {
     return typeof event.error !== 'undefined';
 }

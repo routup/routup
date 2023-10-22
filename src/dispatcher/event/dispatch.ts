@@ -6,9 +6,9 @@ import {
 import {
     isPromise, isStream, isWebBlob, isWebResponse,
 } from '../../utils';
-import type { DispatcherEvent } from './module';
+import type { DispatchEvent } from './module';
 
-async function sendData(event: DispatcherEvent, chunk: unknown) {
+async function sendData(event: DispatchEvent, chunk: unknown) {
     if (chunk instanceof Error) {
         return Promise.reject(createError(chunk));
     }
@@ -33,7 +33,7 @@ async function sendData(event: DispatcherEvent, chunk: unknown) {
 
 type DispatchTargetFn = (next: (err?: Error) => any) => unknown;
 export function dispatch(
-    event: DispatcherEvent,
+    event: DispatchEvent,
     target: DispatchTargetFn,
 ): Promise<boolean> {
     setRequestParams(event.request, event.params);

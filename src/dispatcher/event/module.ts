@@ -4,9 +4,9 @@ import type { Request } from '../../request';
 import type { Response } from '../../response';
 import type { Next } from '../../types';
 import { nextPlaceholder } from '../../utils';
-import type { DispatcherEventCreateContext } from './types';
+import type { DispatchEventCreateContext } from './types';
 
-export class DispatcherEvent {
+export class DispatchEvent {
     /**
      * Request Object.
      */
@@ -63,7 +63,7 @@ export class DispatcherEvent {
      */
     methodsAllowed: string[];
 
-    constructor(context: DispatcherEventCreateContext) {
+    constructor(context: DispatchEventCreateContext) {
         this.request = context.request;
         this.response = context.response;
 

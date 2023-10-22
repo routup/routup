@@ -1,6 +1,6 @@
 import type { RoutupError } from '../../error';
-import { DispatcherEvent } from './module';
+import { DispatchEvent } from './module';
 
-export class DispatcherErrorEvent extends DispatcherEvent {
+export class DispatchErrorEvent extends DispatchEvent {
     override error: RoutupError;
 }

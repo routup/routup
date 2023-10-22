@@ -1,6 +1,6 @@
 import { distinctArray } from 'smob';
 import { HeaderName, MethodName } from '../constants';
-import type { Dispatcher, DispatcherEvent } from '../dispatcher';
+import type { DispatchEvent, Dispatcher } from '../dispatcher';
 import type { RoutupError } from '../error';
 import type { HandlerConfig } from '../handler';
 import {
@@ -284,7 +284,7 @@ export class Router implements Dispatcher {
     // --------------------------------------------------
 
     async dispatch(
-        event: DispatcherEvent,
+        event: DispatchEvent,
     ) : Promise<void> {
         if (this.pathMatcher) {
             const output = this.pathMatcher.exec(event.path);

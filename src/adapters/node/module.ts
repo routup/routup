@@ -5,14 +5,14 @@ import { useRequestPath } from '../../request';
 import type { Response } from '../../response';
 import type { Router } from '../../router';
 import { toMethodName } from '../../utils';
-import { createDispatcherEvent } from '../../dispatcher';
+import { DispatchEvent } from '../../dispatcher';
 
 export async function dispatchNodeRequest(
     router: Router,
     request: Request,
     response: Response,
 ): Promise<void> {
-    const event = createDispatcherEvent({
+    const event = new DispatchEvent({
         request,
         response,
         path: useRequestPath(request),

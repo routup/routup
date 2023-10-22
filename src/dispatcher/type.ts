@@ -1,5 +1,5 @@
-import type { DispatcherEvent } from './event';
+import type { DispatchEvent } from './event';
 
 export interface Dispatcher {
-    dispatch(event: DispatcherEvent) : Promise<void>;
+    dispatch(event: DispatchEvent) : Promise<void>;
 }
