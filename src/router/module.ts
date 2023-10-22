@@ -441,20 +441,16 @@ export class Router implements Dispatcher {
     use(path: Path, plugin: Plugin) : this;
 
     use(...input: unknown[]) : this {
-        const modifyPath = (input?: Path) => {
-            if (typeof input === 'string') {
-                return withLeadingSlash(input);
-            }
-
-            return input;
-        };
-
         let path : Path | undefined;
         for (let i = 0; i < input.length; i++) {
             const item = input[i];
 
             if (isPath(item)) {
-                path = modifyPath(item);
+                if (typeof item === 'string') {
+                    path = withLeadingSlash(item);
+                } else {
+                    path = item;
+                }
                 continue;
             }
 
@@ -467,16 +463,14 @@ export class Router implements Dispatcher {
             }
 
             if (isHandlerConfig(item)) {
-                item.path = path || modifyPath(item.path);
+                item.path = path || item.path;
 
                 this.stack.push(new Handler(item));
                 continue;
             }
 
             if (isHandler(item)) {
-                if (path) {
-                    item.setPath(path);
-                }
+                item.setPath(path || item.path);
 
                 this.stack.push(item);
                 continue;

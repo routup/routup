@@ -5,7 +5,7 @@ import { isError } from '../error';
 import { HookManager, HookName } from '../hook';
 import type { Path } from '../path';
 import { PathMatcher } from '../path';
-import { toMethodName } from '../utils';
+import { toMethodName, withLeadingSlash } from '../utils';
 import { HandlerSymbol, HandlerType } from './constants';
 import type { HandlerConfig } from './types';
 
@@ -107,6 +107,10 @@ export class Handler implements Dispatcher {
     }
 
     setPath(path?: Path) : void {
+        if (typeof path === 'string') {
+            path = withLeadingSlash(path);
+        }
+
         this.config.path = path;
 
         if (typeof path === 'undefined') {

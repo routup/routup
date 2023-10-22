@@ -1,24 +1,23 @@
 import { HandlerType } from '../constants';
+import { Handler } from '../module';
 import type {
     ErrorHandlerConfig,
     ErrorHandlerFn,
 } from './types';
 
-export function errorHandler(input: Omit<ErrorHandlerConfig, 'type'>) : ErrorHandlerConfig;
+export function errorHandler(input: Omit<ErrorHandlerConfig, 'type'>) : Handler;
 
-export function errorHandler(input: ErrorHandlerFn) : ErrorHandlerConfig;
-export function errorHandler(input: any) : ErrorHandlerConfig {
+export function errorHandler(input: ErrorHandlerFn) : Handler;
+export function errorHandler(input: any) : Handler {
     if (typeof input === 'function') {
-        // todo: create Handler
-        return {
+        return new Handler({
             type: HandlerType.ERROR,
             fn: input,
-        };
+        });
     }
 
-    // todo: create Handler
-    return {
+    return new Handler({
         type: HandlerType.ERROR,
         ...input,
-    };
+    });
 }
