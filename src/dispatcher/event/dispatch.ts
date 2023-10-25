@@ -1,35 +1,12 @@
 import { createError } from '../../error';
 import { setRequestMountPath, setRequestParams, setRequestRouterPath } from '../../request';
 import {
-    send, sendStream, sendWebBlob, sendWebResponse,
+    send,
 } from '../../response';
 import {
-    isPromise, isStream, isWebBlob, isWebResponse,
+    isPromise,
 } from '../../utils';
 import type { DispatchEvent } from './module';
-
-async function sendData(event: DispatchEvent, chunk: unknown) {
-    if (chunk instanceof Error) {
-        return Promise.reject(createError(chunk));
-    }
-
-    if (isStream(chunk)) {
-        await sendStream(event.response, chunk);
-        return Promise.resolve();
-    }
-
-    if (isWebBlob(chunk)) {
-        await sendWebBlob(event.response, chunk);
-        return Promise.resolve();
-    }
-
-    if (isWebResponse(chunk)) {
-        await sendWebResponse(event.response, chunk);
-        return Promise.resolve();
-    }
-
-    return send(event.response, chunk);
-}
 
 type DispatchTargetFn = (next: (err?: Error) => any) => unknown;
 export function dispatch(
@@ -78,7 +55,7 @@ export function dispatch(
             unsubscribe();
 
             if (!event.dispatched) {
-                await sendData(event, data);
+                await send(event.response, data);
             }
 
             return true;

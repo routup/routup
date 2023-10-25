@@ -2,10 +2,14 @@ import { Buffer } from 'buffer';
 import { HeaderName } from '../../constants';
 import { findRouterOption } from '../../router-options';
 import { useRequestRouterPath } from '../../request';
+import { isStream, isWebBlob, isWebResponse } from '../../utils';
 import type { Response } from '../types';
 import { isResponseGone } from './gone';
 import { appendResponseHeaderDirective } from './header';
 import { setResponseHeaderContentType } from './header-content-type';
+import { sendStream } from './send-stream';
+import { sendWebBlob } from './send-web-blob';
+import { sendWebResponse } from './send-web-response';
 
 export async function send(res: Response, chunk?: any) : Promise<void> {
     switch (typeof chunk) {
@@ -16,12 +20,33 @@ export async function send(res: Response, chunk?: any) : Promise<void> {
         case 'boolean':
         case 'number':
         case 'object': {
-            if (Buffer.isBuffer(chunk)) {
-                setResponseHeaderContentType(res, 'bin', true);
-            } else if (chunk !== null) {
-                chunk = JSON.stringify(chunk);
+            if (chunk !== null) {
+                if (chunk instanceof Error) {
+                    throw chunk;
+                }
 
-                setResponseHeaderContentType(res, 'application/json', true);
+                if (isStream(chunk)) {
+                    await sendStream(res, chunk);
+                    return;
+                }
+
+                if (isWebBlob(chunk)) {
+                    await sendWebBlob(res, chunk);
+                    return;
+                }
+
+                if (isWebResponse(chunk)) {
+                    await sendWebResponse(res, chunk);
+                    return;
+                }
+
+                if (Buffer.isBuffer(chunk)) {
+                    setResponseHeaderContentType(res, 'bin', true);
+                } else {
+                    chunk = JSON.stringify(chunk);
+
+                    setResponseHeaderContentType(res, 'application/json', true);
+                }
             }
             break;
         }
