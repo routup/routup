@@ -79,7 +79,7 @@
         "jest": "^29.7.0",
         "rimraf": "^5.0.5",
         "rollup": "^4.1.4",
-        "semantic-release": "^22.0.5",
+        "semantic-release": "^22.0.6",
         "supertest": "^6.3.3",
         "typescript": "5.2.2"
     }
