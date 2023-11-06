@@ -1,3 +1,10 @@
+# [3.2.0](https://github.com/routup/routup/compare/v3.1.0...v3.2.0) (2023-11-06)
+
+
+### Features
+
+* include stream, web- & web-response detection in send helper ([f59977e](https://github.com/routup/routup/commit/f59977e6849e6e913f308099966d03e9bd351d5c))
+
 # [3.1.0](https://github.com/routup/routup/compare/v3.0.0...v3.1.0) (2023-10-22)
 
 
