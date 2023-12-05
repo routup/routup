@@ -52,7 +52,7 @@
     "dependencies": {
         "@ebec/http": "^2.3.0",
         "buffer": "^6.0.3",
-        "mime-explorer": "^1.0.0",
+        "mime-explorer": "^1.1.0",
         "negotiator": "^0.6.3",
         "path-to-regexp": "^6.2.1",
         "proxy-addr": "^2.0.7",
