@@ -69,7 +69,7 @@
         "@tada5hi/eslint-config-typescript": "^1.2.7",
         "@tada5hi/semantic-release": "^0.3.0",
         "@tada5hi/tsconfig": "^0.5.0",
-        "@types/jest": "^29.5.8",
+        "@types/jest": "^29.5.11",
         "@types/negotiator": "^0.6.3",
         "@types/node": "^20.10.3",
         "@types/proxy-addr": "^2.0.3",
