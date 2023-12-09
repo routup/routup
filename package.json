@@ -81,6 +81,6 @@
         "rollup": "^4.6.1",
         "semantic-release": "^22.0.10",
         "supertest": "^6.3.3",
-        "typescript": "5.3.2"
+        "typescript": "5.3.3"
     }
 }
