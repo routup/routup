@@ -1,4 +1,5 @@
 export * from './cache';
+export * from './event-stream';
 export * from './gone';
 export * from './header';
 export * from './header-attachment';

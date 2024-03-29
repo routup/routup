@@ -12,3 +12,7 @@ export function isResponseGone(res: Response) {
 
     return false;
 }
+
+export function setResponseGone(res: Response, value: boolean) {
+    (res as any)[GoneSymbol] = value;
+}
