@@ -80,7 +80,7 @@
         "rimraf": "^5.0.5",
         "rollup": "^4.13.2",
         "semantic-release": "^22.0.12",
-        "supertest": "^6.3.3",
+        "supertest": "^6.3.4",
         "typescript": "5.4.3"
     }
 }
