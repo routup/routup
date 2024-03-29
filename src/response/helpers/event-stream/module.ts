@@ -2,6 +2,7 @@ import { PassThrough } from 'readable-stream';
 import { HeaderName } from '../../../constants';
 import { isRequestHTTP2 } from '../../../request';
 import type { Response } from '../../types';
+import { setResponseGone } from '../gone';
 import type { EventStreamMessage } from './types';
 import { serializeEventStreamMessage } from './utils';
 
@@ -90,6 +91,8 @@ export class EventStream {
         if (!this.passThrough.closed) {
             this.passThrough.end();
         }
+
+        setResponseGone(this.response, true);
 
         this.response.end();
     }
