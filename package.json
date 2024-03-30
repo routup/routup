@@ -1,6 +1,6 @@
 {
     "name": "routup",
-    "version": "3.2.0",
+    "version": "3.3.0",
     "description": "Routup is a minimalistic http based routing framework.",
     "exports": {
         "./package.json": "./package.json",

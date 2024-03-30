@@ -1,3 +1,19 @@
+# [3.3.0](https://github.com/routup/routup/compare/v3.2.0...v3.3.0) (2024-03-30)
+
+
+### Bug Fixes
+
+* **deps:** bump mime-explorer from 1.0.0 to 1.1.0 ([#461](https://github.com/routup/routup/issues/461)) ([d9c3ab9](https://github.com/routup/routup/commit/d9c3ab9f957fee45dfbf554b8a53e615d7986fcb))
+* **deps:** bump readable-stream from 4.4.2 to 4.5.2 ([#482](https://github.com/routup/routup/issues/482)) ([5dab8f3](https://github.com/routup/routup/commit/5dab8f391bf3fe0d8b894344790455deae1db3fe))
+* **deps:** bump smob from 1.4.1 to 1.5.0 ([#538](https://github.com/routup/routup/issues/538)) ([53bb4ae](https://github.com/routup/routup/commit/53bb4aedb470c28c0f3c9d126334d9fbbbaf7011))
+* mark response as terminated after event stream is closed ([3efdef1](https://github.com/routup/routup/commit/3efdef129c7da542965319d26f8dc8fdc649f0b5))
+
+
+### Features
+
+* initial server-sent events implementation ([67c45c3](https://github.com/routup/routup/commit/67c45c39b8b99d2c3e90c3922f21670e7ee25d96))
+* sse emit close & error event ([cb4fdfe](https://github.com/routup/routup/commit/cb4fdfee673d99c8f097e7fcf7383c392de224ef))
+
 # [3.2.0](https://github.com/routup/routup/compare/v3.1.0...v3.2.0) (2023-11-06)
 
 
