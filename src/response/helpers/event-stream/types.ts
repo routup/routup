@@ -15,9 +15,11 @@ export type EventStreamMessage = {
     /**
      * The data field for the message.
      */
-    data?: string,
+    data: string,
     /**
      * A string identifying the type of event described.
      */
     event?: string,
 };
+
+export type EventStreamListener<T = any> = (err: Error | null, data: T) => void | Promise<void>;

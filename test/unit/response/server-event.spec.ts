@@ -8,16 +8,22 @@ describe('src/helpers/response/server-event', () => {
 
     beforeAll(() => {
         server = supertest(createRequestListener(async (_req, res) => {
-            const serverEvent = createEventStream(res);
+            const stream = createEventStream(res);
+
+            let interval : ReturnType<typeof setInterval> | undefined;
+            stream.on('close', () => {
+                if (interval) {
+                    clearInterval(interval);
+                }
+            });
 
             let i = 0;
-            const interval = setInterval(() => {
-                serverEvent.write({ data: 'hello world' });
+            interval = setInterval(() => {
+                stream.write({ data: 'hello world' });
 
                 i++;
                 if (i > 50) {
-                    clearInterval(interval);
-                    serverEvent.end();
+                    stream.end();
                 }
             });
         }));

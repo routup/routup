@@ -3,7 +3,7 @@ import { HeaderName } from '../../../constants';
 import { isRequestHTTP2 } from '../../../request';
 import type { Response } from '../../types';
 import { setResponseGone } from '../gone';
-import type { EventStreamMessage } from './types';
+import type { EventStreamListener, EventStreamMessage } from './types';
 import { serializeEventStreamMessage } from './utils';
 
 export class EventStream {
@@ -12,6 +12,8 @@ export class EventStream {
     protected passThrough : PassThrough;
 
     protected flushed : boolean;
+
+    protected eventHandlers : Record<string, EventStreamListener[]>;
 
     constructor(response: Response) {
         this.response = response;
@@ -22,25 +24,24 @@ export class EventStream {
 
         this.flushed = false;
 
+        this.eventHandlers = {};
+
         this.open();
     }
 
     protected open() {
-        this.response.req.on('close', () => {
+        this.response.req.on('close', () => this.end());
+        this.response.req.on('error', (err) => {
+            this.emit('error', err);
             this.end();
         });
 
-        this.passThrough.on('data', (chunk) => {
-            this.response.write(chunk);
-        });
-
-        this.passThrough.on('error', () => {
+        this.passThrough.on('data', (chunk) => this.response.write(chunk));
+        this.passThrough.on('error', (err) => {
+            this.emit('error', err);
             this.end();
         });
-
-        this.passThrough.on('close', () => {
-            this.end();
-        });
+        this.passThrough.on('close', () => this.end());
 
         this.response.setHeader(
             HeaderName.CONTENT_TYPE,
@@ -92,8 +93,33 @@ export class EventStream {
             this.passThrough.end();
         }
 
+        this.emit('close');
+
         setResponseGone(this.response, true);
 
         this.response.end();
+    }
+
+    on(event: 'close', listener: EventStreamListener) : void;
+
+    on(event: 'error', listener: EventStreamListener) : void;
+
+    on(event: string, listener: EventStreamListener) : void {
+        if (typeof this.eventHandlers[event] === 'undefined') {
+            this.eventHandlers[event] = [];
+        }
+
+        this.eventHandlers[event].push(listener);
+    }
+
+    protected emit(event: string, ...args: any[]) : void {
+        if (typeof this.eventHandlers[event] === 'undefined') {
+            return;
+        }
+
+        const listeners = this.eventHandlers[event].slice();
+        for (let i = 0; i < listeners.length; i++) {
+            listeners[i].apply(this, args as any);
+        }
     }
 }
