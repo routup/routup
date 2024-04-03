@@ -1,18 +1,15 @@
+import { getProperty, setProperty } from '../../utils';
 import type { Response } from '../types';
 
-const GoneSymbol = Symbol.for('ResGone');
+const symbol = Symbol.for('ResGone');
 export function isResponseGone(res: Response) {
     if (res.headersSent || res.writableEnded) {
         return true;
     }
 
-    if (GoneSymbol in res) {
-        return (res as any)[GoneSymbol];
-    }
-
-    return false;
+    return getProperty(res, symbol) ?? false;
 }
 
 export function setResponseGone(res: Response, value: boolean) {
-    (res as any)[GoneSymbol] = value;
+    setProperty(res, symbol, value);
 }

@@ -1,58 +1,62 @@
 import { hasOwnProperty, merge } from 'smob';
+import { getProperty, setProperty } from '../../utils';
 
 import type { Request } from '../types';
 
-const envSymbol = Symbol.for('ReqEnv');
+const symbol = Symbol.for('ReqEnv');
 
-export function setRequestEnv(req: Request, key: string, value: unknown) : void;
-export function setRequestEnv(req: Request, record: Record<string, any>, append?: boolean) : void;
-export function setRequestEnv(req: Request, key: Record<string, any> | string, value?: boolean | unknown) : void {
-    if (envSymbol in req) {
+export function setRequestEnv(req: Request, key: string | symbol, value: unknown) : void;
+export function setRequestEnv(req: Request, record: Record<string | symbol, any>, append?: boolean) : void;
+export function setRequestEnv(req: Request, key: Record<string | symbol, any> | string | symbol, value?: boolean | unknown) : void {
+    const propertyValue = getProperty(req, symbol);
+
+    if (propertyValue) {
         if (typeof key === 'object') {
             if (value) {
-                (req as any)[envSymbol] = merge((req as any)[envSymbol], key);
+                setProperty(req, symbol, merge(propertyValue, key));
             } else {
-                (req as any)[envSymbol] = key;
+                setProperty(req, symbol, key);
             }
         } else {
-            (req as any)[envSymbol][key] = value;
+            propertyValue[key] = value;
+            setProperty(req, symbol, propertyValue);
         }
 
         return;
     }
 
     if (typeof key === 'object') {
-        (req as any)[envSymbol] = key;
+        setProperty(req, symbol, key);
         return;
     }
 
-    (req as any)[envSymbol] = {
+    setProperty(req, symbol, {
         [key]: value,
-    };
+    });
 }
 
 export function useRequestEnv(req: Request) : Record<string, any>;
-export function useRequestEnv(req: Request, key: string) : unknown | undefined;
-export function useRequestEnv(req: Request, key?: string) {
-    if (envSymbol in req) {
-        if (typeof key === 'string') {
-            return (req as any)[envSymbol][key];
+export function useRequestEnv(req: Request, key: PropertyKey) : unknown | undefined;
+export function useRequestEnv(req: Request, key?: PropertyKey) {
+    const propertyValue = getProperty(req, symbol);
+    if (propertyValue) {
+        if (typeof key !== 'undefined') {
+            return propertyValue[key];
         }
 
-        return (req as any)[envSymbol];
+        return propertyValue;
     }
 
-    if (typeof key === 'string') {
+    if (typeof key !== 'undefined') {
         return undefined;
     }
 
     return {};
 }
 
-export function unsetRequestEnv(req: Request, key: string) {
-    if (envSymbol in req) {
-        if (hasOwnProperty((req as any)[envSymbol], key)) {
-            delete (req as any)[envSymbol][key];
-        }
+export function unsetRequestEnv(req: Request, key: PropertyKey) {
+    const propertyValue = getProperty(req, symbol);
+    if (hasOwnProperty(propertyValue, key)) {
+        delete propertyValue[key];
     }
 }
