@@ -1,18 +1,12 @@
+import { getProperty, setProperty } from '../../utils';
 import type { Request } from '../types';
 
-const ParamsSymbol = Symbol.for('ReqParams');
+const symbol = Symbol.for('ReqParams');
 
 export function useRequestParams(req: Request) : Record<string, any> {
-    /* istanbul ignore next */
-    if ('params' in req) {
-        return (req as any).params;
-    }
-
-    if (ParamsSymbol in req) {
-        return (req as any)[ParamsSymbol];
-    }
-
-    return {};
+    return getProperty(req, symbol) ||
+        getProperty(req, 'params') ||
+        {};
 }
 
 export function useRequestParam(req: Request, key: string) : any {
@@ -23,7 +17,7 @@ export function setRequestParams(
     req: Request,
     data: Record<string, any>,
 ) {
-    (req as any)[ParamsSymbol] = data;
+    setProperty(req, symbol, data);
 }
 
 export function setRequestParam(

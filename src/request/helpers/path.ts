@@ -1,14 +1,14 @@
+import { getProperty, setProperty } from '../../utils';
 import type { Request } from '../types';
 
 const PathSymbol = Symbol.for('ReqPath');
 
 export function useRequestPath(req: Request) : string {
-    if ('path' in req) {
-        return (req as any).path;
-    }
+    const path = getProperty(req, 'path') ||
+        getProperty(req, PathSymbol);
 
-    if (PathSymbol in req) {
-        return (req as any)[PathSymbol];
+    if (path) {
+        return path;
     }
 
     if (typeof req.url === 'undefined') {
@@ -16,8 +16,7 @@ export function useRequestPath(req: Request) : string {
     }
 
     const parsed = new URL(req.url, 'http://localhost/');
+    setProperty(req, PathSymbol, parsed.pathname);
 
-    (req as any)[PathSymbol] = parsed.pathname;
-
-    return (req as any)[PathSymbol];
+    return parsed.pathname;
 }

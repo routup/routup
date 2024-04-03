@@ -1,13 +1,17 @@
 import Negotiator from 'negotiator';
+import { getProperty, setProperty } from '../../utils';
 
 import type { Request } from '../types';
 
-const NegotiatorSymbol = Symbol.for('ReqNegotiator');
+const symbol = Symbol.for('ReqNegotiator');
 
 export function useRequestNegotiator(req: Request) : Negotiator {
-    if (NegotiatorSymbol in req) {
-        return (req as any)[NegotiatorSymbol];
+    let value = getProperty(req, symbol);
+    if (value) {
+        return value;
     }
 
-    return new Negotiator(req);
+    value = new Negotiator(req);
+    setProperty(req, symbol, value);
+    return value;
 }

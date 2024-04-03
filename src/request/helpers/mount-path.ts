@@ -1,15 +1,12 @@
+import { getProperty, setProperty } from '../../utils';
 import type { Request } from '../types';
 
-const ReqMountPathSymbol = Symbol.for('ReqMountPath');
+const symbol = Symbol.for('ReqMountPath');
 
 export function useRequestMountPath(req: Request) : string {
-    if (ReqMountPathSymbol in req) {
-        return (req as any)[ReqMountPathSymbol];
-    }
-
-    return '/';
+    return getProperty<string>(req, symbol) || '/';
 }
 
 export function setRequestMountPath(req: Request, basePath: string) {
-    (req as any)[ReqMountPathSymbol] = basePath;
+    setProperty(req, symbol, basePath);
 }
