@@ -1,3 +1,16 @@
+# [4.0.0](https://github.com/routup/routup/compare/v3.3.0...v4.0.0) (2024-06-29)
+
+
+### Features
+
+* bump path-to-regexp to v7.x ([9a82dc8](https://github.com/routup/routup/commit/9a82dc8975d3227e47f91c676769f616f65dd7be))
+* utility to set/get property of req/res ([c070a80](https://github.com/routup/routup/commit/c070a808a770abb11d1ddd0b9558032e19307219))
+
+
+### BREAKING CHANGES
+
+* remove support for regex as path input
+
 # [3.3.0](https://github.com/routup/routup/compare/v3.2.0...v3.3.0) (2024-03-30)
 
 
