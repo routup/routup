@@ -1,6 +1,6 @@
 import supertest from 'supertest';
 import {
-    Router, coreHandler, createNodeDispatcher, useRequestPath,
+    Router, coreHandler, createNodeDispatcher,
 } from '../../../src';
 
 describe('routing/paths', () => {
@@ -56,30 +56,5 @@ describe('routing/paths', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.text).toEqual('/foo/bar/baz');
-    });
-
-    it('should handle regexp paths', async () => {
-        const router = new Router();
-
-        router.get(/.*fly$/, coreHandler((req) => useRequestPath(req)));
-
-        const server = supertest(createNodeDispatcher(router));
-
-        let response = await server
-            .get('/butterfly');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('/butterfly');
-
-        response = await server
-            .get('/dragonfly');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('/dragonfly');
-
-        response = await server
-            .get('/dragonflyman');
-
-        expect(response.statusCode).toEqual(404);
     });
 });

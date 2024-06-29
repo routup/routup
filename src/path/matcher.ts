@@ -24,7 +24,10 @@ export class PathMatcher {
         this.path = path;
 
         this.regexpOptions = options || {};
-        this.regexp = pathToRegexp(path, this.regexpKeys, options);
+        const regexp = pathToRegexp(path, options);
+
+        this.regexp = regexp;
+        this.regexpKeys = regexp.keys;
     }
 
     test(path: string) {

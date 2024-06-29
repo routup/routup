@@ -86,21 +86,12 @@ export class Router implements Dispatcher {
             return;
         }
 
-        if (typeof value === 'string') {
-            this.pathMatcher = new PathMatcher(
-                withLeadingSlash(withoutTrailingSlash(`${value}`)),
-                {
-                    end: false,
-                },
-            );
-        } else {
-            this.pathMatcher = new PathMatcher(
-                value,
-                {
-                    end: false,
-                },
-            );
-        }
+        this.pathMatcher = new PathMatcher(
+            withLeadingSlash(withoutTrailingSlash(`${value}`)),
+            {
+                end: false,
+            },
+        );
     }
 
     // --------------------------------------------------
@@ -454,11 +445,7 @@ export class Router implements Dispatcher {
             const item = input[i];
 
             if (isPath(item)) {
-                if (typeof item === 'string') {
-                    path = withLeadingSlash(item);
-                } else {
-                    path = item;
-                }
+                path = withLeadingSlash(item);
                 continue;
             }
 
