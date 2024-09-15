@@ -26,7 +26,7 @@ export class PathMatcher {
         this.regexpOptions = options || {};
         const regexp = pathToRegexp(path, options);
 
-        this.regexp = regexp;
+        this.regexp = regexp.regexp;
         this.regexpKeys = regexp.keys;
     }
 
