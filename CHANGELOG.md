@@ -1,3 +1,11 @@
+## [4.0.1](https://github.com/routup/routup/compare/v4.0.0...v4.0.1) (2024-09-15)
+
+
+### Bug Fixes
+
+* **deps:** bump path-to-regexp from 7.0.0 to 7.1.0 ([#625](https://github.com/routup/routup/issues/625)) ([23fcd28](https://github.com/routup/routup/commit/23fcd2840ea3ebfada8f1222195405718169810a))
+* **deps:** bump path-to-regexp to v8.x ([87048a1](https://github.com/routup/routup/commit/87048a16fa149a060f8382286b646a1f0fb49c29))
+
 # [4.0.0](https://github.com/routup/routup/compare/v3.3.0...v4.0.0) (2024-06-29)
 
 
