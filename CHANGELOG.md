@@ -1,3 +1,11 @@
+## [4.0.2](https://github.com/routup/routup/compare/v4.0.1...v4.0.2) (2025-06-25)
+
+
+### Bug Fixes
+
+* **deps:** bump negotiator from 0.6.3 to 1.0.0 ([#700](https://github.com/routup/routup/issues/700)) ([84edd77](https://github.com/routup/routup/commit/84edd778b87d8baa9072319909385324f265e8a7))
+* **deps:** bump the minorandpatch group with 3 updates ([#758](https://github.com/routup/routup/issues/758)) ([c0117b3](https://github.com/routup/routup/commit/c0117b34c81f3be26f5c60a5ce71e7e81b6ed4ed))
+
 ## [4.0.1](https://github.com/routup/routup/compare/v4.0.0...v4.0.1) (2024-09-15)
 
 
