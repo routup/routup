@@ -1,0 +1,435 @@
+{
+    "definitions": {
+        "GetManyResponse": {
+            "properties": {
+                "foo": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "foo"
+            ],
+            "type": "object"
+        }
+    },
+    "info": {
+        "title": "API Documentation",
+        "version": "1.0.0",
+        "description": "Explore the REST Endpoints of the API."
+    },
+    "paths": {
+        "/query/many": {
+            "get": {
+                "operationId": "GetMany",
+                "consumes": [],
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "schema": {}
+                    }
+                },
+                "security": [],
+                "parameters": []
+            }
+        },
+        "/query/single": {
+            "get": {
+                "operationId": "Get",
+                "consumes": [],
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "schema": {}
+                    }
+                },
+                "security": [],
+                "parameters": [
+                    {
+                        "description": "",
+                        "in": "query",
+                        "name": "foo",
+                        "required": true,
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/post/many": {
+            "post": {
+                "operationId": "PostMany",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "schema": {}
+                    }
+                },
+                "security": [],
+                "parameters": [
+                    {
+                        "description": "",
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "properties": {
+                                "foo": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "foo"
+                            ],
+                            "type": "object"
+                        }
+                    }
+                ]
+            }
+        },
+        "/post/single": {
+            "post": {
+                "operationId": "Post",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "schema": {}
+                    }
+                },
+                "security": [],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "schema": {
+                            "type": "object",
+                            "title": "Body",
+                            "properties": {
+                                "foo": {
+                                    "type": "string",
+                                    "description": ""
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "/middleware": {
+            "get": {
+                "operationId": "Middleware",
+                "consumes": [],
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "schema": {}
+                    }
+                },
+                "security": [],
+                "parameters": []
+            }
+        },
+        "/header/many": {
+            "get": {
+                "operationId": "Headers",
+                "consumes": [],
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "schema": {}
+                    }
+                },
+                "security": [],
+                "parameters": []
+            }
+        },
+        "/header/single": {
+            "get": {
+                "operationId": "Header",
+                "consumes": [],
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "schema": {}
+                    }
+                },
+                "security": [],
+                "parameters": [
+                    {
+                        "description": "",
+                        "in": "header",
+                        "name": "connection",
+                        "required": true,
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/get/many": {
+            "get": {
+                "operationId": "GetMany",
+                "consumes": [],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ok",
+                        "schema": {
+                            "$ref": "#/definitions/GetManyResponse"
+                        },
+                        "examples": {
+                            "application/json": {
+                                "foo": "bar"
+                            }
+                        }
+                    }
+                },
+                "security": [],
+                "parameters": []
+            }
+        },
+        "/get/{id}": {
+            "get": {
+                "operationId": "Get",
+                "consumes": [],
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "schema": {}
+                    }
+                },
+                "security": [],
+                "parameters": [
+                    {
+                        "description": "",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/get/{id}/{foo}": {
+            "get": {
+                "operationId": "GetNested",
+                "consumes": [],
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "schema": {}
+                    }
+                },
+                "security": [],
+                "parameters": [
+                    {
+                        "description": "",
+                        "in": "path",
+                        "name": "foo",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "description": "",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/cookie/many": {
+            "get": {
+                "operationId": "GetMany",
+                "consumes": [],
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "schema": {}
+                    }
+                },
+                "security": [],
+                "parameters": []
+            }
+        },
+        "/cookie/single": {
+            "get": {
+                "operationId": "Get",
+                "consumes": [],
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "schema": {}
+                    }
+                },
+                "security": [],
+                "parameters": []
+            }
+        },
+        "/combined": {
+            "get": {
+                "operationId": "GetMany",
+                "consumes": [],
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "schema": {}
+                    }
+                },
+                "security": [],
+                "parameters": []
+            },
+            "post": {
+                "operationId": "Create",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "schema": {}
+                    }
+                },
+                "security": [],
+                "parameters": []
+            },
+            "put": {
+                "operationId": "Put",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "schema": {}
+                    }
+                },
+                "security": [],
+                "parameters": []
+            },
+            "patch": {
+                "operationId": "Patch",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "schema": {}
+                    }
+                },
+                "security": [],
+                "parameters": []
+            }
+        },
+        "/combined/{id}": {
+            "get": {
+                "operationId": "GetOne",
+                "consumes": [],
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "schema": {}
+                    }
+                },
+                "security": [],
+                "parameters": [
+                    {
+                        "description": "",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ]
+            },
+            "delete": {
+                "operationId": "Delete",
+                "consumes": [],
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "schema": {}
+                    }
+                },
+                "security": [],
+                "parameters": [
+                    {
+                        "description": "",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ]
+            }
+        }
+    },
+    "swagger": "2.0",
+    "securityDefinitions": {},
+    "consumes": [
+        "application/json"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "host": "localhost:3000",
+    "basePath": "/"
+}

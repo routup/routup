@@ -29,6 +29,30 @@ describe('src/plugin/**', () => {
         expect(response.text).toEqual('Hello, World!');
     });
 
+    it('should install plugin with same name', async () => {
+        const router = new Router();
+        router.use({
+            name: 'plugin',
+            install: () => {
+                router.get('/', coreHandler((_req, _res, next) => next()));
+                // do nothing
+            },
+        });
+        router.use({
+            name: 'plugin',
+            install: (router) => {
+                router.get('/', coreHandler(() => 'Hello, World!'));
+            },
+        });
+
+        const server = supertest(createNodeDispatcher(router));
+        const response = await server
+            .get('/');
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.text).toEqual('Hello, World!');
+    });
+
     it('should install plugin with options', async () => {
         const router = new Router();
         router.use(plugin({ handlerPath: '/foo' }));
