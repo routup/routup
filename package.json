@@ -16,6 +16,9 @@
     "files": [
         "dist/"
     ],
+    "engines": {
+        "node": ">=22.0.0"
+    },
     "scripts": {
         "build:types": "tsc --emitDeclarationOnly -p tsconfig.json",
         "build:js": "rollup -c",
