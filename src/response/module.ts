@@ -1,5 +1,4 @@
-import type { OutgoingHttpHeaders } from 'http';
-import type { OutgoingHttpHeader } from 'node:http';
+import type { OutgoingHttpHeader, OutgoingHttpHeaders } from 'node:http';
 import type { Socket } from 'node:net';
 import type { Writable as NodeWritable } from 'node:stream';
 import { Buffer } from 'buffer';
@@ -149,6 +148,21 @@ export function createResponse(request: Request) : Response {
             }
 
             headers[name.toLowerCase()] = value;
+            return this as Response;
+        },
+        setHeaders(headers: Headers | Map<string, number | string | readonly string[]>): Response {
+            if (headers instanceof Map) {
+                headers.entries().forEach(([key, value]) => {
+                    this.setHeader(key, value);
+                });
+
+                return this as Response;
+            }
+
+            headers.forEach((value, key) => {
+                this.setHeader(key, value);
+            });
+
             return this as Response;
         },
         setTimeout(_msecs: number, _callback: (() => void) | undefined): Response {
