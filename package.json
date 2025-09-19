@@ -74,7 +74,7 @@
         "@tada5hi/tsconfig": "^0.6.0",
         "@types/jest": "^30.0.0",
         "@types/negotiator": "^0.6.4",
-        "@types/node": "^24.1.0",
+        "@types/node": "^24.5.2",
         "@types/proxy-addr": "^2.0.3",
         "@types/readable-stream": "^4.0.21",
         "@types/supertest": "^6.0.3",
