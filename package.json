@@ -82,6 +82,7 @@
         "rimraf": "^6.1.2",
         "rollup": "^4.57.1",
         "supertest": "^7.2.2",
-        "typescript": "5.9.3"
+        "typescript": "5.9.3",
+        "workspaces-publish": "^1.5.0"
     }
 }
