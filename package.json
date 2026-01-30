@@ -70,7 +70,6 @@
         "@swc/jest": "^0.2.39",
         "@tada5hi/commitlint-config": "^1.2.7",
         "@tada5hi/eslint-config-typescript": "^1.2.18",
-        "@tada5hi/semantic-release": "^0.3.2",
         "@tada5hi/tsconfig": "^0.7.0",
         "@types/jest": "^30.0.0",
         "@types/negotiator": "^0.6.4",
@@ -82,7 +81,6 @@
         "jest": "^30.2.0",
         "rimraf": "^6.1.2",
         "rollup": "^4.53.4",
-        "semantic-release": "^24.2.5",
         "supertest": "^7.1.4",
         "typescript": "5.9.3"
     }
