@@ -15,8 +15,12 @@ export function useRequestPath(req: Request) : string {
         return '/';
     }
 
-    const parsed = new URL(req.url, 'http://localhost/');
-    setProperty(req, PathSymbol, parsed.pathname);
+    try {
+        const parsed = new URL(req.url, 'http://localhost/');
+        setProperty(req, PathSymbol, parsed.pathname);
 
-    return parsed.pathname;
+        return parsed.pathname;
+    } catch (_e) {
+        return '/';
+    }
 }
