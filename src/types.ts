@@ -1,6 +1,6 @@
 import type { Readable as NodeReadable } from 'node:stream';
 import type { Readable } from 'readable-stream';
-import type { ReadableStream } from 'stream/web';
+import type { ReadableStream } from 'node:stream/web';
 
 export type NodeReadableStream = NodeReadable | Readable;
 

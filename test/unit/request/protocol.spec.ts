@@ -1,3 +1,4 @@
+import { describe, it } from 'vitest';
 import supertest from 'supertest';
 import { HeaderName, getRequestProtocol, send } from '../../../src';
 import { createRequestListener } from '../../handler';
@@ -5,7 +6,10 @@ import { createRequestListener } from '../../handler';
 describe('src/helpers/request/hostname', () => {
     it('should determine protocol', async () => {
         const server = supertest(createRequestListener((req, res) => {
-            send(res, getRequestProtocol(req, { default: 'http', trustProxy: true }));
+            send(res, getRequestProtocol(req, {
+                default: 'http',
+                trustProxy: true 
+            }));
         }));
 
         await server

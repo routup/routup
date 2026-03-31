@@ -1,7 +1,7 @@
 import type { IncomingMessage } from 'node:http';
 import type { Readable as NodeReadable } from 'node:stream';
 import { Readable } from 'readable-stream';
-import type { ReadableStream as NodeWebReadableStream } from 'stream/web';
+import type { ReadableStream as NodeWebReadableStream } from 'node:stream/web';
 import { isWebStream } from '../utils';
 import type { RequestCreateContext } from './types';
 
@@ -21,27 +21,27 @@ export function createRequest(context: RequestCreateContext) : IncomingMessage {
 
     const rawHeaders : string[] = [];
     let keys = Object.keys(headers);
-    for (let i = 0; i < keys.length; i++) {
-        const header = headers[keys[i]];
+    for (const key of keys) {
+        const header = headers[key];
         if (Array.isArray(header)) {
-            for (let j = 0; j < header.length; j++) {
-                rawHeaders.push(keys[i], header[j]);
+            for (const element of header) {
+                rawHeaders.push(key, element);
             }
         } else if (typeof header === 'string') {
-            rawHeaders.push(keys[i], header);
+            rawHeaders.push(key, header);
         }
     }
 
     const headersDistinct : Record<string, string[]> = {};
     keys = Object.keys(headers);
-    for (let i = 0; i < keys.length; i++) {
-        const header = headers[keys[i]];
+    for (const key of keys) {
+        const header = headers[key];
         if (Array.isArray(header)) {
-            headersDistinct[keys[i]] = header;
+            headersDistinct[key] = header;
         }
 
         if (typeof header === 'string') {
-            headersDistinct[keys[i]] = [header];
+            headersDistinct[key] = [header];
         }
     }
 

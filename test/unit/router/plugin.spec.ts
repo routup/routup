@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import supertest from 'supertest';
 import { Router, coreHandler, createNodeDispatcher } from '../../../src';
 import type { Plugin } from '../../../src';
@@ -55,7 +56,9 @@ describe('src/plugin/**', () => {
 
     it('should install plugin with options', async () => {
         const router = new Router();
-        router.use(plugin({ handlerPath: '/foo' }));
+        router.use(plugin({
+            handlerPath: '/foo' 
+        }));
 
         const server = supertest(createNodeDispatcher(router));
 

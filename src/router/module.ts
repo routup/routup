@@ -4,10 +4,16 @@ import type { DispatchEvent, Dispatcher } from '../dispatcher';
 import type { RoutupError } from '../error';
 import type { HandlerConfig } from '../handler';
 import {
-    Handler, HandlerType, isHandler, isHandlerConfig,
+    Handler, 
+    HandlerType, 
+    isHandler, 
+    isHandlerConfig,
 } from '../handler';
 import type {
-    HookDefaultListener, HookErrorListener, HookListener, HookUnsubscribeFn,
+    HookDefaultListener, 
+    HookErrorListener, 
+    HookListener, 
+    HookUnsubscribeFn,
 } from '../hook';
 import { HookManager, HookName } from '../hook';
 import type { Path } from '../path';
@@ -144,7 +150,7 @@ export class Router implements Dispatcher {
 
         let match : boolean;
 
-        const item = this.stack[context.stackIndex];
+        const item = this.stack[context.stackIndex]!;
 
         if (isHandler(item)) {
             if (
@@ -233,7 +239,7 @@ export class Router implements Dispatcher {
         }
 
         try {
-            await this.stack[context.stackIndex].dispatch(context.event);
+            await this.stack[context.stackIndex]!.dispatch(context.event);
         } catch (e) {
             context.event.error = e as RoutupError;
 
@@ -257,7 +263,7 @@ export class Router implements Dispatcher {
             context.event.method &&
             context.event.method === MethodName.OPTIONS
         ) {
-            if (context.event.methodsAllowed.indexOf(MethodName.GET) !== -1) {
+            if (context.event.methodsAllowed.includes(MethodName.GET)) {
                 context.event.methodsAllowed.push(MethodName.HEAD);
             }
 
@@ -394,8 +400,7 @@ export class Router implements Dispatcher {
     ) {
         let path : Path | undefined;
 
-        for (let i = 0; i < input.length; i++) {
-            const element = input[i];
+        for (const element of input) {
             if (isPath(element)) {
                 path = element;
                 continue;
@@ -441,9 +446,7 @@ export class Router implements Dispatcher {
 
     use(...input: unknown[]) : this {
         let path : Path | undefined;
-        for (let i = 0; i < input.length; i++) {
-            const item = input[i];
-
+        for (const item of input) {
             if (isPath(item)) {
                 path = withLeadingSlash(item);
                 continue;
@@ -473,7 +476,9 @@ export class Router implements Dispatcher {
 
             if (isPlugin(item)) {
                 if (path) {
-                    this.install(item, { path });
+                    this.install(item, {
+                        path 
+                    });
                 } else {
                     this.install(item);
                 }
@@ -490,7 +495,9 @@ export class Router implements Dispatcher {
     ) : this {
         const name = context.name || plugin.name;
 
-        const router = new Router({ name });
+        const router = new Router({
+            name 
+        });
         plugin.install(router);
 
         if (context.path) {

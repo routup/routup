@@ -7,13 +7,16 @@ type ResponseFormats = {
 };
 
 export function sendFormat(res: Response, input: ResponseFormats) {
-    const { default: formatDefault, ...formats } = input;
+    const {
+        default: formatDefault, 
+        ...formats 
+    } = input;
 
     const contentTypes = Object.keys(formats);
 
     const contentType = getRequestAcceptableContentType(res.req, contentTypes);
     if (contentType) {
-        formats[contentType]();
+        formats[contentType]!();
 
         return;
     }

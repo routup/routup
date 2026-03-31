@@ -1,7 +1,6 @@
+import { describe, expect, it } from 'vitest';
 import type { TrustProxyFn } from '../../../src/utils';
-import {
-    buildTrustProxyFn,
-} from '../../../src/utils';
+import { buildTrustProxyFn, } from '../../../src/utils';
 
 describe('src/utils/trust-proxy', () => {
     it('should build trust proxy fn', () => {

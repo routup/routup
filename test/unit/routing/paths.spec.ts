@@ -1,7 +1,6 @@
+import { describe, expect, it } from 'vitest';
 import supertest from 'supertest';
-import {
-    Router, coreHandler, createNodeDispatcher,
-} from '../../../src';
+import { Router,coreHandler,createNodeDispatcher, } from '../../../src';
 
 describe('routing/paths', () => {
     it('should handle path', async () => {
@@ -42,11 +41,15 @@ describe('routing/paths', () => {
     });
 
     it('should handle path for nested routers', async () => {
-        const child = new Router({ path: '/bar' });
+        const child = new Router({
+            path: '/bar' 
+        });
 
         child.get('/baz', coreHandler(() => '/foo/bar/baz'));
 
-        const router = new Router({ path: '/foo' });
+        const router = new Router({
+            path: '/foo' 
+        });
         router.use(child);
 
         const server = supertest(createNodeDispatcher(router));

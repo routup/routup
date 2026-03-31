@@ -5,7 +5,10 @@ import type { RoutupError } from '../error';
 import { nextPlaceholder } from '../utils';
 import { HookName } from './constants';
 import type {
-    HookDefaultListener, HookErrorListener, HookListener, HookUnsubscribeFn,
+    HookDefaultListener, 
+    HookErrorListener, 
+    HookListener, 
+    HookUnsubscribeFn,
 } from './types';
 
 export class HookManager {

@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer';
+import { Buffer } from 'node:buffer';
 import { merge } from 'smob';
 import { isObject } from '../object';
 import { createEtag } from './module';

@@ -68,14 +68,14 @@ export async function sendFile(
         const rangeHeader = res.req.headers[HeaderName.RANGE];
         if (rangeHeader) {
             const [x, y] = rangeHeader.replace('bytes=', '')
-                .split('-');
+                .split('-') as [string, string];
 
             contentOptions.end = Math.min(
-                parseInt(y, 10) || stats.size - 1,
+                Number.parseInt(y, 10) || stats.size - 1,
                 stats.size - 1,
             );
 
-            contentOptions.start = parseInt(x, 10) || 0;
+            contentOptions.start = Number.parseInt(x, 10) || 0;
 
             if (contentOptions.end >= stats.size) {
                 contentOptions.end = stats.size - 1;

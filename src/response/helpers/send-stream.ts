@@ -1,4 +1,4 @@
-import type { Readable as NodeReadable } from 'stream';
+import type { Readable as NodeReadable } from 'node:stream';
 import type { NodeReadableStream, WebReadableStream } from '../../types';
 import { isWebStream } from '../../utils';
 import type { Response } from '../types';

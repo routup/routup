@@ -1,7 +1,7 @@
 import { get, getType } from 'mime-explorer';
 
 export function getMimeType(type: string) : string | undefined {
-    if (type.indexOf('/') !== -1) {
+    if (type.includes('/')) {
         return type;
     }
 

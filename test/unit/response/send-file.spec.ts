@@ -1,10 +1,13 @@
-import { createReadStream } from 'fs';
-import fs from 'node:fs';
+import { describe, expect, it } from 'vitest';
+import fs, { createReadStream } from 'node:fs';
 import supertest from 'supertest';
 import type { SendFileOptions } from '../../../src';
 import {
     HeaderName,
-    Router, coreHandler, createNodeDispatcher, sendFile,
+    Router, 
+    coreHandler, 
+    createNodeDispatcher, 
+    sendFile,
 } from '../../../src';
 import { createRequestListener } from '../../handler';
 
@@ -32,7 +35,10 @@ describe('src/helpers/response/send-file', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8');
-        expect(response.body).toEqual({ id: 1, name: 'tada5hi' });
+        expect(response.body).toEqual({
+            id: 1,
+            name: 'tada5hi' 
+        });
     });
 
     it('should not send file promise', async () => {
@@ -62,7 +68,10 @@ describe('src/helpers/response/send-file', () => {
         expect(response.statusCode).toEqual(200);
         expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8');
         expect(response.headers[HeaderName.CONTENT_DISPOSITION]).toEqual('attachment; filename="dummy.json"');
-        expect(response.body).toEqual({ id: 1, name: 'tada5hi' });
+        expect(response.body).toEqual({
+            id: 1,
+            name: 'tada5hi' 
+        });
     });
 
     it('should shrink end of range if it results in an overflow', async () => {
@@ -77,7 +86,9 @@ describe('src/helpers/response/send-file', () => {
         expect(response).toBeDefined();
         expect(response.status).toEqual(200);
 
-        const file = await fs.promises.readFile('test/data/dummy.txt', { encoding: 'utf-8' });
+        const file = await fs.promises.readFile('test/data/dummy.txt', {
+            encoding: 'utf-8' 
+        });
 
         expect(response.headers[HeaderName.ETag].substring(0, 6)).toEqual('W/"631');
         expect(response.headers[HeaderName.CONTENT_RANGE]).toEqual(`${`bytes 10-${file.length - 1}`}/${file.length}`);

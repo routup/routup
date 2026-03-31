@@ -1,11 +1,7 @@
 import { createError } from '../../error';
 import { setRequestMountPath, setRequestParams, setRequestRouterPath } from '../../request';
-import {
-    send,
-} from '../../response';
-import {
-    isPromise,
-} from '../../utils';
+import { send } from '../../response';
+import { isPromise } from '../../utils';
 import type { DispatchEvent } from './module';
 
 type DispatchTargetFn = (next: (err?: Error) => any) => unknown;

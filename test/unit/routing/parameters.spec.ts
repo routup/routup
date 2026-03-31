@@ -1,7 +1,13 @@
+import { describe, expect, it } from 'vitest';
 import supertest from 'supertest';
 import {
     Router,
-    coreHandler, createNodeDispatcher, send, setRequestParam, useRequestParam, useRequestParams,
+    coreHandler,
+    createNodeDispatcher,
+    send, 
+    setRequestParam, 
+    useRequestParam, 
+    useRequestParams,
 } from '../../../src';
 import { createRequestListener } from '../../handler';
 
@@ -17,7 +23,10 @@ describe('routing/parameters', () => {
             .get('/123/run');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({ id: '123', action: 'run' });
+        expect(response.body).toEqual({
+            id: '123',
+            action: 'run' 
+        });
     });
 
     it('should pass on captured parameters', async () => {
@@ -33,7 +42,10 @@ describe('routing/parameters', () => {
             .get('/123/run');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({ id: '123', action: 'run' });
+        expect(response.body).toEqual({
+            id: '123',
+            action: 'run' 
+        });
     });
 
     it('should set and receive a single param on the fly', async () => {

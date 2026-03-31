@@ -27,7 +27,7 @@ export function getRequestHostName(req: Request, options?: RequestHostNameOption
         hostname = req.headers[HeaderName.HOST];
     } else {
         hostname = Array.isArray(hostname) ? hostname.pop() : hostname;
-        if (hostname && hostname.indexOf(',') !== -1) {
+        if (hostname && hostname.includes(',')) {
             hostname = hostname.substring(0, hostname.indexOf(',')).trimEnd();
         }
     }

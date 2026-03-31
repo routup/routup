@@ -1,6 +1,9 @@
 import type { Path } from '../path';
 import type {
-    EtagFn, EtagInput, TrustProxyFn, TrustProxyInput,
+    EtagFn, 
+    EtagInput, 
+    TrustProxyFn, 
+    TrustProxyInput,
 } from '../utils';
 
 export type RouterOptions = {

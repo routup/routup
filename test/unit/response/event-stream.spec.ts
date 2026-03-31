@@ -1,3 +1,4 @@
+import { beforeAll, describe, expect, it } from 'vitest';
 import { clearInterval } from 'node:timers';
 import supertest from 'supertest';
 import { HeaderName, createEventStream } from '../../../src';
@@ -19,7 +20,9 @@ describe('src/helpers/response/server-event', () => {
 
             let i = 0;
             interval = setInterval(() => {
-                stream.write({ data: 'hello world' });
+                stream.write({
+                    data: 'hello world' 
+                });
 
                 i++;
                 if (i > 50) {

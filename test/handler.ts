@@ -1,4 +1,4 @@
-import type { RequestListener } from 'http';
+import type { RequestListener } from 'node:http';
 import type { CoreHandlerFn } from '../src';
 
 export function createRequestListener(handler: CoreHandlerFn) : RequestListener {

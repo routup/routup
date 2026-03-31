@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { findRouterOption, setRouterOptions, unsetRouterOptions } from '../../../src/router-options';
 
 describe('src/config/**', () => {
@@ -10,7 +11,9 @@ describe('src/config/**', () => {
     });
 
     it('should apply and revoke values', () => {
-        setRouterOptions(1, { subdomainOffset: 5 });
+        setRouterOptions(1, {
+            subdomainOffset: 5 
+        });
         expect(findRouterOption('subdomainOffset', [1])).toEqual(5);
 
         unsetRouterOptions(1);

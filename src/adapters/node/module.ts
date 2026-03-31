@@ -42,7 +42,6 @@ export async function dispatchNodeRequest(
 
 export function createNodeDispatcher(router: Router): RequestListener {
     return (req: Request, res: Response) => {
-        // eslint-disable-next-line no-void
         void dispatchNodeRequest(router, req, res);
     };
 }

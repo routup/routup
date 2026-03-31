@@ -1,20 +1,29 @@
 import supertest from 'supertest';
+import {
+ 
+    describe, 
+    expect, 
+    it, 
+    vi 
+} from 'vitest';
 import type { DispatchEvent } from '../../../src';
 import {
-    Router, coreHandler, createNodeDispatcher,
+    Router,
+    coreHandler,
+    createNodeDispatcher,
 } from '../../../src';
 import type { HookDefaultListener } from '../../../src/hook';
 import { HookName } from '../../../src/hook';
 
 type HookMountOutput = {
-    [K in `${HookName}`]: jest.Mock<any, any, any>
+    [K in `${HookName}`]: ReturnType<typeof vi.fn>
 };
 function mountHooks(router: Router) : HookMountOutput {
     const output : Partial<HookMountOutput> = {};
     const keys = Object.values(HookName);
-    for (let i = 0; i < keys.length; i++) {
-        const key = keys[i] as `${HookName}`;
-        const fn = jest.fn();
+    for (const key_ of keys) {
+        const key = key_ as `${HookName}`;
+        const fn = vi.fn();
         router.on(key as any, (event: DispatchEvent) => {
             fn();
 
@@ -79,8 +88,8 @@ describe('src/router/hooks', () => {
         const hooks = mountHooks(router);
 
         const keys = Object.keys(hooks) as (HookName[]);
-        for (let i = 0; i < keys.length; i++) {
-            router.off(keys[i]);
+        for (const key of keys) {
+            router.off(key);
         }
 
         const server = supertest(createNodeDispatcher(router));
@@ -102,8 +111,10 @@ describe('src/router/hooks', () => {
         const router = new Router();
         router.use(coreHandler(() => 'Hello, World!'));
 
-        const fnJest = jest.fn();
-        const fn : HookDefaultListener = ({ next }) => {
+        const fnJest = vi.fn();
+        const fn : HookDefaultListener = ({
+            next 
+        }) => {
             fnJest();
 
             next();
@@ -128,7 +139,9 @@ describe('src/router/hooks', () => {
         router.use(coreHandler(() => 'Hello, World!'));
 
         router.on(HookName.DISPATCH_START, () => { throw new Error('dispatch start failed!'); });
-        router.on(HookName.ERROR, ({ error }) => error.message);
+        router.on(HookName.ERROR, ({
+            error 
+        }) => error.message);
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -144,7 +157,9 @@ describe('src/router/hooks', () => {
         router.use(coreHandler(() => 'Hello, World!'));
 
         router.on(HookName.CHILD_MATCH, () => { throw new Error('match failed!'); });
-        router.on(HookName.ERROR, ({ error }) => error.message);
+        router.on(HookName.ERROR, ({
+            error 
+        }) => error.message);
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -159,8 +174,10 @@ describe('src/router/hooks', () => {
         const router = new Router();
         router.use(coreHandler(() => 'Hello, World!'));
 
-        const fnJest = jest.fn();
-        const fn : HookDefaultListener = ({ next }) => {
+        const fnJest = vi.fn();
+        const fn : HookDefaultListener = ({
+            next 
+        }) => {
             fnJest();
 
             next();
@@ -186,7 +203,9 @@ describe('src/router/hooks', () => {
             fn: () => {
                 throw new Error('Hello, World!');
             },
-            onError({ error }) {
+            onError({
+                error 
+            }) {
                 return `Error: ${error.message}`;
             },
         }));
@@ -203,16 +222,20 @@ describe('src/router/hooks', () => {
     it('should trigger handler hooks', async () => {
         const router = new Router();
 
-        const onBefore = jest.fn();
-        const onAfter = jest.fn();
+        const onBefore = vi.fn();
+        const onAfter = vi.fn();
 
         router.use(coreHandler({
             fn: () => 'Hello, World!',
-            onBefore({ next }) {
+            onBefore({
+                next 
+            }) {
                 onBefore();
                 next();
             },
-            onAfter({ next }) {
+            onAfter({
+                next 
+            }) {
                 onAfter();
                 next();
             },

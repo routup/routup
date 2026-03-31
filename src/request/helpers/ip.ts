@@ -23,5 +23,5 @@ export function getRequestIP(req: Request, options?: RequestIpOptions) : string 
     }
 
     const addrs = all(req, trustProxy);
-    return addrs[addrs.length - 1];
+    return addrs[addrs.length - 1] as string;
 }

@@ -72,7 +72,9 @@ export class EventStream {
 
     write(message: string | EventStreamMessage) : void {
         if (typeof message === 'string') {
-            this.write({ data: message });
+            this.write({
+                data: message 
+            });
             return;
         }
 
@@ -118,8 +120,8 @@ export class EventStream {
         }
 
         const listeners = this.eventHandlers[event].slice();
-        for (let i = 0; i < listeners.length; i++) {
-            listeners[i].apply(this, args as any);
+        for (const listener of listeners) {
+            listener.apply(this, args as any);
         }
     }
 }

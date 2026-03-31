@@ -26,8 +26,8 @@ export function getRequestAcceptableContentType(req: Request, input?: string | s
 
     let polluted = false;
     const mimeTypes : string[] = [];
-    for (let i = 0; i < items.length; i++) {
-        const mimeType = getMimeType(items[i]);
+    for (const item of items) {
+        const mimeType = getMimeType(item);
         if (mimeType) {
             mimeTypes.push(mimeType);
         } else {
@@ -42,7 +42,7 @@ export function getRequestAcceptableContentType(req: Request, input?: string | s
             return items[0];
         }
 
-        return items[mimeTypes.indexOf(matches[0])];
+        return items[mimeTypes.indexOf(matches[0]!)];
     }
 
     return undefined;

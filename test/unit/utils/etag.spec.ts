@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import type { EtagFn } from '../../../src/utils';
 import { buildEtagFn, createEtag, generateETag } from '../../../src/utils';
@@ -13,7 +14,9 @@ describe('src/utils/etag', () => {
         expect(fn).toBeDefined();
         expect(await fn('foo')).toBeUndefined();
 
-        fn = buildEtagFn({ threshold: 10_000 });
+        fn = buildEtagFn({
+            threshold: 10_000 
+        });
         expect(fn).toBeDefined();
         expect(await fn('foo')).toBeUndefined();
     });

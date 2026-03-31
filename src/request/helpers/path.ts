@@ -20,7 +20,7 @@ export function useRequestPath(req: Request) : string {
         setProperty(req, PathSymbol, parsed.pathname);
 
         return parsed.pathname;
-    } catch (_e) {
+    } catch {
         return '/';
     }
 }

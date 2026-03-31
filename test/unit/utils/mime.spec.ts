@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { getCharsetForMimeType } from '../../../src/utils';
 
 describe('src/utils/mime', () => {

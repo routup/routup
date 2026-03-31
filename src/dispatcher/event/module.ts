@@ -51,7 +51,7 @@ export class DispatchEvent {
     /**
      * Indicate if the request has already been dispatched/send.
      */
-    protected _dispatched: boolean;
+    protected _dispatched!: boolean;
 
     /**
      * Ids of chained router instances.

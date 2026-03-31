@@ -24,5 +24,7 @@ export function createError(input: Input | unknown) : RoutupError {
         return new RoutupError();
     }
 
-    return new RoutupError({ cause: input }, input);
+    return new RoutupError({
+        cause: input 
+    }, input);
 }

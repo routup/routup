@@ -1,7 +1,7 @@
 import type { OutgoingHttpHeader, OutgoingHttpHeaders } from 'node:http';
 import type { Socket } from 'node:net';
 import type { Writable as NodeWritable } from 'node:stream';
-import { Buffer } from 'buffer';
+import { Buffer } from 'node:buffer';
 import { Writable } from 'readable-stream';
 import { hasOwnProperty } from 'smob';
 import { HeaderName } from '../constants';
@@ -9,18 +9,17 @@ import type { Request } from '../request';
 import { splitCookiesString } from '../utils';
 import type { Response } from './types';
 
-type BufferEncoding =
-    | 'ascii'
-    | 'utf8'
-    | 'utf-8'
-    | 'utf16le'
-    | 'ucs2'
-    | 'ucs-2'
-    | 'base64'
-    | 'base64url'
-    | 'latin1'
-    | 'binary'
-    | 'hex';
+type BufferEncoding =    | 'ascii' |
+    'utf8' |
+    'utf-8' |
+    'utf16le' |
+    'ucs2' |
+    'ucs-2' |
+    'base64' |
+    'base64url' |
+    'latin1' |
+    'binary' |
+    'hex';
 
 type Callback = (error?: (Error | null)) => void;
 
@@ -74,8 +73,8 @@ export function createResponse(request: Request) : Response {
             if (output) {
                 const arrayBuffer = new ArrayBuffer(output.length);
                 const view = new Uint8Array(arrayBuffer);
-                for (let i = 0; i < output.length; ++i) {
-                    view[i] = output[i];
+                for (const [i, byte] of output.entries()) {
+                    view[i] = byte;
                 }
                 return arrayBuffer;
             }
@@ -191,16 +190,16 @@ export function createResponse(request: Request) : Response {
             const headers = (arg2 || arg1) as OutgoingHttpHeaders[] | OutgoingHttpHeaders;
             if (headers) {
                 if (Array.isArray(headers)) {
-                    for (let i = 0; i < headers.length; i++) {
-                        const keys = Object.keys(headers[i]);
+                    for (const [i, header] of headers.entries()) {
+                        const keys = Object.keys(header);
                         for (let j = 0; j < keys.length; j++) {
-                            this.setHeader(keys[i], headers[i][keys[j]] as OutgoingHttpHeader);
+                            this.setHeader(keys[i]!, header[keys[j]!] as OutgoingHttpHeader);
                         }
                     }
                 } else {
                     const keys = Object.keys(headers);
-                    for (let i = 0; i < keys.length; i++) {
-                        this.setHeader(keys[i], headers[keys[i]] as OutgoingHttpHeader);
+                    for (const key of keys) {
+                        this.setHeader(key, headers[key] as OutgoingHttpHeader);
                     }
                 }
             }

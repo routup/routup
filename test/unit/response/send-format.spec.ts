@@ -1,7 +1,8 @@
-import path from 'node:path';
+import { describe, expect, it } from 'vitest';
 import supertest from 'supertest';
 import {
-    HeaderName, send, sendAccepted, sendCreated, sendFile, sendFormat, sendRedirect,
+    send,
+    sendFormat,
 } from '../../../src';
 import { createRequestListener } from '../../handler';
 

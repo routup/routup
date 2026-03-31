@@ -20,7 +20,7 @@ export function unsetRouterOptions(id: number) {
 }
 
 export function findRouterOption<
-K extends keyof RouterOptions,
+    K extends keyof RouterOptions,
 >(key: K, path?: number[]) : RouterOptions[K] {
     if (!path || path.length === 0) {
         return defaults[key];
@@ -28,11 +28,13 @@ K extends keyof RouterOptions,
 
     if (path.length > 0) {
         for (let i = path.length; i >= 0; i--) {
+            const segment = path[i];
             if (
-                hasOwnProperty(instances, path[i]) &&
-                typeof instances[path[i]][key] !== 'undefined'
+                segment !== undefined &&
+                hasOwnProperty(instances, segment) &&
+                typeof instances[segment]![key] !== 'undefined'
             ) {
-                return instances[path[i]][key] as RouterOptions[K];
+                return instances[segment]![key] as RouterOptions[K];
             }
         }
     }

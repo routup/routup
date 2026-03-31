@@ -1,23 +1,13 @@
 {
     "extends": "@tada5hi/tsconfig",
     "compilerOptions": {
-        "lib": [
-            "ESNext",
-            "DOM"
-        ],
-        "module": "ES2022",
-        "outDir": "dist",
         "target": "ES2022",
+        "module": "ESNext",
         "moduleResolution": "bundler",
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "esModuleInterop": true,
-        "strictPropertyInitialization": false
+        "noEmit": true,
+        "allowImportingTsExtensions": true
     },
     "include": [
-        "src/**/*.ts"
-    ],
-    "exclude": [
-        "node_modules/**/*"
+        "src/**/*"
     ]
 }

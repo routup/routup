@@ -1,3 +1,4 @@
+import { describe, it } from 'vitest';
 import supertest from 'supertest';
 import { HeaderName, getRequestHostName, send } from '../../../src';
 import { createRequestListener } from '../../handler';
@@ -49,7 +50,9 @@ describe('src/helpers/request/hostname', () => {
 
     it('should determine hostname with trust proxy', async () => {
         const server = supertest(createRequestListener((req, res) => {
-            send(res, getRequestHostName(req, { trustProxy: true }));
+            send(res, getRequestHostName(req, {
+                trustProxy: true 
+            }));
         }));
 
         await server
@@ -73,7 +76,9 @@ describe('src/helpers/request/hostname', () => {
 
     it('should determine hostname with trust proxy restriction', async () => {
         const server = supertest(createRequestListener((req, res) => {
-            send(res, getRequestHostName(req, { trustProxy: '10.1.10.0' }));
+            send(res, getRequestHostName(req, {
+                trustProxy: '10.1.10.0' 
+            }));
         }));
 
         await server

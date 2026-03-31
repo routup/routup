@@ -4,9 +4,7 @@ import { createResponse } from '../../response';
 import type { Router } from '../../router';
 import { toMethodName } from '../../utils';
 import { DispatchEvent } from '../../dispatcher';
-import type {
-    RawRequest, RawResponse, RawResponseHeaders,
-} from './type';
+import type { RawRequest,RawResponse,RawResponseHeaders, } from './type';
 
 export async function dispatchRawRequest(
     router: Router,
@@ -27,12 +25,12 @@ export async function dispatchRawRequest(
 
         const headers = res.getHeaders();
         const keys = Object.keys(headers);
-        for (let i = 0; i < keys.length; i++) {
-            const header = headers[keys[i]];
+        for (const key of keys) {
+            const header = headers[key];
             if (typeof header === 'number') {
-                output[keys[i]] = `${header}`;
+                output[key] = `${header}`;
             } else if (header) {
-                output[keys[i]] = header;
+                output[key] = header;
             }
         }
 

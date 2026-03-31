@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer';
+import { Buffer } from 'node:buffer';
 import { HeaderName } from '../../constants';
 import { findRouterOption } from '../../router-options';
 import { useRequestRouterPath } from '../../request';

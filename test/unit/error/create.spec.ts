@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { InternalServerError, NotFoundError } from '@ebec/http';
 import { RoutupError, createError } from '../../../src';
 
@@ -14,7 +15,10 @@ describe('src/error/create', () => {
     });
 
     it('should create error by options', () => {
-        const error = createError({ statusCode: 510, statusMessage: 'foo' });
+        const error = createError({
+            statusCode: 510,
+            statusMessage: 'foo' 
+        });
         expect(error.statusCode).toEqual(510);
         expect(error.statusMessage).toEqual('foo');
     });
