@@ -10,7 +10,14 @@ export function appendResponseHeader(
 ) {
     let header = res.getHeader(name);
     if (!header) {
-        res.setHeader(name, value);
+        if (Array.isArray(value)) {
+            res.setHeader(
+                name,
+                value.map((v) => sanitizeHeaderValue(`${v}`)) as readonly string[],
+            );
+        } else {
+            res.setHeader(name, sanitizeHeaderValue(`${value}`));
+        }
 
         return;
     }
@@ -32,11 +39,11 @@ export function appendResponseHeaderDirective(
     let header = res.getHeader(name);
     if (!header) {
         if (Array.isArray(value)) {
-            res.setHeader(name, value.join('; '));
+            res.setHeader(name, sanitizeHeaderValue(value.join('; ')));
             return;
         }
 
-        res.setHeader(name, value);
+        res.setHeader(name, sanitizeHeaderValue(`${value}`));
         return;
     }
 

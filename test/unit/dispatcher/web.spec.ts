@@ -29,6 +29,7 @@ describe('bridge/web', () => {
             [HeaderName.CONTENT_TYPE, 'text/html'],
             [HeaderName.ETag, 'W/"4-bb1UjMA+RLi0S25o5WJVzkJzrkk"'],
         ]);
+        expect(response.headers.has(HeaderName.CONTENT_ENCODING)).toBeFalsy();
 
         const data = await response.text();
         expect(data).toEqual('/foo');

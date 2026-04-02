@@ -1,4 +1,5 @@
 import { RoutupError } from '../../error';
+import { sanitizeHeaderValue } from '../../utils';
 import type { Response } from '../types';
 import { send } from './send';
 
@@ -37,7 +38,7 @@ export function sendRedirect(res: Response, location: string, statusCode = 302):
     }
 
     res.statusCode = statusCode;
-    res.setHeader('location', location);
+    res.setHeader('location', sanitizeHeaderValue(location));
 
     const escapedLoc = escapeHtml(location);
     const html = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=${escapedLoc}"></head></html>`;

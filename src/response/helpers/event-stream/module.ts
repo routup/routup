@@ -33,8 +33,19 @@ export class EventStream {
 
         this.eventHandlers = {};
 
-        this.maxMessageSize = options?.maxMessageSize;
-        this.maxListeners = options?.maxListeners;
+        if (options?.maxMessageSize !== undefined) {
+            if (!Number.isInteger(options.maxMessageSize) || options.maxMessageSize < 0) {
+                throw new TypeError('maxMessageSize must be a non-negative integer.');
+            }
+            this.maxMessageSize = options.maxMessageSize;
+        }
+
+        if (options?.maxListeners !== undefined) {
+            if (!Number.isInteger(options.maxListeners) || options.maxListeners < 0) {
+                throw new TypeError('maxListeners must be a non-negative integer.');
+            }
+            this.maxListeners = options.maxListeners;
+        }
 
         this.open();
     }
@@ -88,9 +99,11 @@ export class EventStream {
 
         const serialized = serializeEventStreamMessage(message);
 
-        if (this.maxMessageSize && serialized.length > this.maxMessageSize) {
+        const serializedSize = Buffer.byteLength(serialized, 'utf8');
+
+        if (this.maxMessageSize && serializedSize > this.maxMessageSize) {
             this.emit('error', new Error(
-                `SSE message size (${serialized.length}) exceeds limit (${this.maxMessageSize}).`,
+                `SSE message size (${serializedSize}) exceeds limit (${this.maxMessageSize}).`,
             ));
             return;
         }
