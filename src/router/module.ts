@@ -101,30 +101,27 @@ export class Router implements Dispatcher {
     // --------------------------------------------------
 
     protected async executePipelineStep(context: RouterPipelineContext) : Promise<void> {
-        while (context.step !== RouterPipelineStep.FINISH) {
-            switch (context.step) {
-                case RouterPipelineStep.START:
-                    await this.executePipelineStepStart(context);
-                    break;
-                case RouterPipelineStep.LOOKUP:
-                    await this.executePipelineStepLookup(context);
-                    break;
-                case RouterPipelineStep.CHILD_BEFORE:
-                    await this.executePipelineStepChildBefore(context);
-                    break;
-                case RouterPipelineStep.CHILD_DISPATCH:
-                    await this.executePipelineStepChildDispatch(context);
-                    break;
-                case RouterPipelineStep.CHILD_AFTER:
-                    await this.executePipelineStepChildAfter(context);
-                    break;
-                default:
-                    context.step = RouterPipelineStep.FINISH;
-                    break;
+        switch (context.step) {
+            case RouterPipelineStep.START: {
+                return this.executePipelineStepStart(context);
+            }
+            case RouterPipelineStep.LOOKUP: {
+                return this.executePipelineStepLookup(context);
+            }
+            case RouterPipelineStep.CHILD_BEFORE: {
+                return this.executePipelineStepChildBefore(context);
+            }
+            case RouterPipelineStep.CHILD_DISPATCH: {
+                return this.executePipelineStepChildDispatch(context);
+            }
+            case RouterPipelineStep.CHILD_AFTER: {
+                return this.executePipelineStepChildAfter(context);
+            }
+            case RouterPipelineStep.FINISH:
+            default: {
+                return this.executePipelineStepFinish(context);
             }
         }
-
-        return this.executePipelineStepFinish(context);
     }
 
     protected async executePipelineStepStart(context: RouterPipelineContext) : Promise<void> {
@@ -135,6 +132,8 @@ export class Router implements Dispatcher {
         } else {
             context.step = RouterPipelineStep.LOOKUP;
         }
+
+        return this.executePipelineStep(context);
     }
 
     protected async executePipelineStepLookup(context: RouterPipelineContext) : Promise<void> {
@@ -169,7 +168,7 @@ export class Router implements Dispatcher {
                             context.step = RouterPipelineStep.CHILD_BEFORE;
                         }
 
-                        return;
+                        return this.executePipelineStep(context);
                     }
                 }
 
@@ -188,13 +187,14 @@ export class Router implements Dispatcher {
                     context.step = RouterPipelineStep.CHILD_BEFORE;
                 }
 
-                return;
+                return this.executePipelineStep(context);
             }
 
             context.stackIndex++;
         }
 
         context.step = RouterPipelineStep.FINISH;
+        return this.executePipelineStep(context);
     }
 
     protected async executePipelineStepChildBefore(context: RouterPipelineContext) : Promise<void> {
@@ -205,6 +205,8 @@ export class Router implements Dispatcher {
         } else {
             context.step = RouterPipelineStep.CHILD_DISPATCH;
         }
+
+        return this.executePipelineStep(context);
     }
 
     protected async executePipelineStepChildAfter(context: RouterPipelineContext) : Promise<void> {
@@ -215,6 +217,8 @@ export class Router implements Dispatcher {
         } else {
             context.step = RouterPipelineStep.LOOKUP;
         }
+
+        return this.executePipelineStep(context);
     }
 
     protected async executePipelineStepChildDispatch(context: RouterPipelineContext) : Promise<void> {
@@ -223,7 +227,7 @@ export class Router implements Dispatcher {
             typeof this.stack[context.stackIndex] === 'undefined'
         ) {
             context.step = RouterPipelineStep.FINISH;
-            return;
+            return this.executePipelineStep(context);
         }
 
         try {
@@ -236,6 +240,8 @@ export class Router implements Dispatcher {
 
         context.stackIndex++;
         context.step = RouterPipelineStep.CHILD_AFTER;
+
+        return this.executePipelineStep(context);
     }
 
     protected async executePipelineStepFinish(context: RouterPipelineContext) : Promise<void> {
