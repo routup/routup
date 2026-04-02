@@ -94,9 +94,7 @@ export class Router implements Dispatcher {
 
         this.pathMatcher = new PathMatcher(
             withLeadingSlash(withoutTrailingSlash(`${value}`)),
-            {
-                end: false,
-            },
+            { end: false },
         );
     }
 
@@ -476,9 +474,7 @@ export class Router implements Dispatcher {
 
             if (isPlugin(item)) {
                 if (path) {
-                    this.install(item, {
-                        path 
-                    });
+                    this.install(item, { path });
                 } else {
                     this.install(item);
                 }
@@ -495,9 +491,7 @@ export class Router implements Dispatcher {
     ) : this {
         const name = context.name || plugin.name;
 
-        const router = new Router({
-            name 
-        });
+        const router = new Router({ name });
         plugin.install(router);
 
         if (context.path) {

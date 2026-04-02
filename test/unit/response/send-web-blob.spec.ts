@@ -13,9 +13,7 @@ describe('src/helpers/response/send-web-blob', () => {
 
         router.get('/', coreHandler(() => new Blob(
             ['<q id="a"><span id="b">hey!</span></q>'],
-            {
-                type: 'text/html',
-            },
+            { type: 'text/html' },
         )));
 
         const server = supertest(createNodeDispatcher(router));

@@ -46,13 +46,9 @@ describe('src/helpers/request/env', () => {
 
     it('should append env to request', async () => {
         const server = supertest(createRequestListener((req, res) => {
-            setRequestEnv(req, {
-                foo: 'bar',
-            });
+            setRequestEnv(req, { foo: 'bar' });
 
-            setRequestEnv(req, {
-                bar: 'baz',
-            }, true);
+            setRequestEnv(req, { bar: 'baz' }, true);
 
             send(res, useRequestEnv(req));
         }));
@@ -69,13 +65,9 @@ describe('src/helpers/request/env', () => {
 
     it('should overwrite env of request', async () => {
         const server = supertest(createRequestListener((req, res) => {
-            setRequestEnv(req, {
-                foo: 'bar',
-            });
+            setRequestEnv(req, { foo: 'bar' });
 
-            setRequestEnv(req, {
-                bar: 'baz',
-            });
+            setRequestEnv(req, { bar: 'baz' });
 
             send(res, useRequestEnv(req));
         }));
@@ -84,9 +76,7 @@ describe('src/helpers/request/env', () => {
             .get('/');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({
-            bar: 'baz',
-        });
+        expect(response.body).toEqual({ bar: 'baz' });
     });
 
     it('should unset env of request', async () => {
@@ -105,9 +95,7 @@ describe('src/helpers/request/env', () => {
             .get('/');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({
-            bar: 'baz',
-        });
+        expect(response.body).toEqual({ bar: 'baz' });
     });
 
     it('should use request env', async () => {

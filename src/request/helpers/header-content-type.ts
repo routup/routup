@@ -18,5 +18,5 @@ export function matchRequestContentType(req: Request, contentType: string) : boo
         return header[0] === getMimeType(contentType);
     }
 
-    return header.split('; ').shift() === getMimeType(contentType);
+    return header.split(';')[0].trim() === getMimeType(contentType);
 }

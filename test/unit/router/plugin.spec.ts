@@ -56,9 +56,7 @@ describe('src/plugin/**', () => {
 
     it('should install plugin with options', async () => {
         const router = new Router();
-        router.use(plugin({
-            handlerPath: '/foo' 
-        }));
+        router.use(plugin({ handlerPath: '/foo' }));
 
         const server = supertest(createNodeDispatcher(router));
 

@@ -1,14 +1,18 @@
 import type { EventStreamMessage } from './types';
 
+function stripNewlines(value: string) : string {
+    return value.replace(/[\r\n]/g, '');
+}
+
 export function serializeEventStreamMessage(message: EventStreamMessage): string {
     let result = '';
 
     if (message.id) {
-        result += `id: ${message.id}\n`;
+        result += `id: ${stripNewlines(message.id)}\n`;
     }
 
     if (message.event) {
-        result += `event: ${message.event}\n`;
+        result += `event: ${stripNewlines(message.event)}\n`;
     }
 
     if (
@@ -18,7 +22,11 @@ export function serializeEventStreamMessage(message: EventStreamMessage): string
         result += `retry: ${message.retry}\n`;
     }
 
-    result += `data: ${message.data}\n\n`;
+    const lines = message.data.replace(/\r/g, '').split('\n');
+    for (const line of lines) {
+        result += `data: ${line}\n`;
+    }
+    result += '\n';
 
     return result;
 }

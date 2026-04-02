@@ -8,7 +8,11 @@ function decodeParam(val: unknown) {
         return val;
     }
 
-    return decodeURIComponent(val);
+    try {
+        return decodeURIComponent(val);
+    } catch {
+        return val;
+    }
 }
 
 export class PathMatcher {
@@ -41,16 +45,17 @@ export class PathMatcher {
         ) {
             return {
                 path: '/',
-                params: {},
+                params: Object.create(null),
             };
         }
 
         if (this.path === '*') {
+            const wildcardParams : Record<string, unknown> = Object.create(null);
+            wildcardParams[0] = decodeParam(path);
+
             return {
                 path,
-                params: {
-                    0: decodeParam(path),
-                },
+                params: wildcardParams,
             };
         }
 
@@ -60,7 +65,7 @@ export class PathMatcher {
             return undefined;
         }
 
-        const params : Record<string, unknown> = {};
+        const params : Record<string, unknown> = Object.create(null);
 
         for (let i = 1; i < match.length; i++) {
             const key = this.regexpKeys[i - 1];

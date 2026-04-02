@@ -54,7 +54,13 @@ export function getRequestProtocol(
 
     const index = header.indexOf(',');
 
-    return index !== -1 ?
-        header.substring(0, index).trim() :
-        header.trim();
+    const forwarded = index !== -1 ?
+        header.substring(0, index).trim().toLowerCase() :
+        header.trim().toLowerCase();
+
+    if (forwarded === 'http' || forwarded === 'https') {
+        return forwarded;
+    }
+
+    return protocol;
 }

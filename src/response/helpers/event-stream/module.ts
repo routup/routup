@@ -6,6 +6,11 @@ import { setResponseGone } from '../gone';
 import type { EventStreamListener, EventStreamMessage } from './types';
 import { serializeEventStreamMessage } from './utils';
 
+export type EventStreamOptions = {
+    maxMessageSize?: number,
+    maxListeners?: number,
+};
+
 export class EventStream {
     protected response: Response;
 
@@ -15,16 +20,32 @@ export class EventStream {
 
     protected eventHandlers : Record<string, EventStreamListener[]>;
 
-    constructor(response: Response) {
+    protected maxMessageSize? : number;
+
+    protected maxListeners? : number;
+
+    constructor(response: Response, options?: EventStreamOptions) {
         this.response = response;
 
-        this.passThrough = new PassThrough({
-            encoding: 'utf-8',
-        });
+        this.passThrough = new PassThrough({ encoding: 'utf-8' });
 
         this.flushed = false;
 
         this.eventHandlers = {};
+
+        if (options?.maxMessageSize !== undefined) {
+            if (!Number.isInteger(options.maxMessageSize) || options.maxMessageSize < 0) {
+                throw new TypeError('maxMessageSize must be a non-negative integer.');
+            }
+            this.maxMessageSize = options.maxMessageSize;
+        }
+
+        if (options?.maxListeners !== undefined) {
+            if (!Number.isInteger(options.maxListeners) || options.maxListeners < 0) {
+                throw new TypeError('maxListeners must be a non-negative integer.');
+            }
+            this.maxListeners = options.maxListeners;
+        }
 
         this.open();
     }
@@ -72,9 +93,18 @@ export class EventStream {
 
     write(message: string | EventStreamMessage) : void {
         if (typeof message === 'string') {
-            this.write({
-                data: message 
-            });
+            this.write({ data: message });
+            return;
+        }
+
+        const serialized = serializeEventStreamMessage(message);
+
+        const serializedSize = Buffer.byteLength(serialized, 'utf8');
+
+        if (this.maxMessageSize && serializedSize > this.maxMessageSize) {
+            this.emit('error', new Error(
+                `SSE message size (${serializedSize}) exceeds limit (${this.maxMessageSize}).`,
+            ));
             return;
         }
 
@@ -82,7 +112,7 @@ export class EventStream {
             !this.passThrough.closed &&
             this.passThrough.writable
         ) {
-            this.passThrough.write(serializeEventStreamMessage(message));
+            this.passThrough.write(serialized);
         }
     }
 
@@ -109,6 +139,15 @@ export class EventStream {
     on(event: string, listener: EventStreamListener) : void {
         if (typeof this.eventHandlers[event] === 'undefined') {
             this.eventHandlers[event] = [];
+        }
+
+        if (this.maxListeners) {
+            const totalListeners = Object.values(this.eventHandlers)
+                .reduce((sum, handlers) => sum + handlers.length, 0);
+
+            if (totalListeners >= this.maxListeners) {
+                return;
+            }
         }
 
         this.eventHandlers[event].push(listener);

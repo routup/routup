@@ -19,7 +19,7 @@ describe('src/helpers/response/send', () => {
             .get('/');
 
         expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('text/html; charset=utf-8');
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('text/html');
     });
 
     it('should send redirect', async () => {

@@ -42,7 +42,15 @@ export function getRequestHostName(req: Request, options?: RequestHostNameOption
         0;
     const index = hostname.indexOf(':', offset);
 
-    return index !== -1 ?
+    const result = index !== -1 ?
         hostname.substring(0, index) :
         hostname;
+
+    // Reject hostnames with obviously invalid characters
+    // eslint-disable-next-line no-control-regex
+    if (/[\x00-\x1F\x7F\s/@\\]/.test(result)) {
+        return undefined;
+    }
+
+    return result;
 }

@@ -8,7 +8,7 @@ describe('src/helpers/request/hostname', () => {
         const server = supertest(createRequestListener((req, res) => {
             send(res, getRequestProtocol(req, {
                 default: 'http',
-                trustProxy: true 
+                trustProxy: true, 
             }));
         }));
 

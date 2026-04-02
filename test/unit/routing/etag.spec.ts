@@ -9,9 +9,7 @@ import {
 
 describe('src/router', () => {
     it('should not send etag', async () => {
-        const router = new Router({
-            etag: false,
-        });
+        const router = new Router({ etag: false });
 
         router.get('/', coreHandler(() => 'Hello world!'));
 

@@ -14,9 +14,7 @@ describe('src/utils/etag', () => {
         expect(fn).toBeDefined();
         expect(await fn('foo')).toBeUndefined();
 
-        fn = buildEtagFn({
-            threshold: 10_000 
-        });
+        fn = buildEtagFn({ threshold: 10_000 });
         expect(fn).toBeDefined();
         expect(await fn('foo')).toBeUndefined();
     });

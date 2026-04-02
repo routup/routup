@@ -1,5 +1,6 @@
 import type { OutgoingHttpHeader } from 'node:http';
 
+import { sanitizeHeaderValue } from '../../utils';
 import type { Response } from '../types';
 
 export function appendResponseHeader(
@@ -9,7 +10,14 @@ export function appendResponseHeader(
 ) {
     let header = res.getHeader(name);
     if (!header) {
-        res.setHeader(name, value);
+        if (Array.isArray(value)) {
+            res.setHeader(
+                name,
+                value.map((v) => sanitizeHeaderValue(`${v}`)) as readonly string[],
+            );
+        } else {
+            res.setHeader(name, sanitizeHeaderValue(`${value}`));
+        }
 
         return;
     }
@@ -18,7 +26,9 @@ export function appendResponseHeader(
         header = [header.toString()];
     }
 
-    res.setHeader(name, [...header, value] as readonly string[]);
+    res.setHeader(name, [...header, value].map(
+        (v) => sanitizeHeaderValue(`${v}`),
+    ) as readonly string[]);
 }
 
 export function appendResponseHeaderDirective(
@@ -29,11 +39,11 @@ export function appendResponseHeaderDirective(
     let header = res.getHeader(name);
     if (!header) {
         if (Array.isArray(value)) {
-            res.setHeader(name, value.join('; '));
+            res.setHeader(name, sanitizeHeaderValue(value.join('; ')));
             return;
         }
 
-        res.setHeader(name, value);
+        res.setHeader(name, sanitizeHeaderValue(`${value}`));
         return;
     }
 
@@ -56,5 +66,5 @@ export function appendResponseHeaderDirective(
 
     header = [...new Set(header)];
 
-    res.setHeader(name, header.join('; '));
+    res.setHeader(name, sanitizeHeaderValue(header.join('; ')));
 }

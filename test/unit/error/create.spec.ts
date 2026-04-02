@@ -17,7 +17,7 @@ describe('src/error/create', () => {
     it('should create error by options', () => {
         const error = createError({
             statusCode: 510,
-            statusMessage: 'foo' 
+            statusMessage: 'foo', 
         });
         expect(error.statusCode).toEqual(510);
         expect(error.statusMessage).toEqual('foo');

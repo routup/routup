@@ -118,9 +118,7 @@ export class Handler implements Dispatcher {
             return;
         }
 
-        this.pathMatcher = new PathMatcher(path, {
-            end: !!this.config.method,
-        });
+        this.pathMatcher = new PathMatcher(path, { end: !!this.config.method });
     }
 
     // --------------------------------------------------

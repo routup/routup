@@ -9,7 +9,7 @@ export type ErrorHandlerFn = (
     err: RoutupError,
     req: Request,
     res: Response,
-    next: Next
+    next: Next,
 ) => unknown | Promise<unknown>;
 
 export type ErrorHandlerConfig = HandlerBaseConfig & {

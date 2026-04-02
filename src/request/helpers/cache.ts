@@ -12,5 +12,10 @@ export function isRequestCacheable(req: Request, modifiedTime: string | Date) : 
         new Date(modifiedTime) :
         modifiedTime;
 
-    return new Date(modifiedSince) >= modifiedTime;
+    const sinceDate = new Date(modifiedSince);
+    if (Number.isNaN(sinceDate.getTime()) || Number.isNaN(modifiedTime.getTime())) {
+        return false;
+    }
+
+    return sinceDate >= modifiedTime;
 }

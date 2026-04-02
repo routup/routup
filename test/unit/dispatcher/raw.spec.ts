@@ -32,8 +32,7 @@ describe('bridge/raw', () => {
         });
 
         expect(response.headers).toBeDefined();
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('text/html; charset=utf-8');
-        expect(response.headers[HeaderName.CONTENT_ENCODING]).toEqual('utf-8');
+        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('text/html');
         expect(response.status).toEqual(200);
         expect(transformArrayBufferToString(response.body)).toEqual('/foo');
     });
@@ -99,9 +98,7 @@ describe('bridge/raw', () => {
         const response = await dispatch({
             method: 'POST',
             path: '/foo',
-            headers: {
-                [HeaderName.CONTENT_TYPE]: 'application/json; charset=utf-8',
-            },
+            headers: { [HeaderName.CONTENT_TYPE]: 'application/json; charset=utf-8' },
             body: stream,
         });
 

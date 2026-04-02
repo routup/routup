@@ -25,14 +25,12 @@ describe('routing/parameters', () => {
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual({
             id: '123',
-            action: 'run' 
+            action: 'run', 
         });
     });
 
     it('should pass on captured parameters', async () => {
-        const router = new Router({
-            path: '/:id',
-        });
+        const router = new Router({ path: '/:id' });
 
         router.get('/:action', coreHandler(async (req) => useRequestParams(req)));
 
@@ -44,7 +42,7 @@ describe('routing/parameters', () => {
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual({
             id: '123',
-            action: 'run' 
+            action: 'run', 
         });
     });
 

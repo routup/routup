@@ -37,7 +37,7 @@ describe('src/helpers/response/header', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8');
-        expect(response.headers[HeaderName.CONTENT_DISPOSITION]).toEqual('attachment; filename="dummy.json"');
+        expect(response.headers[HeaderName.CONTENT_DISPOSITION]).toEqual('attachment; filename="dummy.json"; filename*=UTF-8\'\'dummy.json');
     });
 
     it('should append value', async () => {
