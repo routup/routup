@@ -101,32 +101,26 @@ export class Router implements Dispatcher {
     // --------------------------------------------------
 
     protected async executePipelineStep(context: RouterPipelineContext) : Promise<void> {
-        try {
-            while (context.step !== RouterPipelineStep.FINISH) {
-                switch (context.step) {
-                    case RouterPipelineStep.START:
-                        await this.executePipelineStepStart(context);
-                        break;
-                    case RouterPipelineStep.LOOKUP:
-                        await this.executePipelineStepLookup(context);
-                        break;
-                    case RouterPipelineStep.CHILD_BEFORE:
-                        await this.executePipelineStepChildBefore(context);
-                        break;
-                    case RouterPipelineStep.CHILD_DISPATCH:
-                        await this.executePipelineStepChildDispatch(context);
-                        break;
-                    case RouterPipelineStep.CHILD_AFTER:
-                        await this.executePipelineStepChildAfter(context);
-                        break;
-                    default:
-                        context.step = RouterPipelineStep.FINISH;
-                        break;
-                }
-            }
-        } catch (e) {
-            if (!context.event.error) {
-                context.event.error = e as RoutupError;
+        while (context.step !== RouterPipelineStep.FINISH) {
+            switch (context.step) {
+                case RouterPipelineStep.START:
+                    await this.executePipelineStepStart(context);
+                    break;
+                case RouterPipelineStep.LOOKUP:
+                    await this.executePipelineStepLookup(context);
+                    break;
+                case RouterPipelineStep.CHILD_BEFORE:
+                    await this.executePipelineStepChildBefore(context);
+                    break;
+                case RouterPipelineStep.CHILD_DISPATCH:
+                    await this.executePipelineStepChildDispatch(context);
+                    break;
+                case RouterPipelineStep.CHILD_AFTER:
+                    await this.executePipelineStepChildAfter(context);
+                    break;
+                default:
+                    context.step = RouterPipelineStep.FINISH;
+                    break;
             }
         }
 
@@ -308,10 +302,6 @@ export class Router implements Dispatcher {
 
         try {
             await this.executePipelineStep(context);
-        } catch (e) {
-            if (!context.event.error) {
-                context.event.error = e as RoutupError;
-            }
         } finally {
             context.event.routerPath.pop();
         }
