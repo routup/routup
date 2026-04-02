@@ -1,5 +1,6 @@
 import type { OutgoingHttpHeader } from 'node:http';
 
+import { sanitizeHeaderValue } from '../../utils';
 import type { Response } from '../types';
 
 export function appendResponseHeader(
@@ -18,7 +19,9 @@ export function appendResponseHeader(
         header = [header.toString()];
     }
 
-    res.setHeader(name, [...header, value] as readonly string[]);
+    res.setHeader(name, [...header, value].map(
+        (v) => sanitizeHeaderValue(`${v}`),
+    ) as readonly string[]);
 }
 
 export function appendResponseHeaderDirective(
@@ -56,5 +59,5 @@ export function appendResponseHeaderDirective(
 
     header = [...new Set(header)];
 
-    res.setHeader(name, header.join('; '));
+    res.setHeader(name, sanitizeHeaderValue(header.join('; ')));
 }

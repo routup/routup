@@ -25,9 +25,8 @@ describe('bridge/web', () => {
         expect(response.status).toEqual(200);
 
         expect([...response.headers.entries()]).toMatchObject([
-            [HeaderName.CONTENT_ENCODING, 'utf-8'],
             [HeaderName.CONTENT_LENGTH, '4'],
-            [HeaderName.CONTENT_TYPE, 'text/html; charset=utf-8'],
+            [HeaderName.CONTENT_TYPE, 'text/html'],
             [HeaderName.ETag, 'W/"4-bb1UjMA+RLi0S25o5WJVzkJzrkk"'],
         ]);
 
@@ -65,9 +64,7 @@ describe('bridge/web', () => {
         }));
 
         const dispatch = createWebDispatcher(router);
-        const request = new Request(new URL('/', 'http://localhost/'), {
-            method: 'GET',
-        });
+        const request = new Request(new URL('/', 'http://localhost/'), { method: 'GET' });
         const response = await dispatch(request);
 
         expect([...response.headers.entries()]).toEqual([

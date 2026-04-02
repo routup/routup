@@ -7,7 +7,7 @@ import type { HandlerBaseConfig } from '../types-base';
 export type CoreHandlerFn = (
     req: Request,
     res: Response,
-    next: Next
+    next: Next,
 ) => unknown | Promise<unknown>;
 
 export type CoreHandlerConfig = HandlerBaseConfig & {

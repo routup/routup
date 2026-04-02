@@ -6,7 +6,7 @@ const symbol = Symbol.for('ReqParams');
 export function useRequestParams(req: Request) : Record<string, any> {
     return getProperty(req, symbol) ||
         getProperty(req, 'params') ||
-        {};
+        Object.create(null);
 }
 
 export function useRequestParam(req: Request, key: string) : any {

@@ -11,9 +11,7 @@ import { createRequestListener } from '../../handler';
 
 describe('src/helpers/request/mount-path', () => {
     it('should get base-url with predefined path', async () => {
-        const router = new Router({
-            path: '/foo',
-        });
+        const router = new Router({ path: '/foo' });
 
         router.get('', coreHandler((req, res) => send(res, useRequestMountPath(req))));
 

@@ -8,9 +8,7 @@ describe('src/helpers/response/send-web-response', () => {
 
         router.get('/', coreHandler(() => new Response(null, {
             status: 210,
-            headers: {
-                foo: 'bar',
-            },
+            headers: { foo: 'bar' },
         })));
 
         const server = supertest(createNodeDispatcher(router));

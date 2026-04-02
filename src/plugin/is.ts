@@ -1,5 +1,5 @@
 import { isObject } from '../utils';
-import type { Plugin, } from './types';
+import type { Plugin } from './types';
 
 export function isPlugin(input: unknown): input is Plugin {
     if (!isObject(input)) {

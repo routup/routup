@@ -4,7 +4,7 @@ import { createResponse } from '../../response';
 import type { Router } from '../../router';
 import { toMethodName } from '../../utils';
 import { DispatchEvent } from '../../dispatcher';
-import type { RawRequest,RawResponse,RawResponseHeaders, } from './type';
+import type { RawRequest, RawResponse, RawResponseHeaders } from './type';
 
 export async function dispatchRawRequest(
     router: Router,
@@ -64,9 +64,7 @@ export async function dispatchRawRequest(
         });
     }
 
-    return createRawResponse({
-        status: 404,
-    });
+    return createRawResponse({ status: 404 });
 }
 
 export function createRawDispatcher(router: Router) {

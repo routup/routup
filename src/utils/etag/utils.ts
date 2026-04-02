@@ -15,9 +15,7 @@ export function buildEtagFn(input?: boolean | EtagOptions | EtagFn) : EtagFn {
         return () => Promise.resolve(undefined);
     }
 
-    let options : EtagOptions = {
-        weak: true,
-    };
+    let options : EtagOptions = { weak: true };
 
     if (isObject(input)) {
         options = merge(input, options);

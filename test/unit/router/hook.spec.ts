@@ -4,7 +4,7 @@ import {
     describe, 
     expect, 
     it, 
-    vi 
+    vi, 
 } from 'vitest';
 import type { DispatchEvent } from '../../../src';
 import {
@@ -112,9 +112,7 @@ describe('src/router/hooks', () => {
         router.use(coreHandler(() => 'Hello, World!'));
 
         const fnJest = vi.fn();
-        const fn : HookDefaultListener = ({
-            next 
-        }) => {
+        const fn : HookDefaultListener = ({ next }) => {
             fnJest();
 
             next();
@@ -139,9 +137,7 @@ describe('src/router/hooks', () => {
         router.use(coreHandler(() => 'Hello, World!'));
 
         router.on(HookName.DISPATCH_START, () => { throw new Error('dispatch start failed!'); });
-        router.on(HookName.ERROR, ({
-            error 
-        }) => error.message);
+        router.on(HookName.ERROR, ({ error }) => error.message);
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -157,9 +153,7 @@ describe('src/router/hooks', () => {
         router.use(coreHandler(() => 'Hello, World!'));
 
         router.on(HookName.CHILD_MATCH, () => { throw new Error('match failed!'); });
-        router.on(HookName.ERROR, ({
-            error 
-        }) => error.message);
+        router.on(HookName.ERROR, ({ error }) => error.message);
 
         const server = supertest(createNodeDispatcher(router));
 
@@ -175,9 +169,7 @@ describe('src/router/hooks', () => {
         router.use(coreHandler(() => 'Hello, World!'));
 
         const fnJest = vi.fn();
-        const fn : HookDefaultListener = ({
-            next 
-        }) => {
+        const fn : HookDefaultListener = ({ next }) => {
             fnJest();
 
             next();
@@ -203,9 +195,7 @@ describe('src/router/hooks', () => {
             fn: () => {
                 throw new Error('Hello, World!');
             },
-            onError({
-                error 
-            }) {
+            onError({ error }) {
                 return `Error: ${error.message}`;
             },
         }));
@@ -227,15 +217,11 @@ describe('src/router/hooks', () => {
 
         router.use(coreHandler({
             fn: () => 'Hello, World!',
-            onBefore({
-                next 
-            }) {
+            onBefore({ next }) {
                 onBefore();
                 next();
             },
-            onAfter({
-                next 
-            }) {
+            onAfter({ next }) {
                 onAfter();
                 next();
             },

@@ -30,9 +30,7 @@ export function setRequestEnv(req: Request, key: Record<string | symbol, any> | 
         return;
     }
 
-    setProperty(req, symbol, {
-        [key]: value,
-    });
+    setProperty(req, symbol, { [key]: value });
 }
 
 export function useRequestEnv(req: Request) : Record<string, any>;

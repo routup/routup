@@ -5,7 +5,6 @@ import { useRequestRouterPath } from '../../request';
 import { isStream, isWebBlob, isWebResponse } from '../../utils';
 import type { Response } from '../types';
 import { isResponseGone } from './gone';
-import { appendResponseHeaderDirective } from './header';
 import { setResponseHeaderContentType } from './header-content-type';
 import { sendStream } from './send-stream';
 import { sendWebBlob } from './send-web-blob';
@@ -55,10 +54,6 @@ export async function send(res: Response, chunk?: any) : Promise<void> {
     let encoding : BufferEncoding | undefined;
 
     if (typeof chunk === 'string') {
-        res.setHeader(HeaderName.CONTENT_ENCODING, 'utf-8');
-
-        appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, 'charset=utf-8');
-
         encoding = 'utf-8';
     }
 

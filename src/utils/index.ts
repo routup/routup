@@ -1,4 +1,5 @@
 export * from './cookie';
+export * from './header';
 export * from './etag';
 export * from './trust-proxy';
 export * from './is-instance';

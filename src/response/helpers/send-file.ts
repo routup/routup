@@ -21,7 +21,7 @@ export type SendFileStats = {
 export type SendFileOptions = {
     stats: () => Promise<SendFileStats> | SendFileStats,
     content: (
-        options: SendFileContentOptions
+        options: SendFileContentOptions,
     ) => Promise<unknown> | unknown
     attachment?: boolean,
     name?: string
@@ -70,18 +70,18 @@ export async function sendFile(
             const [x, y] = rangeHeader.replace('bytes=', '')
                 .split('-') as [string, string];
 
-            contentOptions.end = Math.min(
-                Number.parseInt(y, 10) || stats.size - 1,
-                stats.size - 1,
-            );
+            const parsedStart = Number.parseInt(x, 10);
+            const parsedEnd = Number.parseInt(y, 10);
 
-            contentOptions.start = Number.parseInt(x, 10) || 0;
+            contentOptions.start = Number.isFinite(parsedStart) && parsedStart >= 0 ? parsedStart : 0;
+            contentOptions.end = Number.isFinite(parsedEnd) && parsedEnd >= 0 ?
+                Math.min(parsedEnd, stats.size - 1) :
+                stats.size - 1;
 
-            if (contentOptions.end >= stats.size) {
-                contentOptions.end = stats.size - 1;
-            }
-
-            if (contentOptions.start >= stats.size) {
+            if (
+                contentOptions.start >= stats.size ||
+                contentOptions.start > contentOptions.end
+            ) {
                 res.setHeader(HeaderName.CONTENT_RANGE, `bytes */${stats.size}`);
                 res.statusCode = 416;
                 res.end();
