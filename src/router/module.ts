@@ -101,130 +101,126 @@ export class Router implements Dispatcher {
     // --------------------------------------------------
 
     protected async executePipelineStep(context: RouterPipelineContext) : Promise<void> {
-        switch (context.step) {
-            case RouterPipelineStep.START: {
-                return this.executePipelineStepStart(context);
+        try {
+            while (context.step !== RouterPipelineStep.FINISH) {
+                switch (context.step) {
+                    case RouterPipelineStep.START:
+                        await this.executePipelineStepStart(context);
+                        break;
+                    case RouterPipelineStep.LOOKUP:
+                        await this.executePipelineStepLookup(context);
+                        break;
+                    case RouterPipelineStep.CHILD_BEFORE:
+                        await this.executePipelineStepChildBefore(context);
+                        break;
+                    case RouterPipelineStep.CHILD_DISPATCH:
+                        await this.executePipelineStepChildDispatch(context);
+                        break;
+                    case RouterPipelineStep.CHILD_AFTER:
+                        await this.executePipelineStepChildAfter(context);
+                        break;
+                    default:
+                        context.step = RouterPipelineStep.FINISH;
+                        break;
+                }
             }
-            case RouterPipelineStep.LOOKUP: {
-                return this.executePipelineStepLookup(context);
-            }
-            case RouterPipelineStep.CHILD_BEFORE: {
-                return this.executePipelineStepChildBefore(context);
-            }
-            case RouterPipelineStep.CHILD_DISPATCH: {
-                return this.executePipelineStepChildDispatch(context);
-            }
-            case RouterPipelineStep.CHILD_AFTER: {
-                return this.executePipelineStepChildAfter(context);
-            }
-            case RouterPipelineStep.FINISH:
-            default: {
-                return this.executePipelineStepFinish(context);
+        } catch (e) {
+            if (!context.event.error) {
+                context.event.error = e as RoutupError;
             }
         }
+
+        return this.executePipelineStepFinish(context);
     }
 
     protected async executePipelineStepStart(context: RouterPipelineContext) : Promise<void> {
-        return this.hookManager.trigger(HookName.DISPATCH_START, context.event)
-            .then(() => {
-                if (context.event.dispatched) {
-                    context.step = RouterPipelineStep.FINISH;
-                } else {
-                    context.step++;
-                }
+        await this.hookManager.trigger(HookName.DISPATCH_START, context.event);
 
-                return this.executePipelineStep(context);
-            });
+        if (context.event.dispatched) {
+            context.step = RouterPipelineStep.FINISH;
+        } else {
+            context.step = RouterPipelineStep.LOOKUP;
+        }
     }
 
     protected async executePipelineStepLookup(context: RouterPipelineContext) : Promise<void> {
-        if (
-            context.event.dispatched ||
-            context.stackIndex >= this.stack.length
+        while (
+            !context.event.dispatched &&
+            context.stackIndex < this.stack.length
         ) {
-            context.step = RouterPipelineStep.FINISH;
-            return this.executePipelineStep(context);
-        }
+            const item = this.stack[context.stackIndex]!;
 
-        let match : boolean;
-
-        const item = this.stack[context.stackIndex]!;
-
-        if (isHandler(item)) {
-            if (
-                (context.event.error && item.type === HandlerType.CORE) ||
-                (!context.event.error && item.type === HandlerType.ERROR)
-            ) {
-                context.stackIndex++;
-                return this.executePipelineStepLookup(context);
-            }
-
-            match = item.matchPath(context.event.path);
-
-            if (match) {
-                if (item.method) {
-                    context.event.methodsAllowed.push(item.method);
+            if (isHandler(item)) {
+                if (
+                    (context.event.error && item.type === HandlerType.CORE) ||
+                    (!context.event.error && item.type === HandlerType.ERROR)
+                ) {
+                    context.stackIndex++;
+                    continue;
                 }
 
-                if (item.matchMethod(context.event.method)) {
-                    await this.hookManager.trigger(HookName.CHILD_MATCH, context.event);
+                const match = item.matchPath(context.event.path);
 
-                    if (context.event.dispatched) {
-                        context.step = RouterPipelineStep.FINISH;
-                    } else {
-                        context.step++;
+                if (match) {
+                    if (item.method) {
+                        context.event.methodsAllowed.push(item.method);
                     }
 
-                    return this.executePipelineStep(context);
+                    if (item.matchMethod(context.event.method)) {
+                        await this.hookManager.trigger(HookName.CHILD_MATCH, context.event);
+
+                        if (context.event.dispatched) {
+                            context.step = RouterPipelineStep.FINISH;
+                        } else {
+                            context.step = RouterPipelineStep.CHILD_BEFORE;
+                        }
+
+                        return;
+                    }
                 }
+
+                context.stackIndex++;
+                continue;
+            }
+
+            const match = item.matchPath(context.event.path);
+
+            if (match) {
+                await this.hookManager.trigger(HookName.CHILD_MATCH, context.event);
+
+                if (context.event.dispatched) {
+                    context.step = RouterPipelineStep.FINISH;
+                } else {
+                    context.step = RouterPipelineStep.CHILD_BEFORE;
+                }
+
+                return;
             }
 
             context.stackIndex++;
-            return this.executePipelineStepLookup(context);
         }
 
-        match = item.matchPath(context.event.path);
-
-        if (match) {
-            await this.hookManager.trigger(HookName.CHILD_MATCH, context.event);
-
-            if (context.event.dispatched) {
-                context.step = RouterPipelineStep.FINISH;
-            } else {
-                context.step++;
-            }
-
-            return this.executePipelineStep(context);
-        }
-
-        context.stackIndex++;
-        return this.executePipelineStepLookup(context);
+        context.step = RouterPipelineStep.FINISH;
     }
 
     protected async executePipelineStepChildBefore(context: RouterPipelineContext) : Promise<void> {
-        return this.hookManager.trigger(HookName.CHILD_DISPATCH_BEFORE, context.event)
-            .then(() => {
-                if (context.event.dispatched) {
-                    context.step = RouterPipelineStep.FINISH;
-                } else {
-                    context.step++;
-                }
+        await this.hookManager.trigger(HookName.CHILD_DISPATCH_BEFORE, context.event);
 
-                return this.executePipelineStep(context);
-            });
+        if (context.event.dispatched) {
+            context.step = RouterPipelineStep.FINISH;
+        } else {
+            context.step = RouterPipelineStep.CHILD_DISPATCH;
+        }
     }
 
     protected async executePipelineStepChildAfter(context: RouterPipelineContext) : Promise<void> {
-        return this.hookManager.trigger(HookName.CHILD_DISPATCH_AFTER, context.event)
-            .then(() => {
-                if (context.event.dispatched) {
-                    context.step = RouterPipelineStep.FINISH;
-                } else {
-                    context.step = RouterPipelineStep.LOOKUP;
-                }
+        await this.hookManager.trigger(HookName.CHILD_DISPATCH_AFTER, context.event);
 
-                return this.executePipelineStep(context);
-            });
+        if (context.event.dispatched) {
+            context.step = RouterPipelineStep.FINISH;
+        } else {
+            context.step = RouterPipelineStep.LOOKUP;
+        }
     }
 
     protected async executePipelineStepChildDispatch(context: RouterPipelineContext) : Promise<void> {
@@ -233,7 +229,7 @@ export class Router implements Dispatcher {
             typeof this.stack[context.stackIndex] === 'undefined'
         ) {
             context.step = RouterPipelineStep.FINISH;
-            return this.executePipelineStep(context);
+            return;
         }
 
         try {
@@ -245,9 +241,7 @@ export class Router implements Dispatcher {
         }
 
         context.stackIndex++;
-        context.step++;
-
-        return this.executePipelineStep(context);
+        context.step = RouterPipelineStep.CHILD_AFTER;
     }
 
     protected async executePipelineStepFinish(context: RouterPipelineContext) : Promise<void> {
@@ -312,10 +306,15 @@ export class Router implements Dispatcher {
 
         event.routerPath.push(this.id);
 
-        return this.executePipelineStepStart(context)
-            .then(() => {
-                context.event.routerPath.pop();
-            });
+        try {
+            await this.executePipelineStep(context);
+        } catch (e) {
+            if (!context.event.error) {
+                context.event.error = e as RoutupError;
+            }
+        } finally {
+            context.event.routerPath.pop();
+        }
     }
 
     // --------------------------------------------------
