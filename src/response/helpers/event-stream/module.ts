@@ -11,9 +11,6 @@ export type EventStreamOptions = {
     maxListeners?: number,
 };
 
-const DEFAULT_MAX_MESSAGE_SIZE = 1024 * 1024; // 1MB
-const DEFAULT_MAX_LISTENERS = 100;
-
 export class EventStream {
     protected response: Response;
 
@@ -23,9 +20,9 @@ export class EventStream {
 
     protected eventHandlers : Record<string, EventStreamListener[]>;
 
-    protected maxMessageSize : number;
+    protected maxMessageSize? : number;
 
-    protected maxListeners : number;
+    protected maxListeners? : number;
 
     constructor(response: Response, options?: EventStreamOptions) {
         this.response = response;
@@ -36,8 +33,8 @@ export class EventStream {
 
         this.eventHandlers = {};
 
-        this.maxMessageSize = options?.maxMessageSize ?? DEFAULT_MAX_MESSAGE_SIZE;
-        this.maxListeners = options?.maxListeners ?? DEFAULT_MAX_LISTENERS;
+        this.maxMessageSize = options?.maxMessageSize;
+        this.maxListeners = options?.maxListeners;
 
         this.open();
     }
@@ -91,7 +88,7 @@ export class EventStream {
 
         const serialized = serializeEventStreamMessage(message);
 
-        if (serialized.length > this.maxMessageSize) {
+        if (this.maxMessageSize && serialized.length > this.maxMessageSize) {
             this.emit('error', new Error(
                 `SSE message size (${serialized.length}) exceeds limit (${this.maxMessageSize}).`,
             ));
@@ -131,11 +128,13 @@ export class EventStream {
             this.eventHandlers[event] = [];
         }
 
-        const totalListeners = Object.values(this.eventHandlers)
-            .reduce((sum, handlers) => sum + handlers.length, 0);
+        if (this.maxListeners) {
+            const totalListeners = Object.values(this.eventHandlers)
+                .reduce((sum, handlers) => sum + handlers.length, 0);
 
-        if (totalListeners >= this.maxListeners) {
-            return;
+            if (totalListeners >= this.maxListeners) {
+                return;
+            }
         }
 
         this.eventHandlers[event].push(listener);
