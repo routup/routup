@@ -40,6 +40,7 @@ describe('src/router/hooks', () => {
         expect(error).not.toHaveBeenCalled();
         expect(request).toHaveBeenCalledTimes(1);
         expect(response).toHaveBeenCalledTimes(1);
+        expect(childMatch).toHaveBeenCalledTimes(1);
         expect(childBefore).toHaveBeenCalledTimes(1);
         expect(childAfter).toHaveBeenCalledTimes(1);
     });
@@ -86,6 +87,22 @@ describe('src/router/hooks', () => {
 
         expect(res.status).toEqual(200);
         expect(await res.text()).toEqual('Hello, World!');
+        expect(fn).not.toHaveBeenCalled();
+    });
+
+    it('should remove error hook and fall through to default error handling', async () => {
+        const router = new Router();
+        router.use(coreHandler(() => {
+            throw new Error('fail');
+        }));
+
+        const fn = vi.fn();
+        router.on(HookName.ERROR, () => { fn(); });
+        router.off(HookName.ERROR);
+
+        const res = await router.fetch(createTestRequest('/'));
+
+        expect(res.status).toEqual(500);
         expect(fn).not.toHaveBeenCalled();
     });
 

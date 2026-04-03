@@ -5,7 +5,7 @@ import { createTestRequest } from '../../helpers';
 
 describe('src/helpers/request/cache', () => {
     it('should be cacheable', () => {
-        const event = new DispatchEvent(createTestRequest('/', { headers: { 'if-modified-since': new Date(Date.now() + 3600).toUTCString() } }));
+        const event = new DispatchEvent(createTestRequest('/', { headers: { 'if-modified-since': new Date(Date.now() + 3_600_000).toUTCString() } }));
 
         expect(isRequestCacheable(event, new Date())).toBe(true);
     });

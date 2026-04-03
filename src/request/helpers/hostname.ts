@@ -4,13 +4,11 @@ import type { TrustProxyFn, TrustProxyInput } from '../../utils/index.ts';
 import { buildTrustProxyFn } from '../../utils/index.ts';
 import type { DispatchEvent } from '../../dispatcher/event/module.ts';
 
-type RequestHostNameOptions = {
+export type RequestHostNameOptions = {
     trustProxy?: TrustProxyInput,
 };
 
-export function getRequestHostName(event: DispatchEvent, options?: RequestHostNameOptions) : string | undefined {
-    options = options || {};
-
+export function getRequestHostName(event: DispatchEvent, options: RequestHostNameOptions = {}) : string | undefined {
     let trustProxy : TrustProxyFn;
     if (typeof options.trustProxy !== 'undefined') {
         trustProxy = buildTrustProxyFn(options.trustProxy);

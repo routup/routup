@@ -4,17 +4,15 @@ import type { TrustProxyFn, TrustProxyInput } from '../../utils/index.ts';
 import { buildTrustProxyFn } from '../../utils/index.ts';
 import type { DispatchEvent } from '../../dispatcher/event/module.ts';
 
-type RequestProtocolOptions = {
+export type RequestProtocolOptions = {
     trustProxy?: TrustProxyInput,
     default?: string,
 };
 
 export function getRequestProtocol(
     event: DispatchEvent,
-    options?: RequestProtocolOptions,
+    options: RequestProtocolOptions = {},
 ) : string {
-    options = options || {};
-
     let trustProxy : TrustProxyFn;
     if (typeof options.trustProxy !== 'undefined') {
         trustProxy = buildTrustProxyFn(options.trustProxy);
