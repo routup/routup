@@ -1,36 +1,74 @@
 # Request
 
-The incoming request is represented as an object, which is injected into a handler function.
+The incoming request is accessed through the `DispatchEvent` object passed to every handler.
 
-There, it can either be interacted with directly or so-called [helpers](../api/request-helpers.md) can be used,
-which provide abstractions for the interaction and transformation with the incoming request.
-For example, it may be necessary to access the IP address, Host, Path, etc. at different places.
+## Event Properties
+
+The event provides direct access to common request data:
+
+```typescript
+coreHandler((event) => {
+    event.request;      // ServerRequest (srvx)
+    event.method;       // "GET", "POST", etc.
+    event.path;         // URL path (e.g. "/users/123")
+    event.params;       // Route parameters (e.g. { id: "123" })
+    event.headers;      // Request headers
+    event.searchParams; // URL search parameters
+    event.mountPath;    // Path prefix where this router is mounted
+});
+```
+
+## Reading the Body
+
+Use `readBody()` to parse the request body. It automatically handles JSON, form data, and text. Results are cached for repeated access.
+
+```typescript
+import { coreHandler, readBody } from 'routup';
+
+router.post('/users', coreHandler(async (event) => {
+    const body = await readBody(event);
+    return { created: body.name };
+}));
+```
+
+## Request Helpers
+
+Helpers are standalone functions that take the event as their first argument:
+
+```typescript
+import {
+    getRequestHostName,
+    getRequestIP
+} from 'routup';
+
+coreHandler((event) => {
+    const hostname = getRequestHostName(event);
+    const ip = getRequestIP(event);
+    return { hostname, ip };
+});
+```
 
 ## Data Sharing
 
-To share data between handlers, it is recommended
-to use the helpers [setRequestEnv](../api/request-helpers.md#setrequestenv)
-and [useRequestEnv](../api/request-helpers.md#userequestenv).
+To share data between handlers, use `setRequestEnv` and `useRequestEnv`:
 
 ```typescript
-import { 
-    coreHandler, 
-    Router, 
-    setRequestEnv, 
+import {
+    coreHandler,
+    Router,
+    setRequestEnv,
     useRequestEnv
 } from 'routup';
 
 const router = new Router();
 
-router.use(coreHandler((req, res, next) => {
-    setRequestEnv(req, 'foo', 'bar');
-    next();
+router.use(coreHandler((event) => {
+    setRequestEnv(event, 'userId', '42');
+    return event.next();
 }));
 
-router.use(coreHandler((req, res, next) => {
-    const foo = useRequestEnv(req, 'foo');
-    console.log(foo);
-    // bar
+router.get('/', coreHandler((event) => {
+    const userId = useRequestEnv(event, 'userId');
+    return { userId };
 }));
 ```
-

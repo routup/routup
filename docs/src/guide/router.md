@@ -1,68 +1,99 @@
 # Router
 
-A router is a wrapper that stacks [handlers](./handlers.md) and executes them on demand.
-It is the central node of the ecosystem.
-
-Routers can be nested arbitrarily deep and offers different ways
-how a handler or another router can be bound to itself.
-But more about this in the [mounting](#mounting) section.
+The `Router` is the central building block. It manages a stack of handlers and dispatches requests through them.
 
 ```typescript
-import { createServer } from 'node:http';
-import {
-    coreHandler,
-    createNodeDispatcher,
-    Router
-} from 'routup';
+import { Router, coreHandler, serve } from 'routup';
 
 const router = new Router();
 
-router.get('/', coreHandler(() => 'Hello, World!'));
+router.get('/', coreHandler((event) => {
+    return 'Hello, World!';
+}));
 
-const server = createServer(createNodeDispatcher(router));
-server.listen(3000)
+serve(router, { port: 3000 });
 ```
 
-It is possible to process requests not only from Nodejs, but also from other sources.
-These requests can be transferred to the system with the help of so-called [dispatchers](./dispatchers.md).
+## HTTP Methods
+
+The router provides shorthand methods for all common HTTP verbs:
+
+```typescript
+router.get('/users', coreHandler((event) => { /* ... */ }));
+router.post('/users', coreHandler((event) => { /* ... */ }));
+router.put('/users/:id', coreHandler((event) => { /* ... */ }));
+router.patch('/users/:id', coreHandler((event) => { /* ... */ }));
+router.delete('/users/:id', coreHandler((event) => { /* ... */ }));
+```
 
 ## Mounting
-A router can only be connected to another router using the **use** method.
 
 ### Global
 
-Don't mount a router one on a specific path.
+Mount a handler or router without a path prefix:
 
 ```typescript
-import { Router } from 'routup';
-
-const router = new Router();
-
-const child = new Router();
-router.use(child);
+router.use(coreHandler((event) => {
+    // runs for all requests
+    return event.next();
+}));
 ```
 
 ### Path
 
-A path can either be declared as [string](./paths.md#string) or as [regular expression](./paths.md#regular-expressions)
-In the following the router is mounted on the path `/child`.
+Mount on a specific path prefix:
 
 ```typescript
-import { Router } from 'routup';
-
-const router = new Router();
-
-const child = new Router();
-router.use('/child', child);
+router.use('/api', apiRouter);
 ```
 
+Or set the path in the router options:
+
 ```typescript
-import { Router } from 'routup';
+const apiRouter = new Router({ path: '/api' });
+router.use(apiRouter);
+```
 
-const router = new Router({
-    path: '/child'
-});
+## Nesting
 
+Routers can be nested for modular route organization:
+
+```typescript
+const users = new Router();
+users.get('/', coreHandler((event) => {
+    return [{ id: 1, name: 'Alice' }];
+}));
+users.get('/:id', coreHandler((event) => {
+    return { id: event.params.id };
+}));
+
+const api = new Router();
+api.use('/users', users);
+
+const app = new Router();
+app.use('/api', api);
+// GET /api/users, GET /api/users/:id
+```
+
+## router.fetch()
+
+You can call `router.fetch()` directly with a `Request` object to get a `Response`:
+
+```typescript
+const router = new Router();
+router.get('/', coreHandler(() => 'Hello'));
+
+const response = await router.fetch(
+    new Request('http://localhost/')
+);
+console.log(await response.text()); // "Hello"
+```
+
+## router.mount() (experimental)
+
+An experimental method to mount a router at a specific path:
+
+```typescript
 const child = new Router();
-router.use(child);
+router.mount('/api', child);
 ```

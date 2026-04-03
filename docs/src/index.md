@@ -1,9 +1,9 @@
 ---
 layout: home
 hero:
-    name: Routup 🧙‍
-    text: Routing Library
-    tagline: A lightweight, runtime agnostic and extendable routing library
+    name: Routup
+    text: Routing Framework
+    tagline: A minimalistic, runtime-agnostic HTTP routing framework built on srvx and Web Standards
     actions:
        - theme: brand
          text: Get Started
@@ -13,16 +13,16 @@ hero:
          link: https://github.com/routup/routup
 
 features:
+    - icon: 🌐
+      title: Web Standards
+      details: Built on srvx — uses Web API Request/Response everywhere
     - icon: 🏃‍♂️
-      title: Runtime agnostic
-      details: Run code everywhere
+      title: Runtime Agnostic
+      details: Run on Node.js, Bun, Deno, Cloudflare Workers, and more
     - icon: 🚀
-      title: High Performance
-      details: Fast and efficient routing of requests
+      title: Return-based Responses
+      details: Return strings, objects, streams, or Response — automatically converted
     - icon: 🔌
-      title: Plugin System
-      details: Powerful and easy to learn plugin system
-    - icon: 📌
-      title: Hook system
-      details: Listen to specific events in the request/response lifecycle
+      title: Plugin & Hook System
+      details: Powerful plugin system and lifecycle hooks for cross-cutting concerns
 ---

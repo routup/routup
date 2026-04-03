@@ -1,160 +1,258 @@
 # Response Helpers
 
-## `setResponseCacheHeaders`
+All response helpers take a `DispatchEvent` as the first argument. Send helpers return a `Response` object. Header helpers mutate `event.response.headers` in place.
 
-Set cache headers (`last-modified` & `cache-control`) depending on the
-options input.
+## Send Helpers
 
-```typescript
-declare function setResponseCacheHeaders(
-    res: Response,
-    options?: ResponseCacheHeadersOptions
-);
+### `sendRedirect`
 
-type ResponseCacheHeadersOptions = {
-    maxAge?: number,
-    modifiedTime?: string | Date,
-    cacheControls?: string[]
-};
-```
-
-## `appendResponseHeaderDirective`
-
-Append a header directive to an existent response header.
-If the header is not present in the response, then the header will be created.
-
-```typescript
-declare function appendResponseHeaderDirective(
-    res: ServerResponse,
-    name: string,
-    value: OutgoingHttpHeader,
-) 
-```
-
-## `setResponseHeaderAttachment`
-
-Set the `Content-Disposition` response header and adds the filename directive,
-if a filename is provided as function argument.
-In addition, it sets the `Content-Type` based on the extension of the filename.
-
-```typescript
-declare function setResponseHeaderAttachment(
-    res: ServerResponse,
-    filename?: string
-);
-```
-
-## `setResponseHeaderContentType`
-
-Set the `Content-Type` response header.
-
-```typescript
-declare function setResponseHeaderContentType(
-    res: ServerResponse,
-    input: string,
-    ifNotExists?: boolean
-);
-```
-
-## `send`
-
-Send is properly the most important response helper. It accepts any input data (optional),
-as argument and negotiate the content-type of the input data and sends
-a formatted response to client.
-
-```typescript
-declare async function send(res: Response, chunk?: any) : Promise<void>;
-```
-
-## `sendFile`
-
-Send a local file to the client.
-
-```typescript
-type SendFileContentOptions = {
-    end?: number,
-    start?: number;
-};
-
-type SendFileStats = {
-    size?: number,
-    mtime?: Date | number | string,
-    name?: string
-};
-
-type SendFileOptions = {
-    stats: () => Promise<SendFileStats> | SendFileStats,
-    content: (
-        options: SendFileContentOptions
-    ) => Promise<unknown> | unknown
-    attachment?: boolean,
-    name?: string
-};
-
-declare function sendFile(
-    res: ServerResponse,
-    options: SendFileOptions,
-    fn?: Next
-);
-```
-
-## `sendRedirect`
-
-Redirect the client to another location.
+Redirect the client to another URL. Sends an HTML body with a `<meta>` refresh as a fallback.
 
 ```typescript
 declare function sendRedirect(
-    res: Response,
+    event: DispatchEvent,
     location: string,
-    statusCode = 302
-)
+    statusCode?: number,
+): Response;
 ```
 
-## `sendStream`
+```typescript
+return sendRedirect(event, '/login', 302);
+```
 
-Send a readable stream to the client.
+### `sendFile`
+
+Send a file with support for range requests, ETag generation, and automatic content-type detection.
+
+```typescript
+declare function sendFile(
+    event: DispatchEvent,
+    options: SendFileOptions,
+): Promise<Response>;
+```
+
+```typescript
+return await sendFile(event, {
+    stats: () => fs.stat(filePath),
+    content: (opts) => fs.createReadStream(filePath, opts),
+    name: 'report.pdf',
+});
+```
+
+### `sendStream`
+
+Wrap a `ReadableStream` in a `Response`.
 
 ```typescript
 declare function sendStream(
-    res: Response,
-    stream: Readable | ReadableStream,
-    fn?: Next
-) 
+    event: DispatchEvent,
+    stream: ReadableStream,
+): Response;
 ```
 
-## `ServerSentEvents`
+```typescript
+const stream = new ReadableStream({ /* ... */ });
+return sendStream(event, stream);
+```
 
-Create an EventStream instance for enabling [server sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)
+### `sendCreated`
+
+Send a `201 Created` response with optional body data.
+
+```typescript
+declare function sendCreated(
+    event: DispatchEvent,
+    data?: unknown,
+): Response;
+```
+
+```typescript
+return sendCreated(event, { id: 1, name: 'New Item' });
+```
+
+### `sendAccepted`
+
+Send a `202 Accepted` response with optional body data.
+
+```typescript
+declare function sendAccepted(
+    event: DispatchEvent,
+    data?: unknown,
+): Response;
+```
+
+```typescript
+return sendAccepted(event, { status: 'processing' });
+```
+
+### `sendFormat`
+
+Perform content negotiation and send the response in the format the client prefers. Returns `undefined` if no format matches.
+
+```typescript
+declare function sendFormat(
+    event: DispatchEvent,
+    formats: Record<string, () => Response>,
+): Response | undefined;
+```
+
+```typescript
+return sendFormat(event, {
+    'application/json': () => Response.json({ ok: true }),
+    'text/html': () => new Response('<p>OK</p>', {
+        headers: { 'Content-Type': 'text/html' },
+    }),
+});
+```
+
+## Header Helpers
+
+### `setResponseHeaderAttachment`
+
+Set the `Content-Disposition` header to `attachment`. When a filename is provided, adds the `filename` directive and sets `Content-Type` based on the file extension.
+
+```typescript
+declare function setResponseHeaderAttachment(
+    event: DispatchEvent,
+    filename?: string,
+): void;
+```
+
+```typescript
+setResponseHeaderAttachment(event, 'data.csv');
+```
+
+### `setResponseHeaderContentType`
+
+Set the `Content-Type` response header. Optionally skip if a content type is already set.
+
+```typescript
+declare function setResponseHeaderContentType(
+    event: DispatchEvent,
+    type: string,
+    ifNotExists?: boolean,
+): void;
+```
+
+```typescript
+setResponseHeaderContentType(event, 'application/json');
+```
+
+### `setResponseCacheHeaders`
+
+Set `Cache-Control` and `Last-Modified` headers based on the provided options.
+
+```typescript
+declare function setResponseCacheHeaders(
+    event: DispatchEvent,
+    options?: ResponseCacheHeadersOptions,
+): void;
+```
+
+```typescript
+setResponseCacheHeaders(event, {
+    maxAge: 3600,
+    modifiedTime: stats.mtime,
+});
+```
+
+### `appendResponseHeader`
+
+Append a value to an existing response header (or create it).
+
+```typescript
+declare function appendResponseHeader(
+    event: DispatchEvent,
+    name: string,
+    value: string,
+): void;
+```
+
+```typescript
+appendResponseHeader(event, 'Set-Cookie', 'session=abc; Path=/');
+```
+
+### `appendResponseHeaderDirective`
+
+Append a directive to an existing response header value (or create the header).
+
+```typescript
+declare function appendResponseHeaderDirective(
+    event: DispatchEvent,
+    name: string,
+    value: string,
+): void;
+```
+
+```typescript
+appendResponseHeaderDirective(event, 'Cache-Control', 'no-cache');
+```
+
+## Status Helpers
+
+### `isResponseGone`
+
+Check whether the response has already been dispatched.
+
+```typescript
+declare function isResponseGone(event: DispatchEvent): boolean;
+```
+
+### `setResponseGone`
+
+Mark the response as dispatched.
+
+```typescript
+declare function setResponseGone(event: DispatchEvent): void;
+```
+
+## Event Stream (SSE)
+
+### `createEventStream`
+
+Create a Server-Sent Events stream. Returns an object with methods to write events, end the stream, and the underlying `Response`.
 
 ```typescript
 declare function createEventStream(
-    res: Response
-) : EventStream;
+    event: DispatchEvent,
+    options?: EventStreamOptions,
+): { write: (data: string) => void; end: () => void; response: Response };
 ```
 
-**`Example`**
-
-```ts
+```typescript
 import { coreHandler, createEventStream } from 'routup';
 
-coreHandler((req, res) => {
-    const eventStream = createEventStream(res);
+coreHandler((event) => {
+    const stream = createEventStream(event);
 
-    let interval;
+    let count = 0;
+    const interval = setInterval(() => {
+        stream.write(`count: ${count}`);
+        count++;
 
-    eventStream.on('close', () => {
-        clearInterval(interval);
-    })
-
-    let i = 0;
-    interval = setInterval(() => {
-        eventStream.write("Hello world");
-        
-        i++
-        if(i > 100) {
-            // automatically close the event stream after 100 messages
-            eventStream.end();
+        if (count > 100) {
+            stream.end();
+            clearInterval(interval);
         }
     }, 1000);
+
+    return stream.response;
 });
+```
+
+## Utility
+
+### `setResponseContentTypeByFileName`
+
+Set the `Content-Type` header based on a file's extension.
+
+```typescript
+declare function setResponseContentTypeByFileName(
+    event: DispatchEvent,
+    fileName: string,
+): void;
+```
+
+```typescript
+setResponseContentTypeByFileName(event, 'image.png');
 ```

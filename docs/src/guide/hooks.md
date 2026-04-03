@@ -1,188 +1,155 @@
 # Hooks
 
-Hooks are a way to listen to specific events in the request/response lifecycle and
-to manipulate the request or response at certain steps during the dispatch process, or to terminate the request early.
+Hooks let you listen to lifecycle events during request processing. They can inspect, modify, or short-circuit requests and responses.
 
-The following router level hooks are available:
-- [dispatchStart](#dispatchstart)
-- [childMatch](#childmatch)
-- [childDispatchBefore](#childdispatchbefore)
-- [childDispatchAfter](#childdispatchafter)
-- [dispatchEnd](#dispatchend)
-- [error](#error)
+## Available Hooks
 
-The following handler level hooks are available:
+### Router-level Hooks
 
-- [onBefore](#onbefore)
-- [onAfter](#onafter)
-- [onError](#onerror)
+| Hook | Fires when |
+|------|-----------|
+| `request` | A request enters the router |
+| `response` | The router has produced a response |
+| `error` | An error occurs during dispatch |
+| `childMatch` | A matching child handler/router is found |
+| `childDispatchBefore` | Before dispatching to a matched child |
+| `childDispatchAfter` | After a matched child completes |
 
-It is important to note that if a hook returns a value that does not resolve to `undefined`,
-this value is sent as a response and the request is terminated.
+### Handler-level Hooks
 
-## Context
+| Hook | Fires when |
+|------|-----------|
+| `onBefore` | Before the handler executes |
+| `onAfter` | After the handler executes |
+| `onError` | When the handler throws an error |
 
-Hook listeners always receive an argument of type [DispatchEvent](). If an error occurred during the dispatch process,
-the argument is of type [DispatchErrorEvent]().
+## Registering Hooks
 
-````typescript
-router.on('dispatchStart', (event) => {
-    event.request // Request object
-    event.response // Response object
-    event.params // Params collected during execution
-    event.path // Request path
-    event.method // GET, POST, ...
-    event.error // The error which occurred during the dispatch process. 
-    event.dispatched // Indicate if the request has already been dispatched/send.
-    event.next() // Call the next handler/router
+Use `router.on()` and `router.off()` to manage hook listeners:
+
+```typescript
+router.on('request', (event) => {
+    console.log(`${event.method} ${event.path}`);
 });
-````
-
-## Async/Sync
-
-Hook Listeners can be defined both asynchronously and synchronously.
-A synchronous hook listener can be defined as follows. 
-In the example a callback call is also involved to illustrate how to proceed with the lifecycle in this case.
-
-**Sync**
-
-```typescript
-router.on('dispatchStart', (event) => {
-    cbMethod((err) => {
-        if(err) {
-            event.next(err);
-            return;
-        }
-        
-        event.next();
-    })
-})
 ```
 
-**Async**
+## Hook Context
+
+Hook listeners receive a `DispatchEvent` with access to:
 
 ```typescript
-router.on('dispatchStart', async (event) => {
-    await asyncMethod();
-})
+router.on('request', (event) => {
+    event.request;      // ServerRequest
+    event.method;       // HTTP method
+    event.path;         // Request path
+    event.params;       // Route params
+    event.headers;      // Request headers
+    event.response;     // Response accumulator
+    event.next();       // Continue to next handler
+});
 ```
 
-## Router
-### dispatchStart
+If a hook returns a non-undefined value, that value becomes the response and the request is terminated.
 
-This hook is triggered when the dispatch process starts.
-It signals the start of the router processing a request.
+## Async and Sync
+
+Hooks support both synchronous and asynchronous listeners:
 
 ```typescript
-router.on('dispatchStart', async (event) => {
-    // do something
-})
+// Sync
+router.on('request', (event) => {
+    // synchronous logic
+});
+
+// Async
+router.on('request', async (event) => {
+    await someAsyncOperation();
+});
 ```
 
-### childMatch
-This hook is called when a matching child router or handler is found based on certain criteria such as **method** and **path**.
+## Router Hooks
+
+### request
+
+Triggered when a request enters the router:
 
 ```typescript
-router.on('childMatch', async (event) => {
-    // do something
-})
+router.on('request', (event) => {
+    console.log('incoming request:', event.path);
+});
 ```
 
-### childDispatchBefore
-This hook is called **before** the dispatch process of the child router or handler is executed.
+### response
+
+Triggered when the router has produced a response:
 
 ```typescript
-router.on('childDispatchBefore', async (event) => {
-    // do something
-})
-```
-
-### childDispatchAfter
-This hook is called **after** the dispatch process of the child router or handler is executed.
-
-::: warning **Note**
-
-The hook is a bit special, because it is called even if the request is already dispatched.
-Therefore, the **dispatched** property must be checked if a response is to be given.
-:::
-
-```typescript
-router.on('childDispatchAfter', async (event) => {
-    if(event.dispatched) {
-        // response can no longer be modified.
-    } else {
-        // response can be modified.
-    }
-    
-    // do something
-})
-```
-
-### dispatchEnd
-This hook is called after the dispatch process of the current router instance is terminated.
-
-::: warning **Note**
-
-The hook is a bit special, because it is called even if the request is already dispatched.
-Therefore, the **dispatched** property must be checked if a response is to be given.
-:::
-
-```typescript
-router.on('dispatchEnd', async (event) => {
-    if(event.dispatched) {
-        // response can no longer be modified.
-    } else {
-        // response can be modified.
-    }
-    
-    // do something
-})
+router.on('response', (event) => {
+    console.log('response sent for:', event.path);
+});
 ```
 
 ### error
-This hook is called when an error occurs during another hook, the dispatch process of a handler or child router. 
-It can be used in different ways. Either the error is handled as in the following example and a response is sent.
+
+Triggered when an error occurs. You can handle it or re-throw:
 
 ```typescript
 router.on('error', ({ error, response }) => {
-    response.statusCode = error.statusCode;
-    
-    return 'An error occured: ' + error.message;
-})
+    response.status = error.statusCode || 500;
+    return { error: error.message };
+});
 ```
-The other option is to modify the error and pass it either with the **next()** method or by throwing the error.
 
-**`throw`**
+To modify and propagate the error:
+
 ```typescript
 router.on('error', ({ error }) => {
     error.statusCode = 500;
-    
     throw error;
 });
 ```
 
-**`next`**
+### childMatch
+
+Triggered when a matching child handler or router is found:
+
 ```typescript
-router.on('error', ({ error, next }) => {
-    error.statusCode = 500;
-    
-    next(error);
+router.on('childMatch', (event) => {
+    // inspect the matched child
 });
 ```
 
-## Handler
+### childDispatchBefore
 
-Handler hooks are somewhat special, as they must be defined differently than router level hooks.
-However, the [context](#context) or the handler argument is the same as for the router hooks.
+Triggered before dispatching to the matched child:
+
+```typescript
+router.on('childDispatchBefore', (event) => {
+    // run logic before child handles request
+});
+```
+
+### childDispatchAfter
+
+Triggered after the matched child completes:
+
+```typescript
+router.on('childDispatchAfter', (event) => {
+    // run logic after child handles request
+});
+```
+
+## Handler Hooks
+
+Handler-level hooks are defined in the verbose handler declaration:
 
 ### onBefore
 
 ```typescript
 router.use(coreHandler({
-    fn: () => 'Hello, World!',
-    onBefore({ next }) {
-        // do something
-        next();
+    fn: (event) => 'Hello, World!',
+    onBefore(event) {
+        // runs before the handler
     }
 }));
 ```
@@ -191,10 +158,9 @@ router.use(coreHandler({
 
 ```typescript
 router.use(coreHandler({
-    fn: () => 'Hello, World!',
-    onAfter({ next }) {
-        // do something
-        next();
+    fn: (event) => 'Hello, World!',
+    onAfter(event) {
+        // runs after the handler
     }
 }));
 ```
@@ -203,10 +169,9 @@ router.use(coreHandler({
 
 ```typescript
 router.use(coreHandler({
-    fn: () => 'Hello, World!',
-    onError({ error, next }) {
-        // do something
-        next();
+    fn: (event) => 'Hello, World!',
+    onError({ error }) {
+        // handle handler-specific errors
     }
 }));
 ```

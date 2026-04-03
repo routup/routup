@@ -6,7 +6,7 @@ import type { HandlerBaseConfig } from '../types-base.ts';
 export type ErrorHandlerFn = (
     error: RoutupError,
     event: DispatchEvent,
-) => Response | Promise<Response> | void | Promise<void>;
+) => unknown | Promise<unknown>;
 
 export type ErrorHandlerConfig = HandlerBaseConfig & {
     type: `${HandlerType.ERROR}`,

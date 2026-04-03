@@ -9,7 +9,7 @@ export default defineConfig({
             { icon: 'github', link: 'https://github.com/routup/routup' },
         ],
         editLink: {
-            pattern: 'https://github.com/routup/docs/edit/master/docs/:path',
+            pattern: 'https://github.com/routup/routup/edit/develop/docs/:path',
             text: 'Edit this page on GitHub',
         },
         nav: [
@@ -54,14 +54,15 @@ export default defineConfig({
                     text: 'Advanced',
                     items: [
                         { text: 'Hooks', link: '/guide/hooks' },
-                        { text: 'Dispatchers', link: '/guide/dispatchers' },
+                        { text: 'Serving', link: '/guide/dispatchers' },
                         { text: 'Runtime Environments', link: '/guide/runtime-environments' },
                     ],
                 },
                 {
-                    text: 'Recipes',
+                    text: 'Migration',
                     items: [
                         { text: 'Express Compatibility', link: '/guide/express-compatibility' },
+                        { text: 'Migrating to v5', link: '/guide/migration-v5' },
                     ],
                 },
             ],

@@ -4,7 +4,7 @@ import type { HandlerBaseConfig } from '../types-base.ts';
 
 export type CoreHandlerFn = (
     event: DispatchEvent,
-) => Response | Promise<Response> | void | Promise<void>;
+) => unknown | Promise<unknown>;
 
 export type CoreHandlerConfig = HandlerBaseConfig & {
     type: `${HandlerType.CORE}`,

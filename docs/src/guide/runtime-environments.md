@@ -1,75 +1,81 @@
 # Runtime Environments
 
-It is possible to use Routup in any javascript runtime environment. Below are examples for Node.Js, Bun and Deno.
-There are different [dispatchers](dispatchers.md) how requests can be transmitted in different ways.
+Routup runs on any JavaScript runtime via srvx. Import from `routup` to auto-select the runtime, or use a runtime-specific import path.
 
-## Node
+## Import Paths
+
+| Import | Runtime |
+|--------|---------|
+| `routup` | Auto-selects based on environment |
+| `routup/node` | Node.js |
+| `routup/bun` | Bun |
+| `routup/deno` | Deno |
+| `routup/cloudflare` | Cloudflare Workers |
+| `routup/service-worker` | Service Workers |
+| `routup/generic` | Generic Web API runtime |
+
+## Node.js
 
 ```typescript
-import { createServer } from 'node:http';
-import {
-    createNodeDispatcher,
-    coreHandler,
-    Router
-} from 'routup';
+import { Router, coreHandler, serve } from 'routup/node';
 
 const router = new Router();
+router.get('/', coreHandler(() => 'Hello from Node.js'));
 
-router.get('/', coreHandler(() => 'Hello World'));
+serve(router, { port: 3000 });
+```
 
-const server = createServer(createNodeDispatcher(router));
-server.listen(3000)
+If you need a raw Node.js `(req, res)` handler (e.g. for `http.createServer` or Express integration):
+
+```typescript
+import { toNodeHandler } from 'routup/node';
+
+const handler = toNodeHandler(router);
+http.createServer(handler).listen(3000);
 ```
 
 ## Bun
 
 ```typescript
-import {
-    createWebDispatcher,
-    coreHandler,
-    Router
-} from 'routup';
+import { Router, coreHandler, serve } from 'routup/bun';
 
 const router = new Router();
+router.get('/', coreHandler(() => 'Hello from Bun'));
 
-router.get('/', coreHandler(() => 'Hello World'));
-
-const dispatch = createWebDispatcher(router);
-
-Bun.serve({
-    async fetch(request) {
-        return dispatch(request);
-    },
-    port: 3000,
-});
+serve(router, { port: 3000 });
 ```
 
 ## Deno
 
 ```typescript
-import {
-    createWebDispatcher,
-    coreHandler,
-    Router
-} from 'routup';
+import { Router, coreHandler, serve } from 'routup/deno';
 
 const router = new Router();
+router.get('/', coreHandler(() => 'Hello from Deno'));
 
-router.get('/', coreHandler(() => 'Hello World'));
+serve(router, { port: 3000 });
+```
 
-const dispatch = createWebDispatcher(router);
+## Cloudflare Workers
 
-const server = Deno.listen({
-    port: 3000
-});
-for await (const conn of server) {
-    const httpConn = Deno.serveHttp(conn);
+```typescript
+import { Router, coreHandler, serve } from 'routup/cloudflare';
 
-    for await (const requestEvent of httpConn) {
-        const response = await dispatch(
-            requestEvent.request
-        );
-        requestEvent.respondWith(response);
-    }
-}
+const router = new Router();
+router.get('/', coreHandler(() => 'Hello from Cloudflare'));
+
+export default serve(router);
+```
+
+## Auto-detection
+
+When you import from `routup`, the runtime is auto-selected via conditional exports in `package.json`. This is the recommended approach for libraries and portable code:
+
+```typescript
+import { Router, coreHandler, serve } from 'routup';
+
+const router = new Router();
+router.get('/', coreHandler(() => 'Hello'));
+
+serve(router, { port: 3000 });
 ```

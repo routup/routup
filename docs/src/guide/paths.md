@@ -1,30 +1,61 @@
 # Paths
 
-Paths define endpoints (URIs) on which a handler or router is mounted.
-The following example should illustrate how paths can be defined:
+Paths define the URL patterns that handlers and routers respond to. Routup uses [path-to-regexp](https://github.com/pillarjs/path-to-regexp) for pattern matching.
 
-Respond to a **GET** request on the `/foo` route.
+## Basic Paths
 
 ```typescript
-router.get('/foo', coreHandler(() => 'foo'));
+router.get('/users', coreHandler((event) => {
+    return 'user list';
+}));
 ```
 
 ## Parameters
 
-Path parameters are named URL segments that are used to capture the corresponding value at the position in the URL.
-The captured values can be acquired using the helper [useRequestParam](../api/request-helpers.md#userequestparam) and
-[useRequestParams](../api/request-helpers.md#userequestparams).
+Named parameters capture values from the URL:
 
 ```typescript
-router.get('/users/:id/roles/:roleId', coreHandler((req, res) => {
-    const params = useRequestParams(req);
-    console.log(params);
-    // { id: 'xxx', roleId: 'xxx' }
+router.get('/users/:id', coreHandler((event) => {
+    return { id: event.params.id };
+}));
 
-    const param = useRequestParam(req, 'id');
-    console.log(param);
-    // xxx
-    
-    return params;
+router.get('/users/:id/roles/:roleId', coreHandler((event) => {
+    return {
+        id: event.params.id,
+        roleId: event.params.roleId
+    };
+}));
+```
+
+## Wildcards
+
+Match any path suffix with a wildcard:
+
+```typescript
+router.get('/files/*', coreHandler((event) => {
+    return { path: event.params[0] };
+}));
+```
+
+## Regular Expressions
+
+Use regular expressions for advanced matching:
+
+```typescript
+router.get(/^\/users\/(\d+)$/, coreHandler((event) => {
+    return { id: event.params[0] };
+}));
+```
+
+## Optional Parameters
+
+Append `?` to make a parameter optional:
+
+```typescript
+router.get('/users/:id?', coreHandler((event) => {
+    if (event.params.id) {
+        return { id: event.params.id };
+    }
+    return { users: [] };
 }));
 ```

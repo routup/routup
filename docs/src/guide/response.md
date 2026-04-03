@@ -1,52 +1,119 @@
 # Response
 
-The outgoing response is represented as an object, which is injected into a handler function.
+In routup v5, responses are return-based. Handlers return a value, and routup converts it to a `Response` object automatically.
 
-There, it can either be interacted with directly or so-called [helpers](../api/request-helpers.md) can be used,
-which provide abstractions for the interaction and transformation.
-
-## Send
-
-A handler can send a response either [explicitly](#explicit) or [implicitly](#implicit).
-In both cases, the request is terminated and no further handler is called.
-
-### Explicit
-
-In the explicit variant, the response is sent with the help of a response [helper](../api/response-helpers.md)
-(send, sendStream, sendFile, ...).
+## Return Values
 
 ```typescript
-import { coreHandler, send } from 'routup';
+// String — text/plain
+coreHandler(() => 'Hello, World!');
 
-const handler = coreHandler((req, res) => {
-    send(res, 'Hello World!');
+// Object or Array — application/json
+coreHandler(() => ({ users: [] }));
+
+// Response — used as-is
+coreHandler(() => new Response('Created', { status: 201 }));
+
+// ReadableStream — streamed to client
+coreHandler(() => someReadableStream);
+
+// Blob — sent with appropriate content type
+coreHandler(() => new Blob(['data'], { type: 'text/plain' }));
+
+// ArrayBuffer — sent as binary
+coreHandler(() => new ArrayBuffer(8));
+
+// null — empty 204 No Content
+coreHandler(() => null);
+```
+
+## Status and Headers
+
+Use `event.response` to set status codes and headers before returning:
+
+```typescript
+coreHandler((event) => {
+    event.response.status = 201;
+    event.response.headers.set('X-Custom', 'value');
+    return { created: true };
 });
 ```
 
+## Response Helpers
+
+Routup provides helper functions for common response patterns:
+
+### sendFile
+
+Send a file to the client:
+
 ```typescript
-import fs from 'node:fs';
+import { coreHandler, sendFile } from 'routup';
+
+router.get('/download', coreHandler((event) => {
+    return sendFile(event, { path: '/path/to/file.pdf' });
+}));
+```
+
+### sendRedirect
+
+Redirect the client to another URL:
+
+```typescript
+import { coreHandler, sendRedirect } from 'routup';
+
+router.get('/old', coreHandler((event) => {
+    return sendRedirect(event, '/new');
+}));
+```
+
+### sendCreated
+
+Send a 201 Created response:
+
+```typescript
+import { coreHandler, sendCreated } from 'routup';
+
+router.post('/users', coreHandler((event) => {
+    return sendCreated(event, { id: 1 });
+}));
+```
+
+### sendAccepted
+
+Send a 202 Accepted response:
+
+```typescript
+import { coreHandler, sendAccepted } from 'routup';
+
+router.post('/jobs', coreHandler((event) => {
+    return sendAccepted(event);
+}));
+```
+
+### sendStream
+
+Stream data to the client:
+
+```typescript
 import { coreHandler, sendStream } from 'routup';
 
-const handler = coreHandler((req, res) => {
-    const readable = fs.createReadStream('...');
-    sendStream(res, stream);
-});
+router.get('/stream', coreHandler((event) => {
+    return sendStream(event, readableStream);
+}));
 ```
 
-### Implicit
+### sendFormat
 
-In the implicit variant, the value is simply returned and routup tries to find out for itself how to handle the value.
+Content-negotiate and send a response in the appropriate format:
 
 ```typescript
-import { coreHandler } from 'routup';
+import { coreHandler, sendFormat } from 'routup';
 
-const handler = coreHandler(() => 'Hello, World!');
+router.get('/data', coreHandler((event) => {
+    return sendFormat(event, {
+        json: () => ({ key: 'value' }),
+        text: () => 'key=value',
+    });
+}));
 ```
-
-```typescript
-import { coreHandler } from 'routup';
-
-const handler = coreHandler(() => fs.createReadStream('...'));
-```
-
-

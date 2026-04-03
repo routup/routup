@@ -1,184 +1,129 @@
 # Handlers
 
-Handlers are executed in a stack like manner.
-One handler after the other is processed until a handler interrupts the chain.
-Only handlers that meet criteria such as the path and method are called.
-A handler can be [mounted](#mounting) to a router in different ways.
+Handlers are functions that process requests. They receive a `DispatchEvent` and return a value that becomes the response.
 
-## Middleware
-A handler that does not finalize the request is called **middleware**.
-Such a handler calls the `next()` callback function or returns a value that resolves to `undefined` to execute the next handler in the chain.
+## Core Handlers
 
-::: warning **Note**
-
-Express middleware libraries (like body-parser, multer, ...) should work in most cases
-out of the box 🔥. [Read more](./express-compatibility.md).
-
-:::
-
-## Types
-There are different types of handlers that are called depending on the conditions.
-
-### Core
-A **core** handler is the default handler that either interrupts the chain by sending a response 
-or passes the request to the next handler in the chain.
-
-**`explicit`**
-
-The coreHandler function should be used to define a handler function in the classical sense.
+A core handler processes a request and returns a response value:
 
 ```typescript
 import { coreHandler } from 'routup';
 
-const handler = coreHandler((req, res, next) => {
-    // ...
+const handler = coreHandler((event) => {
+    return { message: 'Hello, World!' };
 });
 ```
 
-**`implicit`**
+## Error Handlers
 
-A handler can be defined implicitly, without the helper function.
-In this case the handler is recognized by the function arguments.
+An error handler is called when an error occurs in a previous handler:
 
-::: warning **Note**
-
-It is highly recommended to use the explicit variant, 
-since this way the handler type does not have to be determined based on the function arguments.
-In addition, only the explicit variant will be supported in the next major version.
-
-:::
-
-```typescript
-const handler = (req, res, next) => {
-    // ...
-};
-```
-
-### Error
-An **error** handler is a special kind of handler, 
-which is only executed if an error occurred in a previous handler.
-
-**`explicit`**
-
-The **errorHandler** function should be used to define a handler function in the classical sense.
 ```typescript
 import { errorHandler } from 'routup';
 
-const handler = errorHandler((err, req, res, next) => {
-    // ...
+const handler = errorHandler((error, event) => {
+    event.response.status = 500;
+    return { error: error.message };
 });
 ```
 
-**`implicit`**
+## Return Values
 
-A handler can be defined implicitly, without the helper function.
-In this case the handler is recognized by the function arguments.
-
-::: warning **Note**
-
-It is highly recommended to use the explicit variant,
-since this way the handler type does not have to be determined based on the function arguments.
-In addition, only the explicit variant will be supported in the next major version.
-
-:::
+Handlers return values that are automatically converted to `Response` objects:
 
 ```typescript
-const handler = (err, req, res, next) => {
-    // ...
-};
+// String — sent as text/plain
+coreHandler(() => 'Hello, World!');
+
+// Object/Array — sent as application/json
+coreHandler(() => ({ name: 'Alice' }));
+
+// Response — sent as-is
+coreHandler(() => new Response('Custom', { status: 201 }));
+
+// ReadableStream, Blob, ArrayBuffer — sent as binary
+coreHandler(() => new Blob(['data']));
+
+// null — empty 204 response
+coreHandler(() => null);
 ```
 
-## Declarations
+## Middleware
 
-Both core and error handlers, can be defined in two different ways.
-Core handler functions can have up to 3 arguments (req, res, next) whereas error handler functions can have up to 4 arguments (err, req, res, next). 
-This should be familiar to anyone who has used express before.
+A handler that calls `event.next()` acts as middleware. It can inspect or modify the request, then pass control to the next handler:
+
+```typescript
+coreHandler(async (event) => {
+    console.log(`${event.method} ${event.path}`);
+    return event.next();
+});
+```
+
+You can also modify the downstream response:
+
+```typescript
+coreHandler(async (event) => {
+    const response = await event.next();
+    // inspect or modify the response
+    return response;
+});
+```
+
+## Declaration Styles
 
 ### Shorthand
 
-With the shorthand variant, only the handler function is passed as argument to the **coreHandler** & **errorHandler** function.
-This also corresponds to the way the handlers were declared in the [Types](#types) section.
+Pass a function directly:
 
 ```typescript
-import { coreHandler } from 'routup';
-
-const handler = coreHandler((req, res, next) => {
-    // ...
+const handler = coreHandler((event) => {
+    return 'Hello, World!';
 });
 ```
 
 ### Verbose
 
-The verbose variant is more complex, but offers the possibility to set additional information 
-like **path**, **method**, ... in the handler definition.
+Pass a configuration object with path, method, and handler function:
 
 ```typescript
-import { coreHandler } from 'routup';
-
 const handler = coreHandler({
     method: 'GET',
-    path: '/',
-    fn: (req, res, next) => {
-        // ...
+    path: '/users/:id',
+    fn: (event) => {
+        return { id: event.params.id };
     }
 });
 ```
 
 ## Mounting
 
-In the following it will be shown how a [handler](./handlers.md) can be mounted on different ways.
-
-
 ### Global
 
-Mount a handler without any specific criteria,
-making it available to process requests regardless of path and method.
-
 ```typescript
-router.use(coreHandler(() => 'Hello, World!'));
-```
-
-### Method
-
-Mount a handler based on the HTTP method `GET`.
-
-```typescript
-router.use(coreHandler({
-    method: 'GET',
-    fn: () => 'Hello, World!'
+router.use(coreHandler((event) => {
+    return event.next();
 }));
 ```
 
-The router also provides a method with the same syntax for each lowercase HTTP method (get, post, delete, ...).
+### By Method
+
 ```typescript
-router.get(coreHandler(() => 'Hello, World!'));
-router.post(/* ... */);
-// ...
+router.get('/', coreHandler((event) => 'Hello'));
+router.post('/users', coreHandler((event) => { /* ... */ }));
 ```
 
-### Path
-
-Mount a handler based on the path `/foo`.
+### By Path
 
 ```typescript
-router.use('/foo', coreHandler(() => 'Hello, World!'));
-```
-
-### Path & Method
-
-Mount a handler based on the path `/foo` and the HTTP method `GET`.
-
-```typescript
-router.use(coreHandler({
-    method: 'GET',
-    path: '/foo',
-    fn: () => 'Hello, World!'
+router.use('/api', coreHandler((event) => {
+    return { api: true };
 }));
 ```
 
-The router also provides a method with the same syntax for each lowercase HTTP method (get, post, delete, ...).
+### By Path and Method
+
 ```typescript
-router.get('/foo', coreHandler(() => 'Hello, World!'));
-router.post(/* ... */);
-// ...
+router.get('/users/:id', coreHandler((event) => {
+    return { id: event.params.id };
+}));
 ```
