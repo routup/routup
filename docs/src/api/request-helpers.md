@@ -274,8 +274,8 @@ declare function useRequestEnv(
 // Single key
 declare function useRequestEnv(
     event: DispatchEvent,
-    key: string,
-): unknown;
+    key: PropertyKey,
+): unknown | undefined;
 ```
 
 ```typescript

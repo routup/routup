@@ -36,15 +36,15 @@ export function createEventStream(
         },
     });
 
-    const headers = new Headers({
-        [HeaderName.CONTENT_TYPE]: 'text/event-stream',
-        [HeaderName.CACHE_CONTROL]: 'private, no-cache, no-store, no-transform, must-revalidate, max-age=0',
-        [HeaderName.X_ACCEL_BUFFERING]: 'no',
-        [HeaderName.CONNECTION]: 'keep-alive',
-    });
+    const headers = new Headers(event.response.headers);
+    headers.set(HeaderName.CONTENT_TYPE, 'text/event-stream');
+    headers.set(HeaderName.CACHE_CONTROL, 'private, no-cache, no-store, no-transform, must-revalidate, max-age=0');
+    headers.set(HeaderName.X_ACCEL_BUFFERING, 'no');
+    headers.set(HeaderName.CONNECTION, 'keep-alive');
 
     const response = new Response(stream, {
-        status: 200,
+        status: event.response.status,
+        statusText: event.response.statusText,
         headers,
     });
 

@@ -17,23 +17,54 @@ function callNodeHandler(
     const isMiddleware = handler.length > 2;
 
     return new Promise((resolve, reject) => {
-        res.once('close', () => resolve(kHandled));
-        res.once('finish', () => resolve(kHandled));
-        res.once('error', (error) => reject(error));
+        let settled = false;
+
+        const onClose = () => settle(kHandled);
+        const onFinish = () => settle(kHandled);
+        const onError = (error: Error) => fail(error);
+
+        function cleanup() {
+            res.removeListener('close', onClose);
+            res.removeListener('finish', onFinish);
+            res.removeListener('error', onError);
+        }
+
+        function settle(value: typeof kHandled | void) {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            resolve(value);
+        }
+
+        function fail(error: unknown) {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            reject(error);
+        }
+
+        res.once('close', onClose);
+        res.once('finish', onFinish);
+        res.once('error', onError);
 
         try {
             if (isMiddleware) {
                 Promise.resolve(
-                    (handler as NodeMiddleware)(req, res, (error) =>
-                        (error ? reject(error) : resolve(undefined))),
-                ).catch(reject);
+                    (handler as NodeMiddleware)(req, res, (error) => {
+                        if (error) {
+                            fail(error);
+                        } else {
+                            settle(res.writableEnded || res.destroyed ? kHandled : undefined);
+                        }
+                    }),
+                ).catch(fail);
             } else {
                 Promise.resolve((handler as NodeHandler)(req, res))
-                    .then(() => resolve(kHandled))
-                    .catch(reject);
+                    .then(() => settle(kHandled))
+                    .catch(fail);
             }
         } catch (error) {
-            reject(error);
+            fail(error);
         }
     });
 }

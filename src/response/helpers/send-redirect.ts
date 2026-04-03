@@ -42,11 +42,13 @@ export function sendRedirect(event: DispatchEvent, location: string, statusCode 
 
     event.dispatched = true;
 
+    const headers = new Headers(event.response.headers);
+    headers.set('location', sanitizedLocation);
+    headers.set('content-type', 'text/html; charset=utf-8');
+    headers.delete('content-length');
+
     return new Response(html, {
         status: statusCode,
-        headers: {
-            'location': sanitizedLocation,
-            'content-type': 'text/html; charset=utf-8',
-        },
+        headers,
     });
 }

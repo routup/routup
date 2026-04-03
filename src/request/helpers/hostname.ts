@@ -22,7 +22,7 @@ export function getRequestHostName(event: DispatchEvent, options?: RequestHostNa
     }
 
     let hostname = event.headers.get(HeaderName.X_FORWARDED_HOST);
-    if (!hostname || !trustProxy('0.0.0.0', 0)) {
+    if (!hostname || !trustProxy(event.request.ip || '0.0.0.0', 0)) {
         hostname = event.headers.get(HeaderName.HOST);
     } else if (hostname && hostname.includes(',')) {
         hostname = hostname.substring(0, hostname.indexOf(',')).trimEnd();

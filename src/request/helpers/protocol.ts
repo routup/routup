@@ -40,7 +40,7 @@ export function getRequestProtocol(
         }
     }
 
-    if (!trustProxy('0.0.0.0', 0)) {
+    if (!trustProxy(event.request.ip || '0.0.0.0', 0)) {
         return protocol;
     }
 

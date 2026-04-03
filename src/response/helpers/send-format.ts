@@ -16,9 +16,13 @@ export function sendFormat(event: DispatchEvent, input: ResponseFormats): Respon
 
     const contentTypes = Object.keys(formats);
 
+    if (contentTypes.length === 0) {
+        return formatDefault();
+    }
+
     const contentType = getRequestAcceptableContentType(event, contentTypes);
-    if (contentType) {
-        return formats[contentType]!();
+    if (contentType && formats[contentType]) {
+        return formats[contentType]();
     }
 
     return formatDefault();

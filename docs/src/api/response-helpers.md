@@ -92,8 +92,8 @@ Perform content negotiation and send the response in the format the client prefe
 ```typescript
 declare function sendFormat(
     event: DispatchEvent,
-    formats: Record<string, () => Response>,
-): Response | undefined;
+    formats: Record<string, () => unknown>,
+): unknown | undefined;
 ```
 
 ```typescript
@@ -216,7 +216,7 @@ Create a Server-Sent Events stream. Returns an object with methods to write even
 declare function createEventStream(
     event: DispatchEvent,
     options?: EventStreamOptions,
-): { write: (data: string) => void; end: () => void; response: Response };
+): { write: (data: string | EventStreamMessage) => void; end: () => void; response: Response };
 ```
 
 ```typescript
