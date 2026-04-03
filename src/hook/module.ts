@@ -69,7 +69,7 @@ export class HookManager {
 
         try {
             for (let i = 0; i < this.items[name].length; i++) {
-                const listener = this.items[name][i];
+                const listener = this.items[name][i]!;
                 await this.triggerListener(name, event, listener);
 
                 if (event.dispatched) {

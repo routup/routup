@@ -2,10 +2,11 @@
 
 ## Setup
 
-- **Framework**: Jest 30.2.0
-- **Transformer**: @swc/jest (SWC for fast TypeScript compilation)
+- **Framework**: Vitest
 - **Environment**: Node.js
-- **Config**: `test/jest.config.js`
+- **Config**: `test/vitest.config.ts`
+
+> **Note**: The test suite is being rewritten for the v5 srvx-based API. Many existing tests reference the old `(req, res, next)` handler signatures and `createNodeDispatcher()` adapter, and will fail until updated.
 
 ## Running Tests
 
@@ -21,45 +22,42 @@ Tests live in `test/unit/` and mirror the `src/` directory structure:
 ```
 test/
 ├── unit/
-│   ├── dispatcher/     # Dispatch pipeline tests (raw, web adapters)
+│   ├── dispatcher/     # Dispatch pipeline tests
 │   ├── error/          # Error creation tests
 │   ├── handler/        # Handler definition tests
-│   ├── request/        # Request helper tests (cache, env, headers, hostname, IP, etc.)
-│   ├── response/       # Response helper tests (cache, event-stream, headers, send-file, etc.)
+│   ├── request/        # Request helper tests (body, cache, headers, hostname, IP, etc.)
+│   ├── response/       # Response helper tests (cache, headers, to-response, etc.)
 │   ├── router.spec.ts  # Router integration tests
 │   ├── path.spec.ts    # Path matching tests
 │   └── plugin.spec.ts  # Plugin system tests
 ├── data/               # Test fixtures (static files, etc.)
-└── jest.config.js      # Jest configuration
+└── vitest.config.ts    # Vitest configuration
 ```
 
 ## Test Pattern
 
 - File naming: `*.spec.ts`
-- Tests use `supertest` for HTTP-level assertions against a real Node.js server
-- Typical pattern: create a `Router`, register handlers, wrap with `createNodeDispatcher()`, test with `supertest`
+- Tests use `supertest` for HTTP-level assertions via `toNodeHandler()` from srvx, or test `router.fetch()` directly with Web `Request` objects
+- Typical pattern:
 
 ```typescript
 import supertest from 'supertest';
-import { Router, coreHandler, createNodeDispatcher, send } from '../../src';
+import { toNodeHandler } from 'srvx/node';
+import { Router, coreHandler } from '../../src';
 
 const router = new Router();
-router.get('/', coreHandler((req, res) => send(res, 'ok')));
+router.get('/', coreHandler((event) => 'ok'));
 
-const server = supertest(createNodeDispatcher(router));
+// Option 1: supertest via toNodeHandler()
+const server = supertest(toNodeHandler(router));
 const response = await server.get('/');
 expect(response.text).toBe('ok');
+
+// Option 2: test router.fetch() directly
+const response = await router.fetch(new Request('http://localhost/'));
+expect(await response.text()).toBe('ok');
 ```
 
-## Coverage Thresholds
-
-Configured in `test/jest.config.js`:
-
-| Metric | Threshold |
-|--------|-----------|
-| Branches | 58% |
-| Functions | 77% |
-| Lines | 73% |
-| Statements | 73% |
+## Coverage
 
 Coverage reports are generated in the `coverage/` directory and uploaded to Codecov in CI.

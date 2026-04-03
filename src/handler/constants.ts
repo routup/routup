@@ -3,4 +3,4 @@ export enum HandlerType {
     ERROR = 'error',
 }
 
-export const HandlerSymbol = Symbol.for('Handler');
+export const HandlerSymbol = /* @__PURE__ */ Symbol.for('Handler');

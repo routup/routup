@@ -94,7 +94,7 @@ export async function sendFile(
 
     event.dispatched = true;
 
-    return new Response(content, {
+    return new Response(content as BodyInit, {
         status: statusCode,
         statusText: event.response.statusText,
         headers,

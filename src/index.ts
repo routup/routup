@@ -7,4 +7,3 @@ export * from './request';
 export * from './path';
 export * from './plugin';
 export * from './router';
-export * from './types';

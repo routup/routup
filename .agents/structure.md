@@ -4,8 +4,14 @@
 
 ```
 routup/
-├── src/                    # TypeScript source (121 files)
-│   ├── adapters/           # Runtime adapters (node, web, raw)
+├── src/                    # TypeScript source
+│   ├── _entries/           # Runtime entry points
+│   │   ├── _common.ts      # Shared entry logic
+│   │   ├── node.ts         # Node.js entry (srvx node adapter)
+│   │   ├── bun.ts          # Bun entry (srvx bun adapter)
+│   │   ├── deno.ts         # Deno entry (srvx deno adapter)
+│   │   ├── generic.ts      # Generic Web API entry (srvx generic adapter)
+│   │   └── compat.ts       # Compatibility entry (legacy req/res helpers)
 │   ├── dispatcher/         # DispatchEvent and pipeline triggers
 │   ├── error/              # RoutupError (extends @ebec/http)
 │   ├── handler/            # Handler definitions
@@ -14,22 +20,24 @@ routup/
 │   ├── hook/               # Lifecycle hook system
 │   ├── path/               # PathMatcher using path-to-regexp
 │   ├── plugin/             # Plugin install/management
-│   ├── request/            # Request creation and helpers
-│   ├── response/           # Response creation and helpers
+│   ├── request/            # Request helpers
+│   │   ├── helpers/        # Tree-shakeable helper functions (body, headers, IP, etc.)
+│   │   └── module.ts       # Legacy request object creation (compat-only, not in public API)
+│   ├── response/           # Response helpers
+│   │   ├── helpers/        # Tree-shakeable helper functions (cache, headers, etc.)
+│   │   ├── to-response.ts  # Converts handler return values to Web Response
+│   │   └── module.ts       # Legacy response object creation (compat-only, not in public API)
 │   ├── router/             # Router class (central module)
 │   ├── router-options/     # Router configuration merging
 │   ├── utils/              # Shared utilities
 │   ├── constants.ts        # MethodName, HeaderName enums
-│   ├── types.ts            # Stream types, Next callback
+│   ├── types.ts            # Stream types, handler signatures
 │   └── index.ts            # Barrel export (public API)
-├── test/                   # Jest test suite (32 spec files)
+├── test/                   # Vitest test suite
 │   ├── unit/               # Unit tests mirroring src/ structure
 │   ├── data/               # Test fixtures
-│   └── jest.config.js      # Jest configuration
-├── dist/                   # Build output (generated)
-│   ├── index.cjs           # CommonJS bundle
-│   ├── index.mjs           # ES Module bundle
-│   └── index.d.ts          # TypeScript declarations
+│   └── vitest.config.ts    # Vitest configuration
+├── dist/                   # Build output (generated, multi-entry)
 ├── rollup.config.mjs       # Rollup build configuration
 ├── tsconfig.json           # TypeScript compiler config
 └── package.json            # Project manifest
@@ -39,18 +47,19 @@ routup/
 
 | Module | Purpose |
 |--------|---------|
-| `router/` | Core `Router` class — registers handlers, manages stack, dispatches requests through pipeline steps |
+| `_entries/` | Runtime-specific entry points — each re-exports core API plus runtime adapter (`serve`, `toNodeHandler`, etc.) via srvx |
+| `router/` | Core `Router` class — registers handlers, manages stack, dispatches requests through pipeline steps, exposes `fetch()` |
 | `handler/core/` | `coreHandler()` factory — creates typed request handlers with shorthand and verbose syntax |
-| `handler/error/` | `errorHandler()` factory — creates error handlers that receive `(err, req, res, next)` |
-| `dispatcher/` | `DispatchEvent` — immutable event object carrying request, response, path, method, params through the pipeline |
-| `adapters/node/` | `createNodeDispatcher()` — bridges Router to Node.js `http.createServer()` |
-| `adapters/web/` | `createWebDispatcher()` — bridges Router to Web API `Request → Response` |
-| `adapters/raw/` | Lower-level adapter for custom runtime integrations |
-| `hook/` | Lifecycle events: `dispatchStart`, `dispatchEnd`, `childMatch`, `childDispatchBefore`, `childDispatchAfter`, `error` |
+| `handler/error/` | `errorHandler()` factory — creates error handlers that receive `(error, event)` |
+| `dispatcher/` | `DispatchEvent` — event object carrying request, params, path, method, mountPath, headers, searchParams through the pipeline |
+| `hook/` | Lifecycle events: `request`, `response`, `error` |
 | `plugin/` | Plugin system — objects with `name` and `install(router)` method |
 | `path/` | `PathMatcher` — wraps `path-to-regexp` for URL pattern matching with query string support |
-| `request/` | Request object creation and tree-shakeable helpers (`useRequestPath`, `useRequestParams`, etc.) |
-| `response/` | Response object creation and helpers (`send`, `sendFile`, `setResponseHeader`, etc.) |
+| `request/helpers/` | Tree-shakeable request helpers (`readBody`, `useRequestHeader`, `useRequestIP`, etc.) |
+| `request/module.ts` | Legacy request object creation (compat entry only) |
+| `response/helpers/` | Tree-shakeable response helpers (`setResponseHeader`, `setResponseStatus`, etc.) |
+| `response/to-response.ts` | Converts handler return values (string, object, Response, etc.) into a Web `Response` |
+| `response/module.ts` | Legacy response object creation (compat entry only) |
 | `error/` | `RoutupError` extending `@ebec/http` `HTTPError` with statusCode/statusMessage |
 | `constants.ts` | `MethodName` and `HeaderName` enums for type-safe HTTP constants |
 
@@ -58,21 +67,24 @@ routup/
 
 | Package | Purpose |
 |---------|---------|
+| `srvx` | Universal HTTP server adapter (Node.js, Bun, Deno, generic Web API) |
 | `path-to-regexp` | URL pattern matching (`:id`, wildcards, regex) |
 | `@ebec/http` | Base HTTP error class |
 | `mime-explorer` | MIME type detection for file serving |
 | `negotiator` | HTTP content negotiation |
 | `proxy-addr` | Client IP resolution behind proxies |
-| `readable-stream` | Cross-runtime stream compatibility |
+| `readable-stream` | Cross-runtime stream compatibility (compat entry only) |
 | `smob` | Object merge/utility functions |
 | `uncrypto` | Cross-platform crypto (ETags, etc.) |
 
 ## Build Output
 
-The package ships dual CJS/ESM with TypeScript declarations:
+The package ships multiple ESM entry points with TypeScript declarations:
 
-| Field | Path | Format |
-|-------|------|--------|
-| `main` | `dist/index.cjs` | CommonJS |
-| `module` | `dist/index.mjs` | ES Module |
-| `types` | `dist/index.d.ts` | TypeScript |
+| Entry | Path | Purpose |
+|-------|------|---------|
+| Node.js | `dist/node.mjs` | Node.js runtime via srvx |
+| Bun | `dist/bun.mjs` | Bun runtime via srvx |
+| Deno | `dist/deno.mjs` | Deno runtime via srvx |
+| Generic | `dist/generic.mjs` | Web API runtimes (Cloudflare Workers, etc.) |
+| Compat | `dist/compat.mjs` | Legacy compatibility (req/res object helpers) |

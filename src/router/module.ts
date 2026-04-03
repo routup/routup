@@ -201,7 +201,7 @@ export class Router implements Dispatcher {
                         context.event.methodsAllowed.push(item.method);
                     }
 
-                    if (item.matchMethod(context.event.method)) {
+                    if (item.matchMethod(context.event.method as `${MethodName}`)) {
                         await this.hookManager.trigger(HookName.CHILD_MATCH, context.event);
 
                         if (context.event.dispatched) {
@@ -641,7 +641,6 @@ export class Router implements Dispatcher {
      * Remove single or all hook listeners.
      *
      * @param name
-     * @param fn
      */
     off(name: `${HookName}`): this;
 

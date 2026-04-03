@@ -33,7 +33,7 @@ export function toResponse(
         if (!headers.has('content-type')) {
             headers.set('content-type', 'application/octet-stream');
         }
-        return new Response(value, {
+        return new Response(value as BodyInit, {
             status, 
             statusText, 
             headers, 

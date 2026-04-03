@@ -66,7 +66,7 @@ export class DispatchEvent {
     /**
      * Cached parsed URL (avoids double-parsing).
      */
-    protected _url: FastURL;
+    protected _url: InstanceType<typeof FastURL>;
 
     /**
      * Cached parsed search params.

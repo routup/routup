@@ -9,5 +9,5 @@ export function matchRequestContentType(event: DispatchEvent, contentType: strin
         return true;
     }
 
-    return header.split(';')[0].trim() === getMimeType(contentType);
+    return header.split(';')[0]!.trim() === getMimeType(contentType);
 }
