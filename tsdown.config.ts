@@ -2,7 +2,6 @@ import { defineConfig } from 'tsdown';
 
 export default defineConfig({
     entry: {
-        index: 'src/index.ts',
         node: 'src/_entries/node.ts',
         bun: 'src/_entries/bun.ts',
         deno: 'src/_entries/deno.ts',

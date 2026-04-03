@@ -50,8 +50,15 @@ Send a file to the client:
 ```typescript
 import { coreHandler, sendFile } from 'routup';
 
-router.get('/download', coreHandler((event) => {
-    return sendFile(event, { path: '/path/to/file.pdf' });
+router.get('/download', coreHandler(async (event) => {
+    return sendFile(event, {
+        stats: () => fs.promises.stat('/path/to/file.pdf'),
+        content: (opts) => {
+            const stream = fs.createReadStream('/path/to/file.pdf', opts);
+            return Readable.toWeb(stream);
+        },
+        name: 'file.pdf',
+    });
 }));
 ```
 
@@ -112,8 +119,9 @@ import { coreHandler, sendFormat } from 'routup';
 
 router.get('/data', coreHandler((event) => {
     return sendFormat(event, {
-        json: () => ({ key: 'value' }),
-        text: () => 'key=value',
+        default: () => 'key=value',
+        'application/json': () => ({ key: 'value' }),
+        'text/plain': () => 'key=value',
     });
 }));
 ```

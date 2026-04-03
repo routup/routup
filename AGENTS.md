@@ -11,9 +11,9 @@ Routup is a minimalistic, runtime-agnostic HTTP routing framework for Node.js, B
 npm install
 
 # Development
-npm run build          # Clean dist/, compile with Rollup+SWC, emit .d.ts
-npm run build:js       # Rollup bundle only
-npm run build:types    # TypeScript declarations only
+npm run build          # Build JS (tsdown) + type-check (tsc)
+npm run build:js       # tsdown bundle only
+npm run build:types    # TypeScript type-check only (tsc --noEmit)
 
 # Test
 npm test               # Vitest

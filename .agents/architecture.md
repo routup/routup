@@ -87,10 +87,11 @@ Handlers are distinguished by arity: error handlers have 2 parameters `(error, e
 
 Handlers return values directly instead of calling `send()`. The `toResponse()` function converts return values to a Web `Response`:
 
-- **string** → `Response` with `text/html` content type
+- **string** → `Response` with `text/plain` content type
 - **object/array** → JSON `Response`
 - **Response** → passed through
-- **null/undefined** → empty response (middleware that called `event.next()`)
+- **null** → empty `204 No Content` response
+- **undefined** → no response (middleware pass-through; pipeline continues)
 
 ### Middleware and `event.next()`
 
@@ -185,14 +186,16 @@ Helpers are standalone, tree-shakeable functions:
 
 ```typescript
 // Request helpers
-readBody(event)                  // parse request body
-useRequestHeader(event, name)    // single header
-useRequestHostName(event)        // hostname
-useRequestIP(event)              // client IP (proxy-aware)
+readBody(event)                          // parse request body
+getRequestHeader(event, name)            // single header
+getRequestHostName(event)                // hostname
+getRequestIP(event)                      // client IP (proxy-aware)
 
 // Response helpers
-setResponseHeader(event, k, v)   // set header on response accumulator
-setResponseStatus(event, code)   // set status code
+event.response.headers.set(k, v)         // set header on response accumulator
+event.response.status = code             // set status code
+appendResponseHeader(event, name, value) // append to existing header
+setResponseCacheHeaders(event, options)  // set cache headers
 ```
 
 This design keeps the core lightweight — unused helpers are tree-shaken from the final bundle.

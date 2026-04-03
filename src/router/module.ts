@@ -343,9 +343,12 @@ export class Router implements Dispatcher {
                 .map((key) => key.toUpperCase())
                 .join(',');
 
+            const optionsHeaders = new Headers(context.event.response.headers);
+            optionsHeaders.set(HeaderName.ALLOW, options);
             context.response = new Response(options, {
-                status: 200,
-                headers: { [HeaderName.ALLOW]: options },
+                status: context.event.response.status || 200,
+                statusText: context.event.response.statusText,
+                headers: optionsHeaders,
             });
 
             context.event.dispatched = true;

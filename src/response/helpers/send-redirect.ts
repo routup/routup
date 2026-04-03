@@ -49,6 +49,7 @@ export function sendRedirect(event: DispatchEvent, location: string, statusCode 
 
     return new Response(html, {
         status: statusCode,
+        statusText: event.response.statusText,
         headers,
     });
 }

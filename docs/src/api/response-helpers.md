@@ -63,7 +63,7 @@ Send a `201 Created` response with optional body data.
 declare function sendCreated(
     event: DispatchEvent,
     data?: unknown,
-): Response;
+): Promise<Response>;
 ```
 
 ```typescript
@@ -78,7 +78,7 @@ Send a `202 Accepted` response with optional body data.
 declare function sendAccepted(
     event: DispatchEvent,
     data?: unknown,
-): Response;
+): Promise<Response>;
 ```
 
 ```typescript
@@ -92,16 +92,18 @@ Perform content negotiation and send the response in the format the client prefe
 ```typescript
 declare function sendFormat(
     event: DispatchEvent,
-    formats: Record<string, () => unknown>,
+    formats: {
+        default: () => unknown,
+        [contentType: string]: () => unknown,
+    },
 ): unknown | undefined;
 ```
 
 ```typescript
 return sendFormat(event, {
-    'application/json': () => Response.json({ ok: true }),
-    'text/html': () => new Response('<p>OK</p>', {
-        headers: { 'Content-Type': 'text/html' },
-    }),
+    default: () => ({ ok: true }),
+    'application/json': () => ({ ok: true }),
+    'text/html': () => '<p>OK</p>',
 });
 ```
 
@@ -164,7 +166,7 @@ Append a value to an existing response header (or create it).
 declare function appendResponseHeader(
     event: DispatchEvent,
     name: string,
-    value: string,
+    value: string | string[],
 ): void;
 ```
 
@@ -180,7 +182,7 @@ Append a directive to an existing response header value (or create the header).
 declare function appendResponseHeaderDirective(
     event: DispatchEvent,
     name: string,
-    value: string,
+    value: string | string[],
 ): void;
 ```
 

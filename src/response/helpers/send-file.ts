@@ -68,9 +68,12 @@ export async function sendFile(
                 contentOptions.start > contentOptions.end
             ) {
                 event.dispatched = true;
+                const rangeHeaders = new Headers(headers);
+                rangeHeaders.set(HeaderName.CONTENT_RANGE, `bytes */${stats.size}`);
                 return new Response(null, {
                     status: 416,
-                    headers: { [HeaderName.CONTENT_RANGE]: `bytes */${stats.size}` },
+                    statusText: event.response.statusText,
+                    headers: rangeHeaders,
                 });
             }
 

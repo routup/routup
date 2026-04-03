@@ -29,8 +29,16 @@ export async function toResponse(
     value: unknown,
     event: DispatchEvent,
 ): Promise<Response | undefined> {
-    if (value === null || value === undefined) {
+    if (value === undefined) {
         return undefined;
+    }
+
+    if (value === null) {
+        return new Response(null, {
+            status: event.response.status || 204,
+            statusText: event.response.statusText,
+            headers: event.response.headers,
+        });
     }
 
     if (value instanceof Response) {

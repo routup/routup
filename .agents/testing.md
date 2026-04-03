@@ -6,7 +6,7 @@
 - **Environment**: Node.js
 - **Config**: `test/vitest.config.ts`
 
-> **Note**: The test suite is being rewritten for the v5 srvx-based API. Many existing tests reference the old `(req, res, next)` handler signatures and `createNodeDispatcher()` adapter, and will fail until updated.
+> **Note**: The test suite has been rewritten for the v5 srvx-based API. Tests use `router.fetch()` with Web `Request` objects directly.
 
 ## Running Tests
 
@@ -41,20 +41,13 @@ test/
 - Typical pattern:
 
 ```typescript
-import supertest from 'supertest';
-import { toNodeHandler } from 'srvx/node';
 import { Router, coreHandler } from '../../src';
+import { createTestRequest } from '../helpers';
 
 const router = new Router();
 router.get('/', coreHandler((event) => 'ok'));
 
-// Option 1: supertest via toNodeHandler()
-const server = supertest(toNodeHandler(router));
-const response = await server.get('/');
-expect(response.text).toBe('ok');
-
-// Option 2: test router.fetch() directly
-const response = await router.fetch(new Request('http://localhost/'));
+const response = await router.fetch(createTestRequest('/'));
 expect(await response.text()).toBe('ok');
 ```
 

@@ -65,7 +65,7 @@ describe('routing/middleware', () => {
         let response = await router.fetch(createTestRequest('/'));
 
         expect(response.status).toEqual(200);
-        expect(await response.text()).toBeFalsy();
+        expect(await response.text()).toEqual('');
 
         response = await router.fetch(createTestRequest('/foo'));
 
