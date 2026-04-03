@@ -5,6 +5,7 @@ import type { RoutupError } from '../../error/module.ts';
 export type DispatchEventResponse = {
     status: number;
     headers: Headers;
+    statusText?: string;
 };
 
 export class DispatchEvent {
