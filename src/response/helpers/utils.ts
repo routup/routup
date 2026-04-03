@@ -1,8 +1,8 @@
-import { HeaderName } from '../../constants';
-import { extname, getCharsetForMimeType, getMimeType } from '../../utils';
-import type { Response } from '../types';
+import { HeaderName } from '../../constants.ts';
+import { extname, getCharsetForMimeType, getMimeType } from '../../utils/index.ts';
+import type { DispatchEvent } from '../../dispatcher/event/module.ts';
 
-export function setResponseContentTypeByFileName(res: Response, fileName: string) {
+export function setResponseContentTypeByFileName(event: DispatchEvent, fileName: string) {
     const ext = extname(fileName);
     if (ext) {
         let type = getMimeType(ext.substring(1));
@@ -11,7 +11,7 @@ export function setResponseContentTypeByFileName(res: Response, fileName: string
             if (charset) {
                 type += `; charset=${charset}`;
             }
-            res.setHeader(HeaderName.CONTENT_TYPE, type);
+            event.response.headers.set(HeaderName.CONTENT_TYPE, type);
         }
     }
 }

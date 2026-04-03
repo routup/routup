@@ -1,17 +1,24 @@
 import Negotiator from 'negotiator';
-import { getProperty, setProperty } from '../../utils';
 
-import type { Request } from '../types';
+import type { DispatchEvent } from '../../dispatcher/event/module.ts';
 
-const symbol = Symbol.for('ReqNegotiator');
+const negotiatorMap = new WeakMap<DispatchEvent, Negotiator>();
 
-export function useRequestNegotiator(req: Request) : Negotiator {
-    let value = getProperty(req, symbol);
+function headersToPlainObject(headers: Headers) : Record<string, string> {
+    const result: Record<string, string> = {};
+    headers.forEach((value, key) => {
+        result[key] = value;
+    });
+    return result;
+}
+
+export function useRequestNegotiator(event: DispatchEvent) : Negotiator {
+    let value = negotiatorMap.get(event);
     if (value) {
         return value;
     }
 
-    value = new Negotiator(req);
-    setProperty(req, symbol, value);
+    value = new Negotiator({ headers: headersToPlainObject(event.headers) });
+    negotiatorMap.set(event, value);
     return value;
 }

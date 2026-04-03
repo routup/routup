@@ -8,6 +8,7 @@ import type { HandlerConfig } from '../handler/index.ts';
 import {
     Handler,
     HandlerType,
+    coreHandler,
     isHandler,
     isHandlerConfig,
 } from '../handler/index.ts';
@@ -501,6 +502,34 @@ export class Router implements Dispatcher {
                 this.use(element);
             }
         }
+    }
+
+    // --------------------------------------------------
+
+    /**
+     * Mount an external fetch handler at the given path.
+     * The handler receives requests with the mount prefix stripped from the URL.
+     *
+     * @experimental
+     */
+    mount(path: Path, handler: { fetch: (request: Request) => Response | Promise<Response> }): this;
+    mount(path: Path, handler: (request: Request) => Response | Promise<Response>): this;
+    mount(path: Path, handler: unknown): this {
+        const fn = typeof handler === 'function' ?
+            handler as (request: Request) => Response | Promise<Response> :
+            (handler as { fetch: (request: Request) => Response | Promise<Response> }).fetch.bind(handler);
+
+        this.use(path, coreHandler({
+            fn: async (event: DispatchEvent) => {
+                const url = new URL(event.request.url);
+                url.pathname = event.path;
+
+                const adjusted = new Request(url.toString(), event.request);
+                return fn(adjusted);
+            },
+        }));
+
+        return this;
     }
 
     // --------------------------------------------------

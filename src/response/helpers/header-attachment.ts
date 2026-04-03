@@ -1,7 +1,6 @@
-import { HeaderName } from '../../constants';
-
-import type { Response } from '../types';
-import { setResponseContentTypeByFileName } from './utils';
+import { HeaderName } from '../../constants.ts';
+import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import { setResponseContentTypeByFileName } from './utils.ts';
 
 function sanitizeFilename(filename: string) : string {
     return filename.replace(/[\r\n]/g, '');
@@ -18,9 +17,9 @@ function encodeRfc5987(filename: string) : string {
         .replace(/\*/g, '%2A');
 }
 
-export function setResponseHeaderAttachment(res: Response, filename?: string) {
+export function setResponseHeaderAttachment(event: DispatchEvent, filename?: string) {
     if (typeof filename === 'string') {
-        setResponseContentTypeByFileName(res, filename);
+        setResponseContentTypeByFileName(event, filename);
     }
 
     let disposition = 'attachment';
@@ -32,7 +31,7 @@ export function setResponseHeaderAttachment(res: Response, filename?: string) {
         disposition += `; filename*=UTF-8''${encodeRfc5987(sanitized)}`;
     }
 
-    res.setHeader(
+    event.response.headers.set(
         HeaderName.CONTENT_DISPOSITION,
         disposition,
     );

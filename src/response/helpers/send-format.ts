@@ -1,25 +1,25 @@
-import { getRequestAcceptableContentType } from '../../request/helpers';
-import type { Response } from '../types';
+import { getRequestAcceptableContentType } from '../../request/helpers/header-accept.ts';
+import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+
+type ResponseFormatHandler = () => Response | unknown;
 
 type ResponseFormats = {
-    default: () => void,
-    [key: string]: () => void
+    default: ResponseFormatHandler,
+    [key: string]: ResponseFormatHandler,
 };
 
-export function sendFormat(res: Response, input: ResponseFormats) {
+export function sendFormat(event: DispatchEvent, input: ResponseFormats): Response | unknown | undefined {
     const {
-        default: formatDefault, 
-        ...formats 
+        default: formatDefault,
+        ...formats
     } = input;
 
     const contentTypes = Object.keys(formats);
 
-    const contentType = getRequestAcceptableContentType(res.req, contentTypes);
+    const contentType = getRequestAcceptableContentType(event, contentTypes);
     if (contentType) {
-        formats[contentType]!();
-
-        return;
+        return formats[contentType]!();
     }
 
-    formatDefault();
+    return formatDefault();
 }

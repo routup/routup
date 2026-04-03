@@ -1,4 +1,4 @@
-import type { Response } from '../types';
+import type { DispatchEvent } from '../../dispatcher/event/module.ts';
 
 export type ResponseCacheHeadersOptions = {
     maxAge?: number,
@@ -6,7 +6,7 @@ export type ResponseCacheHeadersOptions = {
     cacheControls?: string[]
 };
 
-export function setResponseCacheHeaders(res: Response, options?: ResponseCacheHeadersOptions) {
+export function setResponseCacheHeaders(event: DispatchEvent, options?: ResponseCacheHeadersOptions) {
     options = options || {};
 
     const cacheControls = ['public'].concat(options.cacheControls || []);
@@ -20,8 +20,8 @@ export function setResponseCacheHeaders(res: Response, options?: ResponseCacheHe
             new Date(options.modifiedTime) :
             options.modifiedTime;
 
-        res.setHeader('last-modified', modifiedTime.toUTCString());
+        event.response.headers.set('last-modified', modifiedTime.toUTCString());
     }
 
-    res.setHeader('cache-control', cacheControls.join(', '));
+    event.response.headers.set('cache-control', cacheControls.join(', '));
 }

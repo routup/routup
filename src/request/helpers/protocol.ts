@@ -1,18 +1,16 @@
-import { hasOwnProperty } from 'smob';
-import { HeaderName } from '../../constants';
-import { findRouterOption } from '../../router-options';
-import type { TrustProxyFn, TrustProxyInput } from '../../utils';
-import { buildTrustProxyFn } from '../../utils';
-import type { Request } from '../types';
-import { useRequestRouterPath } from './router';
+import { HeaderName } from '../../constants.ts';
+import { findRouterOption } from '../../router-options/index.ts';
+import type { TrustProxyFn, TrustProxyInput } from '../../utils/index.ts';
+import { buildTrustProxyFn } from '../../utils/index.ts';
+import type { DispatchEvent } from '../../dispatcher/event/module.ts';
 
 type RequestProtocolOptions = {
     trustProxy?: TrustProxyInput,
-    default?: string
+    default?: string,
 };
 
 export function getRequestProtocol(
-    req: Request,
+    event: DispatchEvent,
     options?: RequestProtocolOptions,
 ) : string {
     options = options || {};
@@ -23,31 +21,30 @@ export function getRequestProtocol(
     } else {
         trustProxy = findRouterOption(
             'trustProxy',
-            useRequestRouterPath(req),
+            event.routerPath,
         );
     }
 
+    // Derive protocol from the request URL scheme
     let protocol : string | undefined = options.default;
-    /* istanbul ignore next */
-    if (
-        hasOwnProperty(req.socket, 'encrypted') &&
-        !!req.socket.encrypted
-    ) {
-        protocol = 'https';
-    } else if (!protocol) {
-        protocol = 'http';
+    try {
+        const url = new URL(event.request.url);
+        if (url.protocol === 'https:') {
+            protocol = 'https';
+        } else if (!protocol) {
+            protocol = 'http';
+        }
+    } catch {
+        if (!protocol) {
+            protocol = 'http';
+        }
     }
 
-    if (!req.socket.remoteAddress || !trustProxy(req.socket.remoteAddress, 0)) {
+    if (!trustProxy('0.0.0.0', 0)) {
         return protocol;
     }
 
-    let header = req.headers[HeaderName.X_FORWARDED_PROTO];
-    /* istanbul ignore next */
-    if (Array.isArray(header)) {
-        header = header.pop();
-    }
-
+    const header = event.headers.get(HeaderName.X_FORWARDED_PROTO);
     if (!header) {
         return protocol;
     }

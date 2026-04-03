@@ -1,11 +1,8 @@
-import { HeaderName } from '../../constants';
-import { basename, isStream } from '../../utils';
-import type { Response } from '../types';
-import { isResponseGone } from './gone';
-import { setResponseHeaderAttachment } from './header-attachment';
-import { send } from './send';
-import { sendStream } from './send-stream';
-import { setResponseContentTypeByFileName } from './utils';
+import { HeaderName } from '../../constants.ts';
+import { basename } from '../../utils/index.ts';
+import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import { setResponseHeaderAttachment } from './header-attachment.ts';
+import { setResponseContentTypeByFileName } from './utils.ts';
 
 export type SendFileContentOptions = {
     end?: number,
@@ -22,50 +19,38 @@ export type SendFileOptions = {
     stats: () => Promise<SendFileStats> | SendFileStats,
     content: (
         options: SendFileContentOptions,
-    ) => Promise<unknown> | unknown
+    ) => Promise<ReadableStream | ArrayBuffer | Uint8Array> | ReadableStream | ArrayBuffer | Uint8Array,
     attachment?: boolean,
     name?: string
 };
 
 export async function sendFile(
-    res: Response,
+    event: DispatchEvent,
     options: SendFileOptions,
-    next?: (err?: Error) => Promise<unknown> | unknown,
-) : Promise<unknown> {
-    let stats: SendFileStats;
-    try {
-        stats = await options.stats();
-    } catch (e) {
-        if (next) {
-            return next(e as Error);
-        }
-
-        if (isResponseGone(res)) {
-            return Promise.resolve();
-        }
-
-        return Promise.reject(e);
-    }
+) : Promise<Response> {
+    const stats = await options.stats();
 
     const name = options.name || stats.name;
+    const { headers } = event.response;
 
     if (name) {
         const fileName = basename(name);
 
         if (options.attachment) {
-            const dispositionHeader = res.getHeader(HeaderName.CONTENT_DISPOSITION);
+            const dispositionHeader = headers.get(HeaderName.CONTENT_DISPOSITION);
             if (!dispositionHeader) {
-                setResponseHeaderAttachment(res, fileName);
+                setResponseHeaderAttachment(event, fileName);
             }
         } else {
-            setResponseContentTypeByFileName(res, fileName);
+            setResponseContentTypeByFileName(event, fileName);
         }
     }
 
     const contentOptions : SendFileContentOptions = {};
+    let statusCode = event.response.status;
 
     if (stats.size) {
-        const rangeHeader = res.req.headers[HeaderName.RANGE];
+        const rangeHeader = event.headers.get(HeaderName.RANGE);
         if (rangeHeader) {
             const [x, y] = rangeHeader.replace('bytes=', '')
                 .split('-') as [string, string];
@@ -82,43 +67,36 @@ export async function sendFile(
                 contentOptions.start >= stats.size ||
                 contentOptions.start > contentOptions.end
             ) {
-                res.setHeader(HeaderName.CONTENT_RANGE, `bytes */${stats.size}`);
-                res.statusCode = 416;
-                res.end();
-                return Promise.resolve();
+                event.dispatched = true;
+                return new Response(null, {
+                    status: 416,
+                    headers: { [HeaderName.CONTENT_RANGE]: `bytes */${stats.size}` },
+                });
             }
 
-            res.setHeader(HeaderName.CONTENT_RANGE, `bytes ${contentOptions.start}-${contentOptions.end}/${stats.size}`);
-            res.setHeader(HeaderName.CONTENT_LENGTH, (contentOptions.end - contentOptions.start + 1));
+            headers.set(HeaderName.CONTENT_RANGE, `bytes ${contentOptions.start}-${contentOptions.end}/${stats.size}`);
+            headers.set(HeaderName.CONTENT_LENGTH, `${contentOptions.end - contentOptions.start + 1}`);
+            statusCode = 206;
         } else {
-            res.setHeader(HeaderName.CONTENT_LENGTH, stats.size);
+            headers.set(HeaderName.CONTENT_LENGTH, `${stats.size}`);
         }
 
-        res.setHeader(HeaderName.ACCEPT_RANGES, 'bytes');
+        headers.set(HeaderName.ACCEPT_RANGES, 'bytes');
 
         if (stats.mtime) {
             const mtime = new Date(stats.mtime);
-            res.setHeader(HeaderName.LAST_MODIFIED, mtime.toUTCString());
-            res.setHeader(HeaderName.ETag, `W/"${stats.size}-${mtime.getTime()}"`);
+            headers.set(HeaderName.LAST_MODIFIED, mtime.toUTCString());
+            headers.set(HeaderName.ETag, `W/"${stats.size}-${mtime.getTime()}"`);
         }
     }
 
-    try {
-        const content = await options.content(contentOptions);
-        if (isStream(content)) {
-            return await sendStream(res, content, next);
-        }
+    const content = await options.content(contentOptions);
 
-        return await send(res, content);
-    } catch (e) {
-        if (next) {
-            return next(e as Error);
-        }
+    event.dispatched = true;
 
-        if (isResponseGone(res)) {
-            return Promise.resolve();
-        }
-
-        return Promise.reject(e);
-    }
+    return new Response(content, {
+        status: statusCode,
+        statusText: event.response.statusText,
+        headers,
+    });
 }

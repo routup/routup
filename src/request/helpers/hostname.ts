@@ -1,15 +1,14 @@
-import { HeaderName } from '../../constants';
-import { findRouterOption } from '../../router-options';
-import type { TrustProxyFn, TrustProxyInput } from '../../utils';
-import { buildTrustProxyFn } from '../../utils';
-import type { Request } from '../types';
-import { useRequestRouterPath } from './router';
+import { HeaderName } from '../../constants.ts';
+import { findRouterOption } from '../../router-options/index.ts';
+import type { TrustProxyFn, TrustProxyInput } from '../../utils/index.ts';
+import { buildTrustProxyFn } from '../../utils/index.ts';
+import type { DispatchEvent } from '../../dispatcher/event/module.ts';
 
 type RequestHostNameOptions = {
-    trustProxy?: TrustProxyInput
+    trustProxy?: TrustProxyInput,
 };
 
-export function getRequestHostName(req: Request, options?: RequestHostNameOptions) : string | undefined {
+export function getRequestHostName(event: DispatchEvent, options?: RequestHostNameOptions) : string | undefined {
     options = options || {};
 
     let trustProxy : TrustProxyFn;
@@ -18,18 +17,15 @@ export function getRequestHostName(req: Request, options?: RequestHostNameOption
     } else {
         trustProxy = findRouterOption(
             'trustProxy',
-            useRequestRouterPath(req),
+            event.routerPath,
         );
     }
 
-    let hostname = req.headers[HeaderName.X_FORWARDED_HOST];
-    if (!hostname || !req.socket.remoteAddress || !trustProxy(req.socket.remoteAddress, 0)) {
-        hostname = req.headers[HeaderName.HOST];
-    } else {
-        hostname = Array.isArray(hostname) ? hostname.pop() : hostname;
-        if (hostname && hostname.includes(',')) {
-            hostname = hostname.substring(0, hostname.indexOf(',')).trimEnd();
-        }
+    let hostname = event.headers.get(HeaderName.X_FORWARDED_HOST);
+    if (!hostname || !trustProxy('0.0.0.0', 0)) {
+        hostname = event.headers.get(HeaderName.HOST);
+    } else if (hostname && hostname.includes(',')) {
+        hostname = hostname.substring(0, hostname.indexOf(',')).trimEnd();
     }
 
     if (!hostname) {
