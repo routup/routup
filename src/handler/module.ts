@@ -1,20 +1,20 @@
-import { MethodName } from '../constants';
-import type { DispatchEvent, Dispatcher } from '../dispatcher';
-import { dispatch } from '../dispatcher';
-import { isError } from '../error';
-import { HookManager, HookName } from '../hook';
-import type { Path } from '../path';
-import { PathMatcher } from '../path';
-import { toMethodName, withLeadingSlash } from '../utils';
-import { HandlerSymbol, HandlerType } from './constants';
-import type { HandlerConfig } from './types';
+import { MethodName } from '../constants.ts';
+import type { DispatchEvent, Dispatcher } from '../dispatcher/index.ts';
+import { isError } from '../error/index.ts';
+import { HookManager, HookName } from '../hook/index.ts';
+import type { Path } from '../path/index.ts';
+import { PathMatcher } from '../path/index.ts';
+import { toResponse } from '../response/to-response.ts';
+import { toMethodName, withLeadingSlash } from '../utils/index.ts';
+import { HandlerSymbol, HandlerType } from './constants.ts';
+import type { HandlerConfig } from './types.ts';
 
 export class Handler implements Dispatcher {
     readonly '@instanceof' = HandlerSymbol;
 
     protected config: HandlerConfig;
 
-    protected hookManager : HookManager;
+    protected hookManager: HookManager;
 
     protected pathMatcher: PathMatcher | undefined;
 
@@ -51,7 +51,7 @@ export class Handler implements Dispatcher {
 
     // --------------------------------------------------
 
-    async dispatch(event: DispatchEvent): Promise<void> {
+    async dispatch(event: DispatchEvent): Promise<Response | undefined> {
         if (this.pathMatcher) {
             const pathMatch = this.pathMatcher.exec(event.path);
             if (pathMatch) {
@@ -64,21 +64,27 @@ export class Handler implements Dispatcher {
 
         await this.hookManager.trigger(HookName.CHILD_DISPATCH_BEFORE, event);
         if (event.dispatched) {
-            return Promise.resolve();
+            return undefined;
         }
 
-        try {
-            event.dispatched = await dispatch(event, (done) => {
-                if (this.config.type === HandlerType.ERROR) {
-                    if (event.error) {
-                        return this.config.fn(event.error, event.request, event.response, done);
-                    }
-                } else {
-                    return this.config.fn(event.request, event.response, done);
-                }
+        let response: Response | undefined;
 
-                return undefined;
-            });
+        try {
+            let result: unknown;
+
+            if (this.config.type === HandlerType.ERROR) {
+                if (event.error) {
+                    result = await this.config.fn(event.error, event);
+                }
+            } else {
+                result = await this.config.fn(event);
+            }
+
+            response = toResponse(result, event);
+
+            if (response) {
+                event.dispatched = true;
+            }
         } catch (e) {
             if (isError(e)) {
                 event.error = e;
@@ -93,7 +99,9 @@ export class Handler implements Dispatcher {
             }
         }
 
-        return this.hookManager.trigger(HookName.CHILD_DISPATCH_AFTER, event);
+        await this.hookManager.trigger(HookName.CHILD_DISPATCH_AFTER, event);
+
+        return response;
     }
 
     // --------------------------------------------------
@@ -106,7 +114,7 @@ export class Handler implements Dispatcher {
         return this.pathMatcher.test(path);
     }
 
-    setPath(path?: Path) : void {
+    setPath(path?: Path): void {
         if (typeof path === 'string') {
             path = withLeadingSlash(path);
         }
@@ -132,7 +140,7 @@ export class Handler implements Dispatcher {
             );
     }
 
-    setMethod(input?: `${MethodName}`) : void {
+    setMethod(input?: `${MethodName}`): void {
         const method = toMethodName(input);
 
         this.config.method = method;

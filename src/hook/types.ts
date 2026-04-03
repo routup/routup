@@ -1,6 +1,6 @@
-import type { DispatchErrorEvent, DispatchEvent } from '../dispatcher';
+import type { DispatchEvent } from '../dispatcher/event/module.ts';
 
-export type HookErrorListener = (event: DispatchErrorEvent) => Promise<unknown> | unknown;
+export type HookErrorListener = (event: DispatchEvent) => Promise<unknown> | unknown;
 export type HookDefaultListener = (event: DispatchEvent) => Promise<unknown> | unknown;
 
 export type HookListener = HookErrorListener | HookDefaultListener;
