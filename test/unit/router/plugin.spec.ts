@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import supertest from 'supertest';
-import { Router, coreHandler, createNodeDispatcher } from '../../../src';
+import { Router, coreHandler } from '../../../src';
 import type { Plugin } from '../../../src';
+import { createTestRequest } from '../../helpers';
 
 type Options = {
     handlerPath?: string
@@ -21,13 +21,10 @@ describe('src/plugin/**', () => {
         const router = new Router();
         router.use(plugin());
 
-        const server = supertest(createNodeDispatcher(router));
+        const response = await router.fetch(createTestRequest('/'));
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('Hello, World!');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('Hello, World!');
     });
 
     it('should install plugin with same name', async () => {
@@ -35,8 +32,7 @@ describe('src/plugin/**', () => {
         router.use({
             name: 'plugin',
             install: () => {
-                router.get('/', coreHandler((_req, _res, next) => next()));
-                // do nothing
+                router.get('/', coreHandler((event) => event.next()));
             },
         });
         router.use({
@@ -46,47 +42,37 @@ describe('src/plugin/**', () => {
             },
         });
 
-        const server = supertest(createNodeDispatcher(router));
-        const response = await server
-            .get('/');
+        const response = await router.fetch(createTestRequest('/'));
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('Hello, World!');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('Hello, World!');
     });
 
     it('should install plugin with options', async () => {
         const router = new Router();
         router.use(plugin({ handlerPath: '/foo' }));
 
-        const server = supertest(createNodeDispatcher(router));
+        let response = await router.fetch(createTestRequest('/'));
 
-        let response = await server
-            .get('/');
+        expect(response.status).toEqual(404);
 
-        expect(response.statusCode).toEqual(404);
+        response = await router.fetch(createTestRequest('/foo'));
 
-        response = await server
-            .get('/foo');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('Hello, World!');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('Hello, World!');
     });
 
     it('should install plugin as child router', async () => {
         const router = new Router();
         router.use('/child', plugin());
 
-        const server = supertest(createNodeDispatcher(router));
+        let response = await router.fetch(createTestRequest('/child'));
 
-        let response = await server
-            .get('/child');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('Hello, World!');
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('Hello, World!');
+        response = await router.fetch(createTestRequest('/'));
 
-        response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(404);
+        expect(response.status).toEqual(404);
     });
 });

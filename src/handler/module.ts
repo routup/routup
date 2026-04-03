@@ -1,6 +1,6 @@
 import { MethodName } from '../constants.ts';
 import type { DispatchEvent, Dispatcher } from '../dispatcher/index.ts';
-import { isError } from '../error/index.ts';
+import { createError, isError } from '../error/index.ts';
 import { HookManager, HookName } from '../hook/index.ts';
 import type { Path } from '../path/index.ts';
 import { PathMatcher } from '../path/index.ts';
@@ -86,16 +86,14 @@ export class Handler implements Dispatcher {
                 event.dispatched = true;
             }
         } catch (e) {
-            if (isError(e)) {
-                event.error = e;
+            event.error = isError(e) ? e : createError(e);
 
-                await this.hookManager.trigger(HookName.ERROR, event);
+            await this.hookManager.trigger(HookName.ERROR, event);
 
-                if (event.dispatched) {
-                    event.error = undefined;
-                } else {
-                    throw e;
-                }
+            if (event.dispatched) {
+                event.error = undefined;
+            } else {
+                throw event.error;
             }
         }
 

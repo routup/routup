@@ -1,25 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import supertest from 'supertest';
 import {
-    HeaderName,
     Router,
     coreHandler,
-    createNodeDispatcher,
 } from '../../../src';
+import { createTestRequest } from '../../helpers';
 
 describe('src/router', () => {
-    it('should not send etag', async () => {
+    it('should not send etag when disabled', async () => {
         const router = new Router({ etag: false });
 
         router.get('/', coreHandler(() => 'Hello world!'));
 
-        const server = supertest(createNodeDispatcher(router));
+        const response = await router.fetch(createTestRequest('/'));
 
-        const response = await server
-            .get('/');
-
-        expect(response.headers[HeaderName.ETag]).toBeUndefined();
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('Hello world!');
+        expect(response.headers.get('etag')).toBeNull();
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('Hello world!');
     });
 });

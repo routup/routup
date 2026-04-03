@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import supertest from 'supertest';
 import {
     Router,
     coreHandler,
-    createNodeDispatcher,
-    useRequestParams,
 } from '../../../src';
+import { createTestRequest } from '../../helpers';
 
 describe('src/module', () => {
     it('should send hello world', async () => {
@@ -13,13 +11,10 @@ describe('src/module', () => {
 
         router.use(coreHandler(() => 'Hello, World!'));
 
-        const server = supertest(createNodeDispatcher(router));
+        const response = await router.fetch(createTestRequest('/'));
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('Hello, World!');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('Hello, World!');
     });
 
     it('should process async & sync handler', async () => {
@@ -34,37 +29,26 @@ describe('src/module', () => {
 
         router.get('/sync', coreHandler(() => 'bar'));
 
-        const server = supertest(createNodeDispatcher(router));
+        let response = await router.fetch(createTestRequest('/async'));
 
-        let response = await server
-            .get('/async');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('foo');
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('foo');
+        response = await router.fetch(createTestRequest('/sync'));
 
-        response = await server
-            .get('/sync');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('bar');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('bar');
     });
 
     it('should process dynamic path', async () => {
         const router = new Router();
 
-        router.get('/param/:id', coreHandler(async (req) => {
-            const params = useRequestParams(req);
+        router.get('/param/:id', coreHandler(async (event) => event.params.id));
 
-            return params.id;
-        }));
+        const response = await router.fetch(createTestRequest('/param/abc'));
 
-        const server = supertest(createNodeDispatcher(router));
-
-        const response = await server
-            .get('/param/abc');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('abc');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('abc');
     });
 
     it('should process with no matching route', async () => {
@@ -75,12 +59,9 @@ describe('src/module', () => {
             coreHandler(() => 'foo'),
         );
 
-        const server = supertest(createNodeDispatcher(router));
+        const response = await router.fetch(createTestRequest('/foo'));
 
-        const response = await server
-            .get('/foo');
-
-        expect(response.statusCode).toEqual(404);
+        expect(response.status).toEqual(404);
     });
 
     it('should process with error thrown', async () => {
@@ -90,18 +71,15 @@ describe('src/module', () => {
             throw new Error('foo');
         }));
 
-        const server = supertest(createNodeDispatcher(router));
+        const response = await router.fetch(createTestRequest('/'));
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(500);
+        expect(response.status).toEqual(500);
     });
 
     it('should process with async error thrown', async () => {
         const router = new Router();
 
-        router.get(coreHandler(() => async () => {
+        router.get('/', coreHandler(async () => {
             await new Promise((_resolve, reject) => {
                 setTimeout(() => {
                     reject(new Error('bar'));
@@ -109,11 +87,8 @@ describe('src/module', () => {
             });
         }));
 
-        const server = supertest(createNodeDispatcher(router));
+        const response = await router.fetch(createTestRequest('/'));
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(500);
+        expect(response.status).toEqual(500);
     });
 });

@@ -3,7 +3,7 @@ import { distinctArray } from 'smob';
 import { HeaderName, MethodName } from '../constants.ts';
 import type { DispatchEvent, Dispatcher } from '../dispatcher/index.ts';
 import { DispatchEvent as DispatchEventClass } from '../dispatcher/event/module.ts';
-import type { RoutupError } from '../error/index.ts';
+import { createError } from '../error/index.ts';
 import type { HandlerConfig } from '../handler/index.ts';
 import {
     Handler,
@@ -311,7 +311,7 @@ export class Router implements Dispatcher {
                 event.dispatched = true;
             }
         } catch (e) {
-            event.error = e as RoutupError;
+            event.error = createError(e);
 
             await this.hookManager.trigger(HookName.ERROR, event);
         }

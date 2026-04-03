@@ -1,86 +1,57 @@
-import { describe, it } from 'vitest';
-import supertest from 'supertest';
-import { HeaderName, getRequestHostName, send } from '../../../src';
-import { createRequestListener } from '../../handler';
+import { describe, expect, it } from 'vitest';
+import { DispatchEvent } from '../../../src/dispatcher/event/module';
+import { HeaderName, getRequestHostName } from '../../../src';
+import { createTestRequest } from '../../helpers';
 
 describe('src/helpers/request/hostname', () => {
-    it('should determine hostname', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            send(res, getRequestHostName(req));
-        }));
+    it('should determine hostname', () => {
+        const event = new DispatchEvent(createTestRequest('/', { headers: { [HeaderName.HOST]: 'example.com' } }));
 
-        await server
-            .get('/')
-            .set(HeaderName.HOST, 'example.com')
-            .expect('example.com');
-
-        await server
-            .get('/')
-            .set(HeaderName.HOST, 'example.com:3000')
-            .expect('example.com');
+        expect(getRequestHostName(event)).toEqual('example.com');
     });
 
-    it('should determine undefined hostname', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            req.headers[HeaderName.HOST] = undefined;
-            send(res, getRequestHostName(req));
-        }));
+    it('should determine hostname without port', () => {
+        const event = new DispatchEvent(createTestRequest('/', { headers: { [HeaderName.HOST]: 'example.com:3000' } }));
 
-        await server
-            .get('/')
-            .set(HeaderName.HOST, 'example.com')
-            .expect('');
+        expect(getRequestHostName(event)).toEqual('example.com');
     });
 
-    it('should determine hostname for IPv6', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            send(res, getRequestHostName(req));
-        }));
+    it('should determine hostname for IPv6', () => {
+        const event1 = new DispatchEvent(createTestRequest('/', { headers: { [HeaderName.HOST]: '[::1]' } }));
 
-        await server
-            .get('/')
-            .set(HeaderName.HOST, '[::1]')
-            .expect('[::1]');
+        expect(getRequestHostName(event1)).toEqual('[::1]');
 
-        await server
-            .get('/')
-            .set(HeaderName.HOST, '[::1]:3000')
-            .expect('[::1]');
+        const event2 = new DispatchEvent(createTestRequest('/', { headers: { [HeaderName.HOST]: '[::1]:3000' } }));
+
+        expect(getRequestHostName(event2)).toEqual('[::1]');
     });
 
-    it('should determine hostname with trust proxy', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            send(res, getRequestHostName(req, { trustProxy: true }));
+    it('should determine hostname with trust proxy', () => {
+        const event1 = new DispatchEvent(createTestRequest('/', {
+            headers: {
+                [HeaderName.HOST]: 'localhost',
+                [HeaderName.X_FORWARDED_HOST]: 'example.com:3000',
+            },
         }));
 
-        await server
-            .get('/')
-            .set(HeaderName.HOST, 'localhost')
-            .set(HeaderName.X_FORWARDED_HOST, 'example.com:3000')
-            .expect('example.com');
+        expect(getRequestHostName(event1, { trustProxy: true })).toEqual('example.com');
 
-        await server
-            .get('/')
-            .set(HeaderName.HOST, 'localhost')
-            .set(HeaderName.X_FORWARDED_HOST, 'example.com, foobar.com')
-            .expect('example.com');
-
-        await server
-            .get('/')
-            .set(HeaderName.HOST, 'localhost')
-            .set(HeaderName.X_FORWARDED_HOST, 'example.com:3000 , foobar.com:3000')
-            .expect('example.com');
-    });
-
-    it('should determine hostname with trust proxy restriction', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            send(res, getRequestHostName(req, { trustProxy: '10.1.10.0' }));
+        const event2 = new DispatchEvent(createTestRequest('/', {
+            headers: {
+                [HeaderName.HOST]: 'localhost',
+                [HeaderName.X_FORWARDED_HOST]: 'example.com, foobar.com',
+            },
         }));
 
-        await server
-            .get('/not-trusted')
-            .set(HeaderName.HOST, 'localhost')
-            .set(HeaderName.X_FORWARDED_HOST, 'example.com:3000')
-            .expect('localhost');
+        expect(getRequestHostName(event2, { trustProxy: true })).toEqual('example.com');
+
+        const event3 = new DispatchEvent(createTestRequest('/', {
+            headers: {
+                [HeaderName.HOST]: 'localhost',
+                [HeaderName.X_FORWARDED_HOST]: 'example.com:3000 , foobar.com:3000',
+            },
+        }));
+
+        expect(getRequestHostName(event3, { trustProxy: true })).toEqual('example.com');
     });
 });
