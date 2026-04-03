@@ -35,7 +35,7 @@ export async function toResponse(
 
     if (value === null) {
         return new Response(null, {
-            status: event.response.status || 204,
+            status: event.response.status,
             statusText: event.response.statusText,
             headers: event.response.headers,
         });
