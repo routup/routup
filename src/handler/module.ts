@@ -80,7 +80,7 @@ export class Handler implements Dispatcher {
                 result = await this.config.fn(event);
             }
 
-            response = toResponse(result, event);
+            response = await toResponse(result, event);
 
             if (response) {
                 event.dispatched = true;

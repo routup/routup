@@ -1,9 +1,34 @@
 import type { DispatchEvent } from '../dispatcher/event/module.ts';
+import { findRouterOption } from '../router-options/module.ts';
 
-export function toResponse(
+async function applyEtag(
+    body: string,
+    event: DispatchEvent,
+    headers: Headers,
+): Promise<Response | undefined> {
+    const etagFn = findRouterOption('etag', event.routerPath);
+    if (!etagFn) return undefined;
+
+    const etag = await etagFn(body);
+    if (!etag) return undefined;
+
+    headers.set('etag', etag);
+
+    const ifNoneMatch = event.headers.get('if-none-match');
+    if (ifNoneMatch && ifNoneMatch === etag) {
+        return new Response(null, {
+            status: 304,
+            headers,
+        });
+    }
+
+    return undefined;
+}
+
+export async function toResponse(
     value: unknown,
     event: DispatchEvent,
-): Response | undefined {
+): Promise<Response | undefined> {
     if (value === null || value === undefined) {
         return undefined;
     }
@@ -13,19 +38,23 @@ export function toResponse(
     }
 
     const {
-        status, 
-        headers, 
-        statusText, 
+        status,
+        headers,
+        statusText,
     } = event.response;
 
     if (typeof value === 'string') {
         if (!headers.has('content-type')) {
             headers.set('content-type', 'text/plain; charset=utf-8');
         }
+
+        const cached = await applyEtag(value, event, headers);
+        if (cached) return cached;
+
         return new Response(value, {
-            status, 
-            statusText, 
-            headers, 
+            status,
+            statusText,
+            headers,
         });
     }
 
@@ -34,17 +63,17 @@ export function toResponse(
             headers.set('content-type', 'application/octet-stream');
         }
         return new Response(value as BodyInit, {
-            status, 
-            statusText, 
-            headers, 
+            status,
+            statusText,
+            headers,
         });
     }
 
     if (value instanceof ReadableStream) {
         return new Response(value, {
-            status, 
-            statusText, 
-            headers, 
+            status,
+            statusText,
+            headers,
         });
     }
 
@@ -53,9 +82,9 @@ export function toResponse(
             headers.set('content-type', value.type || 'application/octet-stream');
         }
         return new Response(value, {
-            status, 
-            statusText, 
-            headers, 
+            status,
+            statusText,
+            headers,
         });
     }
 
@@ -63,9 +92,15 @@ export function toResponse(
     if (!headers.has('content-type')) {
         headers.set('content-type', 'application/json; charset=utf-8');
     }
-    return new Response(JSON.stringify(value), {
-        status, 
-        statusText, 
-        headers, 
+
+    const json = JSON.stringify(value);
+
+    const cached = await applyEtag(json, event, headers);
+    if (cached) return cached;
+
+    return new Response(json, {
+        status,
+        statusText,
+        headers,
     });
 }
