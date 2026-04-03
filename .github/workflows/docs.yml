@@ -1,0 +1,37 @@
+name: Docs
+
+on:
+    push:
+        branches:
+            - master
+    pull_request:
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - uses: actions/checkout@v6
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+
+            - name: Install
+              run: npm ci
+              working-directory: docs
+
+            - name: Build
+              run: npx vitepress build src --temp .temp
+              working-directory: docs
+
+            - name: CNAME
+              if: ${{ github.event_name == 'push' }}
+              run: cp docs/CNAME docs/src/.vitepress/dist/CNAME
+
+            - name: Deploy
+              uses: peaceiris/actions-gh-pages@v4
+              if: ${{ github.event_name == 'push' }}
+              with:
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  publish_dir: ./docs/src/.vitepress/dist

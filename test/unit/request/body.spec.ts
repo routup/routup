@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Router, coreHandler } from '../../../src';
-import { readBody, readRawBody, readFormData } from '../../../src/request/helpers/body';
+import { readBody, readRawBody } from '../../../src/request/helpers/body';
 import { createTestRequest } from '../../helpers';
 
 describe('src/request/helpers/body', () => {

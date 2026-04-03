@@ -7,9 +7,7 @@ describe('src/response/helpers/send-accepted', () => {
     it('should send 202 with data', async () => {
         const router = new Router();
 
-        router.post('/', coreHandler(async (event) => {
-            return sendAccepted(event, { status: 'processing' });
-        }));
+        router.post('/', coreHandler(async (event) => sendAccepted(event, { status: 'processing' })));
 
         const response = await router.fetch(createTestRequest('/', { method: 'POST' }));
 
@@ -20,9 +18,7 @@ describe('src/response/helpers/send-accepted', () => {
     it('should send 202 without data', async () => {
         const router = new Router();
 
-        router.post('/', coreHandler(async (event) => {
-            return sendAccepted(event);
-        }));
+        router.post('/', coreHandler(async (event) => sendAccepted(event)));
 
         const response = await router.fetch(createTestRequest('/', { method: 'POST' }));
 

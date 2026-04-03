@@ -7,9 +7,7 @@ describe('src/response/helpers/send-created', () => {
     it('should send 201 with data', async () => {
         const router = new Router();
 
-        router.post('/', coreHandler(async (event) => {
-            return sendCreated(event, { id: 1 });
-        }));
+        router.post('/', coreHandler(async (event) => sendCreated(event, { id: 1 })));
 
         const response = await router.fetch(createTestRequest('/', { method: 'POST' }));
 
@@ -20,9 +18,7 @@ describe('src/response/helpers/send-created', () => {
     it('should send 201 without data', async () => {
         const router = new Router();
 
-        router.post('/', coreHandler(async (event) => {
-            return sendCreated(event);
-        }));
+        router.post('/', coreHandler(async (event) => sendCreated(event)));
 
         const response = await router.fetch(createTestRequest('/', { method: 'POST' }));
 
@@ -33,9 +29,7 @@ describe('src/response/helpers/send-created', () => {
     it('should send 201 with string data', async () => {
         const router = new Router();
 
-        router.post('/', coreHandler(async (event) => {
-            return sendCreated(event, 'Created successfully');
-        }));
+        router.post('/', coreHandler(async (event) => sendCreated(event, 'Created successfully')));
 
         const response = await router.fetch(createTestRequest('/', { method: 'POST' }));
 
