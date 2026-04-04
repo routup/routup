@@ -1,61 +1,36 @@
 import { describe, expect, it } from 'vitest';
-import supertest from 'supertest';
 import {
     Router,
     coreHandler,
-    createNodeDispatcher,
-    send, 
-    setRequestParam, 
-    useRequestParam, 
-    useRequestParams,
 } from '../../../src';
-import { createRequestListener } from '../../handler';
+import { createTestRequest } from '../../helpers';
 
 describe('routing/parameters', () => {
     it('should capture parameters', async () => {
         const router = new Router();
 
-        router.get('/:id/:action', coreHandler(async (req) => useRequestParams(req)));
+        router.get('/:id/:action', coreHandler(async (event) => event.params));
 
-        const server = supertest(createNodeDispatcher(router));
+        const response = await router.fetch(createTestRequest('/123/run'));
 
-        const response = await server
-            .get('/123/run');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({
+        expect(response.status).toEqual(200);
+        expect(await response.json()).toEqual({
             id: '123',
-            action: 'run', 
+            action: 'run',
         });
     });
 
     it('should pass on captured parameters', async () => {
         const router = new Router({ path: '/:id' });
 
-        router.get('/:action', coreHandler(async (req) => useRequestParams(req)));
+        router.get('/:action', coreHandler(async (event) => event.params));
 
-        const server = supertest(createNodeDispatcher(router));
+        const response = await router.fetch(createTestRequest('/123/run'));
 
-        const response = await server
-            .get('/123/run');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({
+        expect(response.status).toEqual(200);
+        expect(await response.json()).toEqual({
             id: '123',
-            action: 'run', 
+            action: 'run',
         });
-    });
-
-    it('should set and receive a single param on the fly', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            setRequestParam(req, 'foo', 'bar');
-
-            send(res, useRequestParam(req, 'foo'));
-        }));
-
-        const response = await server
-            .get('/');
-
-        expect(response.text).toEqual('bar');
     });
 });

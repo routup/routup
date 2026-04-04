@@ -30,7 +30,6 @@ describe('src/error/create', () => {
         expect(error).toBeDefined();
         expect(error.statusCode).toEqual(notFoundError.statusCode);
         expect(error.statusMessage).toEqual(notFoundError.statusMessage);
-        expect(error.expose).toBeTruthy();
     });
 
     it('should create error for server error', () => {
@@ -40,6 +39,5 @@ describe('src/error/create', () => {
         expect(error).toBeDefined();
         expect(error.statusCode).toEqual(internalServerError.statusCode);
         expect(error.statusMessage).toEqual(internalServerError.statusMessage);
-        expect(error.expose).toBeFalsy();
     });
 });

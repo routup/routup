@@ -1,7 +1,10 @@
-import type { RoutupError } from '../../error';
-import { DispatchEvent } from './module';
+import type { RoutupError } from '../../error/module.ts';
+import type { DispatchEvent } from './module.ts';
 
-export class DispatchErrorEvent extends DispatchEvent {
-    // @ts-expect-error @typescript-eslint/ban-ts-comment
-    override error: RoutupError;
+export function isDispatchErrorEvent(
+    event: DispatchEvent,
+): boolean {
+    return typeof event.error !== 'undefined';
 }
+
+export type { RoutupError };

@@ -1,29 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import type { Request } from '../../../src';
+import { DispatchEvent } from '../../../src/dispatcher/event/module';
 import { HeaderName, getRequestIP } from '../../../src';
-
-function createReq(socketAddr: string, headers?: Record<string, any>) : Request {
-    return {
-        socket: { remoteAddress: socketAddr },
-        headers: headers || {},
-    } as Request;
-}
+import { createTestRequest } from '../../helpers';
 
 describe('src/helpers/request/ip', () => {
-    it('should determine address', () => {
-        let req = createReq('127.0.0.1');
-        let ip = getRequestIP(req);
-        expect(ip).toEqual('127.0.0.1');
+    it('should determine address from request.ip', () => {
+        const event = new DispatchEvent(createTestRequest('/', { ip: '127.0.0.1' }));
 
-        req = createReq('127.0.0.1', { [HeaderName.X_FORWARDED_FOR]: '192.168.0.1, 10.0.0.1' });
-        ip = getRequestIP(req, { trustProxy: true });
-        expect(ip).toEqual('192.168.0.1');
+        expect(getRequestIP(event)).toEqual('127.0.0.1');
+    });
 
-        ip = getRequestIP(req, { trustProxy: false });
-        expect(ip).toEqual('127.0.0.1');
+    it('should determine address from x-forwarded-for with trust proxy', () => {
+        const event = new DispatchEvent(createTestRequest('/', { headers: { [HeaderName.X_FORWARDED_FOR]: '192.168.0.1, 10.0.0.1' } }));
 
-        req = createReq('10.0.0.1', { [HeaderName.X_FORWARDED_FOR]: '10.0.0.3, 192.168.0.1, 10.0.0.2' });
-        ip = getRequestIP(req, { trustProxy: (addr) => /^10\./.test(addr) });
-        expect(ip).toEqual('192.168.0.1');
+        expect(getRequestIP(event, { trustProxy: true })).toEqual('192.168.0.1');
+    });
+
+    it('should not use x-forwarded-for without trust proxy', () => {
+        const event = new DispatchEvent(createTestRequest('/', { headers: { [HeaderName.X_FORWARDED_FOR]: '192.168.0.1, 10.0.0.1' } }));
+
+        expect(getRequestIP(event, { trustProxy: false })).toBeUndefined();
+    });
+
+    it('should return undefined when no ip available', () => {
+        const event = new DispatchEvent(createTestRequest('/'));
+
+        expect(getRequestIP(event)).toBeUndefined();
     });
 });

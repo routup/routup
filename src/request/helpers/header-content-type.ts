@@ -1,22 +1,13 @@
-import { HeaderName } from '../../constants';
-import { getMimeType } from '../../utils';
-import type { Request } from '../types';
-import { getRequestHeader } from './header';
+import { HeaderName } from '../../constants.ts';
+import { getMimeType } from '../../utils/index.ts';
+import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import { getRequestHeader } from './header.ts';
 
-export function matchRequestContentType(req: Request, contentType: string) : boolean {
-    const header = getRequestHeader(req, HeaderName.CONTENT_TYPE);
+export function matchRequestContentType(event: DispatchEvent, contentType: string) : boolean {
+    const header = getRequestHeader(event, HeaderName.CONTENT_TYPE);
     if (!header) {
         return true;
     }
 
-    /* istanbul ignore next */
-    if (Array.isArray(header)) {
-        if (header.length === 0) {
-            return true;
-        }
-
-        return header[0] === getMimeType(contentType);
-    }
-
-    return header.split(';')[0].trim() === getMimeType(contentType);
+    return header.split(';')[0]!.trim() === getMimeType(contentType);
 }

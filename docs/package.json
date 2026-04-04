@@ -1,0 +1,17 @@
+{
+    "name": "@routup/docs",
+    "private": true,
+    "version": "1.0.0",
+    "scripts": {
+        "dev": "vitepress dev src --temp .temp",
+        "build": "vitepress build src --temp .temp"
+    },
+    "dependencies": {
+        "vitepress": "^1.2.3",
+        "vue": "^3.4.31"
+    },
+    "devDependencies": {
+        "flexsearch": "^0.7.43",
+        "vitepress-plugin-search": "^1.0.4-alpha.22"
+    }
+}

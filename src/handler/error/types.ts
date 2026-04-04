@@ -1,15 +1,11 @@
-import type { RoutupError } from '../../error';
-import type { Request } from '../../request';
-import type { Response } from '../../response';
-import type { Next } from '../../types';
-import type { HandlerType } from '../constants';
-import type { HandlerBaseConfig } from '../types-base';
+import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import type { RoutupError } from '../../error/module.ts';
+import type { HandlerType } from '../constants.ts';
+import type { HandlerBaseConfig } from '../types-base.ts';
 
 export type ErrorHandlerFn = (
-    err: RoutupError,
-    req: Request,
-    res: Response,
-    next: Next,
+    error: RoutupError,
+    event: DispatchEvent,
 ) => unknown | Promise<unknown>;
 
 export type ErrorHandlerConfig = HandlerBaseConfig & {

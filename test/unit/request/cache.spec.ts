@@ -1,31 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import supertest from 'supertest';
-import { isRequestCacheable, send } from '../../../src';
-import { createRequestListener } from '../../handler';
+import { DispatchEvent } from '../../../src/dispatcher/event/module';
+import { isRequestCacheable } from '../../../src';
+import { createTestRequest } from '../../helpers';
 
 describe('src/helpers/request/cache', () => {
-    it('should be cacheable', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            send(res, isRequestCacheable(req, new Date()));
-        }));
+    it('should be cacheable', () => {
+        const event = new DispatchEvent(createTestRequest('/', { headers: { 'if-modified-since': new Date(Date.now() + 3_600_000).toUTCString() } }));
 
-        const response = await server
-            .get('/')
-            .set('If-Modified-Since', new Date(Date.now() + 3600).toUTCString());
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('true');
+        expect(isRequestCacheable(event, new Date())).toBe(true);
     });
 
-    it('should not be cacheable', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            send(res, isRequestCacheable(req, new Date()));
-        }));
+    it('should not be cacheable', () => {
+        const event = new DispatchEvent(createTestRequest('/'));
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('false');
+        expect(isRequestCacheable(event, new Date())).toBe(false);
     });
 });

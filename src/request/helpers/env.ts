@@ -1,48 +1,47 @@
 import { hasOwnProperty, merge } from 'smob';
-import { getProperty, setProperty } from '../../utils';
 
-import type { Request } from '../types';
+import type { DispatchEvent } from '../../dispatcher/event/module.ts';
 
-const symbol = Symbol.for('ReqEnv');
+const envMap = new WeakMap<DispatchEvent, Record<string | symbol, any>>();
 
-export function setRequestEnv(req: Request, key: string | symbol, value: unknown) : void;
-export function setRequestEnv(req: Request, record: Record<string | symbol, any>, append?: boolean) : void;
-export function setRequestEnv(req: Request, key: Record<string | symbol, any> | string | symbol, value?: boolean | unknown) : void {
-    const propertyValue = getProperty(req, symbol);
+export function setRequestEnv(event: DispatchEvent, key: string | symbol, value: unknown) : void;
+export function setRequestEnv(event: DispatchEvent, record: Record<string | symbol, any>, append?: boolean) : void;
+export function setRequestEnv(event: DispatchEvent, key: Record<string | symbol, any> | string | symbol, value?: boolean | unknown) : void {
+    const existing = envMap.get(event);
 
-    if (propertyValue) {
+    if (existing) {
         if (typeof key === 'object') {
             if (value) {
-                setProperty(req, symbol, merge(propertyValue, key));
+                envMap.set(event, merge(existing, key));
             } else {
-                setProperty(req, symbol, key);
+                envMap.set(event, key);
             }
         } else {
-            propertyValue[key] = value;
-            setProperty(req, symbol, propertyValue);
+            existing[key] = value;
+            envMap.set(event, existing);
         }
 
         return;
     }
 
     if (typeof key === 'object') {
-        setProperty(req, symbol, key);
+        envMap.set(event, key);
         return;
     }
 
-    setProperty(req, symbol, { [key]: value });
+    envMap.set(event, { [key]: value });
 }
 
-export function useRequestEnv(req: Request) : Record<string, any>;
-export function useRequestEnv(req: Request, key: PropertyKey) : unknown | undefined;
-export function useRequestEnv(req: Request, key?: PropertyKey) {
-    const propertyValue = getProperty(req, symbol);
-    if (propertyValue) {
+export function useRequestEnv(event: DispatchEvent) : Record<string, any>;
+export function useRequestEnv(event: DispatchEvent, key: PropertyKey) : unknown | undefined;
+export function useRequestEnv(event: DispatchEvent, key?: PropertyKey) {
+    const existing = envMap.get(event);
+    if (existing) {
         if (typeof key !== 'undefined') {
-            return propertyValue[key];
+            return existing[key];
         }
 
-        return propertyValue;
+        return existing;
     }
 
     if (typeof key !== 'undefined') {
@@ -52,9 +51,9 @@ export function useRequestEnv(req: Request, key?: PropertyKey) {
     return {};
 }
 
-export function unsetRequestEnv(req: Request, key: PropertyKey) {
-    const propertyValue = getProperty(req, symbol);
-    if (hasOwnProperty(propertyValue, key)) {
-        delete propertyValue[key];
+export function unsetRequestEnv(event: DispatchEvent, key: PropertyKey) {
+    const existing = envMap.get(event);
+    if (existing && hasOwnProperty(existing, key)) {
+        delete existing[key];
     }
 }

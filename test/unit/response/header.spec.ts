@@ -1,154 +1,109 @@
 import { describe, expect, it } from 'vitest';
-import supertest from 'supertest';
+import { DispatchEvent } from '../../../src/dispatcher/event/module';
 import {
     HeaderName,
     appendResponseHeader,
     appendResponseHeaderDirective,
-    send,
     setResponseHeaderAttachment,
     setResponseHeaderContentType,
 } from '../../../src';
-import { createRequestListener } from '../../handler';
+import { createTestRequest } from '../../helpers';
 
 describe('src/helpers/response/header', () => {
-    it('should set header attachment', async () => {
-        const server = supertest(createRequestListener((_req, res) => {
-            setResponseHeaderAttachment(res);
+    it('should set header attachment', () => {
+        const event = new DispatchEvent(createTestRequest('/'));
 
-            send(res);
-        }));
+        setResponseHeaderAttachment(event);
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_DISPOSITION]).toEqual('attachment');
+        expect(event.response.headers.get(HeaderName.CONTENT_DISPOSITION))
+            .toEqual('attachment');
     });
 
-    it('should set header attachment by filename ', async () => {
-        const server = supertest(createRequestListener((_req, res) => {
-            setResponseHeaderAttachment(res, 'dummy.json');
+    it('should set header attachment by filename', () => {
+        const event = new DispatchEvent(createTestRequest('/'));
 
-            send(res);
-        }));
+        setResponseHeaderAttachment(event, 'dummy.json');
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8');
-        expect(response.headers[HeaderName.CONTENT_DISPOSITION]).toEqual('attachment; filename="dummy.json"; filename*=UTF-8\'\'dummy.json');
+        expect(event.response.headers.get(HeaderName.CONTENT_TYPE))
+            .toEqual('application/json; charset=utf-8');
+        expect(event.response.headers.get(HeaderName.CONTENT_DISPOSITION))
+            .toEqual('attachment; filename="dummy.json"; filename*=UTF-8\'\'dummy.json');
     });
 
-    it('should append value', async () => {
-        const server = supertest(createRequestListener((_req, res) => {
-            appendResponseHeader(res, HeaderName.SET_COOKIE, 'foo=bar; Path=/');
-            appendResponseHeader(res, HeaderName.SET_COOKIE, 'bar=baz; Path=/');
+    it('should append value', () => {
+        const event = new DispatchEvent(createTestRequest('/'));
 
-            send(res);
-        }));
+        appendResponseHeader(event, HeaderName.SET_COOKIE, 'foo=bar; Path=/');
+        appendResponseHeader(event, HeaderName.SET_COOKIE, 'bar=baz; Path=/');
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.SET_COOKIE]).toEqual([
+        const cookies = event.response.headers.getSetCookie();
+        expect(cookies).toEqual([
             'foo=bar; Path=/',
             'bar=baz; Path=/',
         ]);
     });
 
-    it('should set header directive value', async () => {
-        const server = supertest(createRequestListener((_req, res) => {
-            appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, 'boundary=something');
+    it('should set header directive value', () => {
+        const event = new DispatchEvent(createTestRequest('/'));
 
-            send(res);
-        }));
+        appendResponseHeaderDirective(event, HeaderName.CONTENT_TYPE, 'boundary=something');
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('boundary=something');
+        expect(event.response.headers.get(HeaderName.CONTENT_TYPE))
+            .toEqual('boundary=something');
     });
 
-    it('should set multiple header directive values', async () => {
-        const server = supertest(createRequestListener((_req, res) => {
-            appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, [
-                'application/json',
-                'boundary=something',
-            ]);
+    it('should set multiple header directive values', () => {
+        const event = new DispatchEvent(createTestRequest('/'));
 
-            send(res);
-        }));
+        appendResponseHeaderDirective(event, HeaderName.CONTENT_TYPE, [
+            'application/json',
+            'boundary=something',
+        ]);
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; boundary=something');
+        expect(event.response.headers.get(HeaderName.CONTENT_TYPE))
+            .toEqual('application/json; boundary=something');
     });
 
-    it('should append single header directive value', async () => {
-        const server = supertest(createRequestListener((_req, res) => {
-            setResponseHeaderAttachment(res, 'dummy.json');
-            appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, 'boundary=something');
+    it('should append single header directive value', () => {
+        const event = new DispatchEvent(createTestRequest('/'));
 
-            send(res);
-        }));
+        setResponseHeaderAttachment(event, 'dummy.json');
+        appendResponseHeaderDirective(event, HeaderName.CONTENT_TYPE, 'boundary=something');
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8; boundary=something');
+        expect(event.response.headers.get(HeaderName.CONTENT_TYPE))
+            .toEqual('application/json; charset=utf-8; boundary=something');
     });
 
-    it('should append multiple header directive values', async () => {
-        const server = supertest(createRequestListener((_req, res) => {
-            setResponseHeaderAttachment(res, 'dummy.json');
-            appendResponseHeaderDirective(res, HeaderName.CONTENT_TYPE, [
-                'charset=utf-8',
-                'boundary=something',
-            ]);
+    it('should append multiple header directive values', () => {
+        const event = new DispatchEvent(createTestRequest('/'));
 
-            send(res);
-        }));
+        setResponseHeaderAttachment(event, 'dummy.json');
+        appendResponseHeaderDirective(event, HeaderName.CONTENT_TYPE, [
+            'charset=utf-8',
+            'boundary=something',
+        ]);
 
-        const response = await server
-            .get('/append-multiple');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8; boundary=something');
+        expect(event.response.headers.get(HeaderName.CONTENT_TYPE))
+            .toEqual('application/json; charset=utf-8; boundary=something');
     });
 
-    it('should set response content type', async () => {
-        const server = supertest(createRequestListener((_req, res) => {
-            setResponseHeaderContentType(res, 'application/json');
-            setResponseHeaderContentType(res, 'text/html', true);
+    it('should set response content type', () => {
+        const event = new DispatchEvent(createTestRequest('/'));
 
-            send(res);
-        }));
+        setResponseHeaderContentType(event, 'application/json');
+        setResponseHeaderContentType(event, 'text/html', true);
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json');
+        expect(event.response.headers.get(HeaderName.CONTENT_TYPE))
+            .toEqual('application/json');
     });
 
-    it('should overwrite response content-type', async () => {
-        const server = supertest(createRequestListener((_req, res) => {
-            setResponseHeaderContentType(res, 'application/json');
-            setResponseHeaderContentType(res, 'text/html');
+    it('should overwrite response content-type', () => {
+        const event = new DispatchEvent(createTestRequest('/'));
 
-            send(res);
-        }));
+        setResponseHeaderContentType(event, 'application/json');
+        setResponseHeaderContentType(event, 'text/html');
 
-        const response = await server
-            .get('/overwrite');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('text/html');
+        expect(event.response.headers.get(HeaderName.CONTENT_TYPE))
+            .toEqual('text/html');
     });
 });

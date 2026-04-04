@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import supertest from 'supertest';
 import {
     HeaderName,
     Router,
     coreHandler,
-    createNodeDispatcher,
 } from '../../../src';
+import { createTestRequest } from '../../helpers';
 
 describe('routing/methods', () => {
     it('should handle different methods', async () => {
@@ -16,77 +15,61 @@ describe('routing/methods', () => {
         router.patch('/patch', coreHandler(async () => 'patch'));
         router.post('/post', coreHandler(async () => 'post'));
         router.put('/put', coreHandler(async () => 'put'));
-        router.head('/head', coreHandler(async () => null));
+        router.head('/head', coreHandler(async () => ''));
         router.options('/options', coreHandler(async () => 'options'));
 
-        const server = supertest(createNodeDispatcher(router));
+        let response = await router.fetch(createTestRequest('/delete', { method: 'DELETE' }));
 
-        let response = await server
-            .delete('/delete');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('delete');
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('delete');
+        response = await router.fetch(createTestRequest('/get'));
 
-        response = await server
-            .get('/get');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('get');
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('get');
+        response = await router.fetch(createTestRequest('/patch', { method: 'PATCH' }));
 
-        response = await server
-            .patch('/patch');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('patch');
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('patch');
+        response = await router.fetch(createTestRequest('/post', { method: 'POST' }));
 
-        response = await server
-            .post('/post');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('post');
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('post');
+        response = await router.fetch(createTestRequest('/put', { method: 'PUT' }));
 
-        response = await server
-            .put('/put');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('put');
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('put');
+        response = await router.fetch(createTestRequest('/head', { method: 'HEAD' }));
 
-        response = await server
-            .head('/head');
+        expect(response.status).toEqual(200);
 
-        expect(response.statusCode).toEqual(200);
+        response = await router.fetch(createTestRequest('/options', { method: 'OPTIONS' }));
 
-        response = await server
-            .options('/options');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('options');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('options');
     });
 
     it('should define global head handler', async () => {
         const router = new Router();
         router.head(coreHandler(async () => 'HEAD'));
 
-        const server = supertest(createNodeDispatcher(router));
+        const response = await router.fetch(createTestRequest('/', { method: 'HEAD' }));
 
-        const response = await server
-            .head('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toBeUndefined();
+        expect(response.status).toEqual(200);
     });
 
     it('should define global options handler', async () => {
         const router = new Router();
         router.options(coreHandler(async () => 'options'));
 
-        const server = supertest(createNodeDispatcher(router));
+        const response = await router.fetch(createTestRequest('/', { method: 'OPTIONS' }));
 
-        const response = await server
-            .options('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('options');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('options');
     });
 
     it('should handle different methods on same path', async () => {
@@ -98,48 +81,39 @@ describe('routing/methods', () => {
         router.post(coreHandler(async () => 'post'));
         router.put(coreHandler(async () => 'put'));
 
-        const server = supertest(createNodeDispatcher(router));
+        let response = await router.fetch(createTestRequest('/', { method: 'DELETE' }));
 
-        let response = await server
-            .delete('/');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('delete');
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('delete');
+        response = await router.fetch(createTestRequest('/'));
 
-        response = await server
-            .get('/');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('get');
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('get');
+        response = await router.fetch(createTestRequest('/', { method: 'PATCH' }));
 
-        response = await server
-            .patch('/');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('patch');
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('patch');
+        response = await router.fetch(createTestRequest('/', { method: 'POST' }));
 
-        response = await server
-            .post('/');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('post');
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('post');
+        response = await router.fetch(createTestRequest('/', { method: 'PUT' }));
 
-        response = await server
-            .put('/');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('put');
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('put');
+        response = await router.fetch(createTestRequest('/', { method: 'HEAD' }));
 
-        response = await server
-            .head('/');
+        expect(response.status).toEqual(200);
 
-        expect(response.statusCode).toEqual(200);
+        response = await router.fetch(createTestRequest('/', { method: 'OPTIONS' }));
 
-        response = await server
-            .options('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.ALLOW]).toEqual('DELETE,GET,PATCH,POST,PUT,HEAD');
-        expect(response.text).toEqual('DELETE,GET,PATCH,POST,PUT,HEAD');
+        expect(response.status).toEqual(200);
+        expect(response.headers.get(HeaderName.ALLOW)).toEqual('DELETE,GET,PATCH,POST,PUT,HEAD');
+        expect(await response.text()).toEqual('DELETE,GET,PATCH,POST,PUT,HEAD');
     });
 });

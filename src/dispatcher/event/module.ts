@@ -1,86 +1,157 @@
-import { MethodName } from '../../constants';
-import type { RoutupError } from '../../error';
-import type { Request } from '../../request';
-import type { Response } from '../../response';
-import type { Next } from '../../types';
-import { nextPlaceholder } from '../../utils';
-import type { DispatchEventCreateContext } from './types';
+import type { ServerRequest } from 'srvx';
+import { FastURL } from 'srvx';
+import { RoutupError } from '../../error/module.ts';
+
+export type DispatchEventResponse = {
+    status: number;
+    headers: Headers;
+    statusText?: string;
+};
 
 export class DispatchEvent {
     /**
-     * Request Object.
+     * The srvx ServerRequest (extends Web Standard Request).
      */
-    request: Request;
+    readonly request: ServerRequest;
 
     /**
-     * Response Object.
-     */
-    response: Response;
-
-    /**
-     * Params collected during execution.
+     * Route parameters — populated by PathMatcher during dispatch.
      */
     params: Record<string, any>;
 
     /**
-     * Request path.
+     * Request path (adjusted during router nesting).
      */
     path: string;
 
     /**
-     * HTTP Method used for the request.
+     * HTTP method.
      */
-    method: `${MethodName}`;
+    readonly method: string;
 
     /**
-     * The relative path on which the router is hung.
+     * Accumulated mount path from nested routers.
      */
     mountPath: string;
 
     /**
-     * The error which occurred during the dispatch process.
+     * Error that occurred during dispatch.
      */
     error?: RoutupError;
 
     /**
-     * Signal that the request hasn't been handled.
-     * Therefore, the request must be passed to the next handler or router in the chain.
-     */
-    next: Next;
-
-    /**
-     * Indicate if the request has already been dispatched/send.
-     */
-    protected _dispatched!: boolean;
-
-    /**
-     * Ids of chained router instances.
+     * Router ID stack for nesting tracking.
      */
     routerPath: number[];
 
     /**
-     * Collected methods during dispatch process.
+     * Collected allowed methods (for OPTIONS).
      */
     methodsAllowed: string[];
 
-    constructor(context: DispatchEventCreateContext) {
-        this.request = context.request;
-        this.response = context.response;
+    /**
+     * Whether a response has been produced.
+     */
+    protected _dispatched: boolean;
 
-        this.method = context.method || MethodName.GET;
-        this.methodsAllowed = [];
+    /**
+     * Lazy response accumulator for status/headers.
+     *
+     * NOTE: If the handler returns a `Response` object directly, these
+     * values are ignored. They only apply when returning plain values
+     * (string, object, etc.) that go through `toResponse()`.
+     */
+    protected _response?: DispatchEventResponse;
+
+    /**
+     * Cached parsed URL (avoids double-parsing).
+     */
+    protected _url: InstanceType<typeof FastURL>;
+
+    /**
+     * Cached parsed search params.
+     */
+    protected _searchParams?: URLSearchParams;
+
+    /**
+     * Continuation function for middleware onion model.
+     */
+    _next?: () => Promise<Response | undefined>;
+
+    /**
+     * Whether _next has already been called (guard against double-invocation).
+     */
+    _nextCalled: boolean;
+
+    constructor(request: ServerRequest) {
+        this.request = request;
+        this._url = new FastURL(request.url);
+        this.method = request.method;
+        this.path = this._url.pathname;
         this.mountPath = '/';
         this.params = {};
-        this.path = context.path || '/';
         this.routerPath = [];
-        this.next = nextPlaceholder;
+        this.methodsAllowed = [];
+        this._dispatched = false;
+        this._nextCalled = false;
     }
 
-    get dispatched() {
-        return this._dispatched || this.response.writableEnded || this.response.headersSent;
+    /**
+     * Web Standard Headers from the request.
+     */
+    get headers(): Headers {
+        return this.request.headers;
+    }
+
+    /**
+     * Lazily-parsed URL search params (cached after first access).
+     *
+     * For advanced query parsing (arrays, nesting), use `@routup/query`.
+     */
+    get searchParams(): URLSearchParams {
+        if (!this._searchParams) {
+            this._searchParams = new URLSearchParams(this._url.search);
+        }
+        return this._searchParams;
+    }
+
+    /**
+     * Response accumulator — set status/headers before returning a plain value.
+     *
+     * NOTE: If the handler returns a `Response` object directly, these
+     * values are ignored. They only apply when returning plain values
+     * (string, object, etc.) that go through `toResponse()`.
+     */
+    get response(): DispatchEventResponse {
+        if (!this._response) {
+            this._response = { status: 200, headers: new Headers() };
+        }
+        return this._response;
+    }
+
+    get dispatched(): boolean {
+        return this._dispatched;
     }
 
     set dispatched(value: boolean) {
         this._dispatched = value;
+    }
+
+    /**
+     * Call the next handler in the pipeline (onion model).
+     *
+     * Can only be called once per handler. A second call throws.
+     * Returns the downstream `Response`, or `undefined` if no handler matched.
+     */
+    async next(): Promise<Response | undefined> {
+        if (this._nextCalled) {
+            throw new RoutupError('event.next() can only be called once per handler.');
+        }
+        this._nextCalled = true;
+
+        if (this._next) {
+            return this._next();
+        }
+        return undefined;
     }
 }

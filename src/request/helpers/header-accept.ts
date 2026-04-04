@@ -1,25 +1,25 @@
-import { HeaderName } from '../../constants';
-import { getMimeType } from '../../utils';
-import type { Request } from '../types';
-import { getRequestHeader } from './header';
-import { useRequestNegotiator } from './negotiator';
+import { HeaderName } from '../../constants.ts';
+import { getMimeType } from '../../utils/index.ts';
+import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import { getRequestHeader } from './header.ts';
+import { useRequestNegotiator } from './negotiator.ts';
 
-export function getRequestAcceptableContentTypes(req: Request) : string[] {
-    const negotiator = useRequestNegotiator(req);
+export function getRequestAcceptableContentTypes(event: DispatchEvent) : string[] {
+    const negotiator = useRequestNegotiator(event);
 
     return negotiator.mediaTypes();
 }
 
-export function getRequestAcceptableContentType(req: Request, input?: string | string[]) : string | undefined {
+export function getRequestAcceptableContentType(event: DispatchEvent, input?: string | string[]) : string | undefined {
     input = input || [];
 
     const items = Array.isArray(input) ? input : [input];
 
     if (items.length === 0) {
-        return getRequestAcceptableContentTypes(req).shift();
+        return getRequestAcceptableContentTypes(event).shift();
     }
 
-    const header = getRequestHeader(req, HeaderName.ACCEPT);
+    const header = getRequestHeader(event, HeaderName.ACCEPT);
     if (!header) {
         return items[0];
     }
@@ -35,7 +35,7 @@ export function getRequestAcceptableContentType(req: Request, input?: string | s
         }
     }
 
-    const negotiator = useRequestNegotiator(req);
+    const negotiator = useRequestNegotiator(event);
     const matches = negotiator.mediaTypes(mimeTypes);
     if (matches.length > 0) {
         if (polluted) {

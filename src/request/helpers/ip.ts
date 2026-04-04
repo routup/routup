@@ -1,27 +1,27 @@
-import { all } from 'proxy-addr';
-import { findRouterOption } from '../../router-options';
-import type { TrustProxyFn, TrustProxyInput } from '../../utils';
-import { buildTrustProxyFn } from '../../utils';
-import type { Request } from '../types';
-import { useRequestRouterPath } from './router';
+import { HeaderName } from '../../constants.ts';
+import type { DispatchEvent } from '../../dispatcher/event/module.ts';
 
-type RequestIpOptions = {
-    trustProxy?: TrustProxyInput
+export type RequestIpOptions = {
+    trustProxy?: boolean,
 };
 
-export function getRequestIP(req: Request, options?: RequestIpOptions) : string {
-    options = options || {};
-
-    let trustProxy : TrustProxyFn;
-    if (typeof options.trustProxy !== 'undefined') {
-        trustProxy = buildTrustProxyFn(options.trustProxy);
-    } else {
-        trustProxy = findRouterOption(
-            'trustProxy',
-            useRequestRouterPath(req),
-        );
+export function getRequestIP(event: DispatchEvent, options: RequestIpOptions = {}) : string | undefined {
+    // srvx ServerRequest may provide .ip directly
+    const request = event.request as { ip?: string };
+    if (request.ip) {
+        return request.ip;
     }
 
-    const addrs = all(req, trustProxy);
-    return addrs[addrs.length - 1] as string;
+    // Fall back to x-forwarded-for header if proxy is trusted
+    if (options.trustProxy) {
+        const forwarded = event.headers.get(HeaderName.X_FORWARDED_FOR);
+        if (forwarded) {
+            const first = forwarded.split(',')[0];
+            if (first) {
+                return first.trim();
+            }
+        }
+    }
+
+    return undefined;
 }

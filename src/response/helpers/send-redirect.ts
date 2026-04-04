@@ -1,7 +1,6 @@
-import { RoutupError } from '../../error';
-import { sanitizeHeaderValue } from '../../utils';
-import type { Response } from '../types';
-import { send } from './send';
+import { RoutupError } from '../../error/module.ts';
+import { sanitizeHeaderValue } from '../../utils/index.ts';
+import type { DispatchEvent } from '../../dispatcher/event/module.ts';
 
 function escapeHtml(str: string) : string {
     return str
@@ -29,7 +28,7 @@ function isAllowedRedirectUrl(location: string) : boolean {
     }
 }
 
-export function sendRedirect(res: Response, location: string, statusCode = 302): Promise<void> {
+export function sendRedirect(event: DispatchEvent, location: string, statusCode = 302): Response {
     if (!isAllowedRedirectUrl(location)) {
         throw new RoutupError({
             statusCode: 400,
@@ -37,11 +36,22 @@ export function sendRedirect(res: Response, location: string, statusCode = 302):
         });
     }
 
-    res.statusCode = statusCode;
-    res.setHeader('location', sanitizeHeaderValue(location));
-
+    const sanitizedLocation = sanitizeHeaderValue(location);
     const escapedLoc = escapeHtml(location);
     const html = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=${escapedLoc}"></head></html>`;
 
-    return send(res, html);
+    const headers = new Headers(event.response.headers);
+    headers.set('location', sanitizedLocation);
+    headers.set('content-type', 'text/html; charset=utf-8');
+    headers.delete('content-length');
+
+    const response = new Response(html, {
+        status: statusCode,
+        statusText: event.response.statusText,
+        headers,
+    });
+
+    event.dispatched = true;
+
+    return response;
 }
