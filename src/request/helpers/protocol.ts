@@ -24,18 +24,16 @@ export function getRequestProtocol(
     }
 
     // Derive protocol from the request URL scheme
-    let protocol : string | undefined = options.default;
+    let protocol : string;
     try {
         const url = new URL(event.request.url);
         if (url.protocol === 'https:') {
             protocol = 'https';
-        } else if (!protocol) {
+        } else {
             protocol = 'http';
         }
     } catch {
-        if (!protocol) {
-            protocol = 'http';
-        }
+        protocol = options.default || 'http';
     }
 
     if (!trustProxy(event.request.ip || '0.0.0.0', 0)) {

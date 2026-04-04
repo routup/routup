@@ -15,7 +15,7 @@ async function applyEtag(
     headers.set('etag', etag);
 
     const ifNoneMatch = event.headers.get('if-none-match');
-    if (ifNoneMatch && ifNoneMatch === etag) {
+    if (ifNoneMatch && (ifNoneMatch === '*' || ifNoneMatch.split(',').some((t) => t.trim() === etag))) {
         return new Response(null, {
             status: 304,
             headers,

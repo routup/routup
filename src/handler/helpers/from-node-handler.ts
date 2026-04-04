@@ -5,7 +5,7 @@ import { HandlerType } from '../constants.ts';
 import type { CoreHandlerFn } from '../core/types.ts';
 
 export type NodeHandler = (req: IncomingMessage, res: ServerResponse) => unknown | Promise<unknown>;
-export type NodeMiddleware = (req: IncomingMessage, res: ServerResponse, next: (err?: Error) => void) => unknown | Promise<unknown>;
+export type NodeMiddleware = (req: IncomingMessage, res: ServerResponse, next: (err?: unknown) => void) => unknown | Promise<unknown>;
 
 const kHandled = /* @__PURE__ */ Symbol('handled');
 

@@ -40,16 +40,18 @@ export function sendRedirect(event: DispatchEvent, location: string, statusCode 
     const escapedLoc = escapeHtml(location);
     const html = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=${escapedLoc}"></head></html>`;
 
-    event.dispatched = true;
-
     const headers = new Headers(event.response.headers);
     headers.set('location', sanitizedLocation);
     headers.set('content-type', 'text/html; charset=utf-8');
     headers.delete('content-length');
 
-    return new Response(html, {
+    const response = new Response(html, {
         status: statusCode,
         statusText: event.response.statusText,
         headers,
     });
+
+    event.dispatched = true;
+
+    return response;
 }
