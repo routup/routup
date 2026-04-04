@@ -1,5 +1,6 @@
 import { HeaderName } from '../../../constants.ts';
 import type { DispatchEvent } from '../../../dispatcher/event/module.ts';
+import { RoutupError } from '../../../error/module.ts';
 import type { EventStreamMessage } from './types.ts';
 import { serializeEventStreamMessage } from './utils.ts';
 
@@ -19,7 +20,7 @@ export function createEventStream(
 ): EventStreamHandle {
     if (options?.maxMessageSize !== undefined) {
         if (!Number.isInteger(options.maxMessageSize) || options.maxMessageSize < 0) {
-            throw new TypeError('maxMessageSize must be a non-negative integer.');
+            throw new RoutupError('maxMessageSize must be a non-negative integer.');
         }
     }
 

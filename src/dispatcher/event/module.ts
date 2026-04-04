@@ -1,6 +1,6 @@
 import type { ServerRequest } from 'srvx';
 import { FastURL } from 'srvx';
-import type { RoutupError } from '../../error/module.ts';
+import { RoutupError } from '../../error/module.ts';
 
 export type DispatchEventResponse = {
     status: number;
@@ -145,7 +145,7 @@ export class DispatchEvent {
      */
     async next(): Promise<Response | undefined> {
         if (this._nextCalled) {
-            throw new Error('event.next() can only be called once per handler.');
+            throw new RoutupError('event.next() can only be called once per handler.');
         }
         this._nextCalled = true;
 
