@@ -51,12 +51,12 @@ To read the docs, visit [https://routup.net](https://routup.net)
 
 ### Handlers
 
-Handlers receive a `DispatchEvent` and return a value. Routup converts the return value to a Web `Response` automatically.
+Handlers receive an event and return a value. Routup converts the return value to a Web `Response` automatically.
 
 **Shorthand**
 
 ```typescript
-import { Router, coreHandler, errorHandler, serve } from 'routup/node';
+import { Router, coreHandler, errorHandler, serve } from 'routup';
 
 const router = new Router();
 
@@ -70,7 +70,7 @@ serve(router, { port: 3000 });
 **Verbose**
 
 ```typescript
-import { Router, coreHandler, serve } from 'routup/node';
+import { Router, coreHandler, serve } from 'routup';
 
 const router = new Router();
 
@@ -98,7 +98,7 @@ serve(router, { port: 3000 });
 | `Response` | Passed through as-is |
 | `ReadableStream` | Streamed to client |
 | `Blob` | Sent with blob's content type |
-| `null` | `204 No Content` |
+| `null` | Empty response (status from `event.response`) |
 
 ### Middleware
 
@@ -117,7 +117,7 @@ Routup runs on any JavaScript runtime:
 
 **Node.js**
 ```typescript
-import { Router, coreHandler, serve } from 'routup/node';
+import { Router, coreHandler, serve } from 'routup';
 
 const router = new Router();
 router.get('/', coreHandler(() => 'Hello, World!'));

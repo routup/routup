@@ -7,11 +7,11 @@ Routup's architecture centers on a **dispatch pipeline** that processes HTTP req
 ### Request Flow
 
 ```text
-HTTP Request → srvx → ServerRequest → DispatchEvent → Router Pipeline → Response
+HTTP Request → srvx → ServerRequest → RoutupEvent → Router Pipeline → Response
 ```
 
 1. **srvx** receives the raw HTTP request and normalizes it into a `ServerRequest`
-2. The **Router**'s `fetch()` method creates a `DispatchEvent` from the request
+2. The **Router**'s `fetch()` method creates a `RoutupEvent` from the request
 3. The **Router** iterates its handler stack, matching path and method
 4. Matched **Handlers** execute, returning response values or calling `event.next()`
 5. Return values are converted to a Web `Response` via `toResponse()`
@@ -109,20 +109,22 @@ coreHandler(async (event) => {
 });
 ```
 
-## DispatchEvent
+## RoutupEvent
 
-The `DispatchEvent` is the central object passed to every handler:
+The `RoutupEvent` (implementing `IRoutupEvent`) is the central object passed to every handler:
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `request` | `ServerRequest` | The srvx-normalized request object |
-| `params` | `Record<string, string>` | Route parameters extracted from path |
+| `request` | `RoutupRequest` | The srvx-normalized request object |
+| `params` | `Record<string, any>` | Route parameters extracted from path |
 | `path` | `string` | Current request path (relative to mount point) |
 | `method` | `string` | HTTP method |
 | `mountPath` | `string` | Path prefix where the router is mounted |
 | `headers` | `Headers` | Request headers |
 | `searchParams` | `URLSearchParams` | Query string parameters |
-| `response` | `object` | Response accumulator for headers, status, etc. |
+| `response` | `RoutupResponse` | Response accumulator for status, headers, statusText |
+| `dispatched` | `boolean` | Whether a response has been produced |
+| `store` | `Record<string \| symbol, unknown>` | Per-request state store for caching and plugin state |
 
 ## Router.fetch()
 
@@ -161,8 +163,8 @@ Hooks provide lifecycle events on the Router:
 
 ```typescript
 router.on('request', (event) => { /* ... */ });
-router.on('response', (event, response) => { /* ... */ });
-router.on('error', (error, event) => { /* ... */ });
+router.on('response', (event) => { /* ... */ });
+router.on('error', (event) => { /* event.error contains the error */ });
 ```
 
 ## Plugin System

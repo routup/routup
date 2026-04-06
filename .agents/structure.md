@@ -12,7 +12,8 @@ routup/
 │   │   ├── generic.ts      # Generic Web API entry (srvx generic adapter)
 │   │   ├── cloudflare.ts   # Cloudflare Workers entry
 │   │   └── service-worker.ts # Service Worker entry
-│   ├── dispatcher/         # DispatchEvent and pipeline triggers
+│   ├── dispatcher/         # Dispatcher interface and pipeline triggers
+│   ├── event/              # RoutupEvent class and IRoutupEvent interface
 │   ├── error/              # RoutupError (extends @ebec/http)
 │   ├── handler/            # Handler definitions
 │   │   ├── core/           # coreHandler — standard request handlers
@@ -53,7 +54,8 @@ routup/
 | `handler/core/` | `coreHandler()` factory — creates typed request handlers with shorthand and verbose syntax |
 | `handler/error/` | `errorHandler()` factory — creates error handlers that receive `(error, event)` |
 | `handler/helpers/` | `fromNodeHandler()` — wraps Node.js `(req, res)` or `(req, res, next)` middleware for use in routup |
-| `dispatcher/` | `DispatchEvent` — event object carrying request, params, path, method, mountPath, headers, searchParams through the pipeline |
+| `dispatcher/` | `IDispatcher` interface for dispatch pipeline |
+| `event/` | `RoutupEvent` class and `IRoutupEvent` interface — event object carrying request, params, path, method, mountPath, headers, searchParams, store through the pipeline |
 | `hook/` | Lifecycle events: `request`, `response`, `error` |
 | `plugin/` | Plugin system — objects with `name` and `install(router)` method |
 | `path/` | `PathMatcher` — wraps `path-to-regexp` for URL pattern matching with query string support |

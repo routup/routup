@@ -24,7 +24,7 @@ import type { Plugin, PluginInstallContext } from '../plugin/index.ts';
 import { isPlugin } from '../plugin/index.ts';
 import type { RouterOptionsInput } from '../router-options/index.ts';
 import { setRouterOptions } from '../router-options/index.ts';
-import { transformRouterOptions } from '../router-options/transform.ts';
+import { normalizeRouterOptions } from '../router-options/normalize.ts';
 import { cleanDoubleSlashes, withLeadingSlash, withoutTrailingSlash } from '../utils/index.ts';
 import { RouterPipelineStep, RouterSymbol } from './constants.ts';
 import type { IRouter, RouterPipelineContext } from './types.ts';
@@ -74,7 +74,7 @@ export class Router implements IRouter {
 
         this.setPath(options.path);
 
-        setRouterOptions(this.id, transformRouterOptions(options));
+        setRouterOptions(this.id, normalizeRouterOptions(options));
     }
 
     // --------------------------------------------------

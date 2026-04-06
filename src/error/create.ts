@@ -4,10 +4,17 @@ import { isObject } from '../utils';
 import { isError } from './is';
 import { RoutupError } from './module';
 
+function isNativeError(input: unknown): input is Error {
+    return isObject(input) &&
+        typeof (input as Record<string, unknown>).message === 'string' &&
+        typeof (input as Record<string, unknown>).name === 'string';
+}
+
 /**
  * Create an internal error object by
  * - an existing RoutupError (returned as-is)
  * - an HTTPError (wrapped into a RoutupError preserving status)
+ * - an Error (wrapped preserving message and cause)
  * - an options object (statusCode, statusMessage, etc.)
  * - a message string
  *
@@ -33,11 +40,18 @@ export function createError(input: HTTPErrorInput | unknown) : RoutupError {
         });
     }
 
+    if (isNativeError(input)) {
+        return new RoutupError({
+            message: input.message,
+            cause: input,
+        });
+    }
+
     if (!isObject(input)) {
         return new RoutupError();
     }
 
-    const options = input as Record<string, unknown>;
+    const options = { ...input as Record<string, unknown> };
     if (!options.cause) {
         options.cause = input;
     }
