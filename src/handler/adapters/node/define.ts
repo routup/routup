@@ -1,12 +1,10 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { IRoutupEvent } from '../../event/index.ts';
-import { RoutupError } from '../../error/module.ts';
-import { Handler } from '../module.ts';
-import { HandlerType } from '../constants.ts';
-import type { CoreHandlerFn } from '../core/types.ts';
-
-export type NodeHandler = (req: IncomingMessage, res: ServerResponse) => unknown | Promise<unknown>;
-export type NodeMiddleware = (req: IncomingMessage, res: ServerResponse, next: (err?: unknown) => void) => unknown | Promise<unknown>;
+import type { IRoutupEvent } from '../../../event/index.ts';
+import { RoutupError } from '../../../error/module.ts';
+import { defineCoreHandler } from '../../core/index.ts';
+import type { Handler } from '../../module.ts';
+import type { CoreHandler } from '../../core/types.ts';
+import type { NodeHandler, NodeMiddleware } from './types.ts';
 
 const kHandled = /* @__PURE__ */ Symbol('handled');
 
@@ -113,8 +111,7 @@ function createNodeBridge(handler: NodeHandler | NodeMiddleware, isMiddleware: b
         throw new RoutupError('fromNodeHandler/fromNodeMiddleware expects a function.');
     }
 
-    return new Handler({
-        type: HandlerType.CORE,
+    return defineCoreHandler({
         fn: (async (event: IRoutupEvent) => {
             const node = event.request.runtime?.node;
             if (!node?.req || !node?.res) {
@@ -133,7 +130,7 @@ function createNodeBridge(handler: NodeHandler | NodeMiddleware, isMiddleware: b
             }
 
             return undefined;
-        }) as CoreHandlerFn,
+        }) as CoreHandler,
     });
 }
 

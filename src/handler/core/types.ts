@@ -1,12 +1,12 @@
 import type { IRoutupEvent } from '../../event/index.ts';
 import type { HandlerType } from '../constants.ts';
-import type { HandlerBaseConfig } from '../types-base.ts';
+import type { HandlerBaseOptions } from '../types-base.ts';
 
-export type CoreHandlerFn = (
+export type CoreHandler = (
     event: IRoutupEvent,
 ) => unknown | Promise<unknown>;
 
-export type CoreHandlerConfig = HandlerBaseConfig & {
+export type CoreHandlerOptions = HandlerBaseOptions & {
     type: `${HandlerType.CORE}`,
-    fn: CoreHandlerFn
+    fn: CoreHandler
 };

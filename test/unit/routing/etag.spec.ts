@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     Router,
-    coreHandler,
+    defineCoreHandler,
 } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
@@ -9,7 +9,7 @@ describe('src/router etag', () => {
     it('should not send etag when disabled', async () => {
         const router = new Router({ etag: false });
 
-        router.get('/', coreHandler(() => 'Hello world!'));
+        router.get('/', defineCoreHandler(() => 'Hello world!'));
 
         const response = await router.fetch(createTestRequest('/'));
 
@@ -21,7 +21,7 @@ describe('src/router etag', () => {
     it('should generate etag for string responses', async () => {
         const router = new Router();
 
-        router.get('/', coreHandler(() => 'Hello world!'));
+        router.get('/', defineCoreHandler(() => 'Hello world!'));
 
         const response = await router.fetch(createTestRequest('/'));
 
@@ -32,7 +32,7 @@ describe('src/router etag', () => {
     it('should return 304 for matching strong etag', async () => {
         const router = new Router();
 
-        router.get('/', coreHandler(() => 'Hello world!'));
+        router.get('/', defineCoreHandler(() => 'Hello world!'));
 
         // First request to get the ETag
         const first = await router.fetch(createTestRequest('/'));
@@ -48,7 +48,7 @@ describe('src/router etag', () => {
     it('should return 304 when client sends strong version of weak etag', async () => {
         const router = new Router();
 
-        router.get('/', coreHandler(() => 'Hello world!'));
+        router.get('/', defineCoreHandler(() => 'Hello world!'));
 
         // First request — server generates weak ETag (W/"...")
         const first = await router.fetch(createTestRequest('/'));
@@ -66,7 +66,7 @@ describe('src/router etag', () => {
     it('should return 304 for wildcard if-none-match', async () => {
         const router = new Router();
 
-        router.get('/', coreHandler(() => 'Hello world!'));
+        router.get('/', defineCoreHandler(() => 'Hello world!'));
 
         const response = await router.fetch(createTestRequest('/', { headers: { 'if-none-match': '*' } }));
 
@@ -76,7 +76,7 @@ describe('src/router etag', () => {
     it('should return 200 for non-matching etag', async () => {
         const router = new Router();
 
-        router.get('/', coreHandler(() => 'Hello world!'));
+        router.get('/', defineCoreHandler(() => 'Hello world!'));
 
         const response = await router.fetch(createTestRequest('/', { headers: { 'if-none-match': '"nonexistent"' } }));
 

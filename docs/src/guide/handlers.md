@@ -7,9 +7,9 @@ Handlers are functions that process requests. They receive an `IRoutupEvent` and
 A core handler processes a request and returns a response value:
 
 ```typescript
-import { coreHandler } from 'routup';
+import { defineCoreHandler } from 'routup';
 
-const handler = coreHandler((event) => {
+const handler = defineCoreHandler((event) => {
     return { message: 'Hello, World!' };
 });
 ```
@@ -19,9 +19,9 @@ const handler = coreHandler((event) => {
 An error handler is called when an error occurs in a previous handler. It receives the error as the first argument and the event as the second:
 
 ```typescript
-import { errorHandler } from 'routup';
+import { defineErrorHandler } from 'routup';
 
-const handler = errorHandler((error, event) => {
+const handler = defineErrorHandler((error, event) => {
     event.response.status = 500;
     return { error: error.message };
 });
@@ -33,22 +33,22 @@ Handlers return values that are automatically converted to `Response` objects:
 
 ```typescript
 // String — sent as text/plain
-coreHandler(() => 'Hello, World!');
+defineCoreHandler(() => 'Hello, World!');
 
 // Object/Array — sent as application/json
-coreHandler(() => ({ name: 'Alice' }));
+defineCoreHandler(() => ({ name: 'Alice' }));
 
 // Response — sent as-is
-coreHandler(() => new Response('Custom', { status: 201 }));
+defineCoreHandler(() => new Response('Custom', { status: 201 }));
 
 // ReadableStream, Blob, ArrayBuffer — sent as binary
-coreHandler(() => new Blob(['data']));
+defineCoreHandler(() => new Blob(['data']));
 
 // null — empty response
-coreHandler(() => null);
+defineCoreHandler(() => null);
 
 // undefined — middleware pass-through (pipeline continues)
-coreHandler(() => undefined);
+defineCoreHandler(() => undefined);
 ```
 
 ## Middleware
@@ -56,7 +56,7 @@ coreHandler(() => undefined);
 A handler that calls `event.next()` acts as middleware. It can inspect or modify the request, then pass control to the next handler:
 
 ```typescript
-coreHandler(async (event) => {
+defineCoreHandler(async (event) => {
     console.log(`${event.method} ${event.path}`);
     return event.next();
 });
@@ -65,7 +65,7 @@ coreHandler(async (event) => {
 You can also modify the downstream response:
 
 ```typescript
-coreHandler(async (event) => {
+defineCoreHandler(async (event) => {
     const response = await event.next();
     // inspect or modify the response
     return response;
@@ -81,7 +81,7 @@ The result of `event.next()` is cached — calling it multiple times returns the
 Pass a function directly:
 
 ```typescript
-const handler = coreHandler((event) => {
+const handler = defineCoreHandler((event) => {
     return 'Hello, World!';
 });
 ```
@@ -91,7 +91,7 @@ const handler = coreHandler((event) => {
 Pass a configuration object with path, method, and handler function:
 
 ```typescript
-const handler = coreHandler({
+const handler = defineCoreHandler({
     method: 'GET',
     path: '/users/:id',
     fn: (event) => {
@@ -103,7 +103,7 @@ const handler = coreHandler({
 The verbose form also supports handler-level hooks:
 
 ```typescript
-const handler = coreHandler({
+const handler = defineCoreHandler({
     fn: (event) => 'Hello, World!',
     onBefore(event) {
         // runs before the handler
@@ -122,7 +122,7 @@ const handler = coreHandler({
 ### Global
 
 ```typescript
-router.use(coreHandler((event) => {
+router.use(defineCoreHandler((event) => {
     return event.next();
 }));
 ```
@@ -130,14 +130,14 @@ router.use(coreHandler((event) => {
 ### By Method
 
 ```typescript
-router.get('/', coreHandler((event) => 'Hello'));
-router.post('/users', coreHandler((event) => { /* ... */ }));
+router.get('/', defineCoreHandler((event) => 'Hello'));
+router.post('/users', defineCoreHandler((event) => { /* ... */ }));
 ```
 
 ### By Path
 
 ```typescript
-router.use('/api', coreHandler((event) => {
+router.use('/api', defineCoreHandler((event) => {
     return { api: true };
 }));
 ```
@@ -145,7 +145,7 @@ router.use('/api', coreHandler((event) => {
 ### By Path and Method
 
 ```typescript
-router.get('/users/:id', coreHandler((event) => {
+router.get('/users/:id', defineCoreHandler((event) => {
     return { id: event.params.id };
 }));
 ```

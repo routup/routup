@@ -3,10 +3,10 @@
 Routup runs on any JavaScript runtime via [srvx](https://srvx.unjs.io/). Import from `routup` — the correct runtime entry is selected automatically via conditional exports.
 
 ```typescript
-import { Router, coreHandler, serve } from 'routup';
+import { Router, defineCoreHandler, serve } from 'routup';
 
 const router = new Router();
-router.get('/', coreHandler(() => 'Hello'));
+router.get('/', defineCoreHandler(() => 'Hello'));
 
 serve(router, { port: 3000 });
 ```

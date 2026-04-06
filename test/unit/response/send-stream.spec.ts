@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Router, coreHandler } from '../../../src';
+import { Router, defineCoreHandler } from '../../../src';
 import { sendStream } from '../../../src/response/helpers/send-stream';
 import { createTestRequest } from '../../helpers';
 
@@ -7,7 +7,7 @@ describe('src/response/helpers/send-stream', () => {
     it('should send a readable stream', async () => {
         const router = new Router();
 
-        router.get('/', coreHandler((event) => {
+        router.get('/', defineCoreHandler((event) => {
             const stream = new ReadableStream({
                 start(controller) {
                     controller.enqueue(new TextEncoder().encode('hello stream'));
@@ -26,7 +26,7 @@ describe('src/response/helpers/send-stream', () => {
     it('should inherit event.response status and headers', async () => {
         const router = new Router();
 
-        router.get('/', coreHandler((event) => {
+        router.get('/', defineCoreHandler((event) => {
             event.response.status = 206;
             event.response.statusText = 'Partial Content';
             event.response.headers.set('x-custom', 'stream-header');

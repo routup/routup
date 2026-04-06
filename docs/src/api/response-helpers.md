@@ -274,9 +274,9 @@ type EventStreamMessage = {
 ```
 
 ```typescript
-import { coreHandler, createEventStream } from 'routup';
+import { defineCoreHandler, createEventStream } from 'routup';
 
-coreHandler((event) => {
+defineCoreHandler((event) => {
     const stream = createEventStream(event);
 
     let count = 0;

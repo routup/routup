@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
     Router,
-    coreHandler,
-    errorHandler,
+    defineCoreHandler,
+    defineErrorHandler,
 } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
@@ -10,13 +10,13 @@ describe('routing/middleware', () => {
     it('should use middleware', async () => {
         const router = new Router();
 
-        router.use(coreHandler((event) => {
+        router.use(defineCoreHandler((event) => {
             event.store.foo = 'bar';
 
             return event.next();
         }));
 
-        router.get(coreHandler((event) => event.store.foo));
+        router.get(defineCoreHandler((event) => event.store.foo));
 
         const response = await router.fetch(createTestRequest('/'));
 
@@ -27,11 +27,11 @@ describe('routing/middleware', () => {
     it('should use error middleware', async () => {
         const router = new Router();
 
-        router.get(coreHandler(() => {
+        router.get(defineCoreHandler(() => {
             throw new Error('ero');
         }));
 
-        router.use(errorHandler((error) => error.message));
+        router.use(defineErrorHandler((error) => error.message));
 
         const response = await router.fetch(createTestRequest('/'));
 
@@ -42,24 +42,24 @@ describe('routing/middleware', () => {
     it('should use middleware on specific path', async () => {
         const router = new Router();
 
-        router.use('/foo', coreHandler((event) => {
+        router.use('/foo', defineCoreHandler((event) => {
             event.store.foo = 'bar';
 
             return event.next();
         }));
 
-        router.get('/', coreHandler((event) => (event.store.foo as string) || ''));
+        router.get('/', defineCoreHandler((event) => (event.store.foo as string) || ''));
 
-        router.get('/foo', coreHandler((event) => event.store.foo));
+        router.get('/foo', defineCoreHandler((event) => event.store.foo));
 
-        router.use('/bar', coreHandler((event) => {
+        router.use('/bar', defineCoreHandler((event) => {
             event.store.bar = 'baz';
             return event.next();
         }));
 
         router.get(
             '/bar',
-            coreHandler((event) => event.store.bar),
+            defineCoreHandler((event) => event.store.bar),
         );
 
         let response = await router.fetch(createTestRequest('/'));

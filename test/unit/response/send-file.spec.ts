@@ -5,7 +5,7 @@ import { RoutupEvent } from '../../../src/event/module';
 import {
     HeaderName,
     Router,
-    coreHandler,
+    defineCoreHandler,
     sendFile,
 } from '../../../src';
 import type { SendFileOptions } from '../../../src';
@@ -53,7 +53,7 @@ describe('src/helpers/response/send-file', () => {
     it('should return 500 for non-existent file', async () => {
         const router = new Router();
 
-        router.get('/', coreHandler((event) =>
+        router.get('/', defineCoreHandler((event) =>
             sendFile(event, buildSendFileOptions('test/data/foo.json'))));
 
         const response = await router.fetch(createTestRequest('/'));

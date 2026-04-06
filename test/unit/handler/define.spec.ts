@@ -2,18 +2,18 @@ import { describe, expect, it } from 'vitest';
 import {
     HandlerType,
     MethodName,
-    coreHandler,
-    errorHandler,
+    defineCoreHandler,
+    defineErrorHandler,
 } from '../../../src';
 
 describe('src/handler/define', () => {
     it('should define core handler', () => {
-        const handler = coreHandler(async () => Promise.resolve());
+        const handler = defineCoreHandler(async () => Promise.resolve());
         expect(handler.type).toEqual(HandlerType.CORE);
     });
 
     it('should define core handler with method', () => {
-        const handler = coreHandler({
+        const handler = defineCoreHandler({
             method: 'GET',
             fn: async () => Promise.resolve(),
         });
@@ -23,7 +23,7 @@ describe('src/handler/define', () => {
     });
 
     it('should define error handler', () => {
-        const handler = errorHandler(async () => Promise.resolve());
+        const handler = defineErrorHandler(async () => Promise.resolve());
         expect(handler.type).toEqual(HandlerType.ERROR);
     });
 });

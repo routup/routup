@@ -1,15 +1,14 @@
 import { distinctArray } from 'smob';
 import { HeaderName, MethodName } from '../constants.ts';
 import { RoutupEvent } from '../event/index.ts';
-import type { IRoutupEvent, RoutupRequest } from '../event/index.ts';
+import type { RoutupRequest } from '../event/index.ts';
 import { createError } from '../error/index.ts';
-import type { HandlerConfig } from '../handler/index.ts';
 import {
     Handler,
+    type HandlerOptions,
     HandlerType,
-    coreHandler,
     isHandler,
-    isHandlerConfig,
+    isHandlerOptions,
 } from '../handler/index.ts';
 import type {
     HookDefaultListener,
@@ -408,71 +407,71 @@ export class Router implements IRouter {
 
     // --------------------------------------------------
 
-    delete(...handlers: (Handler | HandlerConfig)[]): this;
+    delete(...handlers: (Handler | HandlerOptions)[]): this;
 
-    delete(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
+    delete(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
 
-    delete(...input: (Path | Handler | HandlerConfig)[]): this {
+    delete(...input: (Path | Handler | HandlerOptions)[]): this {
         this.useForMethod(MethodName.DELETE, ...input);
 
         return this;
     }
 
-    get(...handlers: (Handler | HandlerConfig)[]): this;
+    get(...handlers: (Handler | HandlerOptions)[]): this;
 
-    get(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
+    get(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
 
-    get(...input: (Path | Handler | HandlerConfig)[]): this {
+    get(...input: (Path | Handler | HandlerOptions)[]): this {
         this.useForMethod(MethodName.GET, ...input);
 
         return this;
     }
 
-    post(...handlers: (Handler | HandlerConfig)[]): this;
+    post(...handlers: (Handler | HandlerOptions)[]): this;
 
-    post(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
+    post(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
 
-    post(...input: (Path | Handler | HandlerConfig)[]): this {
+    post(...input: (Path | Handler | HandlerOptions)[]): this {
         this.useForMethod(MethodName.POST, ...input);
 
         return this;
     }
 
-    put(...handlers: (Handler | HandlerConfig)[]): this;
+    put(...handlers: (Handler | HandlerOptions)[]): this;
 
-    put(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
+    put(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
 
-    put(...input: (Path | Handler | HandlerConfig)[]): this {
+    put(...input: (Path | Handler | HandlerOptions)[]): this {
         this.useForMethod(MethodName.PUT, ...input);
 
         return this;
     }
 
-    patch(...handlers: (Handler | HandlerConfig)[]): this;
+    patch(...handlers: (Handler | HandlerOptions)[]): this;
 
-    patch(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
+    patch(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
 
-    patch(...input: (Path | Handler | HandlerConfig)[]): this {
+    patch(...input: (Path | Handler | HandlerOptions)[]): this {
         this.useForMethod(MethodName.PATCH, ...input);
 
         return this;
     }
 
-    head(...handlers: (Handler | HandlerConfig)[]): this;
+    head(...handlers: (Handler | HandlerOptions)[]): this;
 
-    head(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
+    head(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
 
-    head(...input: (Path | Handler | HandlerConfig)[]): this {
+    head(...input: (Path | Handler | HandlerOptions)[]): this {
         this.useForMethod(MethodName.HEAD, ...input);
 
         return this;
     }
 
-    options(...handlers: (Handler | HandlerConfig)[]): this;
+    options(...handlers: (Handler | HandlerOptions)[]): this;
 
-    options(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
+    options(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
 
-    options(...input: (Path | Handler | HandlerConfig)[]): this {
+    options(...input: (Path | Handler | HandlerOptions)[]): this {
         this.useForMethod(MethodName.OPTIONS, ...input);
 
         return this;
@@ -482,7 +481,7 @@ export class Router implements IRouter {
 
     protected useForMethod(
         method: MethodName,
-        ...input: (Path | Handler | HandlerConfig)[]
+        ...input: (Path | Handler | HandlerOptions)[]
     ) {
         let path: Path | undefined;
 
@@ -492,7 +491,7 @@ export class Router implements IRouter {
                 continue;
             }
 
-            if (isHandlerConfig(element)) {
+            if (isHandlerOptions(element)) {
                 if (path) {
                     element.path = path;
                 }
@@ -518,43 +517,15 @@ export class Router implements IRouter {
 
     // --------------------------------------------------
 
-    /**
-     * Mount an external fetch handler at the given path.
-     * The handler receives requests with the mount prefix stripped from the URL.
-     *
-     * @experimental
-     */
-    mount(path: Path, handler: { fetch: (request: Request) => Response | Promise<Response> }): this;
-    mount(path: Path, handler: (request: Request) => Response | Promise<Response>): this;
-    mount(path: Path, handler: unknown): this {
-        const fn = typeof handler === 'function' ?
-            handler as (request: Request) => Response | Promise<Response> :
-            (handler as { fetch: (request: Request) => Response | Promise<Response> }).fetch.bind(handler);
-
-        this.use(path, coreHandler({
-            fn: async (event: IRoutupEvent) => {
-                const url = new URL(event.request.url);
-                url.pathname = event.path;
-
-                const adjusted = new Request(url.toString(), event.request);
-                return fn(adjusted);
-            },
-        }));
-
-        return this;
-    }
-
-    // --------------------------------------------------
-
     use(router: Router): this;
 
-    use(handler: Handler | HandlerConfig): this;
+    use(handler: Handler | HandlerOptions): this;
 
     use(plugin: Plugin): this;
 
     use(path: Path, router: Router): this;
 
-    use(path: Path, handler: Handler | HandlerConfig): this;
+    use(path: Path, handler: Handler | HandlerOptions): this;
 
     use(path: Path, plugin: Plugin): this;
 
@@ -574,7 +545,7 @@ export class Router implements IRouter {
                 continue;
             }
 
-            if (isHandlerConfig(item)) {
+            if (isHandlerOptions(item)) {
                 item.path = path || item.path;
 
                 this.stack.push(new Handler(item));

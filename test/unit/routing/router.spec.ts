@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     Router,
-    coreHandler,
+    defineCoreHandler,
 } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
@@ -9,7 +9,7 @@ describe('src/module', () => {
     it('should send hello world', async () => {
         const router = new Router();
 
-        router.use(coreHandler(() => 'Hello, World!'));
+        router.use(defineCoreHandler(() => 'Hello, World!'));
 
         const response = await router.fetch(createTestRequest('/'));
 
@@ -22,12 +22,12 @@ describe('src/module', () => {
 
         router.get(
             '/async',
-            coreHandler(async () => new Promise((resolve) => {
+            defineCoreHandler(async () => new Promise((resolve) => {
                 setTimeout(() => resolve('foo'), 0);
             })),
         );
 
-        router.get('/sync', coreHandler(() => 'bar'));
+        router.get('/sync', defineCoreHandler(() => 'bar'));
 
         let response = await router.fetch(createTestRequest('/async'));
 
@@ -43,7 +43,7 @@ describe('src/module', () => {
     it('should process dynamic path', async () => {
         const router = new Router();
 
-        router.get('/param/:id', coreHandler(async (event) => event.params.id));
+        router.get('/param/:id', defineCoreHandler(async (event) => event.params.id));
 
         const response = await router.fetch(createTestRequest('/param/abc'));
 
@@ -56,7 +56,7 @@ describe('src/module', () => {
 
         router.get(
             '/param/:id',
-            coreHandler(() => 'foo'),
+            defineCoreHandler(() => 'foo'),
         );
 
         const response = await router.fetch(createTestRequest('/foo'));
@@ -67,7 +67,7 @@ describe('src/module', () => {
     it('should process with error thrown', async () => {
         const router = new Router();
 
-        router.get('/', coreHandler(() => {
+        router.get('/', defineCoreHandler(() => {
             throw new Error('foo');
         }));
 
@@ -79,7 +79,7 @@ describe('src/module', () => {
     it('should process with async error thrown', async () => {
         const router = new Router();
 
-        router.get('/', coreHandler(async () => {
+        router.get('/', defineCoreHandler(async () => {
             await new Promise((_resolve, reject) => {
                 setTimeout(() => {
                     reject(new Error('bar'));

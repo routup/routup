@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Router, coreHandler } from '../../../src';
+import { Router, defineCoreHandler } from '../../../src';
 import type { Plugin } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
@@ -11,7 +11,7 @@ function plugin(options: Options = {}) : Plugin {
     return {
         name: '@routup/plugin',
         install: (router) => {
-            router.get(options.handlerPath || '/', coreHandler(() => 'Hello, World!'));
+            router.get(options.handlerPath || '/', defineCoreHandler(() => 'Hello, World!'));
         },
     };
 }
@@ -32,13 +32,13 @@ describe('src/plugin/**', () => {
         router.use({
             name: 'plugin',
             install: () => {
-                router.get('/', coreHandler((event) => event.next()));
+                router.get('/', defineCoreHandler((event) => event.next()));
             },
         });
         router.use({
             name: 'plugin',
             install: (router) => {
-                router.get('/', coreHandler(() => 'Hello, World!'));
+                router.get('/', defineCoreHandler(() => 'Hello, World!'));
             },
         });
 

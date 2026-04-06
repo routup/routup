@@ -75,6 +75,6 @@ npm run build:types    # tsc --emitDeclarationOnly
 ## Design Conventions
 
 - **Tree-shakeable helpers**: Request/response operations are standalone functions, not object methods
-- **Factory pattern**: `coreHandler()` and `errorHandler()` factories for type-safe handler creation
+- **Factory pattern**: `defineCoreHandler()` and `defineErrorHandler()` factories for type-safe handler creation
 - **Dual syntax**: Handlers support both shorthand (function) and verbose (config object) forms
 - **Runtime agnostic**: Core code avoids Node.js-specific APIs; adapters bridge to specific runtimes

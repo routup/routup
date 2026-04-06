@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fromNodeHandler, fromNodeMiddleware } from '../../../src/handler/helpers';
+import { fromNodeHandler, fromNodeMiddleware } from '../../../src/handler/adapters/node';
 import { HandlerType } from '../../../src/handler/constants';
 
 describe('src/handler/helpers/from-node-handler', () => {

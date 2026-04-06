@@ -7,7 +7,7 @@ The incoming request is accessed through the event object (`IRoutupEvent`) passe
 The event provides direct access to common request data:
 
 ```typescript
-coreHandler((event) => {
+defineCoreHandler((event) => {
     event.request;      // ServerRequest (srvx)
     event.method;       // "GET", "POST", etc.
     event.path;         // URL path (e.g. "/users/123")
@@ -25,9 +25,9 @@ coreHandler((event) => {
 Use `readBody()` to parse the request body. It automatically handles JSON and form-urlencoded data. Results are cached for repeated access.
 
 ```typescript
-import { coreHandler, readBody } from 'routup';
+import { defineCoreHandler, readBody } from 'routup';
 
-router.post('/users', coreHandler(async (event) => {
+router.post('/users', defineCoreHandler(async (event) => {
     const body = await readBody(event);
     return { created: body.name };
 }));
@@ -36,7 +36,7 @@ router.post('/users', coreHandler(async (event) => {
 For binary or streaming access, use the underlying request methods directly:
 
 ```typescript
-coreHandler(async (event) => {
+defineCoreHandler(async (event) => {
     const buffer = await event.request.arrayBuffer();
     const blob = await event.request.blob();
     const stream = event.request.body; // ReadableStream
@@ -54,7 +54,7 @@ import {
     getRequestProtocol
 } from 'routup';
 
-coreHandler((event) => {
+defineCoreHandler((event) => {
     const hostname = getRequestHostName(event);
     const ip = getRequestIP(event);
     const protocol = getRequestProtocol(event);
@@ -67,16 +67,16 @@ coreHandler((event) => {
 To share data between handlers, use `event.store`:
 
 ```typescript
-import { coreHandler, Router } from 'routup';
+import { defineCoreHandler, Router } from 'routup';
 
 const router = new Router();
 
-router.use(coreHandler((event) => {
+router.use(defineCoreHandler((event) => {
     event.store.userId = '42';
     return event.next();
 }));
 
-router.get('/', coreHandler((event) => {
+router.get('/', defineCoreHandler((event) => {
     const userId = event.store.userId;
     return { userId };
 }));
@@ -99,7 +99,7 @@ const user = event.store[USER_KEY];
 Query parameters are available via `event.searchParams` (a standard `URLSearchParams` object):
 
 ```typescript
-coreHandler((event) => {
+defineCoreHandler((event) => {
     const page = event.searchParams.get('page');
     const tags = event.searchParams.getAll('tag');
     return { page, tags };

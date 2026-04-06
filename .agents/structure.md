@@ -16,8 +16,8 @@ routup/
 │   ├── event/              # RoutupEvent class and IRoutupEvent interface
 │   ├── error/              # RoutupError (extends @ebec/http)
 │   ├── handler/            # Handler definitions
-│   │   ├── core/           # coreHandler — standard request handlers
-│   │   ├── error/          # errorHandler — error-specific handlers
+│   │   ├── core/           # defineCoreHandler — standard request handlers
+│   │   ├── error/          # defineErrorHandler — error-specific handlers
 │   │   └── helpers/        # fromNodeHandler — Node.js middleware bridge
 │   ├── hook/               # Lifecycle hook system
 │   ├── path/               # PathMatcher using path-to-regexp
@@ -51,8 +51,8 @@ routup/
 |--------|---------|
 | `_entries/` | Runtime-specific entry points — each re-exports core API plus runtime adapter (`serve`, `toNodeHandler`, etc.) via srvx |
 | `router/` | Core `Router` class — registers handlers, manages stack, dispatches requests through pipeline steps, exposes `fetch()` |
-| `handler/core/` | `coreHandler()` factory — creates typed request handlers with shorthand and verbose syntax |
-| `handler/error/` | `errorHandler()` factory — creates error handlers that receive `(error, event)` |
+| `handler/core/` | `defineCoreHandler()` factory — creates typed request handlers with shorthand and verbose syntax |
+| `handler/error/` | `defineErrorHandler()` factory — creates error handlers that receive `(error, event)` |
 | `handler/helpers/` | `fromNodeHandler()` — wraps Node.js `(req, res)` or `(req, res, next)` middleware for use in routup |
 | `dispatcher/` | `IDispatcher` interface for dispatch pipeline |
 | `event/` | `RoutupEvent` class and `IRoutupEvent` interface — event object carrying request, params, path, method, mountPath, headers, searchParams, store through the pipeline |

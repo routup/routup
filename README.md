@@ -56,13 +56,13 @@ Handlers receive an event and return a value. Routup converts the return value t
 **Shorthand**
 
 ```typescript
-import { Router, coreHandler, errorHandler, serve } from 'routup';
+import { Router, defineCoreHandler, defineErrorHandler, serve } from 'routup';
 
 const router = new Router();
 
-router.get('/', coreHandler(() => 'Hello, World!'));
-router.get('/greet/:name', coreHandler((event) => `Hello, ${event.params.name}!`));
-router.use(errorHandler((error) => ({ error: error.message })));
+router.get('/', defineCoreHandler(() => 'Hello, World!'));
+router.get('/greet/:name', defineCoreHandler((event) => `Hello, ${event.params.name}!`));
+router.use(defineErrorHandler((error) => ({ error: error.message })));
 
 serve(router, { port: 3000 });
 ```
@@ -70,17 +70,17 @@ serve(router, { port: 3000 });
 **Verbose**
 
 ```typescript
-import { Router, coreHandler, serve } from 'routup';
+import { Router, defineCoreHandler, serve } from 'routup';
 
 const router = new Router();
 
-router.use(coreHandler({
+router.use(defineCoreHandler({
     path: '/',
     method: 'GET',
     fn: () => 'Hello, World!',
 }));
 
-router.use(coreHandler({
+router.use(defineCoreHandler({
     path: '/greet/:name',
     method: 'GET',
     fn: (event) => `Hello, ${event.params.name}!`,
@@ -105,7 +105,7 @@ serve(router, { port: 3000 });
 Middleware calls `event.next()` to continue the pipeline:
 
 ```typescript
-router.use(coreHandler(async (event) => {
+router.use(defineCoreHandler(async (event) => {
     console.log(`${event.method} ${event.path}`);
     return event.next();
 }));
@@ -117,37 +117,37 @@ Routup runs on any JavaScript runtime:
 
 **Node.js**
 ```typescript
-import { Router, coreHandler, serve } from 'routup';
+import { Router, defineCoreHandler, serve } from 'routup';
 
 const router = new Router();
-router.get('/', coreHandler(() => 'Hello, World!'));
+router.get('/', defineCoreHandler(() => 'Hello, World!'));
 serve(router, { port: 3000 });
 ```
 
 **Bun**
 ```typescript
-import { Router, coreHandler, serve } from 'routup/bun';
+import { Router, defineCoreHandler, serve } from 'routup/bun';
 
 const router = new Router();
-router.get('/', coreHandler(() => 'Hello, World!'));
+router.get('/', defineCoreHandler(() => 'Hello, World!'));
 serve(router, { port: 3000 });
 ```
 
 **Deno**
 ```typescript
-import { Router, coreHandler, serve } from 'routup/deno';
+import { Router, defineCoreHandler, serve } from 'routup/deno';
 
 const router = new Router();
-router.get('/', coreHandler(() => 'Hello, World!'));
+router.get('/', defineCoreHandler(() => 'Hello, World!'));
 serve(router, { port: 3000 });
 ```
 
 **Cloudflare Workers**
 ```typescript
-import { Router, coreHandler } from 'routup/cloudflare';
+import { Router, defineCoreHandler } from 'routup/cloudflare';
 
 const router = new Router();
-router.get('/', coreHandler(() => 'Hello, World!'));
+router.get('/', defineCoreHandler(() => 'Hello, World!'));
 
 export default { fetch: (request) => router.fetch(request) };
 ```
