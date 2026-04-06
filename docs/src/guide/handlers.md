@@ -1,6 +1,6 @@
 # Handlers
 
-Handlers are functions that process requests. They receive a `DispatchEvent` and return a value that becomes the response.
+Handlers are functions that process requests. They receive an `IRoutupEvent` and return a value that becomes the response.
 
 ## Core Handlers
 
@@ -16,7 +16,7 @@ const handler = coreHandler((event) => {
 
 ## Error Handlers
 
-An error handler is called when an error occurs in a previous handler:
+An error handler is called when an error occurs in a previous handler. It receives the error as the first argument and the event as the second:
 
 ```typescript
 import { errorHandler } from 'routup';
@@ -44,8 +44,11 @@ coreHandler(() => new Response('Custom', { status: 201 }));
 // ReadableStream, Blob, ArrayBuffer — sent as binary
 coreHandler(() => new Blob(['data']));
 
-// null — empty 204 response
+// null — empty response
 coreHandler(() => null);
+
+// undefined — middleware pass-through (pipeline continues)
+coreHandler(() => undefined);
 ```
 
 ## Middleware
@@ -69,6 +72,8 @@ coreHandler(async (event) => {
 });
 ```
 
+The result of `event.next()` is cached — calling it multiple times returns the same response.
+
 ## Declaration Styles
 
 ### Shorthand
@@ -91,6 +96,23 @@ const handler = coreHandler({
     path: '/users/:id',
     fn: (event) => {
         return { id: event.params.id };
+    }
+});
+```
+
+The verbose form also supports handler-level hooks:
+
+```typescript
+const handler = coreHandler({
+    fn: (event) => 'Hello, World!',
+    onBefore(event) {
+        // runs before the handler
+    },
+    onAfter(event) {
+        // runs after the handler
+    },
+    onError(event) {
+        // handle handler-specific errors
     }
 });
 ```

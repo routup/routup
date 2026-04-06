@@ -1,12 +1,11 @@
 # Runtime Environments
 
-Routup runs on any JavaScript runtime via srvx. Import from `routup` to auto-select the runtime, or use a runtime-specific import path.
+Routup runs on any JavaScript runtime via srvx. Each runtime has its own entry point that provides the `serve()` function alongside all core exports.
 
 ## Import Paths
 
 | Import | Runtime |
 |--------|---------|
-| `routup` | Auto-selects based on environment |
 | `routup/node` | Node.js |
 | `routup/bun` | Bun |
 | `routup/deno` | Deno |
@@ -25,7 +24,7 @@ router.get('/', coreHandler(() => 'Hello from Node.js'));
 serve(router, { port: 3000 });
 ```
 
-If you need a raw Node.js `(req, res)` handler (e.g. for `http.createServer` or Express integration):
+If you need a raw Node.js `(req, res)` handler (e.g., for `http.createServer` or Express integration):
 
 ```typescript
 import { toNodeHandler } from 'routup/node';
@@ -67,15 +66,31 @@ router.get('/', coreHandler(() => 'Hello from Cloudflare'));
 export default serve(router);
 ```
 
-## Auto-detection
+## Generic Web API
 
-When you import from `routup`, the runtime is auto-selected via conditional exports in `package.json`. This is the recommended approach for libraries and portable code:
+For any runtime that supports the Web Fetch API:
 
 ```typescript
-import { Router, coreHandler, serve } from 'routup';
+import { Router, coreHandler, serve } from 'routup/generic';
 
 const router = new Router();
 router.get('/', coreHandler(() => 'Hello'));
 
 serve(router, { port: 3000 });
 ```
+
+## Direct Fetch
+
+In any environment, you can use `router.fetch()` directly with a Web `Request`:
+
+```typescript
+import { Router, coreHandler } from 'routup';
+
+const router = new Router();
+router.get('/', coreHandler(() => 'Hello'));
+
+const response = await router.fetch(new Request('http://localhost/'));
+console.log(await response.text()); // "Hello"
+```
+
+This is useful for serverless environments, testing, and integration with frameworks that expect a fetch-compatible handler.

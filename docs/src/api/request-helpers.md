@@ -1,44 +1,23 @@
 # Request Helpers
 
-All request helpers take a `DispatchEvent` as the first argument.
+All request helpers take an `IRoutupEvent` as the first argument.
 
 ## Body Parsing
 
 ### `readBody`
 
-Parse the request body based on `Content-Type` (JSON, form-urlencoded, or text). The result is cached — subsequent calls return the same parsed value.
+Parse the request body based on `Content-Type`. Handles `application/json` and `application/x-www-form-urlencoded`. The result is cached on the event store — subsequent calls return the same parsed value.
+
+For binary or streaming access, use `event.request.arrayBuffer()`, `event.request.blob()`, or `event.request.body` directly.
+
+> **Experimental**
 
 ```typescript
-declare function readBody<T = unknown>(event: DispatchEvent): Promise<T>;
+declare function readBody<T = unknown>(event: IRoutupEvent): Promise<T | undefined>;
 ```
 
 ```typescript
 const data = await readBody<{ name: string }>(event);
-```
-
-### `readRawBody`
-
-Read the raw request body as an `ArrayBuffer`. Not cached.
-
-```typescript
-declare function readRawBody(event: DispatchEvent): Promise<ArrayBuffer>;
-```
-
-```typescript
-const buffer = await readRawBody(event);
-```
-
-### `readFormData`
-
-Read the request body as `FormData`. Not cached.
-
-```typescript
-declare function readFormData(event: DispatchEvent): Promise<FormData>;
-```
-
-```typescript
-const form = await readFormData(event);
-const file = form.get('avatar');
 ```
 
 ## Headers & Content Negotiation
@@ -49,7 +28,7 @@ Get a single request header by name.
 
 ```typescript
 declare function getRequestHeader(
-    event: DispatchEvent,
+    event: IRoutupEvent,
     name: string,
 ): string | null;
 ```
@@ -64,7 +43,7 @@ Check whether the request's `Content-Type` matches the given type.
 
 ```typescript
 declare function matchRequestContentType(
-    event: DispatchEvent,
+    event: IRoutupEvent,
     type: string,
 ): boolean;
 ```
@@ -81,7 +60,7 @@ Return all content types the client accepts, from the `Accept` header.
 
 ```typescript
 declare function getRequestAcceptableContentTypes(
-    event: DispatchEvent,
+    event: IRoutupEvent,
 ): string[];
 ```
 
@@ -91,7 +70,7 @@ Return the best matching content type from the `Accept` header, optionally filte
 
 ```typescript
 declare function getRequestAcceptableContentType(
-    event: DispatchEvent,
+    event: IRoutupEvent,
     input?: string | string[],
 ): string | undefined;
 ```
@@ -109,7 +88,7 @@ Return all acceptable charsets from the `Accept-Charset` header.
 
 ```typescript
 declare function getRequestAcceptableCharsets(
-    event: DispatchEvent,
+    event: IRoutupEvent,
 ): string[];
 ```
 
@@ -119,7 +98,7 @@ Return the best matching charset from the `Accept-Charset` header.
 
 ```typescript
 declare function getRequestAcceptableCharset(
-    event: DispatchEvent,
+    event: IRoutupEvent,
     input: string | string[],
 ): string | undefined;
 ```
@@ -130,7 +109,7 @@ Return all acceptable encodings from the `Accept-Encoding` header.
 
 ```typescript
 declare function getRequestAcceptableEncodings(
-    event: DispatchEvent,
+    event: IRoutupEvent,
 ): string[];
 ```
 
@@ -140,7 +119,7 @@ Return the best matching encoding from the `Accept-Encoding` header.
 
 ```typescript
 declare function getRequestAcceptableEncoding(
-    event: DispatchEvent,
+    event: IRoutupEvent,
     input: string | string[],
 ): string | undefined;
 ```
@@ -151,7 +130,7 @@ Return all acceptable languages from the `Accept-Language` header.
 
 ```typescript
 declare function getRequestAcceptableLanguages(
-    event: DispatchEvent,
+    event: IRoutupEvent,
 ): string[];
 ```
 
@@ -161,7 +140,7 @@ Return the best matching language from the `Accept-Language` header.
 
 ```typescript
 declare function getRequestAcceptableLanguage(
-    event: DispatchEvent,
+    event: IRoutupEvent,
     input?: string | string[],
 ): string | undefined;
 ```
@@ -174,7 +153,7 @@ Get the hostname from the request, respecting proxy headers when configured.
 
 ```typescript
 declare function getRequestHostName(
-    event: DispatchEvent,
+    event: IRoutupEvent,
     options?: RequestHostNameOptions,
 ): string | undefined;
 ```
@@ -185,12 +164,12 @@ const host = getRequestHostName(event, { trustProxy: true });
 
 ### `getRequestIP`
 
-Get the client IP address. Uses the srvx runtime value when available, falling back to header inspection.
+Get the client IP address. Uses the srvx runtime value when available, falling back to `X-Forwarded-For` header inspection when `trustProxy` is enabled.
 
 ```typescript
 declare function getRequestIP(
-    event: DispatchEvent,
-    options?: RequestIPOptions,
+    event: IRoutupEvent,
+    options?: RequestIpOptions,
 ): string | undefined;
 ```
 
@@ -204,7 +183,7 @@ Get the request protocol (`http` or `https`), respecting proxy headers when conf
 
 ```typescript
 declare function getRequestProtocol(
-    event: DispatchEvent,
+    event: IRoutupEvent,
     options?: RequestProtocolOptions,
 ): string;
 ```
@@ -221,7 +200,7 @@ Check the `If-Modified-Since` header against a modification time. Returns `true`
 
 ```typescript
 declare function isRequestCacheable(
-    event: DispatchEvent,
+    event: IRoutupEvent,
     modifiedTime: string | Date,
 ): boolean;
 ```
@@ -232,68 +211,20 @@ if (isRequestCacheable(event, stats.mtime)) {
 }
 ```
 
-## Environment (Metadata)
+## Per-Request State
 
-Attach arbitrary metadata to a `DispatchEvent` for use by downstream handlers.
-
-### `setRequestEnv`
-
-Set one or more metadata values on the event.
+Use `event.store` directly to share data between handlers. There are no helper functions for this — it is a plain `Record<string | symbol, unknown>`:
 
 ```typescript
-// Single key-value
-declare function setRequestEnv(
-    event: DispatchEvent,
-    key: string,
-    value: unknown,
-): void;
+// Set a value
+event.store.userId = 42;
+event.store[Symbol.for('myPlugin:data')] = { role: 'admin' };
 
-// Multiple key-values
-declare function setRequestEnv(
-    event: DispatchEvent,
-    record: Record<string, unknown>,
-    append?: boolean,
-): void;
+// Read a value
+const userId = event.store.userId;
+
+// Delete a value
+delete event.store.userId;
 ```
 
-```typescript
-setRequestEnv(event, 'userId', 42);
-setRequestEnv(event, { role: 'admin', org: 'acme' });
-```
-
-### `useRequestEnv`
-
-Read metadata from the event.
-
-```typescript
-// All metadata
-declare function useRequestEnv(
-    event: DispatchEvent,
-): Record<string, unknown>;
-
-// Single key
-declare function useRequestEnv(
-    event: DispatchEvent,
-    key: PropertyKey,
-): unknown | undefined;
-```
-
-```typescript
-const userId = useRequestEnv(event, 'userId');
-const all = useRequestEnv(event);
-```
-
-### `unsetRequestEnv`
-
-Remove a metadata key from the event.
-
-```typescript
-declare function unsetRequestEnv(
-    event: DispatchEvent,
-    key: string,
-): void;
-```
-
-```typescript
-unsetRequestEnv(event, 'tempData');
-```
+Use symbol keys (e.g., `Symbol.for('routup:body')`) to avoid collisions between plugins.

@@ -1,6 +1,6 @@
 # Paths
 
-Paths define the URL patterns that handlers and routers respond to. Routup uses [path-to-regexp](https://github.com/pillarjs/path-to-regexp) for pattern matching.
+Paths define the URL patterns that handlers and routers respond to. Routup uses [path-to-regexp](https://github.com/pillarjs/path-to-regexp) (v8) for pattern matching.
 
 ## Basic Paths
 
@@ -29,30 +29,20 @@ router.get('/users/:id/roles/:roleId', coreHandler((event) => {
 
 ## Wildcards
 
-Match any path suffix with a wildcard:
+Match any path suffix with a named wildcard:
 
 ```typescript
-router.get('/files/*', coreHandler((event) => {
-    return { path: event.params[0] };
-}));
-```
-
-## Regular Expressions
-
-Use regular expressions for advanced matching:
-
-```typescript
-router.get(/^\/users\/(\d+)$/, coreHandler((event) => {
-    return { id: event.params[0] };
+router.get('/files/{*path}', coreHandler((event) => {
+    return { path: event.params.path };
 }));
 ```
 
 ## Optional Parameters
 
-Append `?` to make a parameter optional:
+Wrap a segment in braces to make it optional:
 
 ```typescript
-router.get('/users/:id?', coreHandler((event) => {
+router.get('/users{/:id}', coreHandler((event) => {
     if (event.params.id) {
         return { id: event.params.id };
     }

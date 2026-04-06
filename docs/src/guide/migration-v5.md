@@ -1,6 +1,6 @@
 # Migrating to v5
 
-Routup v5 is a major rewrite built on [srvx](https://srvx.h3.dev) and Web Standard APIs. Handlers now receive a single `event` object and return responses instead of mutating `res`.
+Routup v5 is a major rewrite built on [srvx](https://srvx.unjs.io/) and Web Standard APIs. Handlers now receive a single `event` object and return responses instead of mutating `res`.
 
 ## Quick summary
 
@@ -9,7 +9,6 @@ Routup v5 is a major rewrite built on [srvx](https://srvx.h3.dev) and Web Standa
 | `(req, res, next) => { send(res, data) }` | `(event) => data` |
 | `createNodeDispatcher(router)` | `serve(router)` or `toNodeHandler(router)` |
 | `createWebDispatcher(router)` | `router.fetch(request)` |
-| `import { ... } from 'routup'` | `import { ... } from 'routup'` (auto-selects runtime) |
 | `import { ... } from 'routup'` | `import { ... } from 'routup/node'` (explicit runtime) |
 
 ## Handler signatures
@@ -80,7 +79,8 @@ Handlers can return any of these values — `toResponse()` converts them automat
 | `ReadableStream` | Streaming response |
 | `ArrayBuffer` / `Uint8Array` | Binary response |
 | `Blob` | Response with blob's content-type |
-| `null` / `undefined` / `void` | No response (middleware that didn't produce output) |
+| `null` | Empty response |
+| `undefined` | No response (middleware pass-through; pipeline continues) |
 
 To set custom status or headers without constructing a full `Response`:
 
@@ -105,7 +105,7 @@ const router = new Router();
 http.createServer(createNodeDispatcher(router));
 
 // v5
-import { Router, serve } from 'routup'; // or 'routup/node'
+import { Router, serve } from 'routup/node';
 
 const router = new Router();
 serve(router, { port: 3000 });
@@ -135,20 +135,31 @@ Many request helpers are replaced by event properties:
 | `getRequestProtocol(req)` | `getRequestProtocol(event)` |
 | `getRequestAcceptableContentTypes(req)` | `getRequestAcceptableContentTypes(event)` |
 | `matchRequestContentType(req, type)` | `matchRequestContentType(event, type)` |
+| `setRequestEnv(req, key, value)` | `event.store[key] = value` |
+| `useRequestEnv(req, key)` | `event.store[key]` |
+| `unsetRequestEnv(req, key)` | `delete event.store[key]` |
 
-### New: Body parsing
+### Body parsing
 
 ```typescript
-import { readBody, readRawBody, readFormData } from 'routup';
+import { readBody } from 'routup';
 
 coreHandler(async (event) => {
-    const body = await readBody(event);     // auto-detects JSON, form, text
-    const raw = await readRawBody(event);   // ArrayBuffer
-    const form = await readFormData(event); // FormData
+    const body = await readBody(event);     // auto-detects JSON, form-urlencoded
 });
 ```
 
 `readBody()` is cached — calling it multiple times returns the same parsed result.
+
+For binary or streaming access, use the request directly:
+
+```typescript
+coreHandler(async (event) => {
+    const buffer = await event.request.arrayBuffer();
+    const blob = await event.request.blob();
+    const stream = event.request.body; // ReadableStream
+});
+```
 
 ### Query parameters
 
@@ -165,11 +176,11 @@ event.searchParams.getAll('tag');
 | v4 | v5 |
 |----|-----|
 | `send(res, data)` | Return the value from the handler |
-| `sendCreated(res, data)` | `sendCreated(event, data)` → returns `Response` |
-| `sendAccepted(res)` | `sendAccepted(event)` → returns `Response` |
-| `sendRedirect(res, url)` | `sendRedirect(event, url)` → returns `Response` |
-| `sendFile(res, opts)` | `sendFile(event, opts)` → returns `Response` |
-| `sendStream(res, stream)` | `sendStream(event, stream)` → returns `Response` |
+| `sendCreated(res, data)` | `sendCreated(event, data)` |
+| `sendAccepted(res)` | `sendAccepted(event)` |
+| `sendRedirect(res, url)` | `sendRedirect(event, url)` |
+| `sendFile(res, opts)` | `sendFile(event, opts)` |
+| `sendStream(res, stream)` | `sendStream(event, stream)` |
 | `setResponseHeader(res, k, v)` | `event.response.headers.set(k, v)` |
 | `setResponseStatus(res, code)` | `event.response.status = code` |
 | `setResponseHeaderAttachment(res)` | `setResponseHeaderAttachment(event)` |
@@ -188,44 +199,28 @@ event.searchParams.getAll('tag');
 | `router.on('childDispatchBefore', fn)` | `router.on('childDispatchBefore', fn)` |
 | `router.on('childDispatchAfter', fn)` | `router.on('childDispatchAfter', fn)` |
 
-## Incremental migration with legacyHandler
+## Express middleware
 
-If you have existing middleware or handlers you can't rewrite immediately, use the compat layer:
+Use `fromNodeHandler()` or `fromNodeMiddleware()` to wrap existing Express/Connect middleware:
 
 ```typescript
 import { Router } from 'routup';
-import { legacyHandler, legacyErrorHandler } from 'routup/compat';
+import { fromNodeMiddleware } from 'routup/node';
+import cors from 'cors';
 
 const router = new Router();
-
-// Wrap existing (req, res, next) handlers
-router.use(legacyHandler((req, res, next) => {
-    // Old code works unchanged
-    res.setHeader('x-legacy', 'true');
-    next();
-}));
-
-// Wrap existing error handlers
-router.use(legacyErrorHandler((err, req, res, next) => {
-    res.statusCode = err.statusCode || 500;
-    res.end(JSON.stringify({ error: err.message }));
-}));
-
-// New v5 handlers work alongside legacy ones
-router.get('/new', coreHandler((event) => {
-    return { style: 'v5' };
-}));
+router.use(fromNodeMiddleware(cors()));
 ```
 
-`legacyHandler` creates synthetic Node.js `IncomingMessage`/`ServerResponse` objects from the event, so existing code that reads headers, writes to `res`, or calls `next()` continues to work.
+See [Express Compatibility](./express-compatibility.md) for details.
 
 ## Import paths
 
 | Path | Resolves to |
 |------|------------|
-| `routup` | Auto-selects runtime (Node on Node, Bun on Bun, etc.) |
-| `routup/node` | Explicit Node.js entry with `serve()` + `toNodeHandler()` |
-| `routup/bun` | Explicit Bun entry with `serve()` |
-| `routup/deno` | Explicit Deno entry with `serve()` |
-| `routup/generic` | Generic entry (no runtime-specific features) |
-| `routup/compat` | Legacy handler compatibility layer |
+| `routup/node` | Node.js entry with `serve()` + `toNodeHandler()` |
+| `routup/bun` | Bun entry with `serve()` |
+| `routup/deno` | Deno entry with `serve()` |
+| `routup/cloudflare` | Cloudflare Workers entry with `serve()` |
+| `routup/service-worker` | Service Worker entry with `serve()` |
+| `routup/generic` | Generic Web API entry with `serve()` |

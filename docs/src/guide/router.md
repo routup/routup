@@ -3,7 +3,7 @@
 The `Router` is the central building block. It manages a stack of handlers and dispatches requests through them.
 
 ```typescript
-import { Router, coreHandler, serve } from 'routup';
+import { Router, coreHandler, serve } from 'routup/node';
 
 const router = new Router();
 
@@ -75,9 +75,25 @@ app.use('/api', api);
 // GET /api/users, GET /api/users/:id
 ```
 
+## router.mount() <Badge type="warning" text="experimental" />
+
+Mount an external fetch handler at a given path. The handler receives requests with the mount prefix stripped from the URL.
+
+```typescript
+// Mount an object with a fetch method
+router.mount('/api', externalApp);
+
+// Mount a plain fetch function
+router.mount('/proxy', (request) => {
+    return fetch(request);
+});
+```
+
+This is useful for integrating other frameworks or services that expose a Fetch-compatible interface.
+
 ## router.fetch()
 
-You can call `router.fetch()` directly with a `Request` object to get a `Response`:
+You can call `router.fetch()` directly with a `Request` object to get a `Response`. This is the Web Fetch API compatible entry point that srvx calls internally:
 
 ```typescript
 const router = new Router();
@@ -89,11 +105,4 @@ const response = await router.fetch(
 console.log(await response.text()); // "Hello"
 ```
 
-## router.mount() (experimental)
-
-An experimental method to mount a router at a specific path:
-
-```typescript
-const child = new Router();
-router.mount('/api', child);
-```
+This is useful for testing, serverless environments, and any runtime that supports the Fetch API.

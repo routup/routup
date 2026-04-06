@@ -25,17 +25,20 @@ Hooks let you listen to lifecycle events during request processing. They can ins
 
 ## Registering Hooks
 
-Use `router.on()` and `router.off()` to manage hook listeners:
+Use `router.on()` to register hook listeners. It returns an unsubscribe function:
 
 ```typescript
-router.on('request', (event) => {
+const unsubscribe = router.on('request', (event) => {
     console.log(`${event.method} ${event.path}`);
 });
+
+// Later, to remove the listener:
+unsubscribe();
 ```
 
 ## Hook Context
 
-Hook listeners receive a `DispatchEvent` with access to:
+Hook listeners receive the event object with access to:
 
 ```typescript
 router.on('request', (event) => {
@@ -45,7 +48,7 @@ router.on('request', (event) => {
     event.params;       // Route params
     event.headers;      // Request headers
     event.response;     // Response accumulator
-    event.next();       // Continue to next handler
+    event.store;        // Per-request state store
 });
 ```
 
@@ -91,21 +94,11 @@ router.on('response', (event) => {
 
 ### error
 
-Triggered when an error occurs. You can handle it or re-throw:
+Triggered when an error occurs during dispatch:
 
 ```typescript
-router.on('error', ({ error, response }) => {
-    response.status = error.statusCode || 500;
-    return { error: error.message };
-});
-```
-
-To modify and propagate the error:
-
-```typescript
-router.on('error', ({ error }) => {
-    error.statusCode = 500;
-    throw error;
+router.on('error', (event) => {
+    console.error('dispatch error:', event.error);
 });
 ```
 
@@ -170,7 +163,7 @@ router.use(coreHandler({
 ```typescript
 router.use(coreHandler({
     fn: (event) => 'Hello, World!',
-    onError({ error }) {
+    onError(event) {
         // handle handler-specific errors
     }
 }));

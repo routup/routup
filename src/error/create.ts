@@ -37,5 +37,10 @@ export function createError(input: HTTPErrorInput | unknown) : RoutupError {
         return new RoutupError();
     }
 
-    return new RoutupError(input as HTTPErrorInput);
+    const options = input as Record<string, unknown>;
+    if (!options.cause) {
+        options.cause = input;
+    }
+
+    return new RoutupError(options as HTTPErrorInput);
 }

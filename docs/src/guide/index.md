@@ -1,13 +1,13 @@
 # What is it?
 
-**Routup** is a minimalistic, runtime-agnostic HTTP routing framework built on [srvx](https://srvx.unjs.io/) and Web Standards. Handlers receive a `DispatchEvent` and return values that are automatically converted to `Response` objects.
+**Routup** is a minimalistic, runtime-agnostic HTTP routing framework built on [srvx](https://srvx.unjs.io/) and Web Standards. Handlers receive an event object (`IRoutupEvent`) and return values that are automatically converted to `Response` objects.
 
 It runs on Node.js, Bun, Deno, Cloudflare Workers, and any runtime that supports the Web API.
 
 ## Quick Example
 
 ```typescript
-import { Router, coreHandler, serve } from 'routup';
+import { Router, coreHandler, serve } from 'routup/node';
 
 const router = new Router();
 

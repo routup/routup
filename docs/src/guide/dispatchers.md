@@ -1,19 +1,21 @@
 # Serving
 
-In routup v5, the concept of "dispatchers" has been replaced by a unified serving API built on srvx.
+Routup provides multiple ways to serve your application, all built on srvx for cross-runtime compatibility.
 
 ## serve()
 
-The primary way to start a server:
+The primary way to start a server. Import from a runtime-specific entry point:
 
 ```typescript
-import { Router, coreHandler, serve } from 'routup';
+import { Router, coreHandler, serve } from 'routup/node';
 
 const router = new Router();
 router.get('/', coreHandler(() => 'Hello, World!'));
 
 serve(router, { port: 3000 });
 ```
+
+The `serve()` function accepts the same options as srvx (port, hostname, etc.).
 
 ## router.fetch()
 
@@ -31,7 +33,7 @@ console.log(await response.text()); // "Hello"
 
 ## toNodeHandler()
 
-For Node.js interop, convert a router to a standard `(req, res)` handler:
+For Node.js interop, convert a router to a standard `(req, res)` handler. Available from the `routup/node` entry point:
 
 ```typescript
 import { createServer } from 'node:http';
@@ -44,5 +46,7 @@ router.get('/', coreHandler(() => 'Hello'));
 const server = createServer(toNodeHandler(router));
 server.listen(3000);
 ```
+
+This is useful for integrating routup into existing Node.js applications, or using it with frameworks like Express as a sub-app.
 
 See [Runtime Environments](./runtime-environments.md) for runtime-specific examples.
