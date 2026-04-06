@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../../event/index.ts';
 import { RoutupError } from '../../error/module.ts';
 import { Handler } from '../module.ts';
 import { HandlerType } from '../constants.ts';
@@ -115,7 +115,7 @@ function createNodeBridge(handler: NodeHandler | NodeMiddleware, isMiddleware: b
 
     return new Handler({
         type: HandlerType.CORE,
-        fn: (async (event: DispatchEvent) => {
+        fn: (async (event: IRoutupEvent) => {
             const node = event.request.runtime?.node;
             if (!node?.req || !node?.res) {
                 throw new RoutupError('fromNodeHandler/fromNodeMiddleware requires a Node.js runtime.');

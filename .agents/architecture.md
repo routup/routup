@@ -6,7 +6,7 @@ Routup's architecture centers on a **dispatch pipeline** that processes HTTP req
 
 ### Request Flow
 
-```
+```text
 HTTP Request → srvx → ServerRequest → DispatchEvent → Router Pipeline → Response
 ```
 
@@ -88,9 +88,12 @@ Handlers are distinguished by arity: error handlers have 2 parameters `(error, e
 Handlers return values directly instead of calling `send()`. The `toResponse()` function converts return values to a Web `Response`:
 
 - **string** → `Response` with `text/plain` content type
-- **object/array** → JSON `Response`
-- **Response** → passed through
-- **null** → empty `204 No Content` response
+- **object/array/number/boolean** → JSON `Response`
+- **ArrayBuffer/Uint8Array** → binary `Response` with `application/octet-stream`
+- **ReadableStream** → streamed `Response`
+- **Blob** → `Response` with blob's content type
+- **Response** → passed through as-is
+- **null** → empty `Response` (status from `event.response`)
 - **undefined** → no response (middleware pass-through; pipeline continues)
 
 ### Middleware and `event.next()`

@@ -1,9 +1,9 @@
-import type { DispatchEvent } from '../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../event/index.ts';
 import { findRouterOption } from '../router-options/module.ts';
 
 async function applyEtag(
     body: string,
-    event: DispatchEvent,
+    event: IRoutupEvent,
     headers: Headers,
 ): Promise<Response | undefined> {
     const etagFn = findRouterOption('etag', event.routerPath);
@@ -27,7 +27,7 @@ async function applyEtag(
 
 export async function toResponse(
     value: unknown,
-    event: DispatchEvent,
+    event: IRoutupEvent,
 ): Promise<Response | undefined> {
     if (value === undefined) {
         return undefined;

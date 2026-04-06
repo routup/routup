@@ -2,7 +2,7 @@ import { HeaderName } from '../../constants.ts';
 import { findRouterOption } from '../../router-options/index.ts';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils/index.ts';
 import { buildTrustProxyFn } from '../../utils/index.ts';
-import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../../event/index.ts';
 
 export type RequestProtocolOptions = {
     trustProxy?: TrustProxyInput,
@@ -10,7 +10,7 @@ export type RequestProtocolOptions = {
 };
 
 export function getRequestProtocol(
-    event: DispatchEvent,
+    event: IRoutupEvent,
     options: RequestProtocolOptions = {},
 ) : string {
     let trustProxy : TrustProxyFn;

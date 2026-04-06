@@ -1,11 +1,11 @@
 import { HeaderName } from '../../constants.ts';
-import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../../event/index.ts';
 
 export type RequestIpOptions = {
     trustProxy?: boolean,
 };
 
-export function getRequestIP(event: DispatchEvent, options: RequestIpOptions = {}) : string | undefined {
+export function getRequestIP(event: IRoutupEvent, options: RequestIpOptions = {}) : string | undefined {
     // srvx ServerRequest may provide .ip directly
     const request = event.request as { ip?: string };
     if (request.ip) {

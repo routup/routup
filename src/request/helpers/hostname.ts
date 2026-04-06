@@ -2,13 +2,13 @@ import { HeaderName } from '../../constants.ts';
 import { findRouterOption } from '../../router-options/index.ts';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils/index.ts';
 import { buildTrustProxyFn } from '../../utils/index.ts';
-import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../../event/index.ts';
 
 export type RequestHostNameOptions = {
     trustProxy?: TrustProxyInput,
 };
 
-export function getRequestHostName(event: DispatchEvent, options: RequestHostNameOptions = {}) : string | undefined {
+export function getRequestHostName(event: IRoutupEvent, options: RequestHostNameOptions = {}) : string | undefined {
     let trustProxy : TrustProxyFn;
     if (typeof options.trustProxy !== 'undefined') {
         trustProxy = buildTrustProxyFn(options.trustProxy);

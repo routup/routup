@@ -1,12 +1,12 @@
 import { hasOwnProperty, merge } from 'smob';
 
-import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../../event/index.ts';
 
-const envMap = new WeakMap<DispatchEvent, Record<string | symbol, any>>();
+const envMap = new WeakMap<IRoutupEvent, Record<string | symbol, any>>();
 
-export function setRequestEnv(event: DispatchEvent, key: string | symbol, value: unknown) : void;
-export function setRequestEnv(event: DispatchEvent, record: Record<string | symbol, any>, append?: boolean) : void;
-export function setRequestEnv(event: DispatchEvent, key: Record<string | symbol, any> | string | symbol, value?: boolean | unknown) : void {
+export function setRequestEnv(event: IRoutupEvent, key: string | symbol, value: unknown) : void;
+export function setRequestEnv(event: IRoutupEvent, record: Record<string | symbol, any>, append?: boolean) : void;
+export function setRequestEnv(event: IRoutupEvent, key: Record<string | symbol, any> | string | symbol, value?: boolean | unknown) : void {
     const existing = envMap.get(event);
 
     if (existing) {
@@ -32,9 +32,9 @@ export function setRequestEnv(event: DispatchEvent, key: Record<string | symbol,
     envMap.set(event, { [key]: value });
 }
 
-export function useRequestEnv(event: DispatchEvent) : Record<string, any>;
-export function useRequestEnv(event: DispatchEvent, key: PropertyKey) : unknown | undefined;
-export function useRequestEnv(event: DispatchEvent, key?: PropertyKey) {
+export function useRequestEnv(event: IRoutupEvent) : Record<string, any>;
+export function useRequestEnv(event: IRoutupEvent, key: PropertyKey) : unknown | undefined;
+export function useRequestEnv(event: IRoutupEvent, key?: PropertyKey) {
     const existing = envMap.get(event);
     if (existing) {
         if (typeof key !== 'undefined') {
@@ -51,7 +51,7 @@ export function useRequestEnv(event: DispatchEvent, key?: PropertyKey) {
     return {};
 }
 
-export function unsetRequestEnv(event: DispatchEvent, key: PropertyKey) {
+export function unsetRequestEnv(event: IRoutupEvent, key: PropertyKey) {
     const existing = envMap.get(event);
     if (existing && hasOwnProperty(existing, key)) {
         delete existing[key];

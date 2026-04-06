@@ -1,4 +1,4 @@
-import type { ServerRequest } from 'srvx';
+import type { RoutupRequest } from '../src/index';
 
 /**
  * Create a mock ServerRequest for testing.
@@ -7,9 +7,9 @@ import type { ServerRequest } from 'srvx';
 export function createTestRequest(
     url: string,
     options?: RequestInit & { ip?: string },
-): ServerRequest {
+): RoutupRequest {
     const fullUrl = url.startsWith('http') ? url : `http://localhost${url}`;
-    const request = new Request(fullUrl, options) as ServerRequest;
+    const request = new Request(fullUrl, options) as RoutupRequest;
 
     if (options?.ip) {
         request.ip = options.ip;

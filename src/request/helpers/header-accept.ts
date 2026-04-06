@@ -1,16 +1,16 @@
 import { HeaderName } from '../../constants.ts';
 import { getMimeType } from '../../utils/index.ts';
-import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../../event/index.ts';
 import { getRequestHeader } from './header.ts';
 import { useRequestNegotiator } from './negotiator.ts';
 
-export function getRequestAcceptableContentTypes(event: DispatchEvent) : string[] {
+export function getRequestAcceptableContentTypes(event: IRoutupEvent) : string[] {
     const negotiator = useRequestNegotiator(event);
 
     return negotiator.mediaTypes();
 }
 
-export function getRequestAcceptableContentType(event: DispatchEvent, input?: string | string[]) : string | undefined {
+export function getRequestAcceptableContentType(event: IRoutupEvent, input?: string | string[]) : string | undefined {
     input = input || [];
 
     const items = Array.isArray(input) ? input : [input];

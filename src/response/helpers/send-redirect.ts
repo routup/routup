@@ -1,6 +1,6 @@
 import { RoutupError } from '../../error/module.ts';
 import { sanitizeHeaderValue } from '../../utils/index.ts';
-import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../../event/index.ts';
 
 function escapeHtml(str: string) : string {
     return str
@@ -28,7 +28,7 @@ function isAllowedRedirectUrl(location: string) : boolean {
     }
 }
 
-export function sendRedirect(event: DispatchEvent, location: string, statusCode = 302): Response {
+export function sendRedirect(event: IRoutupEvent, location: string, statusCode = 302): Response {
     if (!isAllowedRedirectUrl(location)) {
         throw new RoutupError({
             statusCode: 400,

@@ -1,13 +1,13 @@
-import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../../event/index.ts';
 import { useRequestNegotiator } from './negotiator.ts';
 
-export function getRequestAcceptableCharsets(event: DispatchEvent) : string[] {
+export function getRequestAcceptableCharsets(event: IRoutupEvent) : string[] {
     const negotiator = useRequestNegotiator(event);
 
     return negotiator.charsets();
 }
 
-export function getRequestAcceptableCharset(event: DispatchEvent, input: string | string[]) : string | undefined {
+export function getRequestAcceptableCharset(event: IRoutupEvent, input: string | string[]) : string | undefined {
     input = input || [];
 
     const items = Array.isArray(input) ? input : [input];

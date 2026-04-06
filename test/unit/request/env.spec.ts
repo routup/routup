@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DispatchEvent } from '../../../src/dispatcher/event/module';
+import { RoutupEvent } from '../../../src/event/module';
 import {
     setRequestEnv,
     unsetRequestEnv,
@@ -9,7 +9,7 @@ import { createTestRequest } from '../../helpers';
 
 describe('src/helpers/request/env', () => {
     it('should set & get env param', () => {
-        const event = new DispatchEvent(createTestRequest('/'));
+        const event = new RoutupEvent(createTestRequest('/'));
 
         setRequestEnv(event, 'bar', 'baz');
         setRequestEnv(event, 'foo', 'bar');
@@ -18,7 +18,7 @@ describe('src/helpers/request/env', () => {
     });
 
     it('should set & get env object', () => {
-        const event = new DispatchEvent(createTestRequest('/'));
+        const event = new RoutupEvent(createTestRequest('/'));
 
         setRequestEnv(event, {
             foo: 'bar',
@@ -32,7 +32,7 @@ describe('src/helpers/request/env', () => {
     });
 
     it('should append env to request', () => {
-        const event = new DispatchEvent(createTestRequest('/'));
+        const event = new RoutupEvent(createTestRequest('/'));
 
         setRequestEnv(event, { foo: 'bar' });
         setRequestEnv(event, { bar: 'baz' }, true);
@@ -44,7 +44,7 @@ describe('src/helpers/request/env', () => {
     });
 
     it('should overwrite env of request', () => {
-        const event = new DispatchEvent(createTestRequest('/'));
+        const event = new RoutupEvent(createTestRequest('/'));
 
         setRequestEnv(event, { foo: 'bar' });
         setRequestEnv(event, { bar: 'baz' });
@@ -53,7 +53,7 @@ describe('src/helpers/request/env', () => {
     });
 
     it('should unset env of request', () => {
-        const event = new DispatchEvent(createTestRequest('/'));
+        const event = new RoutupEvent(createTestRequest('/'));
 
         setRequestEnv(event, {
             foo: 'bar',
@@ -66,7 +66,7 @@ describe('src/helpers/request/env', () => {
     });
 
     it('should use request env', () => {
-        const event = new DispatchEvent(createTestRequest('/'));
+        const event = new RoutupEvent(createTestRequest('/'));
 
         expect(useRequestEnv(event)).toEqual({});
     });

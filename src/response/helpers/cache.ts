@@ -1,4 +1,4 @@
-import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../../event/index.ts';
 
 export type ResponseCacheHeadersOptions = {
     maxAge?: number,
@@ -6,7 +6,7 @@ export type ResponseCacheHeadersOptions = {
     cacheControls?: string[]
 };
 
-export function setResponseCacheHeaders(event: DispatchEvent, options?: ResponseCacheHeadersOptions) {
+export function setResponseCacheHeaders(event: IRoutupEvent, options?: ResponseCacheHeadersOptions) {
     options = options || {};
 
     const cacheControls = ['public'].concat(options.cacheControls || []);

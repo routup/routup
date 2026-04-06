@@ -1,8 +1,8 @@
 import Negotiator from 'negotiator';
 
-import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../../event/index.ts';
 
-const negotiatorMap = new WeakMap<DispatchEvent, Negotiator>();
+const negotiatorMap = new WeakMap<IRoutupEvent, Negotiator>();
 
 function headersToPlainObject(headers: Headers) : Record<string, string> {
     const result: Record<string, string> = {};
@@ -12,7 +12,7 @@ function headersToPlainObject(headers: Headers) : Record<string, string> {
     return result;
 }
 
-export function useRequestNegotiator(event: DispatchEvent) : Negotiator {
+export function useRequestNegotiator(event: IRoutupEvent) : Negotiator {
     let value = negotiatorMap.get(event);
     if (value) {
         return value;

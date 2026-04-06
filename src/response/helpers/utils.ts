@@ -1,8 +1,8 @@
 import { HeaderName } from '../../constants.ts';
 import { extname, getCharsetForMimeType, getMimeType } from '../../utils/index.ts';
-import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../../event/index.ts';
 
-export function setResponseContentTypeByFileName(event: DispatchEvent, fileName: string) {
+export function setResponseContentTypeByFileName(event: IRoutupEvent, fileName: string) {
     const ext = extname(fileName);
     if (ext) {
         let type = getMimeType(ext.substring(1));

@@ -1,15 +1,16 @@
 import { MethodName } from '../constants.ts';
-import type { DispatchEvent, Dispatcher } from '../dispatcher/index.ts';
+import type { IDispatcher } from '../dispatcher/index.ts';
+import type { RoutupEvent } from '../event/index.ts';
 import { createError, isError } from '../error/index.ts';
 import { HookManager, HookName } from '../hook/index.ts';
 import type { Path } from '../path/index.ts';
 import { PathMatcher } from '../path/index.ts';
-import { toResponse } from '../response/to-response.ts';
+import { toResponse } from '../response/index.ts';
 import { toMethodName, withLeadingSlash } from '../utils/index.ts';
 import { HandlerSymbol, HandlerType } from './constants.ts';
 import type { HandlerConfig } from './types.ts';
 
-export class Handler implements Dispatcher {
+export class Handler implements IDispatcher {
     readonly '@instanceof' = HandlerSymbol;
 
     protected config: HandlerConfig;
@@ -51,7 +52,7 @@ export class Handler implements Dispatcher {
 
     // --------------------------------------------------
 
-    async dispatch(event: DispatchEvent): Promise<Response | undefined> {
+    async dispatch(event: RoutupEvent): Promise<Response | undefined> {
         if (this.pathMatcher) {
             const pathMatch = this.pathMatcher.exec(event.path);
             if (pathMatch) {

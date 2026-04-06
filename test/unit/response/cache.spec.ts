@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { DispatchEvent } from '../../../src/dispatcher/event/module';
+import { RoutupEvent } from '../../../src/event/module';
 import { HeaderName, setResponseCacheHeaders } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
 describe('src/helpers/response/cache', () => {
     it('should set cache headers', () => {
         const date = new Date();
-        const event = new DispatchEvent(createTestRequest('/'));
+        const event = new RoutupEvent(createTestRequest('/'));
 
         setResponseCacheHeaders(event, {
             maxAge: 3600,

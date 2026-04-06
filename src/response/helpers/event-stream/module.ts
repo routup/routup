@@ -1,5 +1,5 @@
 import { HeaderName } from '../../../constants.ts';
-import type { DispatchEvent } from '../../../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../../../event/index.ts';
 import { RoutupError } from '../../../error/module.ts';
 import type { EventStreamMessage } from './types.ts';
 import { serializeEventStreamMessage } from './utils.ts';
@@ -15,7 +15,7 @@ export type EventStreamHandle = {
 };
 
 export function createEventStream(
-    event: DispatchEvent,
+    event: IRoutupEvent,
     options?: EventStreamOptions,
 ): EventStreamHandle {
     if (options?.maxMessageSize !== undefined) {

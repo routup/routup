@@ -1,7 +1,7 @@
-import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../../event/index.ts';
 
 export function getRequestHeader(
-    event: DispatchEvent,
+    event: IRoutupEvent,
     name: string,
 ) : string | null {
     return event.headers.get(name);

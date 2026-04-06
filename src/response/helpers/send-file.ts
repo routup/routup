@@ -1,6 +1,6 @@
 import { HeaderName } from '../../constants.ts';
 import { basename } from '../../utils/index.ts';
-import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../../event/index.ts';
 import { setResponseHeaderAttachment } from './header-attachment.ts';
 import { setResponseContentTypeByFileName } from './utils.ts';
 
@@ -25,7 +25,7 @@ export type SendFileOptions = {
 };
 
 export async function sendFile(
-    event: DispatchEvent,
+    event: IRoutupEvent,
     options: SendFileOptions,
 ) : Promise<Response> {
     const stats = await options.stats();

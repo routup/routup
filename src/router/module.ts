@@ -1,8 +1,7 @@
-import type { ServerRequest } from 'srvx';
 import { distinctArray } from 'smob';
 import { HeaderName, MethodName } from '../constants.ts';
-import type { DispatchEvent, Dispatcher } from '../dispatcher/index.ts';
-import { DispatchEvent as DispatchEventClass } from '../dispatcher/event/module.ts';
+import { RoutupEvent } from '../event/index.ts';
+import type { IRoutupEvent, RoutupRequest } from '../event/index.ts';
 import { createError } from '../error/index.ts';
 import type { HandlerConfig } from '../handler/index.ts';
 import {
@@ -28,10 +27,10 @@ import { setRouterOptions } from '../router-options/index.ts';
 import { transformRouterOptions } from '../router-options/transform.ts';
 import { cleanDoubleSlashes, withLeadingSlash, withoutTrailingSlash } from '../utils/index.ts';
 import { RouterPipelineStep, RouterSymbol } from './constants.ts';
-import type { RouterPipelineContext } from './types.ts';
+import type { IRouter, RouterPipelineContext } from './types.ts';
 import { acceptsJson, generateRouterID, isRouterInstance } from './utils.ts';
 
-export class Router implements Dispatcher {
+export class Router implements IRouter {
     readonly '@instanceof' = RouterSymbol;
 
     /**
@@ -103,11 +102,11 @@ export class Router implements Dispatcher {
     // --------------------------------------------------
 
     /**
-     * Public entry point — creates a DispatchEvent from the request,
+     * Public entry point — creates a RoutupEvent from the request,
      * runs the pipeline, and returns a Response (with 404/500 fallbacks).
      */
-    async fetch(request: ServerRequest): Promise<Response> {
-        const event = new DispatchEventClass(request);
+    async fetch(request: RoutupRequest): Promise<Response> {
+        const event = new RoutupEvent(request);
 
         const response = await this.dispatch(event);
 
@@ -124,7 +123,7 @@ export class Router implements Dispatcher {
         return this.buildFallbackResponse(request, 404, 'Not Found');
     }
 
-    protected buildFallbackResponse(request: ServerRequest, status: number, message: string): Response {
+    protected buildFallbackResponse(request: RoutupRequest, status: number, message: string): Response {
         if (acceptsJson(request)) {
             return new Response(JSON.stringify({ status, message }), {
                 status,
@@ -360,7 +359,7 @@ export class Router implements Dispatcher {
     // --------------------------------------------------
 
     async dispatch(
-        event: DispatchEvent,
+        event: RoutupEvent,
     ): Promise<Response | undefined> {
         if (this.pathMatcher) {
             const output = this.pathMatcher.exec(event.path);
@@ -523,7 +522,7 @@ export class Router implements Dispatcher {
             (handler as { fetch: (request: Request) => Response | Promise<Response> }).fetch.bind(handler);
 
         this.use(path, coreHandler({
-            fn: async (event: DispatchEvent) => {
+            fn: async (event: IRoutupEvent) => {
                 const url = new URL(event.request.url);
                 url.pathname = event.path;
 

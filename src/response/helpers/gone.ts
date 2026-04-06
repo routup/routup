@@ -1,9 +1,9 @@
-import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../../event/index.ts';
 
-export function isResponseGone(event: DispatchEvent) : boolean {
+export function isResponseGone(event: IRoutupEvent) : boolean {
     return event.dispatched;
 }
 
-export function setResponseGone(event: DispatchEvent) {
+export function setResponseGone(event: IRoutupEvent) {
     event.dispatched = true;
 }

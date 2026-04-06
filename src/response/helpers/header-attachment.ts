@@ -1,5 +1,5 @@
 import { HeaderName } from '../../constants.ts';
-import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../../event/index.ts';
 import { setResponseContentTypeByFileName } from './utils.ts';
 
 function sanitizeFilename(filename: string) : string {
@@ -17,7 +17,7 @@ function encodeRfc5987(filename: string) : string {
         .replace(/\*/g, '%2A');
 }
 
-export function setResponseHeaderAttachment(event: DispatchEvent, filename?: string) {
+export function setResponseHeaderAttachment(event: IRoutupEvent, filename?: string) {
     if (typeof filename === 'string') {
         setResponseContentTypeByFileName(event, filename);
     }

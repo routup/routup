@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { DispatchEvent } from '../../../src/dispatcher/event/module';
+import { RoutupEvent } from '../../../src/event/module';
 import { HeaderName, createEventStream } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
 describe('src/helpers/response/event-stream', () => {
     it('should create event stream with correct headers', () => {
-        const event = new DispatchEvent(createTestRequest('/'));
+        const event = new RoutupEvent(createTestRequest('/'));
         const stream = createEventStream(event);
 
         expect(stream.response).toBeInstanceOf(Response);
@@ -14,7 +14,7 @@ describe('src/helpers/response/event-stream', () => {
     });
 
     it('should write and read events', async () => {
-        const event = new DispatchEvent(createTestRequest('/'));
+        const event = new RoutupEvent(createTestRequest('/'));
         const stream = createEventStream(event);
 
         stream.write({ data: 'hello world' });
@@ -36,7 +36,7 @@ describe('src/helpers/response/event-stream', () => {
     });
 
     it('should write string messages', async () => {
-        const event = new DispatchEvent(createTestRequest('/'));
+        const event = new RoutupEvent(createTestRequest('/'));
         const stream = createEventStream(event);
 
         stream.write('hello');
@@ -51,7 +51,7 @@ describe('src/helpers/response/event-stream', () => {
     });
 
     it('should mark event as dispatched', () => {
-        const event = new DispatchEvent(createTestRequest('/'));
+        const event = new RoutupEvent(createTestRequest('/'));
         createEventStream(event);
 
         expect(event.dispatched).toBe(true);

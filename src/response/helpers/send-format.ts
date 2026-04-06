@@ -1,5 +1,5 @@
 import { getRequestAcceptableContentType } from '../../request/helpers/header-accept.ts';
-import type { DispatchEvent } from '../../dispatcher/event/module.ts';
+import type { IRoutupEvent } from '../../event/index.ts';
 
 type ResponseFormatHandler = () => Response | unknown;
 
@@ -8,7 +8,7 @@ type ResponseFormats = {
     [key: string]: ResponseFormatHandler,
 };
 
-export function sendFormat(event: DispatchEvent, input: ResponseFormats): Response | unknown | undefined {
+export function sendFormat(event: IRoutupEvent, input: ResponseFormats): Response | unknown | undefined {
     const {
         default: formatDefault,
         ...formats
