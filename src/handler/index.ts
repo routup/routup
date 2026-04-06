@@ -1,9 +1,8 @@
 export * from './core';
 export * from './error';
-export * from './web';
+export * from './adapters';
 
 export * from './constants';
-export * from './helpers';
 export * from './is';
 export * from './module';
 export * from './types';
