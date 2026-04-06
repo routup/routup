@@ -123,25 +123,29 @@ export class Router implements IRouter {
         if (event.error) {
             const status = event.error.statusCode || 500;
             const message = event.error.statusMessage || 'Internal Server Error';
-            return this.buildFallbackResponse(request, status, message);
+            return this.buildFallbackResponse(request, event, status, message);
         }
 
-        return this.buildFallbackResponse(request, 404, 'Not Found');
+        return this.buildFallbackResponse(request, event, 404, 'Not Found');
     }
 
-    protected buildFallbackResponse(request: RoutupRequest, status: number, message: string): Response {
+    protected buildFallbackResponse(request: RoutupRequest, event: RoutupEvent, status: number, message: string): Response {
+        const headers = new Headers(event.response.headers);
+
         if (acceptsJson(request)) {
+            headers.set('content-type', 'application/json; charset=utf-8');
             return new Response(JSON.stringify({ status, message }), {
                 status,
                 statusText: message,
-                headers: { 'content-type': 'application/json; charset=utf-8' },
+                headers,
             });
         }
 
+        headers.set('content-type', 'text/plain; charset=utf-8');
         return new Response(message, {
             status,
             statusText: message,
-            headers: { 'content-type': 'text/plain; charset=utf-8' },
+            headers,
         });
     }
 
