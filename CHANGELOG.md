@@ -6,6 +6,23 @@
 * **deps:** bump negotiator from 0.6.3 to 1.0.0 ([#700](https://github.com/routup/routup/issues/700)) ([84edd77](https://github.com/routup/routup/commit/84edd778b87d8baa9072319909385324f265e8a7))
 * **deps:** bump the minorandpatch group with 3 updates ([#758](https://github.com/routup/routup/issues/758)) ([c0117b3](https://github.com/routup/routup/commit/c0117b34c81f3be26f5c60a5ce71e7e81b6ed4ed))
 
+## [5.0.0](https://github.com/routup/routup/compare/v4.1.0...v5.0.0) (2026-04-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* node req/res to web api
+
+### Features
+
+* rewrite framework for runtime-agnostic dispatch ([#832](https://github.com/routup/routup/issues/832)) ([9741aa0](https://github.com/routup/routup/commit/9741aa0203cf22f63b87f447827fbec7e6a4d40a))
+
+
+### Bug Fixes
+
+* address security vulnerabilities across request/response helpers ([#827](https://github.com/routup/routup/issues/827)) ([fb157d3](https://github.com/routup/routup/commit/fb157d37940d2d62ef73afb1798811c39c85f9dc))
+* safe url parse in useRequestPath ([4b9ae29](https://github.com/routup/routup/commit/4b9ae293aa5aec369219553a728773eda29bcd5b))
+
 ## [4.1.0](https://github.com/routup/routup/compare/v4.0.2...v4.1.0) (2026-01-30)
 
 
