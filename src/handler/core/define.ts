@@ -1,14 +1,33 @@
 import { HandlerType } from '../constants';
 import { Handler } from '../module';
 import type {
-    CoreHandlerConfig,
-    CoreHandlerFn,
+    CoreHandler,
+    CoreHandlerOptions,
 } from './types';
 
-export function coreHandler(input: Omit<CoreHandlerConfig, | 'type'>) : Handler;
+/**
+ * Create a request handler.
+ *
+ * @param input - Handler function `(event) => value` or options object `{ fn, path?, method? }`
+ *
+ * @example
+ * ```typescript
+ * // Shorthand — function only
+ * router.get('/', defineCoreHandler((event) => 'Hello'));
+ *
+ * // Verbose — with path and method
+ * router.use(defineCoreHandler({
+ *     path: '/users/:id',
+ *     method: 'GET',
+ *     fn: (event) => ({ id: event.params.id }),
+ * }));
+ * ```
+ */
+export function defineCoreHandler(input: Omit<CoreHandlerOptions, | 'type'>) : Handler;
 
-export function coreHandler(input: CoreHandlerFn) : Handler;
-export function coreHandler(input: any) : Handler {
+export function defineCoreHandler(input: CoreHandler) : Handler;
+
+export function defineCoreHandler(input: any) : Handler {
     if (typeof input === 'function') {
         return new Handler({
             type: HandlerType.CORE,

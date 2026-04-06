@@ -1,6 +1,9 @@
 import type { IDispatcher } from '../dispatcher/index.ts';
 import type { RoutupEvent, RoutupRequest } from '../event/index.ts';
-import type { Handler, HandlerConfig } from '../handler/index.ts';
+import type {
+    Handler,
+    HandlerOptions,
+} from '../handler/index.ts';
 import type {
     HookDefaultListener,
     HookErrorListener,
@@ -52,48 +55,39 @@ export interface IRouter extends IDispatcher {
      * When a path is provided, the item is mounted at that path.
      */
     use(router: IRouter): this;
-    use(handler: Handler | HandlerConfig): this;
+    use(handler: Handler | HandlerOptions): this;
     use(plugin: Plugin): this;
     use(path: Path, router: IRouter): this;
-    use(path: Path, handler: Handler | HandlerConfig): this;
+    use(path: Path, handler: Handler | HandlerOptions): this;
     use(path: Path, plugin: Plugin): this;
 
     /** Register GET handler(s). */
-    get(...handlers: (Handler | HandlerConfig)[]): this;
-    get(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
+    get(...handlers: (Handler | HandlerOptions)[]): this;
+    get(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
 
     /** Register POST handler(s). */
-    post(...handlers: (Handler | HandlerConfig)[]): this;
-    post(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
+    post(...handlers: (Handler | HandlerOptions)[]): this;
+    post(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
 
     /** Register PUT handler(s). */
-    put(...handlers: (Handler | HandlerConfig)[]): this;
-    put(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
+    put(...handlers: (Handler | HandlerOptions)[]): this;
+    put(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
 
     /** Register PATCH handler(s). */
-    patch(...handlers: (Handler | HandlerConfig)[]): this;
-    patch(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
+    patch(...handlers: (Handler | HandlerOptions)[]): this;
+    patch(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
 
     /** Register DELETE handler(s). */
-    delete(...handlers: (Handler | HandlerConfig)[]): this;
-    delete(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
+    delete(...handlers: (Handler | HandlerOptions)[]): this;
+    delete(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
 
     /** Register HEAD handler(s). */
-    head(...handlers: (Handler | HandlerConfig)[]): this;
-    head(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
+    head(...handlers: (Handler | HandlerOptions)[]): this;
+    head(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
 
     /** Register OPTIONS handler(s). */
-    options(...handlers: (Handler | HandlerConfig)[]): this;
-    options(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
-
-    /**
-     * Mount an external fetch handler at the given path.
-     * The handler receives requests with the mount prefix stripped from the URL.
-     *
-     * @experimental
-     */
-    mount(path: Path, handler: { fetch: (request: Request) => Response | Promise<Response> }): this;
-    mount(path: Path, handler: (request: Request) => Response | Promise<Response>): this;
+    options(...handlers: (Handler | HandlerOptions)[]): this;
+    options(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
 
     /**
      * Add a hook listener.

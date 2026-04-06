@@ -8,12 +8,12 @@ import { PathMatcher } from '../path/index.ts';
 import { toResponse } from '../response/index.ts';
 import { toMethodName, withLeadingSlash } from '../utils/index.ts';
 import { HandlerSymbol, HandlerType } from './constants.ts';
-import type { HandlerConfig } from './types.ts';
+import type { HandlerOptions } from './types.ts';
 
 export class Handler implements IDispatcher {
     readonly '@instanceof' = HandlerSymbol;
 
-    protected config: HandlerConfig;
+    protected config: HandlerOptions;
 
     protected hookManager: HookManager;
 
@@ -23,7 +23,7 @@ export class Handler implements IDispatcher {
 
     // --------------------------------------------------
 
-    constructor(handler: HandlerConfig) {
+    constructor(handler: HandlerOptions) {
         this.config = handler;
         this.hookManager = new HookManager();
 

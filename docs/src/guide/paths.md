@@ -5,7 +5,7 @@ Paths define the URL patterns that handlers and routers respond to. Routup uses 
 ## Basic Paths
 
 ```typescript
-router.get('/users', coreHandler((event) => {
+router.get('/users', defineCoreHandler((event) => {
     return 'user list';
 }));
 ```
@@ -15,11 +15,11 @@ router.get('/users', coreHandler((event) => {
 Named parameters capture values from the URL:
 
 ```typescript
-router.get('/users/:id', coreHandler((event) => {
+router.get('/users/:id', defineCoreHandler((event) => {
     return { id: event.params.id };
 }));
 
-router.get('/users/:id/roles/:roleId', coreHandler((event) => {
+router.get('/users/:id/roles/:roleId', defineCoreHandler((event) => {
     return {
         id: event.params.id,
         roleId: event.params.roleId
@@ -32,7 +32,7 @@ router.get('/users/:id/roles/:roleId', coreHandler((event) => {
 Match any path suffix with a named wildcard:
 
 ```typescript
-router.get('/files/{*path}', coreHandler((event) => {
+router.get('/files/{*path}', defineCoreHandler((event) => {
     return { path: event.params.path };
 }));
 ```
@@ -42,7 +42,7 @@ router.get('/files/{*path}', coreHandler((event) => {
 Wrap a segment in braces to make it optional:
 
 ```typescript
-router.get('/users{/:id}', coreHandler((event) => {
+router.get('/users{/:id}', defineCoreHandler((event) => {
     if (event.params.id) {
         return { id: event.params.id };
     }

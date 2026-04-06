@@ -23,7 +23,7 @@ router.use('/api', myPlugin({ /* options */ }));
 Define a plugin as a factory function that returns a `Plugin` object:
 
 ```typescript
-import { coreHandler } from 'routup';
+import { defineCoreHandler } from 'routup';
 import type { Plugin } from 'routup';
 
 export type Options = {
@@ -36,7 +36,7 @@ export function myPlugin(options: Options = {}): Plugin {
     return {
         name: 'myPlugin',
         install: (router) => {
-            router.get(path, coreHandler((event) => {
+            router.get(path, defineCoreHandler((event) => {
                 return 'Hello from plugin!';
             }));
         }

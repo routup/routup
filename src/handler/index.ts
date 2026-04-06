@@ -1,5 +1,7 @@
 export * from './core';
 export * from './error';
+export * from './web';
+
 export * from './constants';
 export * from './helpers';
 export * from './is';

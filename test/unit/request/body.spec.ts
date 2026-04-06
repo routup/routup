@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Router, coreHandler } from '../../../src';
+import { Router, defineCoreHandler } from '../../../src';
 import { readBody } from '../../../src/request/helpers/body';
 import { createTestRequest } from '../../helpers';
 
@@ -8,7 +8,7 @@ describe('src/request/helpers/body', () => {
         const router = new Router();
         let parsed: unknown;
 
-        router.post('/', coreHandler(async (event) => {
+        router.post('/', defineCoreHandler(async (event) => {
             parsed = await readBody(event);
             return 'ok';
         }));
@@ -26,7 +26,7 @@ describe('src/request/helpers/body', () => {
         const router = new Router();
         let parsed: unknown;
 
-        router.post('/', coreHandler(async (event) => {
+        router.post('/', defineCoreHandler(async (event) => {
             parsed = await readBody(event);
             return 'ok';
         }));
@@ -44,7 +44,7 @@ describe('src/request/helpers/body', () => {
         const router = new Router();
         let parsed: unknown;
 
-        router.post('/', coreHandler(async (event) => {
+        router.post('/', defineCoreHandler(async (event) => {
             parsed = await readBody(event);
             return 'ok';
         }));
@@ -62,7 +62,7 @@ describe('src/request/helpers/body', () => {
         const router = new Router();
         let parsed: unknown;
 
-        router.post('/', coreHandler(async (event) => {
+        router.post('/', defineCoreHandler(async (event) => {
             parsed = await readBody(event);
             return 'ok';
         }));
@@ -79,7 +79,7 @@ describe('src/request/helpers/body', () => {
         const router = new Router();
         let parsed: unknown;
 
-        router.post('/', coreHandler(async (event) => {
+        router.post('/', defineCoreHandler(async (event) => {
             parsed = await readBody(event);
             return 'ok';
         }));
@@ -97,7 +97,7 @@ describe('src/request/helpers/body', () => {
         let first: unknown;
         let second: unknown;
 
-        router.post('/', coreHandler(async (event) => {
+        router.post('/', defineCoreHandler(async (event) => {
             first = await readBody(event);
             second = await readBody(event);
             return 'ok';

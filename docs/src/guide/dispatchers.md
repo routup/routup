@@ -7,10 +7,10 @@ Routup provides multiple ways to serve your application, all built on srvx for c
 The primary way to start a server. Import from a runtime-specific entry point:
 
 ```typescript
-import { Router, coreHandler, serve } from 'routup';
+import { Router, defineCoreHandler, serve } from 'routup';
 
 const router = new Router();
-router.get('/', coreHandler(() => 'Hello, World!'));
+router.get('/', defineCoreHandler(() => 'Hello, World!'));
 
 serve(router, { port: 3000 });
 ```
@@ -23,7 +23,7 @@ Call `router.fetch()` directly with a `Request` to get a `Response`. Useful for 
 
 ```typescript
 const router = new Router();
-router.get('/', coreHandler(() => 'Hello'));
+router.get('/', defineCoreHandler(() => 'Hello'));
 
 const response = await router.fetch(
     new Request('http://localhost/')
@@ -37,10 +37,10 @@ For Node.js interop, convert a router to a standard `(req, res)` handler. Availa
 
 ```typescript
 import { createServer } from 'node:http';
-import { Router, coreHandler, toNodeHandler } from 'routup';
+import { Router, defineCoreHandler, toNodeHandler } from 'routup';
 
 const router = new Router();
-router.get('/', coreHandler(() => 'Hello'));
+router.get('/', defineCoreHandler(() => 'Hello'));
 
 const server = createServer(toNodeHandler(router));
 server.listen(3000);

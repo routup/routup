@@ -1,7 +1,5 @@
-import type { CoreHandlerConfig, CoreHandlerFn } from './core';
-import type { ErrorHandlerConfig, ErrorHandlerFn } from './error';
+import type { CoreHandlerOptions } from './core';
+import type { ErrorHandlerOptions } from './error';
 
-export type HandlerConfig = CoreHandlerConfig | ErrorHandlerConfig;
+export type HandlerOptions = CoreHandlerOptions | ErrorHandlerOptions;
 
-export type HandlerFn = CoreHandlerFn |
-ErrorHandlerFn;

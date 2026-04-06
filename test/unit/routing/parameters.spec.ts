@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     Router,
-    coreHandler,
+    defineCoreHandler,
 } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
@@ -9,7 +9,7 @@ describe('routing/parameters', () => {
     it('should capture parameters', async () => {
         const router = new Router();
 
-        router.get('/:id/:action', coreHandler(async (event) => event.params));
+        router.get('/:id/:action', defineCoreHandler(async (event) => event.params));
 
         const response = await router.fetch(createTestRequest('/123/run'));
 
@@ -23,7 +23,7 @@ describe('routing/parameters', () => {
     it('should pass on captured parameters', async () => {
         const router = new Router({ path: '/:id' });
 
-        router.get('/:action', coreHandler(async (event) => event.params));
+        router.get('/:action', defineCoreHandler(async (event) => event.params));
 
         const response = await router.fetch(createTestRequest('/123/run'));
 

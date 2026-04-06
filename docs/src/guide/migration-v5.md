@@ -17,17 +17,17 @@ Routup v5 is a major rewrite built on [srvx](https://srvx.unjs.io/) and Web Stan
 
 ```typescript
 // v4
-coreHandler((req, res, next) => {
+defineCoreHandler((req, res, next) => {
     send(res, { hello: 'world' });
 });
 
 // v5 — return the value directly
-coreHandler((event) => {
+defineCoreHandler((event) => {
     return { hello: 'world' };
 });
 
 // v5 — return a full Response for complete control
-coreHandler((event) => {
+defineCoreHandler((event) => {
     return new Response(JSON.stringify({ hello: 'world' }), {
         status: 200,
         headers: { 'content-type': 'application/json' },
@@ -39,12 +39,12 @@ coreHandler((event) => {
 
 ```typescript
 // v4
-errorHandler((err, req, res, next) => {
+defineErrorHandler((err, req, res, next) => {
     send(res, { error: err.message });
 });
 
 // v5
-errorHandler((error, event) => {
+defineErrorHandler((error, event) => {
     return { error: error.message };
 });
 ```
@@ -53,13 +53,13 @@ errorHandler((error, event) => {
 
 ```typescript
 // v4
-coreHandler((req, res, next) => {
+defineCoreHandler((req, res, next) => {
     console.log('before');
     next();
 });
 
 // v5 — event.next() returns the downstream Response
-coreHandler(async (event) => {
+defineCoreHandler(async (event) => {
     console.log('before');
     const response = await event.next();
     console.log('after');
@@ -85,7 +85,7 @@ Handlers can return any of these values — `toResponse()` converts them automat
 To set custom status or headers without constructing a full `Response`:
 
 ```typescript
-coreHandler((event) => {
+defineCoreHandler((event) => {
     event.response.status = 201;
     event.response.headers.set('x-custom', 'value');
     return { created: true };
@@ -144,7 +144,7 @@ Many request helpers are replaced by event properties:
 ```typescript
 import { readBody } from 'routup';
 
-coreHandler(async (event) => {
+defineCoreHandler(async (event) => {
     const body = await readBody(event);     // auto-detects JSON, form-urlencoded
 });
 ```
@@ -154,7 +154,7 @@ coreHandler(async (event) => {
 For binary or streaming access, use the request directly:
 
 ```typescript
-coreHandler(async (event) => {
+defineCoreHandler(async (event) => {
     const buffer = await event.request.arrayBuffer();
     const blob = await event.request.blob();
     const stream = event.request.body; // ReadableStream

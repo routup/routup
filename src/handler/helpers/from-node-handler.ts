@@ -3,7 +3,7 @@ import type { IRoutupEvent } from '../../event/index.ts';
 import { RoutupError } from '../../error/module.ts';
 import { Handler } from '../module.ts';
 import { HandlerType } from '../constants.ts';
-import type { CoreHandlerFn } from '../core/types.ts';
+import type { CoreHandler } from '../core/types.ts';
 
 export type NodeHandler = (req: IncomingMessage, res: ServerResponse) => unknown | Promise<unknown>;
 export type NodeMiddleware = (req: IncomingMessage, res: ServerResponse, next: (err?: unknown) => void) => unknown | Promise<unknown>;
@@ -133,7 +133,7 @@ function createNodeBridge(handler: NodeHandler | NodeMiddleware, isMiddleware: b
             }
 
             return undefined;
-        }) as CoreHandlerFn,
+        }) as CoreHandler,
     });
 }
 

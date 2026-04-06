@@ -6,28 +6,28 @@ In routup v5, responses are return-based. Handlers return a value, and routup co
 
 ```typescript
 // String — text/plain
-coreHandler(() => 'Hello, World!');
+defineCoreHandler(() => 'Hello, World!');
 
 // Object or Array — application/json
-coreHandler(() => ({ users: [] }));
+defineCoreHandler(() => ({ users: [] }));
 
 // Response — used as-is
-coreHandler(() => new Response('Created', { status: 201 }));
+defineCoreHandler(() => new Response('Created', { status: 201 }));
 
 // ReadableStream — streamed to client
-coreHandler(() => someReadableStream);
+defineCoreHandler(() => someReadableStream);
 
 // Blob — sent with appropriate content type
-coreHandler(() => new Blob(['data'], { type: 'text/plain' }));
+defineCoreHandler(() => new Blob(['data'], { type: 'text/plain' }));
 
 // ArrayBuffer / Uint8Array — sent as binary
-coreHandler(() => new ArrayBuffer(8));
+defineCoreHandler(() => new ArrayBuffer(8));
 
 // null — empty response
-coreHandler(() => null);
+defineCoreHandler(() => null);
 
 // undefined — middleware pass-through (pipeline continues)
-coreHandler(() => undefined);
+defineCoreHandler(() => undefined);
 ```
 
 ## Status and Headers
@@ -35,7 +35,7 @@ coreHandler(() => undefined);
 Use `event.response` to set status codes and headers before returning:
 
 ```typescript
-coreHandler((event) => {
+defineCoreHandler((event) => {
     event.response.status = 201;
     event.response.headers.set('X-Custom', 'value');
     return { created: true };
@@ -53,12 +53,12 @@ Routup provides helper functions for common response patterns:
 Send a file with support for range requests, ETag generation, and automatic content-type detection:
 
 ```typescript
-import { coreHandler, sendFile } from 'routup';
+import { defineCoreHandler, sendFile } from 'routup';
 import fs from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 
-router.get('/download', coreHandler(async (event) => {
+router.get('/download', defineCoreHandler(async (event) => {
     return sendFile(event, {
         stats: () => fs.stat('/path/to/file.pdf'),
         content: (opts) => {
@@ -74,9 +74,9 @@ router.get('/download', coreHandler(async (event) => {
 Redirect the client to another URL:
 
 ```typescript
-import { coreHandler, sendRedirect } from 'routup';
+import { defineCoreHandler, sendRedirect } from 'routup';
 
-router.get('/old', coreHandler((event) => {
+router.get('/old', defineCoreHandler((event) => {
     return sendRedirect(event, '/new');
 }));
 ```
@@ -86,9 +86,9 @@ router.get('/old', coreHandler((event) => {
 Send a 201 Created response:
 
 ```typescript
-import { coreHandler, sendCreated } from 'routup';
+import { defineCoreHandler, sendCreated } from 'routup';
 
-router.post('/users', coreHandler(async (event) => {
+router.post('/users', defineCoreHandler(async (event) => {
     return sendCreated(event, { id: 1 });
 }));
 ```
@@ -98,9 +98,9 @@ router.post('/users', coreHandler(async (event) => {
 Send a 202 Accepted response:
 
 ```typescript
-import { coreHandler, sendAccepted } from 'routup';
+import { defineCoreHandler, sendAccepted } from 'routup';
 
-router.post('/jobs', coreHandler(async (event) => {
+router.post('/jobs', defineCoreHandler(async (event) => {
     return sendAccepted(event);
 }));
 ```
@@ -110,9 +110,9 @@ router.post('/jobs', coreHandler(async (event) => {
 Stream data to the client:
 
 ```typescript
-import { coreHandler, sendStream } from 'routup';
+import { defineCoreHandler, sendStream } from 'routup';
 
-router.get('/stream', coreHandler((event) => {
+router.get('/stream', defineCoreHandler((event) => {
     return sendStream(event, readableStream);
 }));
 ```
@@ -122,9 +122,9 @@ router.get('/stream', coreHandler((event) => {
 Content-negotiate and send a response in the appropriate format:
 
 ```typescript
-import { coreHandler, sendFormat } from 'routup';
+import { defineCoreHandler, sendFormat } from 'routup';
 
-router.get('/data', coreHandler((event) => {
+router.get('/data', defineCoreHandler((event) => {
     return sendFormat(event, {
         default: () => 'key=value',
         'application/json': () => ({ key: 'value' }),
@@ -138,9 +138,9 @@ router.get('/data', coreHandler((event) => {
 Create a Server-Sent Events (SSE) stream:
 
 ```typescript
-import { coreHandler, createEventStream } from 'routup';
+import { defineCoreHandler, createEventStream } from 'routup';
 
-router.get('/events', coreHandler((event) => {
+router.get('/events', defineCoreHandler((event) => {
     const stream = createEventStream(event);
 
     let count = 0;

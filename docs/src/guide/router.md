@@ -3,11 +3,11 @@
 The `Router` is the central building block. It manages a stack of handlers and dispatches requests through them.
 
 ```typescript
-import { Router, coreHandler, serve } from 'routup';
+import { Router, defineCoreHandler, serve } from 'routup';
 
 const router = new Router();
 
-router.get('/', coreHandler((event) => {
+router.get('/', defineCoreHandler((event) => {
     return 'Hello, World!';
 }));
 
@@ -19,11 +19,11 @@ serve(router, { port: 3000 });
 The router provides shorthand methods for all common HTTP verbs:
 
 ```typescript
-router.get('/users', coreHandler((event) => { /* ... */ }));
-router.post('/users', coreHandler((event) => { /* ... */ }));
-router.put('/users/:id', coreHandler((event) => { /* ... */ }));
-router.patch('/users/:id', coreHandler((event) => { /* ... */ }));
-router.delete('/users/:id', coreHandler((event) => { /* ... */ }));
+router.get('/users', defineCoreHandler((event) => { /* ... */ }));
+router.post('/users', defineCoreHandler((event) => { /* ... */ }));
+router.put('/users/:id', defineCoreHandler((event) => { /* ... */ }));
+router.patch('/users/:id', defineCoreHandler((event) => { /* ... */ }));
+router.delete('/users/:id', defineCoreHandler((event) => { /* ... */ }));
 ```
 
 ## Mounting
@@ -33,7 +33,7 @@ router.delete('/users/:id', coreHandler((event) => { /* ... */ }));
 Mount a handler or router without a path prefix:
 
 ```typescript
-router.use(coreHandler((event) => {
+router.use(defineCoreHandler((event) => {
     // runs for all requests
     return event.next();
 }));
@@ -60,10 +60,10 @@ Routers can be nested for modular route organization:
 
 ```typescript
 const users = new Router();
-users.get('/', coreHandler((event) => {
+users.get('/', defineCoreHandler((event) => {
     return [{ id: 1, name: 'Alice' }];
 }));
-users.get('/:id', coreHandler((event) => {
+users.get('/:id', defineCoreHandler((event) => {
     return { id: event.params.id };
 }));
 
@@ -97,7 +97,7 @@ You can call `router.fetch()` directly with a `Request` object to get a `Respons
 
 ```typescript
 const router = new Router();
-router.get('/', coreHandler(() => 'Hello'));
+router.get('/', defineCoreHandler(() => 'Hello'));
 
 const response = await router.fetch(
     new Request('http://localhost/')

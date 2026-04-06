@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Router, coreHandler } from '../../../src';
+import { Router, defineCoreHandler } from '../../../src';
 import { sendAccepted } from '../../../src/response/helpers/send-accepted';
 import { createTestRequest } from '../../helpers';
 
@@ -7,7 +7,7 @@ describe('src/response/helpers/send-accepted', () => {
     it('should send 202 with data', async () => {
         const router = new Router();
 
-        router.post('/', coreHandler(async (event) => sendAccepted(event, { status: 'processing' })));
+        router.post('/', defineCoreHandler(async (event) => sendAccepted(event, { status: 'processing' })));
 
         const response = await router.fetch(createTestRequest('/', { method: 'POST' }));
 
@@ -18,7 +18,7 @@ describe('src/response/helpers/send-accepted', () => {
     it('should send 202 without data', async () => {
         const router = new Router();
 
-        router.post('/', coreHandler(async (event) => sendAccepted(event)));
+        router.post('/', defineCoreHandler(async (event) => sendAccepted(event)));
 
         const response = await router.fetch(createTestRequest('/', { method: 'POST' }));
 

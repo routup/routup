@@ -6,8 +6,8 @@ import {
 } from 'vitest';
 import {
     Router,
-    coreHandler,
-    errorHandler,
+    defineCoreHandler,
+    defineErrorHandler,
 } from '../../../src';
 import type { HookDefaultListener } from '../../../src/hook';
 import { HookName } from '../../../src/hook';
@@ -16,7 +16,7 @@ import { createTestRequest } from '../../helpers';
 describe('src/router/hooks', () => {
     it('should trigger non error hooks', async () => {
         const router = new Router();
-        router.use(coreHandler(() => 'Hello, World!'));
+        router.use(defineCoreHandler(() => 'Hello, World!'));
 
         const request = vi.fn();
         const response = vi.fn();
@@ -47,7 +47,7 @@ describe('src/router/hooks', () => {
 
     it('should trigger error hook', async () => {
         const router = new Router();
-        router.use(coreHandler(() => {
+        router.use(defineCoreHandler(() => {
             throw new Error('Hello, World!');
         }));
 
@@ -70,7 +70,7 @@ describe('src/router/hooks', () => {
 
     it('should remove multiple hooks', async () => {
         const router = new Router();
-        router.use(coreHandler(() => 'Hello, World!'));
+        router.use(defineCoreHandler(() => 'Hello, World!'));
 
         const fn = vi.fn();
 
@@ -92,7 +92,7 @@ describe('src/router/hooks', () => {
 
     it('should remove error hook and fall through to default error handling', async () => {
         const router = new Router();
-        router.use(coreHandler(() => {
+        router.use(defineCoreHandler(() => {
             throw new Error('fail');
         }));
 
@@ -108,7 +108,7 @@ describe('src/router/hooks', () => {
 
     it('should remove single hook', async () => {
         const router = new Router();
-        router.use(coreHandler(() => 'Hello, World!'));
+        router.use(defineCoreHandler(() => 'Hello, World!'));
 
         const fnJest = vi.fn();
         const fn: HookDefaultListener = () => {
@@ -129,11 +129,11 @@ describe('src/router/hooks', () => {
     it('should handle error with error handler', async () => {
         const router = new Router();
 
-        router.use(coreHandler(() => {
+        router.use(defineCoreHandler(() => {
             throw new Error('handler failed!');
         }));
 
-        router.use(errorHandler((error) => `Error: ${error.message}`));
+        router.use(defineErrorHandler((error) => `Error: ${error.message}`));
 
         const res = await router.fetch(createTestRequest('/'));
 
@@ -143,7 +143,7 @@ describe('src/router/hooks', () => {
 
     it('should remove single hook by unsubscribe', async () => {
         const router = new Router();
-        router.use(coreHandler(() => 'Hello, World!'));
+        router.use(defineCoreHandler(() => 'Hello, World!'));
 
         const fnJest = vi.fn();
         const fn: HookDefaultListener = () => {
@@ -166,7 +166,7 @@ describe('src/router/hooks', () => {
 
         const onErrorFn = vi.fn();
 
-        router.use(coreHandler({
+        router.use(defineCoreHandler({
             fn: () => {
                 throw new Error('Hello, World!');
             },
@@ -175,7 +175,7 @@ describe('src/router/hooks', () => {
             },
         }));
 
-        router.use(errorHandler((error) => `Error: ${error.message}`));
+        router.use(defineErrorHandler((error) => `Error: ${error.message}`));
 
         const res = await router.fetch(createTestRequest('/'));
 
@@ -190,7 +190,7 @@ describe('src/router/hooks', () => {
         const onBefore = vi.fn();
         const onAfter = vi.fn();
 
-        router.use(coreHandler({
+        router.use(defineCoreHandler({
             fn: () => 'Hello, World!',
             onBefore() {
                 onBefore();

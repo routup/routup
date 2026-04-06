@@ -33,8 +33,8 @@ npm run lint:fix       # ESLint with auto-fix
 | Export | Description |
 |--------|-------------|
 | `Router` | Core routing engine — register handlers, nest routers, define hooks; exposes `fetch()` entry point |
-| `coreHandler()` | Factory for request handlers `(event) => Response \| any` |
-| `errorHandler()` | Factory for error handlers `(error, event) => Response \| any` |
+| `defineCoreHandler()` | Factory for request handlers `(event) => Response \| any` |
+| `defineErrorHandler()` | Factory for error handlers `(error, event) => Response \| any` |
 | `serve(router)` | Start an HTTP server for the current runtime (from entry files) |
 | `toNodeHandler(router)` | Convert router to Node.js `(req, res) => void` handler (Node entry) |
 | `readBody(event)` | Parse the request body |

@@ -139,7 +139,7 @@ Handler-level hooks are defined in the verbose handler declaration:
 ### onBefore
 
 ```typescript
-router.use(coreHandler({
+router.use(defineCoreHandler({
     fn: (event) => 'Hello, World!',
     onBefore(event) {
         // runs before the handler
@@ -150,7 +150,7 @@ router.use(coreHandler({
 ### onAfter
 
 ```typescript
-router.use(coreHandler({
+router.use(defineCoreHandler({
     fn: (event) => 'Hello, World!',
     onAfter(event) {
         // runs after the handler
@@ -161,7 +161,7 @@ router.use(coreHandler({
 ### onError
 
 ```typescript
-router.use(coreHandler({
+router.use(defineCoreHandler({
     fn: (event) => 'Hello, World!',
     onError(event) {
         // handle handler-specific errors

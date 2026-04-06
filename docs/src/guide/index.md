@@ -7,15 +7,15 @@ It runs on Node.js, Bun, Deno, Cloudflare Workers, and any runtime that supports
 ## Quick Example
 
 ```typescript
-import { Router, coreHandler, serve } from 'routup';
+import { Router, defineCoreHandler, serve } from 'routup';
 
 const router = new Router();
 
-router.get('/', coreHandler((event) => {
+router.get('/', defineCoreHandler((event) => {
     return { message: 'Hello, World!' };
 }));
 
-router.get('/users/:id', coreHandler((event) => {
+router.get('/users/:id', defineCoreHandler((event) => {
     return { id: event.params.id };
 }));
 
