@@ -113,43 +113,14 @@ router.use(defineCoreHandler(async (event) => {
 
 ### Runtimes
 
-Routup runs on any JavaScript runtime:
+Routup runs on any JavaScript runtime — Node.js, Bun, Deno, and Cloudflare Workers. Always import from `routup`:
 
-**Node.js**
 ```typescript
 import { Router, defineCoreHandler, serve } from 'routup';
 
 const router = new Router();
 router.get('/', defineCoreHandler(() => 'Hello, World!'));
 serve(router, { port: 3000 });
-```
-
-**Bun**
-```typescript
-import { Router, defineCoreHandler, serve } from 'routup/bun';
-
-const router = new Router();
-router.get('/', defineCoreHandler(() => 'Hello, World!'));
-serve(router, { port: 3000 });
-```
-
-**Deno**
-```typescript
-import { Router, defineCoreHandler, serve } from 'routup/deno';
-
-const router = new Router();
-router.get('/', defineCoreHandler(() => 'Hello, World!'));
-serve(router, { port: 3000 });
-```
-
-**Cloudflare Workers**
-```typescript
-import { Router, defineCoreHandler } from 'routup/cloudflare';
-
-const router = new Router();
-router.get('/', defineCoreHandler(() => 'Hello, World!'));
-
-export default { fetch: (request) => router.fetch(request) };
 ```
 
 ## Plugins
@@ -171,7 +142,16 @@ Routup is minimalistic by design. [Plugins](https://github.com/routup/plugins) e
 
 ## Benchmarks
 
-> **Note:** These benchmarks were recorded with routup v4 (Node.js 18, Sep 2023). Routup v5 uses srvx and Web Standard APIs — updated benchmarks will follow.
+> **Note:** These benchmarks were recorded with routup v4 (Node.js 18, Sep 2023). Updated v5 benchmarks will follow.
+
+| Package    | Requests/s  | Latency (ms) | Throughput/MB |
+|:-----------|:-----------:|-------------:|--------------:|
+| http       |    61062    |        15.87 |         10.89 |
+| fastify    |    59679    |        16.26 |         10.70 |
+| koa        |    45763    |        21.35 |          8.16 |
+| **routup** |    44588    |        21.91 |          9.02 |
+| hapi       |    41374    |        23.67 |          7.38 |
+| express    |    13376    |        74.18 |          2.39 |
 
 To run benchmarks yourself, see the [benchmarks](https://github.com/routup/benchmarks) repository.
 
