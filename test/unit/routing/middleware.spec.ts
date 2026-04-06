@@ -11,12 +11,12 @@ describe('routing/middleware', () => {
         const router = new Router();
 
         router.use(coreHandler((event) => {
-            event.foo = 'bar';
+            event.store.foo = 'bar';
 
             return event.next();
         }));
 
-        router.get(coreHandler((event) => event.foo));
+        router.get(coreHandler((event) => event.store.foo));
 
         const response = await router.fetch(createTestRequest('/'));
 
@@ -43,23 +43,23 @@ describe('routing/middleware', () => {
         const router = new Router();
 
         router.use('/foo', coreHandler((event) => {
-            event.foo = 'bar';
+            event.store.foo = 'bar';
 
             return event.next();
         }));
 
-        router.get('/', coreHandler((event) => event.foo || ''));
+        router.get('/', coreHandler((event) => (event.store.foo as string) || ''));
 
-        router.get('/foo', coreHandler((event) => event.foo));
+        router.get('/foo', coreHandler((event) => event.store.foo));
 
         router.use('/bar', coreHandler((event) => {
-            event.bar = 'baz';
+            event.store.bar = 'baz';
             return event.next();
         }));
 
         router.get(
             '/bar',
-            coreHandler((event) => event.bar),
+            coreHandler((event) => event.store.bar),
         );
 
         let response = await router.fetch(createTestRequest('/'));
