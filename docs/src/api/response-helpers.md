@@ -1,6 +1,6 @@
 # Response Helpers
 
-All response helpers take an `IRoutupEvent` as the first argument. Send helpers return a `Response` object. Header helpers mutate `event.response.headers` in place.
+All response helpers take an `IRoutupEvent` as the first argument. Most send helpers return a `Response` object. Header helpers mutate `event.response.headers` in place.
 
 ## Send Helpers
 
@@ -246,6 +246,14 @@ declare function createEventStream(
     event: IRoutupEvent,
     options?: EventStreamOptions,
 ): EventStreamHandle;
+```
+
+The `EventStreamOptions` type:
+
+```typescript
+type EventStreamOptions = {
+    maxMessageSize?: number;
+};
 ```
 
 The `EventStreamHandle` type:

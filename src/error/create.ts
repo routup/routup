@@ -52,7 +52,7 @@ export function createError(input: HTTPErrorInput | unknown) : RoutupError {
     }
 
     const options = { ...input as Record<string, unknown> };
-    if (!options.cause) {
+    if (options.cause === undefined) {
         options.cause = input;
     }
 
