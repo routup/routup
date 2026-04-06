@@ -113,7 +113,7 @@ router.use(defineCoreHandler(async (event) => {
 
 ### Runtimes
 
-Routup runs on any JavaScript runtime — Node.js, Bun, Deno, and Cloudflare Workers. Always import from `routup`:
+Routup runs on Node.js, Bun, Deno, and Cloudflare Workers. In most cases, import from `routup`:
 
 ```typescript
 import { Router, defineCoreHandler, serve } from 'routup';
@@ -122,6 +122,8 @@ const router = new Router();
 router.get('/', defineCoreHandler(() => 'Hello, World!'));
 serve(router, { port: 3000 });
 ```
+
+For runtime-specific APIs (e.g. `toNodeHandler`), use the corresponding entrypoint like `routup/node`.
 
 ## Plugins
 

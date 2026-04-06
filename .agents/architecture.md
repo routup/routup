@@ -29,32 +29,22 @@ Each step corresponds to hook events that plugins and middleware can tap into.
 
 ## Entry Files Pattern
 
-Instead of adapters, Routup uses **entry files** that re-export the core API along with runtime-specific `serve()` and `toNodeHandler()` functions provided by srvx:
+Routup uses conditional exports in `package.json` to auto-select the correct runtime adapter. Always import from `routup`:
 
 ```typescript
-// Node.js
-import { Router, defineCoreHandler, serve } from 'routup/node';
+import { Router, defineCoreHandler, serve } from 'routup';
+
 const router = new Router();
 router.get('/', defineCoreHandler((event) => 'Hello'));
 serve(router);
-
-// Bun
-import { Router, defineCoreHandler, serve } from 'routup/bun';
-const router = new Router();
-router.get('/', defineCoreHandler((event) => 'Hello'));
-serve(router);
-
-// Deno
-import { Router, defineCoreHandler, serve } from 'routup/deno';
-
-// Cloudflare Workers / generic Web API
-import { Router, defineCoreHandler } from 'routup/generic';
 ```
 
-Each entry file (`src/_entries/*.ts`) bundles:
+This works on Node.js, Bun, Deno, and Cloudflare Workers. Under the hood, each runtime resolves to a dedicated entry file (`src/_entries/*.ts`) that bundles:
 - All core exports (Router, handlers, helpers, etc.)
 - Runtime-specific `serve()` function from srvx
 - `toNodeHandler()` where applicable (Node.js entry)
+
+Runtime-specific imports (`routup/node`, `routup/bun`, etc.) are still available but rarely needed.
 
 ## Handler System
 
