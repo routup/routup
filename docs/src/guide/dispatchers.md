@@ -37,7 +37,7 @@ For Node.js interop, convert a router to a standard `(req, res)` handler. Availa
 
 ```typescript
 import { createServer } from 'node:http';
-import { Router, defineCoreHandler, toNodeHandler } from 'routup';
+import { Router, defineCoreHandler, toNodeHandler } from 'routup/node';
 
 const router = new Router();
 router.get('/', defineCoreHandler(() => 'Hello'));

@@ -1,4 +1,5 @@
 import type { IRoutupEvent } from '../../../event/index.ts';
+import { RoutupError } from '../../../error/index.ts';
 import { defineCoreHandler } from '../../core/index.ts';
 import type { Handler } from '../../module.ts';
 import { isWebHandlerProvider } from './is.ts';
@@ -30,6 +31,10 @@ export function fromWebHandler(input: WebHandlerProvider) : Handler;
 export function fromWebHandler(input: any) : Handler {
     if (isWebHandlerProvider(input)) {
         return fromWebHandler(input.fetch.bind(input));
+    }
+
+    if (typeof input !== 'function') {
+        throw new RoutupError('fromWebHandler expects a function or an object with a fetch method.');
     }
 
     return defineCoreHandler({ fn: (event: IRoutupEvent) => input(event.request) });

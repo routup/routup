@@ -17,7 +17,7 @@ Routup v5 is a major rewrite built on [srvx](https://srvx.unjs.io/) and Web Stan
 
 ```typescript
 // v4
-defineCoreHandler((req, res, next) => {
+coreHandler((req, res, next) => {
     send(res, { hello: 'world' });
 });
 
@@ -39,7 +39,7 @@ defineCoreHandler((event) => {
 
 ```typescript
 // v4
-defineErrorHandler((err, req, res, next) => {
+errorHandler((err, req, res, next) => {
     send(res, { error: err.message });
 });
 
@@ -53,7 +53,7 @@ defineErrorHandler((error, event) => {
 
 ```typescript
 // v4
-defineCoreHandler((req, res, next) => {
+coreHandler((req, res, next) => {
     console.log('before');
     next();
 });
