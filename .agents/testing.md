@@ -41,11 +41,11 @@ test/
 - Typical pattern:
 
 ```typescript
-import { Router, coreHandler } from '../../src';
+import { Router, defineCoreHandler } from '../../src';
 import { createTestRequest } from '../helpers';
 
 const router = new Router();
-router.get('/', coreHandler((event) => 'ok'));
+router.get('/', defineCoreHandler((event) => 'ok'));
 
 const response = await router.fetch(createTestRequest('/'));
 expect(await response.text()).toBe('ok');

@@ -33,22 +33,22 @@ Instead of adapters, Routup uses **entry files** that re-export the core API alo
 
 ```typescript
 // Node.js
-import { Router, coreHandler, serve } from 'routup/node';
+import { Router, defineCoreHandler, serve } from 'routup/node';
 const router = new Router();
-router.get('/', coreHandler((event) => 'Hello'));
+router.get('/', defineCoreHandler((event) => 'Hello'));
 serve(router);
 
 // Bun
-import { Router, coreHandler, serve } from 'routup/bun';
+import { Router, defineCoreHandler, serve } from 'routup/bun';
 const router = new Router();
-router.get('/', coreHandler((event) => 'Hello'));
+router.get('/', defineCoreHandler((event) => 'Hello'));
 serve(router);
 
 // Deno
-import { Router, coreHandler, serve } from 'routup/deno';
+import { Router, defineCoreHandler, serve } from 'routup/deno';
 
 // Cloudflare Workers / generic Web API
-import { Router, coreHandler } from 'routup/generic';
+import { Router, defineCoreHandler } from 'routup/generic';
 ```
 
 Each entry file (`src/_entries/*.ts`) bundles:
@@ -62,12 +62,12 @@ Two handler types, both supporting shorthand and verbose syntax:
 
 ```typescript
 // Core handler — shorthand (return-based response)
-coreHandler((event) => {
+defineCoreHandler((event) => {
     return 'Hello';
 });
 
 // Core handler — verbose (with path and method)
-coreHandler({
+defineCoreHandler({
     path: '/users/:id',
     method: 'GET',
     fn: (event) => {
@@ -76,12 +76,12 @@ coreHandler({
 });
 
 // Error handler
-errorHandler((error, event) => {
+defineErrorHandler((error, event) => {
     return { error: error.message };
 });
 ```
 
-Handlers are distinguished by their `type` property (`HandlerType.CORE` or `HandlerType.ERROR`), set by the `coreHandler()` and `errorHandler()` factories.
+Handlers are distinguished by their `type` property (`HandlerType.CORE` or `HandlerType.ERROR`), set by the `defineCoreHandler()` and `defineErrorHandler()` factories.
 
 ### Response Model
 
@@ -101,7 +101,7 @@ Handlers return values directly instead of calling `send()`. The `toResponse()` 
 Middleware handlers call `event.next()` to continue the pipeline (onion model):
 
 ```typescript
-coreHandler(async (event) => {
+defineCoreHandler(async (event) => {
     // Before
     const response = await event.next();
     // After
@@ -175,7 +175,7 @@ Plugins encapsulate reusable functionality:
 const myPlugin = {
     name: 'my-plugin',
     install(router: Router) {
-        router.use(coreHandler(async (event) => {
+        router.use(defineCoreHandler(async (event) => {
             // plugin logic
             return event.next();
         }));
