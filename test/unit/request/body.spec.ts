@@ -58,7 +58,7 @@ describe('src/request/helpers/body', () => {
         expect(parsed).toEqual({ tags: ['a', 'b', 'c'], name: 'hello' });
     });
 
-    it('should return text for unknown content type', async () => {
+    it('should return undefined for non-JSON content', async () => {
         const router = new Router();
         let parsed: unknown;
 
@@ -72,60 +72,44 @@ describe('src/request/helpers/body', () => {
             body: 'plain text',
         }));
 
-        expect(parsed).toBe('plain text');
+        expect(parsed).toBeUndefined();
     });
 
-    it('should read body as ArrayBuffer with explicit type', async () => {
-        const router = new Router();
-        let raw: ArrayBuffer | undefined;
-
-        router.post('/', coreHandler(async (event) => {
-            raw = await readBody(event, { type: 'arrayBuffer' });
-            return 'ok';
-        }));
-
-        await router.fetch(createTestRequest('/', {
-            method: 'POST',
-            body: 'raw data',
-        }));
-
-        expect(raw).toBeInstanceOf(ArrayBuffer);
-        expect(new TextDecoder().decode(raw!)).toBe('raw data');
-    });
-
-    it('should read body as text with explicit type', async () => {
-        const router = new Router();
-        let text: string | undefined;
-
-        router.post('/', coreHandler(async (event) => {
-            text = await readBody(event, { type: 'text' });
-            return 'ok';
-        }));
-
-        await router.fetch(createTestRequest('/', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ key: 'value' }),
-        }));
-
-        expect(text).toBe('{"key":"value"}');
-    });
-
-    it('should read body as JSON with explicit type', async () => {
+    it('should attempt JSON parse for unknown content type', async () => {
         const router = new Router();
         let parsed: unknown;
 
         router.post('/', coreHandler(async (event) => {
-            parsed = await readBody(event, { type: 'json' });
+            parsed = await readBody(event);
+            return 'ok';
+        }));
+
+        await router.fetch(createTestRequest('/', {
+            method: 'POST',
+            body: JSON.stringify({ noHeader: true }),
+        }));
+
+        expect(parsed).toEqual({ noHeader: true });
+    });
+
+    it('should cache body on repeated reads', async () => {
+        const router = new Router();
+        let first: unknown;
+        let second: unknown;
+
+        router.post('/', coreHandler(async (event) => {
+            first = await readBody(event);
+            second = await readBody(event);
             return 'ok';
         }));
 
         await router.fetch(createTestRequest('/', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ explicit: true }),
+            body: JSON.stringify({ cached: true }),
         }));
 
-        expect(parsed).toEqual({ explicit: true });
+        expect(first).toEqual({ cached: true });
+        expect(second).toEqual({ cached: true });
     });
 });

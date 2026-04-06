@@ -1,75 +1,44 @@
 import type { IRoutupEvent } from '../../event/index.ts';
 
-export type BodyType = 'json' | 'text' | 'urlencoded' | 'formData' | 'arrayBuffer' | 'blob' | 'stream';
-
-export type ReadBodyOptions<T extends BodyType = BodyType> = {
-    type?: T;
-};
+const BODY_KEY = /* @__PURE__ */ Symbol.for('routup:body');
 
 /**
  * Read and parse the request body.
  *
- * When `type` is specified, the body is parsed accordingly.
- * When omitted, the type is auto-detected from the Content-Type header.
+ * - `application/x-www-form-urlencoded` → plain object (duplicate keys become arrays)
+ * - `application/json` or other → attempts JSON parse, returns undefined on failure
+ *
+ * The result is cached on the event context — calling `readBody()` multiple
+ * times returns the same parsed result.
+ *
+ * For binary or streaming access, use `event.request.arrayBuffer()`,
+ * `event.request.blob()`, or `event.request.body` directly.
+ *
+ * @experimental
  */
-export function readBody(event: IRoutupEvent, options: ReadBodyOptions<'text'>): Promise<string>;
-
-export function readBody(event: IRoutupEvent, options: ReadBodyOptions<'arrayBuffer'>): Promise<ArrayBuffer>;
-
-export function readBody(event: IRoutupEvent, options: ReadBodyOptions<'blob'>): Promise<Blob>;
-
-export function readBody(event: IRoutupEvent, options: ReadBodyOptions<'formData'>): Promise<FormData>;
-
-export function readBody(event: IRoutupEvent, options: ReadBodyOptions<'urlencoded'>): Promise<Record<string, unknown>>;
-
-export function readBody(event: IRoutupEvent, options: ReadBodyOptions<'stream'>): ReadableStream | null;
-
-export function readBody<T = unknown>(event: IRoutupEvent, options?: ReadBodyOptions<'json'>): Promise<T>;
-
-export function readBody(event: IRoutupEvent, options?: ReadBodyOptions): Promise<unknown> | ReadableStream | null;
-
-export function readBody(event: IRoutupEvent, options: ReadBodyOptions = {}): Promise<unknown> | ReadableStream | null {
-    const type = options.type || detectBodyType(event);
-
-    switch (type) {
-        case 'text':
-            return event.request.text();
-        case 'arrayBuffer':
-            return event.request.arrayBuffer();
-        case 'blob':
-            return event.request.blob();
-        case 'formData':
-            return event.request.formData();
-        case 'urlencoded':
-            return event.request.text().then(parseURLEncodedBody);
-        case 'stream':
-            return event.request.body;
-        case 'json':
-        default:
-            return event.request.json();
+export async function readBody<T = unknown>(event: IRoutupEvent): Promise<T | undefined> {
+    const cached = event.context[BODY_KEY];
+    if (cached !== undefined) {
+        return cached as T;
     }
-}
 
-function detectBodyType(event: IRoutupEvent): BodyType {
+    const text = await event.request.text();
+
+    let result: unknown | undefined;
+
     const contentType = event.headers.get('content-type') || '';
-
-    if (contentType.includes('application/json')) {
-        return 'json';
-    }
-
     if (contentType.includes('application/x-www-form-urlencoded')) {
-        return 'urlencoded';
+        result = parseURLEncodedBody(text);
+    } else {
+        try {
+            result = JSON.parse(text);
+        } catch {
+            result = undefined;
+        }
     }
 
-    if (contentType.includes('multipart/form-data')) {
-        return 'formData';
-    }
-
-    if (contentType.includes('application/octet-stream')) {
-        return 'arrayBuffer';
-    }
-
-    return 'text';
+    event.context[BODY_KEY] = result;
+    return result as T;
 }
 
 function parseURLEncodedBody(body: string): Record<string, unknown> {

@@ -73,6 +73,14 @@ export interface IRoutupEvent {
     dispatched: boolean;
 
     /**
+     * Per-request context store for caching and plugin state.
+     *
+     * Use symbol keys (e.g., `Symbol.for('routup:body')`) to avoid collisions.
+     * Data is garbage collected with the event when the request completes.
+     */
+    readonly context: Record<string | symbol, unknown>;
+
+    /**
      * Call the next handler in the pipeline (onion model).
      *
      * The result is cached — calling `next()` multiple times returns the same response.

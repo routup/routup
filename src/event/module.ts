@@ -22,6 +22,8 @@ export class RoutupEvent implements IRoutupEvent {
      */
     methodsAllowed: string[];
 
+    readonly context: Record<string | symbol, unknown>;
+
     protected _dispatched: boolean;
 
     protected _response?: RoutupResponse;
@@ -57,6 +59,7 @@ export class RoutupEvent implements IRoutupEvent {
         this.params = {};
         this.routerPath = [];
         this.methodsAllowed = [];
+        this.context = Object.create(null);
         this._dispatched = false;
         this._nextCalled = false;
     }
