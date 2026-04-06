@@ -1,73 +1,46 @@
 import { describe, expect, it } from 'vitest';
 import { RoutupEvent } from '../../../src/event/module';
-import {
-    setRequestEnv,
-    unsetRequestEnv,
-    useRequestEnv,
-} from '../../../src';
 import { createTestRequest } from '../../helpers';
 
-describe('src/helpers/request/env', () => {
-    it('should set & get env param', () => {
+describe('src/event/store', () => {
+    it('should set & get values', () => {
         const event = new RoutupEvent(createTestRequest('/'));
 
-        setRequestEnv(event, 'bar', 'baz');
-        setRequestEnv(event, 'foo', 'bar');
+        event.store.foo = 'bar';
+        event.store.bar = 'baz';
 
-        expect(useRequestEnv(event, 'foo')).toEqual('bar');
+        expect(event.store.foo).toBe('bar');
+        expect(event.store.bar).toBe('baz');
     });
 
-    it('should set & get env object', () => {
+    it('should support symbol keys', () => {
         const event = new RoutupEvent(createTestRequest('/'));
+        const key = Symbol.for('test:key');
 
-        setRequestEnv(event, {
-            foo: 'bar',
-            bar: 'baz',
-        });
+        event.store[key] = 'value';
 
-        expect(useRequestEnv(event)).toEqual({
-            foo: 'bar',
-            bar: 'baz',
-        });
+        expect(event.store[key]).toBe('value');
     });
 
-    it('should append env to request', () => {
+    it('should delete values', () => {
         const event = new RoutupEvent(createTestRequest('/'));
 
-        setRequestEnv(event, { foo: 'bar' });
-        setRequestEnv(event, { bar: 'baz' }, true);
+        event.store.foo = 'bar';
+        delete event.store.foo;
 
-        expect(useRequestEnv(event)).toEqual({
-            foo: 'bar',
-            bar: 'baz',
-        });
+        expect(event.store.foo).toBeUndefined();
     });
 
-    it('should overwrite env of request', () => {
+    it('should start empty', () => {
         const event = new RoutupEvent(createTestRequest('/'));
 
-        setRequestEnv(event, { foo: 'bar' });
-        setRequestEnv(event, { bar: 'baz' });
-
-        expect(useRequestEnv(event)).toEqual({ bar: 'baz' });
+        expect(Object.keys(event.store)).toEqual([]);
     });
 
-    it('should unset env of request', () => {
+    it('should not have prototype properties', () => {
         const event = new RoutupEvent(createTestRequest('/'));
 
-        setRequestEnv(event, {
-            foo: 'bar',
-            bar: 'baz',
-        });
-
-        unsetRequestEnv(event, 'foo');
-
-        expect(useRequestEnv(event)).toEqual({ bar: 'baz' });
-    });
-
-    it('should use request env', () => {
-        const event = new RoutupEvent(createTestRequest('/'));
-
-        expect(useRequestEnv(event)).toEqual({});
+        expect(event.store.toString).toBeUndefined();
+        expect(event.store.hasOwnProperty).toBeUndefined();
     });
 });

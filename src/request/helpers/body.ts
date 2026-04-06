@@ -8,7 +8,7 @@ const BODY_KEY = /* @__PURE__ */ Symbol.for('routup:body');
  * - `application/x-www-form-urlencoded` → plain object (duplicate keys become arrays)
  * - `application/json` or other → attempts JSON parse, returns undefined on failure
  *
- * The result is cached on the event context — calling `readBody()` multiple
+ * The result is cached on the event store — calling `readBody()` multiple
  * times returns the same parsed result.
  *
  * For binary or streaming access, use `event.request.arrayBuffer()`,
@@ -17,7 +17,7 @@ const BODY_KEY = /* @__PURE__ */ Symbol.for('routup:body');
  * @experimental
  */
 export async function readBody<T = unknown>(event: IRoutupEvent): Promise<T | undefined> {
-    const cached = event.context[BODY_KEY];
+    const cached = event.store[BODY_KEY];
     if (cached !== undefined) {
         return cached as T;
     }
@@ -37,7 +37,7 @@ export async function readBody<T = unknown>(event: IRoutupEvent): Promise<T | un
         }
     }
 
-    event.context[BODY_KEY] = result;
+    event.store[BODY_KEY] = result;
     return result as T;
 }
 

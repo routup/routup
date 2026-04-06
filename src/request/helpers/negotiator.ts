@@ -13,12 +13,12 @@ function headersToPlainObject(headers: Headers) : Record<string, string> {
 }
 
 export function useRequestNegotiator(event: IRoutupEvent) : Negotiator {
-    let value = event.context[NEGOTIATOR_KEY] as Negotiator | undefined;
+    let value = event.store[NEGOTIATOR_KEY] as Negotiator | undefined;
     if (value) {
         return value;
     }
 
     value = new Negotiator({ headers: headersToPlainObject(event.headers) });
-    event.context[NEGOTIATOR_KEY] = value;
+    event.store[NEGOTIATOR_KEY] = value;
     return value;
 }

@@ -1,6 +1,5 @@
 export * from './body.ts';
 export * from './cache.ts';
-export * from './env.ts';
 export * from './header.ts';
 export * from './header-accept.ts';
 export * from './header-accept-charset.ts';
