@@ -81,7 +81,7 @@ errorHandler((error, event) => {
 });
 ```
 
-Handlers are distinguished by arity: error handlers have 2 parameters `(error, event)`, core handlers have 1 parameter `(event)`.
+Handlers are distinguished by their `type` property (`HandlerType.CORE` or `HandlerType.ERROR`), set by the `coreHandler()` and `errorHandler()` factories.
 
 ### Response Model
 

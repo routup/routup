@@ -2,7 +2,7 @@
 
 ## Directory Layout
 
-```
+```text
 routup/
 ├── src/                    # TypeScript source
 │   ├── _entries/           # Runtime entry points
