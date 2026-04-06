@@ -1,9 +1,10 @@
-import type { Response } from '../types';
-import { send } from './send';
+import type { IRoutupEvent } from '../../event/index.ts';
+import { toResponse } from '../to-response.ts';
 
-export function sendCreated(res: Response, chunk?: any) : Promise<void> {
-    res.statusCode = 201;
-    res.statusMessage = 'Created';
+export async function sendCreated(event: IRoutupEvent, data?: unknown): Promise<Response> {
+    event.response.status = 201;
+    event.response.statusText = 'Created';
+    event.dispatched = true;
 
-    return send(res, chunk);
+    return await toResponse(data ?? '', event) as Response;
 }

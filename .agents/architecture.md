@@ -2,19 +2,20 @@
 
 ## Core Concepts
 
-Routup's architecture centers on a **dispatch pipeline** that processes HTTP requests through a stack of handlers, with runtime adapters abstracting away platform differences.
+Routup's architecture centers on a **dispatch pipeline** that processes HTTP requests through a stack of handlers. It uses **srvx** as the universal HTTP server layer, providing a consistent `ServerRequest` interface across all runtimes.
 
 ### Request Flow
 
-```
-HTTP Request → Adapter → DispatchEvent → Router Pipeline → Response
+```text
+HTTP Request → srvx → ServerRequest → RoutupEvent → Router Pipeline → Response
 ```
 
-1. An **Adapter** (Node or Web) receives the raw request and creates a `DispatchEvent`
-2. The **Router** iterates its handler stack, matching path and method
-3. Matched **Handlers** execute in order, calling `next()` to continue
-4. **Hooks** fire at each pipeline step for cross-cutting concerns
-5. The response is sent back through the adapter
+1. **srvx** receives the raw HTTP request and normalizes it into a `ServerRequest`
+2. The **Router**'s `fetch()` method creates a `RoutupEvent` from the request
+3. The **Router** iterates its handler stack, matching path and method
+4. Matched **Handlers** execute, returning response values or calling `event.next()`
+5. Return values are converted to a Web `Response` via `toResponse()`
+6. **Hooks** fire at each pipeline step for cross-cutting concerns
 
 ### Pipeline Steps
 
@@ -26,57 +27,115 @@ START → LOOKUP → CHILD_BEFORE → CHILD_DISPATCH → CHILD_AFTER → FINISH
 
 Each step corresponds to hook events that plugins and middleware can tap into.
 
-## Adapter Pattern
+## Entry Files Pattern
 
-Adapters bridge the Router to specific JavaScript runtimes:
+Instead of adapters, Routup uses **entry files** that re-export the core API along with runtime-specific `serve()` and `toNodeHandler()` functions provided by srvx:
 
 ```typescript
-// Node.js — use with http.createServer()
-import { Router, createNodeDispatcher } from 'routup';
+// Node.js
+import { Router, coreHandler, serve } from 'routup/node';
 const router = new Router();
-const dispatch = createNodeDispatcher(router);
-http.createServer(dispatch);
+router.get('/', coreHandler((event) => 'Hello'));
+serve(router);
 
-// Web API — use with Bun, Deno, Cloudflare Workers
-import { Router, createWebDispatcher } from 'routup';
+// Bun
+import { Router, coreHandler, serve } from 'routup/bun';
 const router = new Router();
-const dispatch = createWebDispatcher(router);
-// Bun.serve({ fetch: dispatch })
+router.get('/', coreHandler((event) => 'Hello'));
+serve(router);
+
+// Deno
+import { Router, coreHandler, serve } from 'routup/deno';
+
+// Cloudflare Workers / generic Web API
+import { Router, coreHandler } from 'routup/generic';
 ```
 
-Both adapters:
-- Create internal request/response objects from the native types
-- Build a `DispatchEvent` with path, method, and references
-- Call `router.dispatch(event)` to run the pipeline
-- Convert the result back to the runtime's response format
+Each entry file (`src/_entries/*.ts`) bundles:
+- All core exports (Router, handlers, helpers, etc.)
+- Runtime-specific `serve()` function from srvx
+- `toNodeHandler()` where applicable (Node.js entry)
 
 ## Handler System
 
 Two handler types, both supporting shorthand and verbose syntax:
 
 ```typescript
-// Core handler — shorthand
-coreHandler((req, res, next) => {
-    send(res, 'Hello');
+// Core handler — shorthand (return-based response)
+coreHandler((event) => {
+    return 'Hello';
 });
 
 // Core handler — verbose (with path and method)
 coreHandler({
     path: '/users/:id',
     method: 'GET',
-    fn: (req, res, next) => {
-        const id = useRequestParam(req, 'id');
-        send(res, { id });
+    fn: (event) => {
+        return { id: event.params.id };
     }
 });
 
 // Error handler
-errorHandler((err, req, res, next) => {
-    send(res, { error: err.message });
+errorHandler((error, event) => {
+    return { error: error.message };
 });
 ```
 
-Handlers are distinguished by arity: error handlers have 4 parameters, core handlers have 3.
+Handlers are distinguished by their `type` property (`HandlerType.CORE` or `HandlerType.ERROR`), set by the `coreHandler()` and `errorHandler()` factories.
+
+### Response Model
+
+Handlers return values directly instead of calling `send()`. The `toResponse()` function converts return values to a Web `Response`:
+
+- **string** → `Response` with `text/plain` content type
+- **object/array/number/boolean** → JSON `Response`
+- **ArrayBuffer/Uint8Array** → binary `Response` with `application/octet-stream`
+- **ReadableStream** → streamed `Response`
+- **Blob** → `Response` with blob's content type
+- **Response** → passed through as-is
+- **null** → empty `Response` (status from `event.response`)
+- **undefined** → no response (middleware pass-through; pipeline continues)
+
+### Middleware and `event.next()`
+
+Middleware handlers call `event.next()` to continue the pipeline (onion model):
+
+```typescript
+coreHandler(async (event) => {
+    // Before
+    const response = await event.next();
+    // After
+    return response;
+});
+```
+
+## RoutupEvent
+
+The `RoutupEvent` (implementing `IRoutupEvent`) is the central object passed to every handler:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `request` | `RoutupRequest` | The srvx-normalized request object |
+| `params` | `Record<string, any>` | Route parameters extracted from path |
+| `path` | `string` | Current request path (relative to mount point) |
+| `method` | `string` | HTTP method |
+| `mountPath` | `string` | Path prefix where the router is mounted |
+| `headers` | `Headers` | Request headers |
+| `searchParams` | `URLSearchParams` | Query string parameters |
+| `response` | `RoutupResponse` | Response accumulator for status, headers, statusText |
+| `dispatched` | `boolean` | Whether a response has been produced |
+| `store` | `Record<string \| symbol, unknown>` | Per-request state store for caching and plugin state |
+
+## Router.fetch()
+
+The `Router` exposes a `fetch()` method as its public entry point, compatible with the Web Fetch API signature:
+
+```typescript
+const router = new Router();
+const response: Response = await router.fetch(request);
+```
+
+This is what srvx calls internally when routing requests.
 
 ## Router Nesting
 
@@ -98,16 +157,14 @@ Hooks provide lifecycle events on the Router:
 
 | Hook | Fires when |
 |------|-----------|
-| `dispatchStart` | Router begins processing a request |
-| `dispatchEnd` | Router finishes processing |
-| `childMatch` | A handler matches the current path/method |
-| `childDispatchBefore` | Before executing a matched handler |
-| `childDispatchAfter` | After a matched handler completes |
+| `request` | Router begins processing a request |
+| `response` | Router finishes processing and has a response |
 | `error` | An error occurs during dispatch |
 
 ```typescript
-router.on('dispatchStart', (event) => { /* ... */ });
-router.off('dispatchStart', listener);
+router.on('request', (event) => { /* ... */ });
+router.on('response', (event) => { /* ... */ });
+router.on('error', (event) => { /* event.error contains the error */ });
 ```
 
 ## Plugin System
@@ -118,9 +175,9 @@ Plugins encapsulate reusable functionality:
 const myPlugin = {
     name: 'my-plugin',
     install(router: Router) {
-        router.use(coreHandler((req, res, next) => {
+        router.use(coreHandler(async (event) => {
             // plugin logic
-            next();
+            return event.next();
         }));
     }
 };
@@ -130,21 +187,20 @@ router.use(myPlugin);
 
 ## Request/Response Helpers
 
-Helpers are standalone, tree-shakeable functions — not methods on the request/response objects:
+Helpers are standalone, tree-shakeable functions:
 
 ```typescript
 // Request helpers
-useRequestPath(req)          // parsed URL path
-useRequestParams(req)        // route parameters
-useRequestHeader(req, name)  // single header
-useRequestHostName(req)      // hostname
-useRequestIP(req)            // client IP (proxy-aware)
+readBody(event)                          // parse request body
+getRequestHeader(event, name)            // single header
+getRequestHostName(event)                // hostname
+getRequestIP(event)                      // client IP (proxy-aware)
 
 // Response helpers
-send(res, data)              // send any data (auto content-type)
-sendFile(res, filePath)      // stream a file
-setResponseHeader(res, k, v) // set header
-setResponseStatus(res, code) // set status code
+event.response.headers.set(k, v)         // set header on response accumulator
+event.response.status = code             // set status code
+appendResponseHeader(event, name, value) // append to existing header
+setResponseCacheHeaders(event, options)  // set cache headers
 ```
 
 This design keeps the core lightweight — unused helpers are tree-shaken from the final bundle.
@@ -158,4 +214,4 @@ Errors thrown in handlers are caught by the pipeline and routed to error handler
 throw new RoutupError({ statusCode: 404, statusMessage: 'Not Found' });
 ```
 
-`RoutupError` extends `@ebec/http`'s `HTTPError`, providing `statusCode` and `statusMessage` properties. Unhandled errors bubble up to the adapter, which sends an appropriate error response.
+`RoutupError` extends `@ebec/http`'s `HTTPError`, providing `statusCode` and `statusMessage` properties. Unhandled errors are converted to an appropriate error response by the pipeline.

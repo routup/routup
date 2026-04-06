@@ -1,9 +1,9 @@
-import { HeaderName } from '../../constants';
+import { HeaderName } from '../../constants.ts';
 
-import type { Request } from '../types';
+import type { IRoutupEvent } from '../../event/index.ts';
 
-export function isRequestCacheable(req: Request, modifiedTime: string | Date) : boolean {
-    const modifiedSince = req.headers[HeaderName.IF_MODIFIED_SINCE];
+export function isRequestCacheable(event: IRoutupEvent, modifiedTime: string | Date) : boolean {
+    const modifiedSince = event.headers.get(HeaderName.IF_MODIFIED_SINCE);
     if (!modifiedSince) {
         return false;
     }

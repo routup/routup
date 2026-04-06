@@ -1,43 +1,42 @@
 import { describe, expect, it } from 'vitest';
-import supertest from 'supertest';
-import {
-    send,
-    sendFormat,
-} from '../../../src';
-import { createRequestListener } from '../../handler';
+import { RoutupEvent } from '../../../src/event/module';
+import { sendFormat } from '../../../src';
+import { createTestRequest } from '../../helpers';
 
 describe('src/helpers/response/send-format', () => {
-    it('should send format depending on accept header', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            sendFormat(res, {
-                'text/html': () => {
-                    send(res, 'text');
-                },
-                'application/json': () => {
-                    send(res, 'json');
-                },
-                default: () => {
-                    send(res, 'default');
-                },
-            });
-        }));
+    it('should select format depending on accept header', () => {
+        const eventHtml = new RoutupEvent(createTestRequest('/', { headers: { 'accept': 'text/html' } }));
 
-        let response = await server
-            .get('/')
-            .set('Accept', 'text/html');
+        const resultHtml = sendFormat(eventHtml, {
+            'text/html': () => 'text',
+            'application/json': () => 'json',
+            default: () => 'default',
+        });
 
-        expect(response.text).toEqual('text');
+        expect(resultHtml).toEqual('text');
+    });
 
-        response = await server
-            .get('/')
-            .set('Accept', 'application/json');
+    it('should select json format', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { 'accept': 'application/json' } }));
 
-        expect(response.text).toEqual('json');
+        const result = sendFormat(event, {
+            'text/html': () => 'text',
+            'application/json': () => 'json',
+            default: () => 'default',
+        });
 
-        response = await server
-            .get('/')
-            .set('Accept', 'foo/bar');
+        expect(result).toEqual('json');
+    });
 
-        expect(response.text).toEqual('default');
+    it('should use default format for unmatched accept', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { 'accept': 'foo/bar' } }));
+
+        const result = sendFormat(event, {
+            'text/html': () => 'text',
+            'application/json': () => 'json',
+            default: () => 'default',
+        });
+
+        expect(result).toEqual('default');
     });
 });

@@ -1,30 +1,39 @@
-import { describe, it } from 'vitest';
-import supertest from 'supertest';
-import { HeaderName, getRequestProtocol, send } from '../../../src';
-import { createRequestListener } from '../../handler';
+import { describe, expect, it } from 'vitest';
+import { RoutupEvent } from '../../../src/event/module';
+import { HeaderName, getRequestProtocol } from '../../../src';
+import { createTestRequest } from '../../helpers';
 
-describe('src/helpers/request/hostname', () => {
-    it('should determine protocol', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            send(res, getRequestProtocol(req, {
-                default: 'http',
-                trustProxy: true, 
-            }));
-        }));
+describe('src/helpers/request/protocol', () => {
+    it('should determine protocol from url', () => {
+        const event = new RoutupEvent(createTestRequest('http://localhost/'));
 
-        await server
-            .get('/')
-            .expect('http');
+        expect(getRequestProtocol(event)).toEqual('http');
     });
 
-    it('should determine protocol of non-trusted', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            send(res, getRequestProtocol(req));
-        }));
+    it('should determine protocol with default', () => {
+        const event = new RoutupEvent(createTestRequest('/'));
 
-        await server
-            .get('/')
-            .set(HeaderName.X_FORWARDED_PROTO, 'https')
-            .expect('http');
+        expect(getRequestProtocol(event, {
+            default: 'http',
+            trustProxy: true,
+        })).toEqual('http');
+    });
+
+    it('should not use x-forwarded-proto without trust proxy', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.X_FORWARDED_PROTO]: 'https' } }));
+
+        expect(getRequestProtocol(event)).toEqual('http');
+    });
+
+    it('should use x-forwarded-proto with trust proxy', () => {
+        const event = new RoutupEvent(createTestRequest('/', { ip: '10.0.0.1', headers: { [HeaderName.X_FORWARDED_PROTO]: 'https' } }));
+
+        expect(getRequestProtocol(event, { trustProxy: true })).toEqual('https');
+    });
+
+    it('should ignore forwarded proto when IP is unavailable', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.X_FORWARDED_PROTO]: 'https' } }));
+
+        expect(getRequestProtocol(event, { trustProxy: true })).toEqual('http');
     });
 });

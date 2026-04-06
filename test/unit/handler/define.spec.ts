@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     HandlerType,
     MethodName,
-    coreHandler, 
+    coreHandler,
     errorHandler,
 } from '../../../src';
 

@@ -1,29 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import supertest from 'supertest';
-import { HeaderName, send, setResponseCacheHeaders } from '../../../src';
-import { createRequestListener } from '../../handler';
+import { RoutupEvent } from '../../../src/event/module';
+import { HeaderName, setResponseCacheHeaders } from '../../../src';
+import { createTestRequest } from '../../helpers';
 
 describe('src/helpers/response/cache', () => {
-    it('should determine if request is cacheable', async () => {
+    it('should set cache headers', () => {
         const date = new Date();
+        const event = new RoutupEvent(createTestRequest('/'));
 
-        const server = supertest(createRequestListener((_req, res) => {
-            setResponseCacheHeaders(res, {
-                maxAge: 3600,
-                modifiedTime: date,
-                cacheControls: [
-                    'must-revalidate',
-                ],
-            });
+        setResponseCacheHeaders(event, {
+            maxAge: 3600,
+            modifiedTime: date,
+            cacheControls: [
+                'must-revalidate',
+            ],
+        });
 
-            send(res);
-        }));
-
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CACHE_CONTROL]).toEqual('public, must-revalidate, max-age=3600, s-maxage=3600');
-        expect(response.headers[HeaderName.LAST_MODIFIED]).toEqual(date.toUTCString());
+        expect(event.response.headers.get(HeaderName.CACHE_CONTROL))
+            .toEqual('public, must-revalidate, max-age=3600, s-maxage=3600');
+        expect(event.response.headers.get(HeaderName.LAST_MODIFIED))
+            .toEqual(date.toUTCString());
     });
 });

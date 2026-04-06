@@ -1,20 +1,20 @@
-import type { IncomingMessage } from 'node:http';
-import { useRequestNegotiator } from './negotiator';
+import type { IRoutupEvent } from '../../event/index.ts';
+import { useRequestNegotiator } from './negotiator.ts';
 
-export function getRequestAcceptableEncodings(req: IncomingMessage) : string[] {
-    const negotiator = useRequestNegotiator(req);
+export function getRequestAcceptableEncodings(event: IRoutupEvent) : string[] {
+    const negotiator = useRequestNegotiator(event);
     return negotiator.encodings();
 }
 
-export function getRequestAcceptableEncoding(req: IncomingMessage, input: string | string[]) : string | undefined {
+export function getRequestAcceptableEncoding(event: IRoutupEvent, input: string | string[]) : string | undefined {
     input = input || [];
 
     const items = Array.isArray(input) ? input : [input];
 
     if (items.length === 0) {
-        return getRequestAcceptableEncodings(req).shift();
+        return getRequestAcceptableEncodings(event).shift();
     }
 
-    const negotiator = useRequestNegotiator(req);
+    const negotiator = useRequestNegotiator(event);
     return negotiator.encodings(items).shift() || undefined;
 }

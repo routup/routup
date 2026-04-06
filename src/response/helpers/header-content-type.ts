@@ -1,10 +1,10 @@
-import { HeaderName } from '../../constants';
-import { getMimeType } from '../../utils';
-import type { Response } from '../types';
+import { HeaderName } from '../../constants.ts';
+import { getMimeType } from '../../utils/index.ts';
+import type { IRoutupEvent } from '../../event/index.ts';
 
-export function setResponseHeaderContentType(res: Response, input: string, ifNotExists?: boolean) {
+export function setResponseHeaderContentType(event: IRoutupEvent, input: string, ifNotExists?: boolean) {
     if (ifNotExists) {
-        const header = res.getHeader(HeaderName.CONTENT_TYPE);
+        const header = event.response.headers.get(HeaderName.CONTENT_TYPE);
         if (header) {
             return;
         }
@@ -12,6 +12,6 @@ export function setResponseHeaderContentType(res: Response, input: string, ifNot
 
     const contentType = getMimeType(input);
     if (contentType) {
-        res.setHeader(HeaderName.CONTENT_TYPE, contentType);
+        event.response.headers.set(HeaderName.CONTENT_TYPE, contentType);
     }
 }

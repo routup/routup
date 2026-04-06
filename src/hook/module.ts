@@ -1,18 +1,15 @@
-import type { DispatchEvent } from '../dispatcher';
-import { dispatch, isDispatcherErrorEvent } from '../dispatcher';
-import type { RoutupError } from '../error';
-
-import { nextPlaceholder } from '../utils';
-import { HookName } from './constants';
+import type { IRoutupEvent } from '../event/index.ts';
+import type { RoutupError } from '../error/module.ts';
+import { HookName } from './constants.ts';
 import type {
-    HookDefaultListener, 
-    HookErrorListener, 
-    HookListener, 
+    HookDefaultListener,
+    HookErrorListener,
+    HookListener,
     HookUnsubscribeFn,
-} from './types';
+} from './types.ts';
 
 export class HookManager {
-    protected items : Record<string, HookListener[]>;
+    protected items: Record<string, HookListener[]>;
 
     // --------------------------------------------------
 
@@ -25,7 +22,7 @@ export class HookManager {
     addListener(
         name: `${HookName}`,
         fn: HookListener,
-    ) : HookUnsubscribeFn {
+    ): HookUnsubscribeFn {
         this.items[name] = this.items[name] || [];
         this.items[name].push(fn);
 
@@ -34,11 +31,11 @@ export class HookManager {
         };
     }
 
-    removeListener(name: `${HookName}`) : void;
+    removeListener(name: `${HookName}`): void;
 
-    removeListener(name: `${HookName}`, fn: HookListener) : void;
+    removeListener(name: `${HookName}`, fn: HookListener): void;
 
-    removeListener(name: `${HookName}`, fn?: HookListener) : void {
+    removeListener(name: `${HookName}`, fn?: HookListener): void {
         if (!this.items[name]) {
             return;
         }
@@ -62,41 +59,23 @@ export class HookManager {
 
     // --------------------------------------------------
 
-    /**
-     * @throws RoutupError
-     *
-     * @param name
-     * @param event
-     */
     async trigger(
         name: `${HookName}`,
-        event: DispatchEvent,
-    ) : Promise<void> {
+        event: IRoutupEvent,
+    ): Promise<void> {
         if (!this.items[name] || this.items[name].length === 0) {
             return;
         }
 
         try {
             for (let i = 0; i < this.items[name].length; i++) {
-                const hook = this.items[name][i] as HookDefaultListener;
-
-                event.dispatched = await dispatch(
-                    event,
-                    (next) => Promise.resolve()
-                        .then(() => {
-                            event.next = next;
-                            return this.triggerListener(name, event, hook);
-                        })
-                        .catch((err) => next(err)),
-                );
-
-                event.next = nextPlaceholder;
+                const listener = this.items[name][i]!;
+                await this.triggerListener(name, event, listener);
 
                 if (event.dispatched) {
                     if (event.error) {
                         event.error = undefined;
                     }
-
                     return;
                 }
             }
@@ -104,10 +83,7 @@ export class HookManager {
             event.error = e as RoutupError;
 
             if (!this.isErrorListenerHook(name)) {
-                await this.trigger(
-                    HookName.ERROR,
-                    event,
-                );
+                await this.trigger(HookName.ERROR, event);
 
                 if (event.dispatched) {
                     if (event.error) {
@@ -118,12 +94,11 @@ export class HookManager {
         }
     }
 
-    private triggerListener(name: `${HookName}`, event: DispatchEvent, listener: HookListener) {
+    private triggerListener(name: `${HookName}`, event: IRoutupEvent, listener: HookListener) {
         if (this.isErrorListenerHook(name)) {
-            if (isDispatcherErrorEvent(event)) {
+            if (event.error) {
                 return (listener as HookErrorListener)(event);
             }
-
             return undefined;
         }
 

@@ -1,36 +1,27 @@
 import { describe, expect, it } from 'vitest';
-import supertest from 'supertest';
 import {
     Router,
     coreHandler,
-    createNodeDispatcher,
     errorHandler,
-    send, 
-    setRequestEnv, 
-    useRequestEnv,
 } from '../../../src';
+import { createTestRequest } from '../../helpers';
 
 describe('routing/middleware', () => {
     it('should use middleware', async () => {
         const router = new Router();
 
-        router.use(coreHandler((req, _res, next) => {
-            setRequestEnv(req, 'foo', 'bar');
+        router.use(coreHandler((event) => {
+            event.store.foo = 'bar';
 
-            next();
+            return event.next();
         }));
 
-        router.get(coreHandler((req, res) => {
-            send(res, useRequestEnv(req, 'foo'));
-        }));
+        router.get(coreHandler((event) => event.store.foo));
 
-        const server = supertest(createNodeDispatcher(router));
+        const response = await router.fetch(createTestRequest('/'));
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('bar');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('bar');
     });
 
     it('should use error middleware', async () => {
@@ -40,66 +31,50 @@ describe('routing/middleware', () => {
             throw new Error('ero');
         }));
 
-        router.use(errorHandler((err, _req, res) => {
-            send(res, err.message);
-        }));
+        router.use(errorHandler((error) => error.message));
 
-        const server = supertest(createNodeDispatcher(router));
+        const response = await router.fetch(createTestRequest('/'));
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('ero');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('ero');
     });
 
     it('should use middleware on specific path', async () => {
         const router = new Router();
 
-        router.use('/foo', coreHandler((req, _res, next) => {
-            setRequestEnv(req, 'foo', 'bar');
+        router.use('/foo', coreHandler((event) => {
+            event.store.foo = 'bar';
 
-            next();
+            return event.next();
         }));
 
-        router.get('/', coreHandler((req, res) => {
-            send(res, useRequestEnv(req, 'foo'));
-        }));
+        router.get('/', coreHandler((event) => (event.store.foo as string) || ''));
 
-        router.get('/foo', coreHandler((req, res) => {
-            send(res, useRequestEnv(req, 'foo'));
-        }));
+        router.get('/foo', coreHandler((event) => event.store.foo));
 
-        router.use('/bar', coreHandler((req, _res, next) => {
-            setRequestEnv(req, 'bar', 'baz');
-            next();
+        router.use('/bar', coreHandler((event) => {
+            event.store.bar = 'baz';
+            return event.next();
         }));
 
         router.get(
             '/bar',
-            coreHandler((req, res) => {
-                send(res, useRequestEnv(req, 'bar'));
-            }),
+            coreHandler((event) => event.store.bar),
         );
 
-        const server = supertest(createNodeDispatcher(router));
+        let response = await router.fetch(createTestRequest('/'));
 
-        let response = await server
-            .get('/');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('');
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toBeFalsy();
+        response = await router.fetch(createTestRequest('/foo'));
 
-        response = await server
-            .get('/foo');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('bar');
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('bar');
+        response = await router.fetch(createTestRequest('/bar'));
 
-        response = await server
-            .get('/bar');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('baz');
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('baz');
     });
 });

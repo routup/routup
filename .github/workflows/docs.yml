@@ -1,0 +1,63 @@
+name: Deploy
+
+on:
+    push:
+        branches:
+            - master
+        paths:
+            - 'docs/**'
+            - '.github/workflows/docs.yml'
+    pull_request:
+        branches:
+            - master
+        paths:
+            - 'docs/**'
+            - '.github/workflows/docs.yml'
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v6
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: 22
+
+            - name: Install
+              run: npm install
+              working-directory: docs
+
+            - name: Build
+              run: npx vitepress build src --temp .temp
+              working-directory: docs
+
+            - name: Upload artifact
+              if: ${{ github.event_name == 'push' }}
+              uses: actions/upload-artifact@v7
+              with:
+                  name: docs-dist
+                  path: ./docs/src/.vitepress/dist
+
+    deploy:
+        if: ${{ github.event_name == 'push' }}
+        needs: build
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - name: Download artifact
+              uses: actions/download-artifact@v8
+              with:
+                  name: docs-dist
+                  path: ./dist
+
+            - name: CNAME
+              run: echo "routup.net" > ./dist/CNAME
+
+            - name: Deploy
+              uses: peaceiris/actions-gh-pages@v4
+              with:
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  publish_dir: ./dist

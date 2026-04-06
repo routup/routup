@@ -1,68 +1,59 @@
-import { 
-    beforeAll, 
-    describe, 
-    expect, 
-    it, 
-} from 'vitest';
-import { clearInterval } from 'node:timers';
-import supertest from 'supertest';
+import { describe, expect, it } from 'vitest';
+import { RoutupEvent } from '../../../src/event/module';
 import { HeaderName, createEventStream } from '../../../src';
-import { createRequestListener } from '../../handler';
+import { createTestRequest } from '../../helpers';
 
-describe('src/helpers/response/server-event', () => {
-    let server : ReturnType<typeof supertest>;
+describe('src/helpers/response/event-stream', () => {
+    it('should create event stream with correct headers', () => {
+        const event = new RoutupEvent(createTestRequest('/'));
+        const stream = createEventStream(event);
 
-    beforeAll(() => {
-        server = supertest(createRequestListener(async (_req, res) => {
-            const stream = createEventStream(res);
-
-            let interval : ReturnType<typeof setInterval> | undefined;
-            stream.on('close', () => {
-                if (interval) {
-                    clearInterval(interval);
-                }
-            });
-
-            let i = 0;
-            interval = setInterval(() => {
-                stream.write({ data: 'hello world' });
-
-                i++;
-                if (i > 50) {
-                    stream.end();
-                }
-            });
-        }));
+        expect(stream.response).toBeInstanceOf(Response);
+        expect(stream.response.headers.get(HeaderName.CONTENT_TYPE))
+            .toEqual('text/event-stream');
     });
 
-    it('streams events', async () => {
-        let messageCount = 0;
+    it('should write and read events', async () => {
+        const event = new RoutupEvent(createTestRequest('/'));
+        const stream = createEventStream(event);
 
-        server
-            .get('/')
-            .expect(200)
-            .expect(HeaderName.CONTENT_TYPE, 'text/event-stream')
-            .buffer()
-            .parse((res, callback) => {
-                res.on('data', (chunk: Buffer) => {
-                    messageCount++;
-                    const message = chunk.toString();
-                    expect(message).toEqual('data: hello world\n\n');
-                });
+        stream.write({ data: 'hello world' });
+        stream.write({ data: 'second message' });
+        stream.end();
 
-                res.on('end', () => {
-                    callback(null, '');
-                });
-            })
-            .then()
-            .catch();
+        const reader = stream.response.body!.getReader();
+        const decoder = new TextDecoder();
+        let result = '';
 
-        await new Promise<void>((resolve) => {
-            setTimeout(() => {
-                resolve();
-            }, 100);
-        });
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            result += decoder.decode(value, { stream: true });
+        }
 
-        expect(messageCount).toBeGreaterThan(0);
+        expect(result).toContain('data: hello world');
+        expect(result).toContain('data: second message');
+    });
+
+    it('should write string messages', async () => {
+        const event = new RoutupEvent(createTestRequest('/'));
+        const stream = createEventStream(event);
+
+        stream.write('hello');
+        stream.end();
+
+        const reader = stream.response.body!.getReader();
+        const decoder = new TextDecoder();
+        const { value } = await reader.read();
+        const text = decoder.decode(value);
+
+        expect(text).toContain('data: hello');
+    });
+
+    it('should not mark event as dispatched at creation time', () => {
+        const event = new RoutupEvent(createTestRequest('/'));
+        createEventStream(event);
+
+        expect(event.dispatched).toBe(false);
     });
 });

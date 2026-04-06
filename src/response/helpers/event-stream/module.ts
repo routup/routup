@@ -1,166 +1,84 @@
-import { PassThrough } from 'readable-stream';
-import { HeaderName } from '../../../constants';
-import { isRequestHTTP2 } from '../../../request';
-import type { Response } from '../../types';
-import { setResponseGone } from '../gone';
-import type { EventStreamListener, EventStreamMessage } from './types';
-import { serializeEventStreamMessage } from './utils';
+import { HeaderName } from '../../../constants.ts';
+import type { IRoutupEvent } from '../../../event/index.ts';
+import { RoutupError } from '../../../error/module.ts';
+import type { EventStreamMessage } from './types.ts';
+import { serializeEventStreamMessage } from './utils.ts';
 
 export type EventStreamOptions = {
     maxMessageSize?: number,
-    maxListeners?: number,
 };
 
-export class EventStream {
-    protected response: Response;
+export type EventStreamHandle = {
+    write(message: string | EventStreamMessage): void;
+    end(): void;
+    response: Response;
+};
 
-    protected passThrough : PassThrough;
-
-    protected flushed : boolean;
-
-    protected eventHandlers : Record<string, EventStreamListener[]>;
-
-    protected maxMessageSize? : number;
-
-    protected maxListeners? : number;
-
-    constructor(response: Response, options?: EventStreamOptions) {
-        this.response = response;
-
-        this.passThrough = new PassThrough({ encoding: 'utf-8' });
-
-        this.flushed = false;
-
-        this.eventHandlers = {};
-
-        if (options?.maxMessageSize !== undefined) {
-            if (!Number.isInteger(options.maxMessageSize) || options.maxMessageSize < 0) {
-                throw new TypeError('maxMessageSize must be a non-negative integer.');
-            }
-            this.maxMessageSize = options.maxMessageSize;
-        }
-
-        if (options?.maxListeners !== undefined) {
-            if (!Number.isInteger(options.maxListeners) || options.maxListeners < 0) {
-                throw new TypeError('maxListeners must be a non-negative integer.');
-            }
-            this.maxListeners = options.maxListeners;
-        }
-
-        this.open();
-    }
-
-    protected open() {
-        this.response.req.on('close', () => this.end());
-        this.response.req.on('error', (err) => {
-            this.emit('error', err);
-            this.end();
-        });
-
-        this.passThrough.on('data', (chunk) => this.response.write(chunk));
-        this.passThrough.on('error', (err) => {
-            this.emit('error', err);
-            this.end();
-        });
-        this.passThrough.on('close', () => this.end());
-
-        this.response.setHeader(
-            HeaderName.CONTENT_TYPE,
-            'text/event-stream',
-        );
-        this.response.setHeader(
-            HeaderName.CACHE_CONTROL,
-            'private, no-cache, no-store, no-transform, must-revalidate, max-age=0',
-        );
-        this.response.setHeader(
-            HeaderName.X_ACCEL_BUFFERING,
-            'no',
-        );
-
-        if (!isRequestHTTP2(this.response.req)) {
-            this.response.setHeader(
-                HeaderName.CONNECTION,
-                'keep-alive',
-            );
-        }
-
-        this.response.statusCode = 200;
-    }
-
-    write(message: EventStreamMessage) : void;
-
-    write(message: string) : void;
-
-    write(message: string | EventStreamMessage) : void {
-        if (typeof message === 'string') {
-            this.write({ data: message });
-            return;
-        }
-
-        const serialized = serializeEventStreamMessage(message);
-
-        const serializedSize = Buffer.byteLength(serialized, 'utf8');
-
-        if (this.maxMessageSize && serializedSize > this.maxMessageSize) {
-            this.emit('error', new Error(
-                `SSE message size (${serializedSize}) exceeds limit (${this.maxMessageSize}).`,
-            ));
-            return;
-        }
-
-        if (
-            !this.passThrough.closed &&
-            this.passThrough.writable
-        ) {
-            this.passThrough.write(serialized);
+export function createEventStream(
+    event: IRoutupEvent,
+    options?: EventStreamOptions,
+): EventStreamHandle {
+    if (options?.maxMessageSize !== undefined) {
+        if (!Number.isInteger(options.maxMessageSize) || options.maxMessageSize < 0) {
+            throw new RoutupError('maxMessageSize must be a non-negative integer.');
         }
     }
 
-    end() {
-        if (this.flushed) return;
+    let controller: ReadableStreamDefaultController<Uint8Array>;
+    let closed = false;
+    const encoder = new TextEncoder();
 
-        this.flushed = true;
+    const stream = new ReadableStream<Uint8Array>({
+        start(ctrl) {
+            controller = ctrl;
+        },
+        cancel() {
+            closed = true;
+        },
+    });
 
-        if (!this.passThrough.closed) {
-            this.passThrough.end();
-        }
+    const headers = new Headers(event.response.headers);
+    headers.set(HeaderName.CONTENT_TYPE, 'text/event-stream');
+    headers.set(HeaderName.CACHE_CONTROL, 'private, no-cache, no-store, no-transform, must-revalidate, max-age=0');
+    headers.set(HeaderName.X_ACCEL_BUFFERING, 'no');
+    headers.set(HeaderName.CONNECTION, 'keep-alive');
 
-        this.emit('close');
+    const response = new Response(stream, {
+        status: event.response.status,
+        statusText: event.response.statusText,
+        headers,
+    });
 
-        setResponseGone(this.response, true);
+    const handle: EventStreamHandle = {
+        write(message: string | EventStreamMessage): void {
+            if (closed) return;
 
-        this.response.end();
-    }
-
-    on(event: 'close', listener: EventStreamListener) : void;
-
-    on(event: 'error', listener: EventStreamListener) : void;
-
-    on(event: string, listener: EventStreamListener) : void {
-        if (typeof this.eventHandlers[event] === 'undefined') {
-            this.eventHandlers[event] = [];
-        }
-
-        if (this.maxListeners) {
-            const totalListeners = Object.values(this.eventHandlers)
-                .reduce((sum, handlers) => sum + handlers.length, 0);
-
-            if (totalListeners >= this.maxListeners) {
+            if (typeof message === 'string') {
+                handle.write({ data: message });
                 return;
             }
-        }
 
-        this.eventHandlers[event].push(listener);
-    }
+            const serialized = serializeEventStreamMessage(message);
 
-    protected emit(event: string, ...args: any[]) : void {
-        if (typeof this.eventHandlers[event] === 'undefined') {
-            return;
-        }
+            if (options?.maxMessageSize !== undefined) {
+                const serializedSize = encoder.encode(serialized).byteLength;
+                if (serializedSize > options.maxMessageSize) {
+                    return;
+                }
+            }
 
-        const listeners = this.eventHandlers[event].slice();
-        for (const listener of listeners) {
-            listener.apply(this, args as any);
-        }
-    }
+            controller.enqueue(encoder.encode(serialized));
+        },
+
+        end(): void {
+            if (closed) return;
+
+            closed = true;
+            controller.close();
+        },
+
+        response,
+    };
+
+    return handle;
 }

@@ -1,62 +1,48 @@
-import supertest from 'supertest';
 import {
- 
-    describe, 
-    expect, 
-    it, 
-    vi, 
+    describe,
+    expect,
+    it,
+    vi,
 } from 'vitest';
-import type { DispatchEvent } from '../../../src';
 import {
     Router,
     coreHandler,
-    createNodeDispatcher,
+    errorHandler,
 } from '../../../src';
 import type { HookDefaultListener } from '../../../src/hook';
 import { HookName } from '../../../src/hook';
-
-type HookMountOutput = {
-    [K in `${HookName}`]: ReturnType<typeof vi.fn>
-};
-function mountHooks(router: Router) : HookMountOutput {
-    const output : Partial<HookMountOutput> = {};
-    const keys = Object.values(HookName);
-    for (const key_ of keys) {
-        const key = key_ as `${HookName}`;
-        const fn = vi.fn();
-        router.on(key as any, (event: DispatchEvent) => {
-            fn();
-
-            // call next fn
-            return event.next();
-        });
-
-        output[key] = fn;
-    }
-
-    return output as HookMountOutput;
-}
+import { createTestRequest } from '../../helpers';
 
 describe('src/router/hooks', () => {
     it('should trigger non error hooks', async () => {
         const router = new Router();
         router.use(coreHandler(() => 'Hello, World!'));
 
-        const hooks = mountHooks(router);
+        const request = vi.fn();
+        const response = vi.fn();
+        const error = vi.fn();
+        const childMatch = vi.fn();
+        const childBefore = vi.fn();
+        const childAfter = vi.fn();
 
-        const server = supertest(createNodeDispatcher(router));
+        router.on(HookName.REQUEST, () => { request(); });
+        router.on(HookName.RESPONSE, () => { response(); });
+        router.on(HookName.ERROR, () => { error(); });
+        router.on(HookName.CHILD_MATCH, () => { childMatch(); });
+        router.on(HookName.CHILD_DISPATCH_BEFORE, () => { childBefore(); });
+        router.on(HookName.CHILD_DISPATCH_AFTER, () => { childAfter(); });
 
-        const response = await server
-            .get('/');
+        const res = await router.fetch(createTestRequest('/'));
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('Hello, World!');
+        expect(res.status).toEqual(200);
+        expect(await res.text()).toEqual('Hello, World!');
 
-        expect(hooks[HookName.ERROR]).not.toHaveBeenCalled();
-        expect(hooks[HookName.DISPATCH_START]).toHaveBeenCalledTimes(1);
-        expect(hooks[HookName.DISPATCH_END]).toHaveBeenCalledTimes(1);
-        expect(hooks[HookName.CHILD_DISPATCH_BEFORE]).toHaveBeenCalledTimes(1);
-        expect(hooks[HookName.CHILD_DISPATCH_AFTER]).toHaveBeenCalledTimes(1);
+        expect(error).not.toHaveBeenCalled();
+        expect(request).toHaveBeenCalledTimes(1);
+        expect(response).toHaveBeenCalledTimes(1);
+        expect(childMatch).toHaveBeenCalledTimes(1);
+        expect(childBefore).toHaveBeenCalledTimes(1);
+        expect(childAfter).toHaveBeenCalledTimes(1);
     });
 
     it('should trigger error hook', async () => {
@@ -65,46 +51,59 @@ describe('src/router/hooks', () => {
             throw new Error('Hello, World!');
         }));
 
-        const hooks = mountHooks(router);
+        const errorFn = vi.fn();
+        const requestFn = vi.fn();
+        const responseFn = vi.fn();
 
-        const server = supertest(createNodeDispatcher(router));
+        router.on(HookName.REQUEST, () => { requestFn(); });
+        router.on(HookName.RESPONSE, () => { responseFn(); });
+        router.on(HookName.ERROR, () => { errorFn(); });
 
-        const response = await server
-            .get('/');
+        const res = await router.fetch(createTestRequest('/'));
 
-        expect(response.statusCode).toEqual(500);
+        expect(res.status).toEqual(500);
 
-        expect(hooks[HookName.ERROR]).toHaveBeenCalledTimes(1);
-        expect(hooks[HookName.DISPATCH_START]).toHaveBeenCalledTimes(1);
-        expect(hooks[HookName.DISPATCH_END]).toHaveBeenCalledTimes(1);
-        expect(hooks[HookName.CHILD_DISPATCH_BEFORE]).toHaveBeenCalledTimes(1);
-        expect(hooks[HookName.CHILD_DISPATCH_AFTER]).toHaveBeenCalledTimes(1);
+        expect(errorFn).toHaveBeenCalledTimes(1);
+        expect(requestFn).toHaveBeenCalledTimes(1);
+        expect(responseFn).toHaveBeenCalledTimes(1);
     });
 
     it('should remove multiple hooks', async () => {
         const router = new Router();
         router.use(coreHandler(() => 'Hello, World!'));
 
-        const hooks = mountHooks(router);
+        const fn = vi.fn();
 
-        const keys = Object.keys(hooks) as (HookName[]);
-        for (const key of keys) {
-            router.off(key);
+        const hooks = Object.values(HookName);
+        for (const hook of hooks) {
+            router.on(hook as any, () => { fn(); });
         }
 
-        const server = supertest(createNodeDispatcher(router));
+        for (const hook of hooks) {
+            router.off(hook);
+        }
 
-        const response = await server
-            .get('/');
+        const res = await router.fetch(createTestRequest('/'));
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('Hello, World!');
+        expect(res.status).toEqual(200);
+        expect(await res.text()).toEqual('Hello, World!');
+        expect(fn).not.toHaveBeenCalled();
+    });
 
-        expect(hooks[HookName.ERROR]).not.toHaveBeenCalled();
-        expect(hooks[HookName.DISPATCH_START]).not.toHaveBeenCalled();
-        expect(hooks[HookName.DISPATCH_END]).not.toHaveBeenCalled();
-        expect(hooks[HookName.CHILD_DISPATCH_BEFORE]).not.toHaveBeenCalled();
-        expect(hooks[HookName.CHILD_DISPATCH_AFTER]).not.toHaveBeenCalled();
+    it('should remove error hook and fall through to default error handling', async () => {
+        const router = new Router();
+        router.use(coreHandler(() => {
+            throw new Error('fail');
+        }));
+
+        const fn = vi.fn();
+        router.on(HookName.ERROR, () => { fn(); });
+        router.off(HookName.ERROR);
+
+        const res = await router.fetch(createTestRequest('/'));
+
+        expect(res.status).toEqual(500);
+        expect(fn).not.toHaveBeenCalled();
     });
 
     it('should remove single hook', async () => {
@@ -112,101 +111,77 @@ describe('src/router/hooks', () => {
         router.use(coreHandler(() => 'Hello, World!'));
 
         const fnJest = vi.fn();
-        const fn : HookDefaultListener = ({ next }) => {
+        const fn: HookDefaultListener = () => {
             fnJest();
-
-            next();
         };
 
-        router.on(HookName.DISPATCH_START, fn);
-        router.off(HookName.DISPATCH_START, fn);
+        router.on(HookName.REQUEST, fn);
+        router.off(HookName.REQUEST, fn);
 
-        const server = supertest(createNodeDispatcher(router));
+        const res = await router.fetch(createTestRequest('/'));
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('Hello, World!');
+        expect(res.status).toEqual(200);
+        expect(await res.text()).toEqual('Hello, World!');
 
         expect(fnJest).not.toHaveBeenCalled();
     });
 
-    it('should handle default hook error', async () => {
+    it('should handle error with error handler', async () => {
         const router = new Router();
-        router.use(coreHandler(() => 'Hello, World!'));
 
-        router.on(HookName.DISPATCH_START, () => { throw new Error('dispatch start failed!'); });
-        router.on(HookName.ERROR, ({ error }) => error.message);
+        router.use(coreHandler(() => {
+            throw new Error('handler failed!');
+        }));
 
-        const server = supertest(createNodeDispatcher(router));
+        router.use(errorHandler((error) => `Error: ${error.message}`));
 
-        const response = await server
-            .get('/');
+        const res = await router.fetch(createTestRequest('/'));
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('dispatch start failed!');
+        expect(res.status).toEqual(200);
+        expect(await res.text()).toEqual('Error: handler failed!');
     });
 
-    it('should handle match hook error', async () => {
-        const router = new Router();
-        router.use(coreHandler(() => 'Hello, World!'));
-
-        router.on(HookName.CHILD_MATCH, () => { throw new Error('match failed!'); });
-        router.on(HookName.ERROR, ({ error }) => error.message);
-
-        const server = supertest(createNodeDispatcher(router));
-
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('match failed!');
-    });
-
-    it('should remove single hook by index', async () => {
+    it('should remove single hook by unsubscribe', async () => {
         const router = new Router();
         router.use(coreHandler(() => 'Hello, World!'));
 
         const fnJest = vi.fn();
-        const fn : HookDefaultListener = ({ next }) => {
+        const fn: HookDefaultListener = () => {
             fnJest();
-
-            next();
         };
 
-        const unsubscribe = router.on(HookName.DISPATCH_START, fn);
+        const unsubscribe = router.on(HookName.REQUEST, fn);
         unsubscribe();
 
-        const server = supertest(createNodeDispatcher(router));
+        const res = await router.fetch(createTestRequest('/'));
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('Hello, World!');
+        expect(res.status).toEqual(200);
+        expect(await res.text()).toEqual('Hello, World!');
 
         expect(fnJest).not.toHaveBeenCalled();
     });
 
     it('should trigger handler error hook', async () => {
         const router = new Router();
+
+        const onErrorFn = vi.fn();
+
         router.use(coreHandler({
             fn: () => {
                 throw new Error('Hello, World!');
             },
-            onError({ error }) {
-                return `Error: ${error.message}`;
+            onError() {
+                onErrorFn();
             },
         }));
 
-        const server = supertest(createNodeDispatcher(router));
+        router.use(errorHandler((error) => `Error: ${error.message}`));
 
-        const response = await server
-            .get('/');
+        const res = await router.fetch(createTestRequest('/'));
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('Error: Hello, World!');
+        expect(res.status).toEqual(200);
+        expect(await res.text()).toEqual('Error: Hello, World!');
+        expect(onErrorFn).toHaveBeenCalled();
     });
 
     it('should trigger handler hooks', async () => {
@@ -217,23 +192,18 @@ describe('src/router/hooks', () => {
 
         router.use(coreHandler({
             fn: () => 'Hello, World!',
-            onBefore({ next }) {
+            onBefore() {
                 onBefore();
-                next();
             },
-            onAfter({ next }) {
+            onAfter() {
                 onAfter();
-                next();
             },
         }));
 
-        const server = supertest(createNodeDispatcher(router));
+        const res = await router.fetch(createTestRequest('/'));
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('Hello, World!');
+        expect(res.status).toEqual(200);
+        expect(await res.text()).toEqual('Hello, World!');
 
         expect(onBefore).toHaveBeenCalled();
         expect(onAfter).toHaveBeenCalled();

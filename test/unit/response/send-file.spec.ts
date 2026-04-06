@@ -1,105 +1,99 @@
 import { describe, expect, it } from 'vitest';
-import fs, { createReadStream } from 'node:fs';
-import supertest from 'supertest';
-import type { SendFileOptions } from '../../../src';
+import fs from 'node:fs';
+import path from 'node:path';
+import { RoutupEvent } from '../../../src/event/module';
 import {
     HeaderName,
-    Router, 
-    coreHandler, 
-    createNodeDispatcher, 
+    Router,
+    coreHandler,
     sendFile,
 } from '../../../src';
-import { createRequestListener } from '../../handler';
+import type { SendFileOptions } from '../../../src';
+import { createTestRequest } from '../../helpers';
 
 const buildSendFileOptions = (
     filePath: string,
     attachment?: boolean,
-) : SendFileOptions => ({
+): SendFileOptions => ({
     name: filePath,
-    stats() {
-        return fs.promises.stat(filePath);
+    async stats() {
+        const stat = await fs.promises.stat(filePath);
+        return {
+            size: stat.size,
+            mtime: stat.mtime,
+            name: path.basename(filePath),
+        };
     },
-    content(options) {
-        return createReadStream(filePath, options);
+    async content(options) {
+        const buffer = await fs.promises.readFile(filePath);
+        if (options.start !== undefined || options.end !== undefined) {
+            return buffer.slice(options.start || 0, options.end !== undefined ? options.end + 1 : undefined);
+        }
+        return buffer;
     },
     attachment,
 });
+
 describe('src/helpers/response/send-file', () => {
     it('should send file', async () => {
-        const server = supertest(createRequestListener((_req, res) => {
-            sendFile(res, buildSendFileOptions('test/data/dummy.json'));
-        }));
+        const event = new RoutupEvent(createTestRequest('/'));
+        const response = await sendFile(event, buildSendFileOptions('test/data/dummy.json'));
 
-        const response = await server
-            .get('/');
+        expect(response.status).toEqual(200);
+        expect(response.headers.get(HeaderName.CONTENT_TYPE))
+            .toEqual('application/json; charset=utf-8');
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8');
-        expect(response.body).toEqual({
+        const body = await response.json();
+        expect(body).toEqual({
             id: 1,
-            name: 'tada5hi', 
+            name: 'tada5hi',
         });
     });
 
-    it('should not send file promise', async () => {
+    it('should return 500 for non-existent file', async () => {
         const router = new Router();
 
-        router.get(coreHandler((
-            _req,
-            res,
-        ) => sendFile(res, buildSendFileOptions('test/data/foo.json'))));
+        router.get('/', coreHandler((event) =>
+            sendFile(event, buildSendFileOptions('test/data/foo.json'))));
 
-        const server = supertest(createNodeDispatcher(router));
+        const response = await router.fetch(createTestRequest('/'));
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(500);
+        expect(response.status).toEqual(500);
     });
 
     it('should send file to download', async () => {
-        const server = supertest(createRequestListener((_req, res) => {
-            sendFile(res, buildSendFileOptions('test/data/dummy.json', true));
-        }));
+        const event = new RoutupEvent(createTestRequest('/'));
+        const response = await sendFile(event, buildSendFileOptions('test/data/dummy.json', true));
 
-        const response = await server
-            .get('/');
+        expect(response.status).toEqual(200);
+        expect(response.headers.get(HeaderName.CONTENT_TYPE))
+            .toEqual('application/json; charset=utf-8');
+        expect(response.headers.get(HeaderName.CONTENT_DISPOSITION))
+            .toEqual('attachment; filename="dummy.json"; filename*=UTF-8\'\'dummy.json');
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.headers[HeaderName.CONTENT_TYPE]).toEqual('application/json; charset=utf-8');
-        expect(response.headers[HeaderName.CONTENT_DISPOSITION]).toEqual('attachment; filename="dummy.json"; filename*=UTF-8\'\'dummy.json');
-        expect(response.body).toEqual({
+        const body = await response.json();
+        expect(body).toEqual({
             id: 1,
-            name: 'tada5hi', 
+            name: 'tada5hi',
         });
     });
 
     it('should shrink end of range if it results in an overflow', async () => {
-        const server = supertest(createRequestListener((_req, res) => {
-            sendFile(res, buildSendFileOptions('test/data/dummy.txt'));
-        }));
-
-        const response = await server
-            .get('/')
-            .set('Range', 'bytes=10-9999999');
+        const event = new RoutupEvent(createTestRequest('/', { headers: { 'range': 'bytes=10-9999999' } }));
+        const response = await sendFile(event, buildSendFileOptions('test/data/dummy.txt'));
 
         expect(response).toBeDefined();
-        expect(response.status).toEqual(200);
 
         const file = await fs.promises.readFile('test/data/dummy.txt', { encoding: 'utf-8' });
 
-        expect(response.headers[HeaderName.ETag].substring(0, 6)).toEqual('W/"631');
-        expect(response.headers[HeaderName.CONTENT_RANGE]).toEqual(`${`bytes 10-${file.length - 1}`}/${file.length}`);
+        expect(response.headers.get(HeaderName.ETag)!.substring(0, 6)).toEqual('W/"631');
+        expect(response.headers.get(HeaderName.CONTENT_RANGE))
+            .toEqual(`bytes 10-${file.length - 1}/${file.length}`);
     });
 
-    it('should throw error when start range exceeds file size', async () => {
-        const server = supertest(createRequestListener((_req, res) => {
-            sendFile(res, buildSendFileOptions('test/data/dummy.txt'));
-        }));
-
-        const response = await server
-            .get('/')
-            .set('Range', 'bytes=999-999999');
+    it('should return 416 when start range exceeds file size', async () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { 'range': 'bytes=999-999999' } }));
+        const response = await sendFile(event, buildSendFileOptions('test/data/dummy.txt'));
 
         expect(response).toBeDefined();
         expect(response.status).toEqual(416);

@@ -1,17 +1,24 @@
 import Negotiator from 'negotiator';
-import { getProperty, setProperty } from '../../utils';
 
-import type { Request } from '../types';
+import type { IRoutupEvent } from '../../event/index.ts';
 
-const symbol = Symbol.for('ReqNegotiator');
+const NEGOTIATOR_KEY = /* @__PURE__ */ Symbol.for('routup:negotiator');
 
-export function useRequestNegotiator(req: Request) : Negotiator {
-    let value = getProperty(req, symbol);
+function headersToPlainObject(headers: Headers) : Record<string, string> {
+    const result: Record<string, string> = {};
+    headers.forEach((value, key) => {
+        result[key] = value;
+    });
+    return result;
+}
+
+export function useRequestNegotiator(event: IRoutupEvent) : Negotiator {
+    let value = event.store[NEGOTIATOR_KEY] as Negotiator | undefined;
     if (value) {
         return value;
     }
 
-    value = new Negotiator(req);
-    setProperty(req, symbol, value);
+    value = new Negotiator({ headers: headersToPlainObject(event.headers) });
+    event.store[NEGOTIATOR_KEY] = value;
     return value;
 }

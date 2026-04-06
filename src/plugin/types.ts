@@ -1,7 +1,7 @@
 import type { Path } from '../path';
-import type { Router } from '../router';
+import type { IRouter } from '../router/types.ts';
 
-export type PluginInstallFn = (router: Router) => any;
+export type PluginInstallFn = (router: IRouter) => any;
 
 export type Plugin = {
     /**

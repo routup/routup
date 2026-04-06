@@ -1,15 +1,9 @@
-import { getProperty, setProperty } from '../../utils';
-import type { Response } from '../types';
+import type { IRoutupEvent } from '../../event/index.ts';
 
-const symbol = Symbol.for('ResGone');
-export function isResponseGone(res: Response) {
-    if (res.headersSent || res.writableEnded) {
-        return true;
-    }
-
-    return getProperty(res, symbol) ?? false;
+export function isResponseGone(event: IRoutupEvent) : boolean {
+    return event.dispatched;
 }
 
-export function setResponseGone(res: Response, value: boolean) {
-    setProperty(res, symbol, value);
+export function setResponseGone(event: IRoutupEvent) {
+    event.dispatched = true;
 }

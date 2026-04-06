@@ -13,3 +13,8 @@ reports
 .temp
 .claude/settings.local.json
 .agents/plans
+docs/node_modules
+docs/.temp
+docs/dist
+docs/src/.vitepress/cache
+docs/src/.vitepress/dist

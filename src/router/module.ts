@@ -1,41 +1,42 @@
 import { distinctArray } from 'smob';
-import { HeaderName, MethodName } from '../constants';
-import type { DispatchEvent, Dispatcher } from '../dispatcher';
-import type { RoutupError } from '../error';
-import type { HandlerConfig } from '../handler';
+import { HeaderName, MethodName } from '../constants.ts';
+import { RoutupEvent } from '../event/index.ts';
+import type { IRoutupEvent, RoutupRequest } from '../event/index.ts';
+import { createError } from '../error/index.ts';
+import type { HandlerConfig } from '../handler/index.ts';
 import {
-    Handler, 
-    HandlerType, 
-    isHandler, 
+    Handler,
+    HandlerType,
+    coreHandler,
+    isHandler,
     isHandlerConfig,
-} from '../handler';
+} from '../handler/index.ts';
 import type {
-    HookDefaultListener, 
-    HookErrorListener, 
-    HookListener, 
+    HookDefaultListener,
+    HookErrorListener,
+    HookListener,
     HookUnsubscribeFn,
-} from '../hook';
-import { HookManager, HookName } from '../hook';
-import type { Path } from '../path';
-import { PathMatcher, isPath } from '../path';
-import type { Plugin, PluginInstallContext } from '../plugin';
-import { isPlugin } from '../plugin';
-import { send } from '../response';
-import type { RouterOptionsInput } from '../router-options';
-import { setRouterOptions } from '../router-options';
-import { transformRouterOptions } from '../router-options/transform';
-import { cleanDoubleSlashes, withLeadingSlash, withoutTrailingSlash } from '../utils';
-import { RouterPipelineStep, RouterSymbol } from './constants';
-import type { RouterPipelineContext } from './types';
-import { generateRouterID, isRouterInstance } from './utils';
+} from '../hook/index.ts';
+import { HookManager, HookName } from '../hook/index.ts';
+import type { Path } from '../path/index.ts';
+import { PathMatcher, isPath } from '../path/index.ts';
+import type { Plugin, PluginInstallContext } from '../plugin/index.ts';
+import { isPlugin } from '../plugin/index.ts';
+import type { RouterOptionsInput } from '../router-options/index.ts';
+import { setRouterOptions } from '../router-options/index.ts';
+import { normalizeRouterOptions } from '../router-options/normalize.ts';
+import { cleanDoubleSlashes, withLeadingSlash, withoutTrailingSlash } from '../utils/index.ts';
+import { RouterPipelineStep, RouterSymbol } from './constants.ts';
+import type { IRouter, RouterPipelineContext } from './types.ts';
+import { acceptsJson, generateRouterID, isRouterInstance } from './utils.ts';
 
-export class Router implements Dispatcher {
+export class Router implements IRouter {
     readonly '@instanceof' = RouterSymbol;
 
     /**
      * An identifier for the router instance.
      */
-    readonly id : number;
+    readonly id: number;
 
     /**
      * A label for the router instance.
@@ -47,14 +48,14 @@ export class Router implements Dispatcher {
      *
      * @protected
      */
-    protected stack : (Router | Handler)[] = [];
+    protected stack: (Router | Handler)[] = [];
 
     /**
      * Path matcher for the current mount path.
      *
      * @protected
      */
-    protected pathMatcher : PathMatcher | undefined;
+    protected pathMatcher: PathMatcher | undefined;
 
     /**
      * A hook manager.
@@ -73,12 +74,12 @@ export class Router implements Dispatcher {
 
         this.setPath(options.path);
 
-        setRouterOptions(this.id, transformRouterOptions(options));
+        setRouterOptions(this.id, normalizeRouterOptions(options));
     }
 
     // --------------------------------------------------
 
-    matchPath(path: string) : boolean {
+    matchPath(path: string): boolean {
         if (this.pathMatcher) {
             return this.pathMatcher.test(path);
         }
@@ -100,7 +101,57 @@ export class Router implements Dispatcher {
 
     // --------------------------------------------------
 
-    protected async executePipelineStep(context: RouterPipelineContext) : Promise<void> {
+    /**
+     * Public entry point — creates a RoutupEvent from the request,
+     * runs the pipeline, and returns a Response (with 404/500 fallbacks).
+     */
+    async fetch(request: RoutupRequest): Promise<Response> {
+        const event = new RoutupEvent(request);
+
+        let response: Response | undefined;
+
+        try {
+            response = await this.dispatch(event);
+        } catch (e) {
+            event.error = createError(e);
+        }
+
+        if (response) {
+            return response;
+        }
+
+        if (event.error) {
+            const status = event.error.statusCode || 500;
+            const message = event.error.statusMessage || 'Internal Server Error';
+            return this.buildFallbackResponse(request, event, status, message);
+        }
+
+        return this.buildFallbackResponse(request, event, 404, 'Not Found');
+    }
+
+    protected buildFallbackResponse(request: RoutupRequest, event: RoutupEvent, status: number, message: string): Response {
+        const headers = new Headers(event.response.headers);
+
+        if (acceptsJson(request)) {
+            headers.set('content-type', 'application/json; charset=utf-8');
+            return new Response(JSON.stringify({ status, message }), {
+                status,
+                statusText: message,
+                headers,
+            });
+        }
+
+        headers.set('content-type', 'text/plain; charset=utf-8');
+        return new Response(message, {
+            status,
+            statusText: message,
+            headers,
+        });
+    }
+
+    // --------------------------------------------------
+
+    protected async executePipelineStep(context: RouterPipelineContext): Promise<void> {
         switch (context.step) {
             case RouterPipelineStep.START: {
                 return this.executePipelineStepStart(context);
@@ -124,8 +175,8 @@ export class Router implements Dispatcher {
         }
     }
 
-    protected async executePipelineStepStart(context: RouterPipelineContext) : Promise<void> {
-        await this.hookManager.trigger(HookName.DISPATCH_START, context.event);
+    protected async executePipelineStepStart(context: RouterPipelineContext): Promise<void> {
+        await this.hookManager.trigger(HookName.REQUEST, context.event);
 
         if (context.event.dispatched) {
             context.step = RouterPipelineStep.FINISH;
@@ -136,7 +187,7 @@ export class Router implements Dispatcher {
         return this.executePipelineStep(context);
     }
 
-    protected async executePipelineStepLookup(context: RouterPipelineContext) : Promise<void> {
+    protected async executePipelineStepLookup(context: RouterPipelineContext): Promise<void> {
         while (
             !context.event.dispatched &&
             context.stackIndex < this.stack.length
@@ -159,7 +210,7 @@ export class Router implements Dispatcher {
                         context.event.methodsAllowed.push(item.method);
                     }
 
-                    if (item.matchMethod(context.event.method)) {
+                    if (item.matchMethod(context.event.method as `${MethodName}`)) {
                         await this.hookManager.trigger(HookName.CHILD_MATCH, context.event);
 
                         if (context.event.dispatched) {
@@ -197,7 +248,7 @@ export class Router implements Dispatcher {
         return this.executePipelineStep(context);
     }
 
-    protected async executePipelineStepChildBefore(context: RouterPipelineContext) : Promise<void> {
+    protected async executePipelineStepChildBefore(context: RouterPipelineContext): Promise<void> {
         await this.hookManager.trigger(HookName.CHILD_DISPATCH_BEFORE, context.event);
 
         if (context.event.dispatched) {
@@ -209,7 +260,7 @@ export class Router implements Dispatcher {
         return this.executePipelineStep(context);
     }
 
-    protected async executePipelineStepChildAfter(context: RouterPipelineContext) : Promise<void> {
+    protected async executePipelineStepChildAfter(context: RouterPipelineContext): Promise<void> {
         await this.hookManager.trigger(HookName.CHILD_DISPATCH_AFTER, context.event);
 
         if (context.event.dispatched) {
@@ -221,7 +272,7 @@ export class Router implements Dispatcher {
         return this.executePipelineStep(context);
     }
 
-    protected async executePipelineStepChildDispatch(context: RouterPipelineContext) : Promise<void> {
+    protected async executePipelineStepChildDispatch(context: RouterPipelineContext): Promise<void> {
         if (
             context.event.dispatched ||
             typeof this.stack[context.stackIndex] === 'undefined'
@@ -230,12 +281,48 @@ export class Router implements Dispatcher {
             return this.executePipelineStep(context);
         }
 
-        try {
-            await this.stack[context.stackIndex]!.dispatch(context.event);
-        } catch (e) {
-            context.event.error = e as RoutupError;
+        const item = this.stack[context.stackIndex]!;
+        const { event } = context;
 
-            await this.hookManager.trigger(HookName.ERROR, context.event);
+        // Save next state before wiring up onion model
+        const savedNext = event._next;
+        const savedNextCalled = event._nextCalled;
+
+        try {
+            event._nextCalled = false;
+            event._next = async () => {
+                // Continue pipeline from the next stack item
+                const nextContext: RouterPipelineContext = {
+                    step: RouterPipelineStep.LOOKUP,
+                    event,
+                    stackIndex: context.stackIndex + 1,
+                    response: undefined,
+                };
+
+                event.routerPath.push(this.id);
+                try {
+                    await this.executePipelineStep(nextContext);
+                } finally {
+                    event.routerPath.pop();
+                }
+
+                return nextContext.response;
+            };
+
+            const response = await item.dispatch(event);
+
+            if (response) {
+                context.response = response;
+                event.dispatched = true;
+            }
+        } catch (e) {
+            event.error = createError(e);
+
+            await this.hookManager.trigger(HookName.ERROR, event);
+        } finally {
+            // Restore next state regardless of success or failure
+            event._next = savedNext;
+            event._nextCalled = savedNextCalled;
         }
 
         context.stackIndex++;
@@ -244,9 +331,9 @@ export class Router implements Dispatcher {
         return this.executePipelineStep(context);
     }
 
-    protected async executePipelineStepFinish(context: RouterPipelineContext) : Promise<void> {
+    protected async executePipelineStepFinish(context: RouterPipelineContext): Promise<void> {
         if (context.event.error || context.event.dispatched) {
-            return this.hookManager.trigger(HookName.DISPATCH_END, context.event);
+            return this.hookManager.trigger(HookName.RESPONSE, context.event);
         }
 
         if (
@@ -265,21 +352,25 @@ export class Router implements Dispatcher {
                 .map((key) => key.toUpperCase())
                 .join(',');
 
-            context.event.response.setHeader(HeaderName.ALLOW, options);
-
-            await send(context.event.response, options);
+            const optionsHeaders = new Headers(context.event.response.headers);
+            optionsHeaders.set(HeaderName.ALLOW, options);
+            context.response = new Response(options, {
+                status: context.event.response.status || 200,
+                statusText: context.event.response.statusText,
+                headers: optionsHeaders,
+            });
 
             context.event.dispatched = true;
         }
 
-        return this.hookManager.trigger(HookName.DISPATCH_END, context.event);
+        return this.hookManager.trigger(HookName.RESPONSE, context.event);
     }
 
     // --------------------------------------------------
 
     async dispatch(
-        event: DispatchEvent,
-    ) : Promise<void> {
+        event: RoutupEvent,
+    ): Promise<Response | undefined> {
         if (this.pathMatcher) {
             const output = this.pathMatcher.exec(event.path);
             if (typeof output !== 'undefined') {
@@ -298,7 +389,7 @@ export class Router implements Dispatcher {
             }
         }
 
-        const context : RouterPipelineContext = {
+        const context: RouterPipelineContext = {
             step: RouterPipelineStep.START,
             event,
             stackIndex: 0,
@@ -309,77 +400,79 @@ export class Router implements Dispatcher {
         try {
             await this.executePipelineStep(context);
         } finally {
-            context.event.routerPath.pop();
+            event.routerPath.pop();
         }
+
+        return context.response;
     }
 
     // --------------------------------------------------
 
-    delete(...handlers: (Handler | HandlerConfig)[]) : this;
+    delete(...handlers: (Handler | HandlerConfig)[]): this;
 
-    delete(path: Path, ...handlers: (Handler | HandlerConfig)[]) : this;
+    delete(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
 
-    delete(...input: (Path | Handler | HandlerConfig)[]) : this {
+    delete(...input: (Path | Handler | HandlerConfig)[]): this {
         this.useForMethod(MethodName.DELETE, ...input);
 
         return this;
     }
 
-    get(...handlers: (Handler | HandlerConfig)[]) : this;
+    get(...handlers: (Handler | HandlerConfig)[]): this;
 
-    get(path: Path, ...handlers: (Handler | HandlerConfig)[]) : this;
+    get(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
 
-    get(...input: (Path | Handler | HandlerConfig)[]) : this {
+    get(...input: (Path | Handler | HandlerConfig)[]): this {
         this.useForMethod(MethodName.GET, ...input);
 
         return this;
     }
 
-    post(...handlers: (Handler | HandlerConfig)[]) : this;
+    post(...handlers: (Handler | HandlerConfig)[]): this;
 
-    post(path: Path, ...handlers: (Handler | HandlerConfig)[]) : this;
+    post(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
 
-    post(...input: (Path | Handler | HandlerConfig)[]) : this {
+    post(...input: (Path | Handler | HandlerConfig)[]): this {
         this.useForMethod(MethodName.POST, ...input);
 
         return this;
     }
 
-    put(...handlers: (Handler | HandlerConfig)[]) : this;
+    put(...handlers: (Handler | HandlerConfig)[]): this;
 
-    put(path: Path, ...handlers: (Handler | HandlerConfig)[]) : this;
+    put(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
 
-    put(...input: (Path | Handler | HandlerConfig)[]) : this {
+    put(...input: (Path | Handler | HandlerConfig)[]): this {
         this.useForMethod(MethodName.PUT, ...input);
 
         return this;
     }
 
-    patch(...handlers: (Handler | HandlerConfig)[]) : this;
+    patch(...handlers: (Handler | HandlerConfig)[]): this;
 
-    patch(path: Path, ...handlers: (Handler | HandlerConfig)[]) : this;
+    patch(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
 
-    patch(...input: (Path | Handler | HandlerConfig)[]) : this {
+    patch(...input: (Path | Handler | HandlerConfig)[]): this {
         this.useForMethod(MethodName.PATCH, ...input);
 
         return this;
     }
 
-    head(...handlers: (Handler | HandlerConfig)[]) : this;
+    head(...handlers: (Handler | HandlerConfig)[]): this;
 
-    head(path: Path, ...handlers: (Handler | HandlerConfig)[]) : this;
+    head(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
 
-    head(...input: (Path | Handler | HandlerConfig)[]) : this {
+    head(...input: (Path | Handler | HandlerConfig)[]): this {
         this.useForMethod(MethodName.HEAD, ...input);
 
         return this;
     }
 
-    options(...handlers: (Handler | HandlerConfig)[]) : this;
+    options(...handlers: (Handler | HandlerConfig)[]): this;
 
-    options(path: Path, ...handlers: (Handler | HandlerConfig)[]) : this;
+    options(path: Path, ...handlers: (Handler | HandlerConfig)[]): this;
 
-    options(...input: (Path | Handler | HandlerConfig)[]) : this {
+    options(...input: (Path | Handler | HandlerConfig)[]): this {
         this.useForMethod(MethodName.OPTIONS, ...input);
 
         return this;
@@ -391,7 +484,7 @@ export class Router implements Dispatcher {
         method: MethodName,
         ...input: (Path | Handler | HandlerConfig)[]
     ) {
-        let path : Path | undefined;
+        let path: Path | undefined;
 
         for (const element of input) {
             if (isPath(element)) {
@@ -425,20 +518,48 @@ export class Router implements Dispatcher {
 
     // --------------------------------------------------
 
-    use(router: Router) : this;
+    /**
+     * Mount an external fetch handler at the given path.
+     * The handler receives requests with the mount prefix stripped from the URL.
+     *
+     * @experimental
+     */
+    mount(path: Path, handler: { fetch: (request: Request) => Response | Promise<Response> }): this;
+    mount(path: Path, handler: (request: Request) => Response | Promise<Response>): this;
+    mount(path: Path, handler: unknown): this {
+        const fn = typeof handler === 'function' ?
+            handler as (request: Request) => Response | Promise<Response> :
+            (handler as { fetch: (request: Request) => Response | Promise<Response> }).fetch.bind(handler);
 
-    use(handler: Handler | HandlerConfig) : this;
+        this.use(path, coreHandler({
+            fn: async (event: IRoutupEvent) => {
+                const url = new URL(event.request.url);
+                url.pathname = event.path;
 
-    use(plugin: Plugin) : this;
+                const adjusted = new Request(url.toString(), event.request);
+                return fn(adjusted);
+            },
+        }));
 
-    use(path: Path, router: Router) : this;
+        return this;
+    }
 
-    use(path: Path, handler: Handler | HandlerConfig) : this;
+    // --------------------------------------------------
 
-    use(path: Path, plugin: Plugin) : this;
+    use(router: Router): this;
 
-    use(...input: unknown[]) : this {
-        let path : Path | undefined;
+    use(handler: Handler | HandlerConfig): this;
+
+    use(plugin: Plugin): this;
+
+    use(path: Path, router: Router): this;
+
+    use(path: Path, handler: Handler | HandlerConfig): this;
+
+    use(path: Path, plugin: Plugin): this;
+
+    use(...input: unknown[]): this {
+        let path: Path | undefined;
         for (const item of input) {
             if (isPath(item)) {
                 path = withLeadingSlash(item);
@@ -483,7 +604,7 @@ export class Router implements Dispatcher {
     protected install(
         plugin: Plugin,
         context: PluginInstallContext = {},
-    ) : this {
+    ): this {
         const name = context.name || plugin.name;
 
         const router = new Router({ name });
@@ -506,26 +627,25 @@ export class Router implements Dispatcher {
      * @param name
      * @param fn
      */
-
     on(
-        name: `${HookName.DISPATCH_START}` |
-            `${HookName.DISPATCH_END}` |
+        name: `${HookName.REQUEST}` |
+            `${HookName.RESPONSE}` |
             `${HookName.CHILD_DISPATCH_BEFORE}` |
             `${HookName.CHILD_DISPATCH_AFTER}`,
         fn: HookDefaultListener
-    ) : HookUnsubscribeFn;
+    ): HookUnsubscribeFn;
 
     on(
         name: `${HookName.CHILD_MATCH}`,
-        fn: HookErrorListener
-    ) : HookUnsubscribeFn;
+        fn: HookDefaultListener
+    ): HookUnsubscribeFn;
 
     on(
         name: `${HookName.ERROR}`,
         fn: HookErrorListener
-    ) : HookUnsubscribeFn;
+    ): HookUnsubscribeFn;
 
-    on(name: `${HookName}`, fn: HookListener) : HookUnsubscribeFn {
+    on(name: `${HookName}`, fn: HookListener): HookUnsubscribeFn {
         return this.hookManager.addListener(name, fn);
     }
 
@@ -534,12 +654,11 @@ export class Router implements Dispatcher {
      *
      * @param name
      */
+    off(name: `${HookName}`): this;
 
-    off(name: `${HookName}`) : this;
+    off(name: `${HookName}`, fn: HookListener): this;
 
-    off(name: `${HookName}`, fn: HookListener) : this;
-
-    off(name: `${HookName}`, fn?: HookListener) : this {
+    off(name: `${HookName}`, fn?: HookListener): this {
         if (typeof fn === 'undefined') {
             this.hookManager.removeListener(name);
 

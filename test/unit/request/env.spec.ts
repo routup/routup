@@ -1,112 +1,46 @@
 import { describe, expect, it } from 'vitest';
-import supertest from 'supertest';
-import { createRequestListener } from '../../handler';
-import {
-    send,
-    setRequestEnv,
-    unsetRequestEnv,
-    useRequestEnv,
-} from '../../../src';
+import { RoutupEvent } from '../../../src/event/module';
+import { createTestRequest } from '../../helpers';
 
-describe('src/helpers/request/env', () => {
-    it('set & get env param', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            setRequestEnv(req, 'bar', 'baz');
-            setRequestEnv(req, 'foo', 'bar');
+describe('src/event/store', () => {
+    it('should set & get values', () => {
+        const event = new RoutupEvent(createTestRequest('/'));
 
-            send(res, useRequestEnv(req, 'foo'));
-        }));
+        event.store.foo = 'bar';
+        event.store.bar = 'baz';
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('bar');
+        expect(event.store.foo).toBe('bar');
+        expect(event.store.bar).toBe('baz');
     });
 
-    it('set set & get env object', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            setRequestEnv(req, {
-                foo: 'bar',
-                bar: 'baz',
-            });
+    it('should support symbol keys', () => {
+        const event = new RoutupEvent(createTestRequest('/'));
+        const key = Symbol.for('test:key');
 
-            send(res, useRequestEnv(req));
-        }));
+        event.store[key] = 'value';
 
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({
-            foo: 'bar',
-            bar: 'baz',
-        });
+        expect(event.store[key]).toBe('value');
     });
 
-    it('should append env to request', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            setRequestEnv(req, { foo: 'bar' });
+    it('should delete values', () => {
+        const event = new RoutupEvent(createTestRequest('/'));
 
-            setRequestEnv(req, { bar: 'baz' }, true);
+        event.store.foo = 'bar';
+        delete event.store.foo;
 
-            send(res, useRequestEnv(req));
-        }));
-
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({
-            foo: 'bar',
-            bar: 'baz',
-        });
+        expect(event.store.foo).toBeUndefined();
     });
 
-    it('should overwrite env of request', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            setRequestEnv(req, { foo: 'bar' });
+    it('should start empty', () => {
+        const event = new RoutupEvent(createTestRequest('/'));
 
-            setRequestEnv(req, { bar: 'baz' });
-
-            send(res, useRequestEnv(req));
-        }));
-
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({ bar: 'baz' });
+        expect(Object.keys(event.store)).toEqual([]);
     });
 
-    it('should unset env of request', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            setRequestEnv(req, {
-                foo: 'bar',
-                bar: 'baz',
-            });
+    it('should not have prototype properties', () => {
+        const event = new RoutupEvent(createTestRequest('/'));
 
-            unsetRequestEnv(req, 'foo');
-
-            send(res, useRequestEnv(req));
-        }));
-
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({ bar: 'baz' });
-    });
-
-    it('should use request env', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            send(res, useRequestEnv(req));
-        }));
-
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual({});
+        expect(event.store.toString).toBeUndefined();
+        expect(event.store.hasOwnProperty).toBeUndefined();
     });
 });

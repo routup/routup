@@ -1,8 +1,7 @@
 export enum HookName {
+    REQUEST = 'request',
+    RESPONSE = 'response',
     ERROR = 'error',
-
-    DISPATCH_START = 'dispatchStart',
-    DISPATCH_END = 'dispatchEnd',
 
     CHILD_MATCH = 'childMatch',
     CHILD_DISPATCH_BEFORE = 'childDispatchBefore',

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import supertest from 'supertest';
+import { RoutupEvent } from '../../../src/event/module';
 import {
     HeaderName,
     getRequestAcceptableCharset,
@@ -12,249 +12,137 @@ import {
     getRequestAcceptableLanguages,
     getRequestHeader,
     matchRequestContentType,
-    send,
-    setRequestHeader,
 } from '../../../src';
-import { createRequestListener } from '../../handler';
+import { createTestRequest } from '../../helpers';
 
 describe('src/helpers/request/header', () => {
-    it('should set & get request header', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            setRequestHeader(req, 'accept-language', 'de');
+    it('should get request header', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { 'accept-language': 'de' } }));
 
-            send(res, getRequestHeader(req, 'accept-language'));
-        }));
-
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('de');
+        expect(getRequestHeader(event, 'accept-language')).toEqual('de');
     });
 
-    it('should get all covered accept header values', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            const accepts = getRequestAcceptableContentTypes(req);
+    it('should return null for missing header', () => {
+        const event = new RoutupEvent(createTestRequest('/'));
 
-            send(res, accepts);
-        }));
-
-        const response = await server
-            .get('/')
-            .set(HeaderName.ACCEPT, 'application/json, text/html');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual(['application/json', 'text/html']);
+        expect(getRequestHeader(event, 'x-missing')).toBeNull();
     });
 
-    it('should get covered accept header value', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            const accepts = getRequestAcceptableContentType(req, 'json');
+    it('should get all covered accept header values', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.ACCEPT]: 'application/json, text/html' } }));
 
-            send(res, accepts);
-        }));
-
-        let response = await server
-            .get('/')
-            .set(HeaderName.ACCEPT, 'application/json, text/html');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('json');
-
-        // no header -> use any content-type
-        response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('json');
-
-        // accept header do not match options
-        response = await server
-            .get('/')
-            .set(HeaderName.ACCEPT, 'image/png');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toBeFalsy();
+        const accepts = getRequestAcceptableContentTypes(event);
+        expect(accepts).toEqual(['application/json', 'text/html']);
     });
 
-    it('should get covered accept header value for multiple options', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            const accepts = getRequestAcceptableContentType(req, ['text', 'json']);
+    it('should get covered accept header value', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.ACCEPT]: 'application/json, text/html' } }));
 
-            send(res, accepts);
-        }));
-
-        const response = await server
-            .get('/')
-            .set(HeaderName.ACCEPT, 'application/json');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('json');
+        expect(getRequestAcceptableContentType(event, 'json')).toEqual('json');
     });
 
-    it('should get all covered accept charset header values', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            const accepts = getRequestAcceptableCharsets(req);
+    it('should return first option when no accept header', () => {
+        const event = new RoutupEvent(createTestRequest('/'));
 
-            send(res, accepts);
-        }));
-
-        let response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual(['*']);
-
-        response = await server
-            .get('/')
-            .set(HeaderName.ACCEPT_CHARSET, 'utf-8');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual(['utf-8']);
+        expect(getRequestAcceptableContentType(event, 'json')).toEqual('json');
     });
 
-    it('should get covered accept charset header value', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            const accepts = getRequestAcceptableCharset(req, 'utf-8');
+    it('should return undefined when accept header does not match', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.ACCEPT]: 'image/png' } }));
 
-            send(res, accepts);
-        }));
-
-        let response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('utf-8');
-
-        response = await server
-            .get('/')
-            .set(HeaderName.ACCEPT_CHARSET, 'binary');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toBeFalsy();
+        expect(getRequestAcceptableContentType(event, 'json')).toBeFalsy();
     });
 
-    it('should get all covered accept encoding header values', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            const accepts = getRequestAcceptableEncodings(req);
+    it('should get covered accept header value for multiple options', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.ACCEPT]: 'application/json' } }));
 
-            send(res, accepts);
-        }));
-
-        const response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual(['gzip', 'deflate', 'identity']);
+        expect(getRequestAcceptableContentType(event, ['text', 'json'])).toEqual('json');
     });
 
-    it('should get all covered accept encoding header value', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            const accepts = getRequestAcceptableEncoding(req, 'gzip');
+    it('should get all covered accept charset header values', () => {
+        const event = new RoutupEvent(createTestRequest('/'));
 
-            send(res, accepts);
-        }));
-
-        let response = await server
-            .get('/')
-            .set(HeaderName.ACCEPT_ENCODING, 'gzip');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('gzip');
-
-        response = await server
-            .get('/')
-            .set(HeaderName.ACCEPT_ENCODING, 'deflate');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toBeFalsy();
+        expect(getRequestAcceptableCharsets(event)).toEqual(['*']);
     });
 
-    it('should get all covered accept language header values', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            const accepts = getRequestAcceptableLanguages(req);
+    it('should get covered accept charset header value with specific charset', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.ACCEPT_CHARSET]: 'utf-8' } }));
 
-            send(res, accepts);
-        }));
-
-        let response = await server
-            .get('/');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual(['*']);
-
-        response = await server
-            .get('/')
-            .set(HeaderName.ACCEPT_LANGUAGE, 'en');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.body).toEqual(['en']);
+        expect(getRequestAcceptableCharsets(event)).toEqual(['utf-8']);
     });
 
-    it('should get covered accept language header value', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            const accepts = getRequestAcceptableLanguage(req, 'de');
+    it('should get covered accept charset header value', () => {
+        const event = new RoutupEvent(createTestRequest('/'));
 
-            send(res, accepts);
-        }));
-
-        let response = await server
-            .get('/de')
-            .set(HeaderName.ACCEPT_LANGUAGE, 'de');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('de');
-
-        response = await server
-            .get('/de')
-            .set(HeaderName.ACCEPT_LANGUAGE, 'en');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toBeFalsy();
+        expect(getRequestAcceptableCharset(event, 'utf-8')).toEqual('utf-8');
     });
 
-    it('should get covered accept language header value for multiple options', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            const accepts = getRequestAcceptableLanguage(req, ['de', 'en']);
+    it('should return falsy for non-matching charset', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.ACCEPT_CHARSET]: 'binary' } }));
 
-            send(res, accepts);
-        }));
-
-        const response = await server
-            .get('/multiple')
-            .set(HeaderName.ACCEPT_LANGUAGE, 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5');
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('en');
+        expect(getRequestAcceptableCharset(event, 'utf-8')).toBeFalsy();
     });
 
-    it('should match request content type', async () => {
-        const server = supertest(createRequestListener((req, res) => {
-            if (matchRequestContentType(req, 'json')) {
-                send(res, 'true');
-            } else {
-                send(res, 'false');
-            }
-        }));
+    it('should get all covered accept encoding header values', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.ACCEPT_ENCODING]: 'gzip, deflate' } }));
 
-        let response = await server
-            .get('/')
-            .set(HeaderName.CONTENT_TYPE, 'application/json; charset=utf-8');
+        const encodings = getRequestAcceptableEncodings(event);
+        expect(encodings).toEqual(['gzip', 'deflate', 'identity']);
+    });
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('true');
+    it('should get covered accept encoding header value', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.ACCEPT_ENCODING]: 'gzip' } }));
 
-        response = await server
-            .get('/')
-            .set(HeaderName.CONTENT_TYPE, 'text/html; charset=utf-8');
+        expect(getRequestAcceptableEncoding(event, 'gzip')).toEqual('gzip');
+    });
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('false');
+    it('should return falsy for non-matching encoding', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.ACCEPT_ENCODING]: 'deflate' } }));
 
-        response = await server
-            .get('/');
+        expect(getRequestAcceptableEncoding(event, 'gzip')).toBeFalsy();
+    });
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.text).toEqual('true');
+    it('should get all covered accept language header values', () => {
+        const event = new RoutupEvent(createTestRequest('/'));
+
+        expect(getRequestAcceptableLanguages(event)).toEqual(['*']);
+    });
+
+    it('should get specific accept language header values', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.ACCEPT_LANGUAGE]: 'en' } }));
+
+        expect(getRequestAcceptableLanguages(event)).toEqual(['en']);
+    });
+
+    it('should get covered accept language header value', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.ACCEPT_LANGUAGE]: 'de' } }));
+
+        expect(getRequestAcceptableLanguage(event, 'de')).toEqual('de');
+    });
+
+    it('should return falsy for non-matching language', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.ACCEPT_LANGUAGE]: 'en' } }));
+
+        expect(getRequestAcceptableLanguage(event, 'de')).toBeFalsy();
+    });
+
+    it('should get covered accept language header value for multiple options', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.ACCEPT_LANGUAGE]: 'fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5' } }));
+
+        expect(getRequestAcceptableLanguage(event, ['de', 'en'])).toEqual('en');
+    });
+
+    it('should match request content type', () => {
+        const eventJson = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.CONTENT_TYPE]: 'application/json; charset=utf-8' } }));
+
+        expect(matchRequestContentType(eventJson, 'json')).toBe(true);
+
+        const eventHtml = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.CONTENT_TYPE]: 'text/html; charset=utf-8' } }));
+
+        expect(matchRequestContentType(eventHtml, 'json')).toBe(false);
+
+        const eventNone = new RoutupEvent(createTestRequest('/'));
+
+        expect(matchRequestContentType(eventNone, 'json')).toBe(true);
     });
 });

@@ -49,16 +49,6 @@ export class PathMatcher {
             };
         }
 
-        if (this.path === '*') {
-            const wildcardParams : Record<string, unknown> = Object.create(null);
-            wildcardParams[0] = decodeParam(path);
-
-            return {
-                path,
-                params: wildcardParams,
-            };
-        }
-
         const match = this.regexp.exec(path);
 
         if (!match) {

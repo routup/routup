@@ -1,2 +1,3 @@
-export * from './factory';
-export * from './module';
+export * from './module.ts';
+export * from './types.ts';
+export * from './utils.ts';
