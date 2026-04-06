@@ -2,5 +2,9 @@ import { isHTTPError } from '@ebec/http';
 import type { RoutupError } from './module';
 
 export function isError(input: unknown) : input is RoutupError {
-    return isHTTPError(input);
+    if (!isHTTPError(input)) {
+        return false;
+    }
+
+    return (input as unknown as { name?: string }).name === 'RoutupError';
 }

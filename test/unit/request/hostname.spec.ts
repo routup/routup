@@ -28,6 +28,7 @@ describe('src/helpers/request/hostname', () => {
 
     it('should determine hostname with trust proxy', () => {
         const event1 = new RoutupEvent(createTestRequest('/', {
+            ip: '10.0.0.1',
             headers: {
                 [HeaderName.HOST]: 'localhost',
                 [HeaderName.X_FORWARDED_HOST]: 'example.com:3000',
@@ -37,6 +38,7 @@ describe('src/helpers/request/hostname', () => {
         expect(getRequestHostName(event1, { trustProxy: true })).toEqual('example.com');
 
         const event2 = new RoutupEvent(createTestRequest('/', {
+            ip: '10.0.0.1',
             headers: {
                 [HeaderName.HOST]: 'localhost',
                 [HeaderName.X_FORWARDED_HOST]: 'example.com, foobar.com',
@@ -46,6 +48,7 @@ describe('src/helpers/request/hostname', () => {
         expect(getRequestHostName(event2, { trustProxy: true })).toEqual('example.com');
 
         const event3 = new RoutupEvent(createTestRequest('/', {
+            ip: '10.0.0.1',
             headers: {
                 [HeaderName.HOST]: 'localhost',
                 [HeaderName.X_FORWARDED_HOST]: 'example.com:3000 , foobar.com:3000',
@@ -53,5 +56,16 @@ describe('src/helpers/request/hostname', () => {
         }));
 
         expect(getRequestHostName(event3, { trustProxy: true })).toEqual('example.com');
+    });
+
+    it('should ignore forwarded host when IP is unavailable', () => {
+        const event = new RoutupEvent(createTestRequest('/', {
+            headers: {
+                [HeaderName.HOST]: 'localhost',
+                [HeaderName.X_FORWARDED_HOST]: 'example.com',
+            },
+        }));
+
+        expect(getRequestHostName(event, { trustProxy: true })).toEqual('localhost');
     });
 });

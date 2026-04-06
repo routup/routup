@@ -49,8 +49,6 @@ export function createEventStream(
         headers,
     });
 
-    event.dispatched = true;
-
     const handle: EventStreamHandle = {
         write(message: string | EventStreamMessage): void {
             if (closed) return;
@@ -62,7 +60,7 @@ export function createEventStream(
 
             const serialized = serializeEventStreamMessage(message);
 
-            if (options?.maxMessageSize) {
+            if (options?.maxMessageSize !== undefined) {
                 const serializedSize = encoder.encode(serialized).byteLength;
                 if (serializedSize > options.maxMessageSize) {
                     return;

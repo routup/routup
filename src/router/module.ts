@@ -108,7 +108,13 @@ export class Router implements IRouter {
     async fetch(request: RoutupRequest): Promise<Response> {
         const event = new RoutupEvent(request);
 
-        const response = await this.dispatch(event);
+        let response: Response | undefined;
+
+        try {
+            response = await this.dispatch(event);
+        } catch (e) {
+            event.error = createError(e);
+        }
 
         if (response) {
             return response;
@@ -274,11 +280,11 @@ export class Router implements IRouter {
         const item = this.stack[context.stackIndex]!;
         const { event } = context;
 
-        try {
-            // Wire up event.next() for onion model
-            const savedNext = event._next;
-            const savedNextCalled = event._nextCalled;
+        // Save next state before wiring up onion model
+        const savedNext = event._next;
+        const savedNextCalled = event._nextCalled;
 
+        try {
             event._nextCalled = false;
             event._next = async () => {
                 // Continue pipeline from the next stack item
@@ -301,10 +307,6 @@ export class Router implements IRouter {
 
             const response = await item.dispatch(event);
 
-            // Restore next state
-            event._next = savedNext;
-            event._nextCalled = savedNextCalled;
-
             if (response) {
                 context.response = response;
                 event.dispatched = true;
@@ -313,6 +315,10 @@ export class Router implements IRouter {
             event.error = createError(e);
 
             await this.hookManager.trigger(HookName.ERROR, event);
+        } finally {
+            // Restore next state regardless of success or failure
+            event._next = savedNext;
+            event._nextCalled = savedNextCalled;
         }
 
         context.stackIndex++;

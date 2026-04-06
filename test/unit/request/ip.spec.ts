@@ -22,6 +22,21 @@ describe('src/helpers/request/ip', () => {
         expect(getRequestIP(event, { trustProxy: false })).toBeUndefined();
     });
 
+    it('should prefer x-forwarded-for over request.ip when trusted', () => {
+        const event = new RoutupEvent(createTestRequest('/', {
+            ip: '10.0.0.1',
+            headers: { [HeaderName.X_FORWARDED_FOR]: '203.0.113.50' },
+        }));
+
+        expect(getRequestIP(event, { trustProxy: true })).toEqual('203.0.113.50');
+    });
+
+    it('should use request.ip when trusted but no forwarded header', () => {
+        const event = new RoutupEvent(createTestRequest('/', { ip: '10.0.0.1' }));
+
+        expect(getRequestIP(event, { trustProxy: true })).toEqual('10.0.0.1');
+    });
+
     it('should return undefined when no ip available', () => {
         const event = new RoutupEvent(createTestRequest('/'));
 

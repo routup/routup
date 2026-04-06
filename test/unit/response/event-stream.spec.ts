@@ -50,10 +50,10 @@ describe('src/helpers/response/event-stream', () => {
         expect(text).toContain('data: hello');
     });
 
-    it('should mark event as dispatched', () => {
+    it('should not mark event as dispatched at creation time', () => {
         const event = new RoutupEvent(createTestRequest('/'));
         createEventStream(event);
 
-        expect(event.dispatched).toBe(true);
+        expect(event.dispatched).toBe(false);
     });
 });

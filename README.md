@@ -171,23 +171,9 @@ Routup is minimalistic by design. [Plugins](https://github.com/routup/plugins) e
 
 ## Benchmarks
 
-* CPUs:  `24`
-* RAM:  `63.9GB`
-* Node: `v18.16.0`
-* Date:  `Wed Sep 13 2023 15:11:58 GMT+0200 (Mitteleuropäische Sommerzeit) `
-* Method: `autocannon -c 100 -d 40 -p 10 localhost:3000` (two rounds; one to warm-up, one to measure)
+> **Note:** These benchmarks were recorded with routup v4 (Node.js 18, Sep 2023). Routup v5 uses srvx and Web Standard APIs — updated benchmarks will follow.
 
-| Package    | Requests/s  | Latency (ms) | Throughput/MB |
-|:-----------|:-----------:|-------------:|--------------:|
-| http       |    61062    |        15.87 |         10.89 |
-| fastify    |    59679    |        16.26 |         10.70 |
-| koa        |    45763    |        21.35 |          8.16 |
-| **routup** |    44588    |        21.91 |          9.02 |
-| hapi       |    41374    |        23.67 |          7.38 |
-| express    |    13376    |        74.18 |          2.39 |
-
-Benchmarks were generated using autocannon.
-To recreate the results, this can be done using the [benchmarks'](https://github.com/routup/benchmarks) repository.
+To run benchmarks yourself, see the [benchmarks](https://github.com/routup/benchmarks) repository.
 
 ## Contributing
 

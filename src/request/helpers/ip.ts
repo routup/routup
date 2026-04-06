@@ -6,13 +6,7 @@ export type RequestIpOptions = {
 };
 
 export function getRequestIP(event: IRoutupEvent, options: RequestIpOptions = {}) : string | undefined {
-    // srvx ServerRequest may provide .ip directly
-    const request = event.request as { ip?: string };
-    if (request.ip) {
-        return request.ip;
-    }
-
-    // Fall back to x-forwarded-for header if proxy is trusted
+    // When proxy is trusted, prefer x-forwarded-for header
     if (options.trustProxy) {
         const forwarded = event.headers.get(HeaderName.X_FORWARDED_FOR);
         if (forwarded) {
@@ -21,6 +15,12 @@ export function getRequestIP(event: IRoutupEvent, options: RequestIpOptions = {}
                 return first.trim();
             }
         }
+    }
+
+    // Fall back to srvx ServerRequest .ip (direct connection IP)
+    const request = event.request as { ip?: string };
+    if (request.ip) {
+        return request.ip;
     }
 
     return undefined;

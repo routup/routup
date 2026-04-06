@@ -26,8 +26,14 @@ describe('src/helpers/request/protocol', () => {
     });
 
     it('should use x-forwarded-proto with trust proxy', () => {
-        const event = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.X_FORWARDED_PROTO]: 'https' } }));
+        const event = new RoutupEvent(createTestRequest('/', { ip: '10.0.0.1', headers: { [HeaderName.X_FORWARDED_PROTO]: 'https' } }));
 
         expect(getRequestProtocol(event, { trustProxy: true })).toEqual('https');
+    });
+
+    it('should ignore forwarded proto when IP is unavailable', () => {
+        const event = new RoutupEvent(createTestRequest('/', { headers: { [HeaderName.X_FORWARDED_PROTO]: 'https' } }));
+
+        expect(getRequestProtocol(event, { trustProxy: true })).toEqual('http');
     });
 });

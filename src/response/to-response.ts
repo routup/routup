@@ -1,6 +1,10 @@
 import type { IRoutupEvent } from '../event/index.ts';
 import { findRouterOption } from '../router-options/module.ts';
 
+function stripWeakPrefix(etag: string): string {
+    return etag.startsWith('W/') ? etag.slice(2) : etag;
+}
+
 async function applyEtag(
     body: string,
     event: IRoutupEvent,
@@ -15,7 +19,7 @@ async function applyEtag(
     headers.set('etag', etag);
 
     const ifNoneMatch = event.headers.get('if-none-match');
-    if (ifNoneMatch && (ifNoneMatch === '*' || ifNoneMatch.split(',').some((t) => t.trim() === etag))) {
+    if (ifNoneMatch && (ifNoneMatch === '*' || ifNoneMatch.split(',').some((t) => stripWeakPrefix(t.trim()) === stripWeakPrefix(etag)))) {
         return new Response(null, {
             status: 304,
             headers,

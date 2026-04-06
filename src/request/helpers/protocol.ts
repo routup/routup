@@ -36,7 +36,7 @@ export function getRequestProtocol(
         protocol = options.default || 'http';
     }
 
-    if (!trustProxy(event.request.ip || '0.0.0.0', 0)) {
+    if (!event.request.ip || !trustProxy(event.request.ip, 0)) {
         return protocol;
     }
 

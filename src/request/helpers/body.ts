@@ -17,9 +17,8 @@ const BODY_KEY = /* @__PURE__ */ Symbol.for('routup:body');
  * @experimental
  */
 export async function readBody<T = unknown>(event: IRoutupEvent): Promise<T | undefined> {
-    const cached = event.store[BODY_KEY];
-    if (cached !== undefined) {
-        return cached as T;
+    if (BODY_KEY in event.store) {
+        return event.store[BODY_KEY] as T;
     }
 
     const text = await event.request.text();
