@@ -7,7 +7,7 @@ It runs on Node.js, Bun, Deno, Cloudflare Workers, and any runtime that supports
 ## Quick Example
 
 ```typescript
-import { Router, coreHandler, serve } from 'routup/node';
+import { Router, coreHandler, serve } from 'routup';
 
 const router = new Router();
 

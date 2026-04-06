@@ -7,7 +7,7 @@ Routup provides multiple ways to serve your application, all built on srvx for c
 The primary way to start a server. Import from a runtime-specific entry point:
 
 ```typescript
-import { Router, coreHandler, serve } from 'routup/node';
+import { Router, coreHandler, serve } from 'routup';
 
 const router = new Router();
 router.get('/', coreHandler(() => 'Hello, World!'));
@@ -37,8 +37,7 @@ For Node.js interop, convert a router to a standard `(req, res)` handler. Availa
 
 ```typescript
 import { createServer } from 'node:http';
-import { Router, coreHandler } from 'routup';
-import { toNodeHandler } from 'routup/node';
+import { Router, coreHandler, toNodeHandler } from 'routup';
 
 const router = new Router();
 router.get('/', coreHandler(() => 'Hello'));

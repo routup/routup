@@ -9,7 +9,7 @@ npm install routup
 ## Basic Setup
 
 ```typescript
-import { Router, coreHandler, serve } from 'routup/node';
+import { Router, coreHandler, serve } from 'routup';
 
 const router = new Router();
 
@@ -20,17 +20,6 @@ router.get('/', coreHandler((event) => {
 serve(router, { port: 3000 });
 ```
 
-## Runtime-specific Imports
+The correct runtime (Node.js, Bun, Deno, etc.) is selected automatically via conditional exports. All core exports (`Router`, `coreHandler`, `errorHandler`, helpers, etc.) and the runtime-specific `serve()` function are available from a single `routup` import.
 
-Each runtime has its own entry point that provides the `serve()` function (and `toNodeHandler()` for Node.js):
-
-```typescript
-import { serve } from 'routup/node';
-import { serve } from 'routup/bun';
-import { serve } from 'routup/deno';
-import { serve } from 'routup/cloudflare';
-import { serve } from 'routup/service-worker';
-import { serve } from 'routup/generic';
-```
-
-All core exports (`Router`, `coreHandler`, `errorHandler`, helpers, etc.) are available from every entry point.
+See [Runtime Environments](./runtime-environments.md) for runtime-specific details and explicit entry points.

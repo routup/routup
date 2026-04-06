@@ -9,7 +9,7 @@ Routup v5 is a major rewrite built on [srvx](https://srvx.unjs.io/) and Web Stan
 | `(req, res, next) => { send(res, data) }` | `(event) => data` |
 | `createNodeDispatcher(router)` | `serve(router)` or `toNodeHandler(router)` |
 | `createWebDispatcher(router)` | `router.fetch(request)` |
-| `import { ... } from 'routup'` | `import { ... } from 'routup/node'` (explicit runtime) |
+| `import { ... } from 'routup'` | `import { ... } from 'routup'` (runtime auto-detected via conditional exports) |
 
 ## Handler signatures
 
@@ -105,13 +105,13 @@ const router = new Router();
 http.createServer(createNodeDispatcher(router));
 
 // v5
-import { Router, serve } from 'routup/node';
+import { Router, serve } from 'routup';
 
 const router = new Router();
 serve(router, { port: 3000 });
 
 // v5 — Node.js http.createServer compatibility
-import { Router, toNodeHandler } from 'routup/node';
+import { Router, toNodeHandler } from 'routup';
 const router = new Router();
 http.createServer(toNodeHandler(router));
 
@@ -204,8 +204,7 @@ event.searchParams.getAll('tag');
 Use `fromNodeHandler()` or `fromNodeMiddleware()` to wrap existing Express/Connect middleware:
 
 ```typescript
-import { Router } from 'routup';
-import { fromNodeMiddleware } from 'routup/node';
+import { Router, fromNodeMiddleware } from 'routup';
 import cors from 'cors';
 
 const router = new Router();

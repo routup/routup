@@ -3,7 +3,7 @@
 The `Router` is the central building block. It manages a stack of handlers and dispatches requests through them.
 
 ```typescript
-import { Router, coreHandler, serve } from 'routup/node';
+import { Router, coreHandler, serve } from 'routup';
 
 const router = new Router();
 

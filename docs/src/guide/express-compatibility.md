@@ -7,8 +7,7 @@ Routup provides `fromNodeHandler()` and `fromNodeMiddleware()` to wrap existing 
 Wrap a Node.js `(req, res, next)` middleware. The `next()` callback is bridged back into routup's pipeline:
 
 ```typescript
-import { Router } from 'routup';
-import { fromNodeMiddleware } from 'routup/node';
+import { Router, fromNodeMiddleware } from 'routup';
 import cors from 'cors';
 
 const router = new Router();
@@ -31,7 +30,7 @@ router.use(fromNodeMiddleware(compression()));
 Wrap a Node.js `(req, res)` handler (without a `next` callback). If the handler writes a response, it is detected and the pipeline stops:
 
 ```typescript
-import { fromNodeHandler } from 'routup/node';
+import { fromNodeHandler } from 'routup';
 
 router.use(fromNodeHandler((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
