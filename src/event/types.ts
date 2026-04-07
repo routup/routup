@@ -10,6 +10,8 @@ export type RoutupResponse = {
 
 export type RoutupRequest = ServerRequest;
 
+export type NextFn = (error?: Error) => unknown | Promise<unknown>;
+
 export interface IRoutupEvent {
     /**
      * The srvx ServerRequest (extends Web Standard Request).
@@ -46,6 +48,11 @@ export interface IRoutupEvent {
      * Used internally by router options resolution.
      */
     routerPath: RouterPathNode[];
+
+    /**
+     * Collected allowed methods for the current path (used for OPTIONS / 405 responses).
+     */
+    methodsAllowed: string[];
 
     /**
      * Web Standard Headers from the request.
@@ -88,4 +95,18 @@ export interface IRoutupEvent {
      * Returns the downstream `Response`, or `undefined` if no handler matched.
      */
     next(error?: Error): Promise<Response | undefined>;
+
+    /**
+     * Set the continuation function for this event.
+     *
+     * The provided function receives an optional error and may return any value —
+     * it will be converted to a `Response` via `toResponse()`.
+     *
+     * When `withFallback` is true (default), the previous `next` is called
+     * as a fallback if `fn` returns no response or throws an error.
+     * When false, the previous `next` is discarded entirely.
+     *
+     * Passing `undefined` as `fn` clears the continuation function.
+     */
+    setNext(fn?: NextFn, withFallback?: boolean): void;
 }

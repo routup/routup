@@ -284,13 +284,8 @@ export class Router implements IRouter {
         const item = this.stack[context.stackIndex]!;
         const { event } = context;
 
-        // Save next state before wiring up onion model
-        const savedNext = event._next;
-        const savedNextCalled = event._nextCalled;
-
         try {
-            event._nextCalled = false;
-            event._next = async (error?: Error) => {
+            event.setNext(async (error?: Error) => {
                 if (error) {
                     event.error = createError(error);
                 }
@@ -312,7 +307,7 @@ export class Router implements IRouter {
                 }
 
                 return nextContext.response;
-            };
+            }, false);
 
             const response = await item.dispatch(event);
 
@@ -324,10 +319,6 @@ export class Router implements IRouter {
             event.error = createError(e);
 
             await this.hookManager.trigger(HookName.ERROR, event);
-        } finally {
-            // Restore next state regardless of success or failure
-            event._next = savedNext;
-            event._nextCalled = savedNextCalled;
         }
 
         context.stackIndex++;

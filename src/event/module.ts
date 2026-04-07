@@ -1,7 +1,13 @@
 import { FastURL } from 'srvx';
 import type { RoutupError } from '../error/module.ts';
 import type { RouterPathNode } from '../router/types.ts';
-import type { IRoutupEvent, RoutupRequest, RoutupResponse } from './types.ts';
+import { toResponse } from '../response/index.ts';
+import type {
+    IRoutupEvent,
+    NextFn,
+    RoutupRequest,
+    RoutupResponse,
+} from './types.ts';
 
 export class RoutupEvent implements IRoutupEvent {
     readonly request: RoutupRequest;
@@ -39,17 +45,17 @@ export class RoutupEvent implements IRoutupEvent {
     /**
      * Continuation function for middleware onion model.
      */
-    _next?: (error?: Error) => Promise<Response | undefined>;
+    protected _next?: (error?: Error) => Promise<Response | undefined>;
 
     /**
      * Whether _next has already been called (guard against double-invocation).
      */
-    _nextCalled: boolean;
+    protected _nextCalled: boolean;
 
     /**
      * The cached result of the next handler.
      */
-    _nextResult?: Promise<Response | undefined>;
+    protected _nextResult?: Promise<Response | undefined>;
 
     constructor(request: RoutupRequest) {
         this.request = request;
@@ -103,5 +109,34 @@ export class RoutupEvent implements IRoutupEvent {
         }
 
         return this._nextResult;
+    }
+
+    setNext(fn?: NextFn, withFallback = true): void {
+        const savedNext = this._next;
+
+        if (fn) {
+            this._next = async (error?: Error) => {
+                try {
+                    const result = await fn(error);
+                    const response = await toResponse(result, this);
+                    if (response || !withFallback) {
+                        return response;
+                    }
+                } catch (e) {
+                    if (withFallback) {
+                        return savedNext?.(e as Error);
+                    }
+
+                    throw e;
+                }
+
+                return savedNext?.(error);
+            };
+        } else {
+            this._next = undefined;
+        }
+
+        this._nextCalled = false;
+        this._nextResult = undefined;
     }
 }

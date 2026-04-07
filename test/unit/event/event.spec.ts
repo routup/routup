@@ -45,10 +45,10 @@ describe('src/event/module', () => {
         const event = new RoutupEvent(createTestRequest('/'));
 
         let callCount = 0;
-        event._next = async () => {
+        event.setNext(async () => {
             callCount++;
             return new Response('ok');
-        };
+        });
 
         const first = await event.next();
         const second = await event.next();
@@ -87,5 +87,86 @@ describe('src/event/module', () => {
 
         event.store[key] = 42;
         expect(event.store[key]).toBe(42);
+    });
+
+    describe('setNext', () => {
+        it('should set continuation that converts return values via toResponse', async () => {
+            const event = new RoutupEvent(createTestRequest('/'));
+
+            event.setNext(() => 'hello');
+
+            const response = await event.next();
+            expect(response).toBeInstanceOf(Response);
+            expect(await response!.text()).toBe('hello');
+        });
+
+        it('should fall back to previous next when fn returns undefined', async () => {
+            const event = new RoutupEvent(createTestRequest('/'));
+
+            event.setNext(() => new Response('original'));
+            event.setNext(() => undefined);
+
+            const response = await event.next();
+            expect(response).toBeInstanceOf(Response);
+            expect(await response!.text()).toBe('original');
+        });
+
+        it('should fall back to previous next when fn throws', async () => {
+            const event = new RoutupEvent(createTestRequest('/'));
+
+            event.setNext(() => new Response('fallback'));
+            event.setNext(() => {
+                throw new Error('boom');
+            });
+
+            const response = await event.next();
+            expect(response).toBeInstanceOf(Response);
+            expect(await response!.text()).toBe('fallback');
+        });
+
+        it('should not fall back when withFallback is false', async () => {
+            const event = new RoutupEvent(createTestRequest('/'));
+
+            event.setNext(() => new Response('original'));
+            event.setNext(() => undefined, false);
+
+            const response = await event.next();
+            expect(response).toBeUndefined();
+        });
+
+        it('should clear continuation when called with undefined', async () => {
+            const event = new RoutupEvent(createTestRequest('/'));
+
+            event.setNext(() => new Response('set'));
+            event.setNext(undefined);
+
+            const response = await event.next();
+            expect(response).toBeUndefined();
+        });
+
+        it('should reset cache so new fn fires after re-setting', async () => {
+            const event = new RoutupEvent(createTestRequest('/'));
+
+            event.setNext(() => new Response('first'));
+            await event.next();
+
+            event.setNext(() => new Response('second'));
+            const response = await event.next();
+            expect(await response!.text()).toBe('second');
+        });
+
+        it('should pass error to fn', async () => {
+            const event = new RoutupEvent(createTestRequest('/'));
+            let receivedError: Error | undefined;
+
+            event.setNext((error) => {
+                receivedError = error;
+                return new Response('handled');
+            });
+
+            await event.next(new Error('test error'));
+            expect(receivedError).toBeInstanceOf(Error);
+            expect(receivedError!.message).toBe('test error');
+        });
     });
 });
