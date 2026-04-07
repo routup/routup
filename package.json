@@ -1,6 +1,6 @@
 {
     "name": "routup",
-    "version": "5.0.0-beta.1",
+    "version": "5.0.0-beta.2",
     "type": "module",
     "description": "Routup is a minimalistic http based routing framework.",
     "exports": {
@@ -8,8 +8,7 @@
         ".": {
             "node": {
                 "types": "./dist/node.d.mts",
-                "import": "./dist/node.mjs",
-                "require": "./dist/node.cjs"
+                "import": "./dist/node.mjs"
             },
             "bun": {
                 "types": "./dist/bun.d.mts",
@@ -25,14 +24,12 @@
             },
             "default": {
                 "types": "./dist/generic.d.mts",
-                "import": "./dist/generic.mjs",
-                "require": "./dist/generic.cjs"
+                "import": "./dist/generic.mjs"
             }
         },
         "./node": {
             "types": "./dist/node.d.mts",
-            "import": "./dist/node.mjs",
-            "require": "./dist/node.cjs"
+            "import": "./dist/node.mjs"
         },
         "./bun": {
             "types": "./dist/bun.d.mts",
@@ -44,8 +41,7 @@
         },
         "./generic": {
             "types": "./dist/generic.d.mts",
-            "import": "./dist/generic.mjs",
-            "require": "./dist/generic.cjs"
+            "import": "./dist/generic.mjs"
         },
         "./cloudflare": {
             "types": "./dist/cloudflare.d.mts",
@@ -56,7 +52,6 @@
             "import": "./dist/service-worker.mjs"
         }
     },
-    "main": "./dist/generic.cjs",
     "module": "./dist/generic.mjs",
     "types": "./dist/generic.d.mts",
     "files": [

@@ -9,7 +9,7 @@ export default defineConfig({
         cloudflare: 'src/_entries/cloudflare.ts',
         'service-worker': 'src/_entries/service-worker.ts',
     },
-    format: ['esm', 'cjs'],
+    format: ['esm'],
     dts: true,
     sourcemap: true,
 });
