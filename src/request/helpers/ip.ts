@@ -1,6 +1,6 @@
 import { HeaderName } from '../../constants.ts';
 import type { IRoutupEvent } from '../../event/index.ts';
-import { findRouterOption } from '../../router-options/index.ts';
+import { getRouterOption } from '../../helpers/get-router-option.ts';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils/index.ts';
 import { buildTrustProxyFn } from '../../utils/index.ts';
 
@@ -20,10 +20,7 @@ export function getRequestIP(event: IRoutupEvent, options: RequestIpOptions = {}
     if (typeof options.trustProxy !== 'undefined') {
         trustProxy = buildTrustProxyFn(options.trustProxy);
     } else {
-        trustProxy = findRouterOption(
-            'trustProxy',
-            event.routerPath,
-        );
+        trustProxy = getRouterOption(event, 'trustProxy');
     }
 
     const socketAddr = event.request.ip;

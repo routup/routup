@@ -2,11 +2,6 @@ import { isInstance } from '../utils/index.ts';
 import { RouterSymbol } from './constants.ts';
 import type { Router } from './module.ts';
 
-let nextId = 0;
-export function generateRouterID(): number {
-    return ++nextId;
-}
-
 export function isRouterInstance(input: unknown): input is Router {
     return isInstance(input, RouterSymbol);
 }

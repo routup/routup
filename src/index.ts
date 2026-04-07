@@ -3,6 +3,7 @@ export * from './dispatcher';
 export * from './error';
 export * from './event';
 export * from './handler';
+export * from './helpers';
 export * from './response';
 export * from './request';
 export * from './path';

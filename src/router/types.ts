@@ -14,7 +14,40 @@ import type {
 
 import type { Path } from '../path/index.ts';
 import type { Plugin } from '../plugin/index.ts';
+import type {
+    EtagFn,
+    EtagInput,
+    TrustProxyFn,
+    TrustProxyInput,
+} from '../utils/index.ts';
 import type { RouterPipelineStep } from './constants.ts';
+
+// --------------------------------------------------
+// Router Options
+// --------------------------------------------------
+
+export type RouterOptions = {
+    path?: Path,
+    name?: string,
+    subdomainOffset: number,
+    proxyIpMax: number,
+    etag: EtagFn,
+    trustProxy: TrustProxyFn,
+};
+
+export type RouterOptionsInput = Omit<Partial<RouterOptions>, 'etag' | 'trustProxy'> & {
+    etag?: EtagInput,
+    trustProxy?: TrustProxyInput,
+};
+
+export type RouterPathNode = {
+    readonly name?: string;
+    readonly config: Partial<RouterOptions>;
+};
+
+// --------------------------------------------------
+// Pipeline
+// --------------------------------------------------
 
 export type RouterPipelineContext = {
     step: RouterPipelineStep,
@@ -24,11 +57,6 @@ export type RouterPipelineContext = {
 };
 
 export interface IRouter extends IDispatcher {
-    /**
-     * Unique identifier for this router instance.
-     */
-    readonly id: number;
-
     /**
      * Optional label for the router instance.
      */

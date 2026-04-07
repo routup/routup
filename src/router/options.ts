@@ -1,5 +1,5 @@
-import { buildEtagFn, buildTrustProxyFn } from '../utils';
-import type { RouterOptions, RouterOptionsInput } from './type';
+import { buildEtagFn, buildTrustProxyFn } from '../utils/index.ts';
+import type { RouterOptions, RouterOptionsInput } from './types.ts';
 
 export function normalizeRouterOptions(input: RouterOptionsInput): Partial<RouterOptions> {
     if (typeof input.etag !== 'undefined') {
