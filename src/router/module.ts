@@ -21,21 +21,19 @@ import type { Path } from '../path/index.ts';
 import { PathMatcher, isPath } from '../path/index.ts';
 import type { Plugin, PluginInstallContext } from '../plugin/index.ts';
 import { isPlugin } from '../plugin/index.ts';
-import type { RouterOptionsInput } from '../router-options/index.ts';
-import { setRouterOptions } from '../router-options/index.ts';
-import { normalizeRouterOptions } from '../router-options/normalize.ts';
+import { normalizeRouterOptions } from './options.ts';
 import { cleanDoubleSlashes, withLeadingSlash, withoutTrailingSlash } from '../utils/index.ts';
 import { RouterPipelineStep, RouterSymbol } from './constants.ts';
-import type { IRouter, RouterPipelineContext } from './types.ts';
-import { acceptsJson, generateRouterID, isRouterInstance } from './utils.ts';
+import type {
+    IRouter,
+    RouterOptions,
+    RouterOptionsInput,
+    RouterPipelineContext,
+} from './types.ts';
+import { acceptsJson, isRouterInstance } from './utils.ts';
 
 export class Router implements IRouter {
     readonly '@instanceof' = RouterSymbol;
-
-    /**
-     * An identifier for the router instance.
-     */
-    readonly id: number;
 
     /**
      * A label for the router instance.
@@ -63,17 +61,20 @@ export class Router implements IRouter {
      */
     protected hookManager: HookManager;
 
+    /**
+     * Normalized options for this router instance.
+     */
+    protected _options: Partial<RouterOptions>;
+
     // --------------------------------------------------
 
-    constructor(options: RouterOptionsInput = {}) {
-        this.id = generateRouterID();
-        this.name = options.name;
+    constructor(input: RouterOptionsInput = {}) {
+        this.name = input.name;
 
         this.hookManager = new HookManager();
+        this._options = normalizeRouterOptions(input);
 
-        this.setPath(options.path);
-
-        setRouterOptions(this.id, normalizeRouterOptions(options));
+        this.setPath(input.path);
     }
 
     // --------------------------------------------------
@@ -298,7 +299,7 @@ export class Router implements IRouter {
                     response: undefined,
                 };
 
-                event.routerPath.push(this.id);
+                event.routerPath.push({ name: this.name, options: this._options });
                 try {
                     await this.executePipelineStep(nextContext);
                 } finally {
@@ -394,7 +395,7 @@ export class Router implements IRouter {
             stackIndex: 0,
         };
 
-        event.routerPath.push(this.id);
+        event.routerPath.push({ name: this.name, options: this._options });
 
         try {
             await this.executePipelineStep(context);

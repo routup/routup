@@ -1,5 +1,5 @@
 import { HeaderName } from '../../constants.ts';
-import { findRouterOption } from '../../router-options/index.ts';
+import { getRouterOption } from '../../helpers/get-router-option.ts';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils/index.ts';
 import { buildTrustProxyFn } from '../../utils/index.ts';
 import type { IRoutupEvent } from '../../event/index.ts';
@@ -13,10 +13,7 @@ export function getRequestHostName(event: IRoutupEvent, options: RequestHostName
     if (typeof options.trustProxy !== 'undefined') {
         trustProxy = buildTrustProxyFn(options.trustProxy);
     } else {
-        trustProxy = findRouterOption(
-            'trustProxy',
-            event.routerPath,
-        );
+        trustProxy = getRouterOption(event, 'trustProxy');
     }
 
     let hostname = event.headers.get(HeaderName.X_FORWARDED_HOST);

@@ -1,64 +1,55 @@
 import { describe, expect, it } from 'vitest';
-import {
-    findRouterOption,
-    setRouterOptions,
-    unsetRouterOptions,
-} from '../../../src/router-options/module';
+import { RoutupEvent } from '../../../src/event';
+import type { RouterPathNode } from '../../../src/router';
+import { getRouterOption } from '../../../src/helpers/get-router-option';
+import { createTestRequest } from '../../helpers';
 
-describe('src/router-options/module', () => {
+function node(options: RouterPathNode['options']): RouterPathNode {
+    return { options };
+}
+
+function createEvent(nodes: RouterPathNode[]) {
+    const event = new RoutupEvent(createTestRequest('/'));
+    event.routerPath = nodes;
+    return event;
+}
+
+describe('src/router/options', () => {
     it('should return default when no options set', () => {
-        const trustProxy = findRouterOption('trustProxy', []);
+        const trustProxy = getRouterOption(createEvent([]), 'trustProxy');
         expect(typeof trustProxy).toBe('function');
         expect(trustProxy('127.0.0.1', 0)).toBe(false);
     });
 
     it('should return default when path is empty', () => {
-        const subdomainOffset = findRouterOption('subdomainOffset');
+        const subdomainOffset = getRouterOption(createEvent([]), 'subdomainOffset');
         expect(subdomainOffset).toBe(2);
     });
 
-    it('should return option set for router id', () => {
-        const id = 9999;
-        setRouterOptions(id, { subdomainOffset: 5 });
-
-        const result = findRouterOption('subdomainOffset', [id]);
+    it('should return option set for router', () => {
+        const result = getRouterOption(
+            createEvent([node({ subdomainOffset: 5 })]),
+            'subdomainOffset',
+        );
         expect(result).toBe(5);
-
-        unsetRouterOptions(id);
     });
 
     it('should walk path from end to find nearest option', () => {
-        const parent = 9990;
-        const child = 9991;
+        const parent = node({ subdomainOffset: 3 });
+        const child = node({ subdomainOffset: 7 });
 
-        setRouterOptions(parent, { subdomainOffset: 3 });
-        setRouterOptions(child, { subdomainOffset: 7 });
-
-        expect(findRouterOption('subdomainOffset', [parent, child])).toBe(7);
-        expect(findRouterOption('subdomainOffset', [parent])).toBe(3);
-
-        unsetRouterOptions(parent);
-        unsetRouterOptions(child);
+        expect(getRouterOption(createEvent([parent, child]), 'subdomainOffset')).toBe(7);
+        expect(getRouterOption(createEvent([parent]), 'subdomainOffset')).toBe(3);
     });
 
     it('should fall back to parent when child has no option', () => {
-        const parent = 9992;
-        const child = 9993;
+        const parent = node({ subdomainOffset: 4 });
+        const child = node({});
 
-        setRouterOptions(parent, { subdomainOffset: 4 });
-        setRouterOptions(child, {});
-
-        expect(findRouterOption('subdomainOffset', [parent, child])).toBe(4);
-
-        unsetRouterOptions(parent);
-        unsetRouterOptions(child);
+        expect(getRouterOption(createEvent([parent, child]), 'subdomainOffset')).toBe(4);
     });
 
-    it('should clean up with unsetRouterOptions', () => {
-        const id = 9994;
-        setRouterOptions(id, { subdomainOffset: 10 });
-        unsetRouterOptions(id);
-
-        expect(findRouterOption('subdomainOffset', [id])).toBe(2);
+    it('should return default when no node has the option', () => {
+        expect(getRouterOption(createEvent([node({})]), 'subdomainOffset')).toBe(2);
     });
 });

@@ -1,5 +1,6 @@
 import { FastURL } from 'srvx';
 import type { RoutupError } from '../error/module.ts';
+import type { RouterPathNode } from '../router/types.ts';
 import type { IRoutupEvent, RoutupRequest, RoutupResponse } from './types.ts';
 
 export class RoutupEvent implements IRoutupEvent {
@@ -15,7 +16,7 @@ export class RoutupEvent implements IRoutupEvent {
 
     error?: RoutupError;
 
-    routerPath: number[];
+    routerPath: RouterPathNode[];
 
     /**
      * Collected allowed methods (for OPTIONS).

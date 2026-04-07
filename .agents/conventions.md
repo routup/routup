@@ -37,16 +37,32 @@ Format: `type(scope): message`
 | `build` | Build system or dependency changes |
 | `ci` | CI/CD configuration |
 
+## Helper Naming Convention
+
+All helpers are standalone, tree-shakeable functions that take `event: IRoutupEvent` as the first argument. The function name prefix indicates its behavior:
+
+| Prefix | Meaning | Caches? | Async? | Example |
+|--------|---------|---------|--------|---------|
+| `get*` | Pure read, no side effects | No | No | `getRequestIP`, `getRequestHeader`, `getRouterOption` |
+| `set*` | Mutate event state (headers, status) | No | No | `setResponseCacheHeaders`, `setResponseGone` |
+| `send*` | Build and return a `Response` | No | No | `sendRedirect`, `sendStream`, `sendFormat` |
+| `read*` | Async I/O read, cached in `event.store` | Yes | Yes | `readBody` |
+| `use*` | Create an object, cached in `event.store` | Yes | No | `useRequestNegotiator` |
+| `is*` | Boolean check | No | No | `isRequestCacheable`, `isResponseGone` |
+| `match*` | Pattern match check | No | No | `matchRequestContentType` |
+| `append*` | Add to existing value | No | No | `appendResponseHeader`, `appendResponseHeaderDirective` |
+| `create*` | Factory, returns a new object | No | No | `createEventStream` |
+
 ## Build System
 
-- **Bundler**: Rollup with SWC plugin (faster than tsc for compilation)
-- **Output**: Dual CJS (`dist/index.cjs`) + ESM (`dist/index.mjs`) + TypeScript declarations (`dist/index.d.ts`)
-- **Config**: `rollup.config.mjs`
+- **Bundler**: tsdown (powered by rolldown)
+- **Output**: ESM-only with TypeScript declarations
+- **Config**: `tsdown.config.ts`
 
 ```bash
-npm run build          # Full build (clean + JS + types)
-npm run build:js       # Rollup bundle only
-npm run build:types    # tsc --emitDeclarationOnly
+npm run build          # Full build (JS + type-check)
+npm run build:js       # tsdown bundle only
+npm run build:types    # tsc --noEmit (type-check only)
 ```
 
 ## CI/CD

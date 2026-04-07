@@ -1,5 +1,6 @@
 import type { ServerRequest } from 'srvx';
 import type { RoutupError } from '../error/module.ts';
+import type { RouterPathNode } from '../router/types.ts';
 
 export type RoutupResponse = {
     status: number;
@@ -41,10 +42,10 @@ export interface IRoutupEvent {
     error?: RoutupError;
 
     /**
-     * Router ID stack for nesting tracking.
+     * Router stack for nesting tracking.
      * Used internally by router options resolution.
      */
-    routerPath: number[];
+    routerPath: RouterPathNode[];
 
     /**
      * Web Standard Headers from the request.
