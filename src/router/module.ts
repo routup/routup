@@ -290,7 +290,11 @@ export class Router implements IRouter {
 
         try {
             event._nextCalled = false;
-            event._next = async () => {
+            event._next = async (error?: Error) => {
+                if (error) {
+                    event.error = createError(error);
+                }
+
                 // Continue pipeline from the next stack item
                 const nextContext: RouterPipelineContext = {
                     step: RouterPipelineStep.LOOKUP,
@@ -300,6 +304,7 @@ export class Router implements IRouter {
                 };
 
                 event.routerPath.push({ name: this.name, options: this._options });
+
                 try {
                     await this.executePipelineStep(nextContext);
                 } finally {

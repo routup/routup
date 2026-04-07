@@ -39,7 +39,7 @@ export class RoutupEvent implements IRoutupEvent {
     /**
      * Continuation function for middleware onion model.
      */
-    _next?: () => Promise<Response | undefined>;
+    _next?: (error?: Error) => Promise<Response | undefined>;
 
     /**
      * Whether _next has already been called (guard against double-invocation).
@@ -92,14 +92,14 @@ export class RoutupEvent implements IRoutupEvent {
         this._dispatched = value;
     }
 
-    async next(): Promise<Response | undefined> {
+    async next(error?: Error): Promise<Response | undefined> {
         if (this._nextCalled) {
             return this._nextResult;
         }
         this._nextCalled = true;
 
         if (this._next) {
-            this._nextResult = this._next();
+            this._nextResult = this._next(error);
         }
 
         return this._nextResult;

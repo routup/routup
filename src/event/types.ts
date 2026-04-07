@@ -87,5 +87,5 @@ export interface IRoutupEvent {
      * The result is cached — calling `next()` multiple times returns the same response.
      * Returns the downstream `Response`, or `undefined` if no handler matched.
      */
-    next(): Promise<Response | undefined>;
+    next(error?: Error): Promise<Response | undefined>;
 }
