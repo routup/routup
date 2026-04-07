@@ -1,4 +1,4 @@
-import { isObject } from './object';
+import { isObject } from './object.ts';
 
 export function isInstance(
     input: unknown,

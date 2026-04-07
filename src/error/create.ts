@@ -1,8 +1,8 @@
 import { isHTTPError } from '@ebec/http';
 import type { HTTPErrorInput } from '@ebec/http';
-import { isObject } from '../utils';
-import { isError } from './is';
-import { RoutupError } from './module';
+import { isObject } from '../utils/index.ts';
+import { isError } from './is.ts';
+import { RoutupError } from './module.ts';
 
 function isNativeError(input: unknown): input is Error {
     return isObject(input) &&

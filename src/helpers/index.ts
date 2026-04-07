@@ -1,1 +1,1 @@
-export * from './get-router-option';
+export * from './get-router-option.ts';

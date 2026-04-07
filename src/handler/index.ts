@@ -1,9 +1,9 @@
-export * from './core';
-export * from './error';
-export * from './adapters';
+export * from './core/index.ts';
+export * from './error/index.ts';
+export * from './adapters/index.ts';
 
-export * from './constants';
-export * from './is';
-export * from './module';
-export * from './types';
-export * from './types-base';
+export * from './constants.ts';
+export * from './is.ts';
+export * from './module.ts';
+export * from './types.ts';
+export * from './types-base.ts';

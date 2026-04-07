@@ -1,3 +1,3 @@
-export * from './create';
-export * from './is';
-export * from './module';
+export * from './create.ts';
+export * from './is.ts';
+export * from './module.ts';

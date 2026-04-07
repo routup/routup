@@ -1,4 +1,4 @@
-import type { EventStreamMessage } from './types';
+import type { EventStreamMessage } from './types.ts';
 
 function stripNewlines(value: string) : string {
     return value.replace(/[\r\n]/g, '');

@@ -1,5 +1,5 @@
-import { isObject } from '../utils';
-import type { Plugin } from './types';
+import { isObject } from '../utils/index.ts';
+import type { Plugin } from './types.ts';
 
 export function isPlugin(input: unknown): input is Plugin {
     if (!isObject(input)) {

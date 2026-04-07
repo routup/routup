@@ -1,5 +1,5 @@
 import { compile } from 'proxy-addr';
-import type { TrustProxyFn } from './type';
+import type { TrustProxyFn } from './type.ts';
 
 export function buildTrustProxyFn(
     input?: boolean | number | string | string[] | TrustProxyFn,

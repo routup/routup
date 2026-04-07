@@ -1,7 +1,7 @@
-import { isInstance, isObject } from '../utils';
-import { HandlerSymbol } from './constants';
-import type { Handler } from './module';
-import type { HandlerOptions } from './types';
+import { isInstance, isObject } from '../utils/index.ts';
+import { HandlerSymbol } from './constants.ts';
+import type { Handler } from './module.ts';
+import type { HandlerOptions } from './types.ts';
 
 export function isHandlerOptions(input: unknown) : input is HandlerOptions {
     return isObject(input) &&

@@ -1,9 +1,9 @@
-import { HandlerType } from '../constants';
-import { Handler } from '../module';
+import { HandlerType } from '../constants.ts';
+import { Handler } from '../module.ts';
 import type {
     CoreHandler,
     CoreHandlerOptions,
-} from './types';
+} from './types.ts';
 
 /**
  * Create a request handler.

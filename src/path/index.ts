@@ -1,3 +1,3 @@
-export * from './matcher';
-export * from './type';
-export * from './utils';
+export * from './matcher.ts';
+export * from './type.ts';
+export * from './utils.ts';

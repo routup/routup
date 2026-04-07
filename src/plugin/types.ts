@@ -1,4 +1,4 @@
-import type { Path } from '../path';
+import type { Path } from '../path/index.ts';
 import type { IRouter } from '../router/types.ts';
 
 export type PluginInstallFn = (router: IRouter) => any;

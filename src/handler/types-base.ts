@@ -1,6 +1,6 @@
-import type { MethodName } from '../constants';
-import type { HookDefaultListener, HookErrorListener } from '../hook';
-import type { Path } from '../path';
+import type { MethodName } from '../constants.ts';
+import type { HookDefaultListener, HookErrorListener } from '../hook/index.ts';
+import type { Path } from '../path/index.ts';
 
 export type HandlerBaseOptions = {
     method?: Uppercase<MethodName> | Lowercase<MethodName>,

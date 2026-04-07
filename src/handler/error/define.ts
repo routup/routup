@@ -1,9 +1,9 @@
-import { HandlerType } from '../constants';
-import { Handler } from '../module';
+import { HandlerType } from '../constants.ts';
+import { Handler } from '../module.ts';
 import type {
     ErrorHandler,
     ErrorHandlerOptions,
-} from './types';
+} from './types.ts';
 
 /**
  * Create an error handler.

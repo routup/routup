@@ -1,8 +1,8 @@
 import { Buffer } from 'node:buffer';
 import { subtle } from 'uncrypto';
 import { type Stats } from 'node:fs';
-import { isObject } from '../object';
-import type { EtagOptions } from './type';
+import { isObject } from '../object.ts';
+import type { EtagOptions } from './type.ts';
 
 /**
  * Determine if object is a Stats object.

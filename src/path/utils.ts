@@ -1,4 +1,4 @@
-import type { Path } from './type';
+import type { Path } from './type.ts';
 
 export function isPath(input: unknown): input is Path {
     return typeof input === 'string';

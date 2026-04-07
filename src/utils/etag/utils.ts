@@ -1,8 +1,8 @@
 import { Buffer } from 'node:buffer';
 import { merge } from 'smob';
-import { isObject } from '../object';
-import { createEtag } from './module';
-import type { EtagFn, EtagOptions } from './type';
+import { isObject } from '../object.ts';
+import { createEtag } from './module.ts';
+import type { EtagFn, EtagOptions } from './type.ts';
 
 export function buildEtagFn(input?: boolean | EtagOptions | EtagFn) : EtagFn {
     if (typeof input === 'function') {

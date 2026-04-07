@@ -1,3 +1,3 @@
-export * from './module';
-export * from './utils';
-export * from './type';
+export * from './module.ts';
+export * from './utils.ts';
+export * from './type.ts';

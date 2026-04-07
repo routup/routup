@@ -1,4 +1,4 @@
-import type { MethodName } from '../constants';
+import type { MethodName } from '../constants.ts';
 
 export function toMethodName(input: string | undefined) : MethodName | undefined;
 export function toMethodName(input: string | undefined, alt: MethodName) : MethodName;

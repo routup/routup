@@ -1,4 +1,4 @@
-import { isObject } from './object';
+import { isObject } from './object.ts';
 
 export function isPromise(p: unknown) : p is Promise<unknown> {
     return isObject(p) &&
