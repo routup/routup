@@ -13,7 +13,7 @@ export function getRouterOption<
     K extends keyof RouterOptions,
 >(event: IRoutupEvent, key: K): RouterOptions[K] {
     for (let i = event.routerPath.length - 1; i >= 0; i--) {
-        const value = event.routerPath[i]!.config[key];
+        const value = event.routerPath[i]!.options[key];
         if (typeof value !== 'undefined') {
             return value as RouterOptions[K];
         }

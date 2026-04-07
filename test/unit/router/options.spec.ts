@@ -4,8 +4,8 @@ import type { RouterPathNode } from '../../../src/router';
 import { getRouterOption } from '../../../src/helpers/get-router-option';
 import { createTestRequest } from '../../helpers';
 
-function node(config: RouterPathNode['config']): RouterPathNode {
-    return { config };
+function node(options: RouterPathNode['options']): RouterPathNode {
+    return { options };
 }
 
 function createEvent(nodes: RouterPathNode[]) {

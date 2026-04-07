@@ -42,7 +42,7 @@ export type RouterOptionsInput = Omit<Partial<RouterOptions>, 'etag' | 'trustPro
 
 export type RouterPathNode = {
     readonly name?: string;
-    readonly config: Partial<RouterOptions>;
+    readonly options: Partial<RouterOptions>;
 };
 
 // --------------------------------------------------

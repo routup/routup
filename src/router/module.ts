@@ -24,11 +24,11 @@ import { isPlugin } from '../plugin/index.ts';
 import { normalizeRouterOptions } from './options.ts';
 import { cleanDoubleSlashes, withLeadingSlash, withoutTrailingSlash } from '../utils/index.ts';
 import { RouterPipelineStep, RouterSymbol } from './constants.ts';
-import type { 
-    IRouter, 
-    RouterOptions, 
-    RouterOptionsInput, 
-    RouterPipelineContext, 
+import type {
+    IRouter,
+    RouterOptions,
+    RouterOptionsInput,
+    RouterPipelineContext,
 } from './types.ts';
 import { acceptsJson, isRouterInstance } from './utils.ts';
 
@@ -64,7 +64,7 @@ export class Router implements IRouter {
     /**
      * Normalized options for this router instance.
      */
-    readonly config: Partial<RouterOptions>;
+    protected _options: Partial<RouterOptions>;
 
     // --------------------------------------------------
 
@@ -72,7 +72,7 @@ export class Router implements IRouter {
         this.name = input.name;
 
         this.hookManager = new HookManager();
-        this.config = normalizeRouterOptions(input);
+        this._options = normalizeRouterOptions(input);
 
         this.setPath(input.path);
     }
@@ -299,7 +299,7 @@ export class Router implements IRouter {
                     response: undefined,
                 };
 
-                event.routerPath.push({ name: this.name, config: this.config });
+                event.routerPath.push({ name: this.name, options: this._options });
                 try {
                     await this.executePipelineStep(nextContext);
                 } finally {
@@ -395,7 +395,7 @@ export class Router implements IRouter {
             stackIndex: 0,
         };
 
-        event.routerPath.push({ name: this.name, config: this.config });
+        event.routerPath.push({ name: this.name, options: this._options });
 
         try {
             await this.executePipelineStep(context);
