@@ -51,7 +51,5 @@ export function sendRedirect(event: IRoutupEvent, location: string, statusCode =
         headers,
     });
 
-    event.dispatched = true;
-
     return response;
 }

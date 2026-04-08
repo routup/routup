@@ -1,6 +1,7 @@
 import { distinctArray } from 'smob';
 import { HeaderName, MethodName } from '../constants.ts';
-import { RoutupEvent } from '../event/index.ts';
+import { DispatcherEvent } from '../dispatcher/index.ts';
+import type { IDispatcherEvent } from '../dispatcher/index.ts';
 import type { RoutupRequest } from '../event/index.ts';
 import { createError } from '../error/index.ts';
 import {
@@ -102,11 +103,11 @@ export class Router implements IRouter {
     // --------------------------------------------------
 
     /**
-     * Public entry point — creates a RoutupEvent from the request,
+     * Public entry point — creates a DispatcherEvent from the request,
      * runs the pipeline, and returns a Response (with 404/500 fallbacks).
      */
     async fetch(request: RoutupRequest): Promise<Response> {
-        const event = new RoutupEvent(request);
+        const event = new DispatcherEvent(request);
 
         let response: Response | undefined;
 
@@ -129,7 +130,7 @@ export class Router implements IRouter {
         return this.buildFallbackResponse(request, event, 404, 'Not Found');
     }
 
-    protected buildFallbackResponse(request: RoutupRequest, event: RoutupEvent, status: number, message: string): Response {
+    protected buildFallbackResponse(request: RoutupRequest, event: IDispatcherEvent, status: number, message: string): Response {
         const headers = new Headers(event.response.headers);
 
         if (acceptsJson(request)) {
@@ -298,16 +299,10 @@ export class Router implements IRouter {
                     response: undefined,
                 };
 
-                event.routerPath.push({ name: this.name, options: this._options });
-
-                try {
-                    await this.executePipelineStep(nextContext);
-                } finally {
-                    event.routerPath.pop();
-                }
+                await this.executePipelineStep(nextContext);
 
                 return nextContext.response;
-            }, false);
+            });
 
             const response = await item.dispatch(event);
 
@@ -365,7 +360,7 @@ export class Router implements IRouter {
     // --------------------------------------------------
 
     async dispatch(
-        event: RoutupEvent,
+        event: IDispatcherEvent,
     ): Promise<Response | undefined> {
         if (this.pathMatcher) {
             const output = this.pathMatcher.exec(event.path);

@@ -1,5 +1,5 @@
-import type { IDispatcher } from '../dispatcher/index.ts';
-import type { RoutupEvent, RoutupRequest } from '../event/index.ts';
+import type { IDispatcher, IDispatcherEvent } from '../dispatcher/index.ts';
+import type { RoutupRequest } from '../event/index.ts';
 import type {
     Handler,
     HandlerOptions,
@@ -51,7 +51,7 @@ export type RouterPathNode = {
 
 export type RouterPipelineContext = {
     step: RouterPipelineStep,
-    event: RoutupEvent,
+    event: IDispatcherEvent,
     stackIndex: number,
     response?: Response,
 };

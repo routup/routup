@@ -126,7 +126,7 @@ function createNodeBridge(handler: NodeHandler | NodeMiddleware, isMiddleware: b
                 await callHandler(handler as NodeHandler, req, res);
 
             if (result === kHandled) {
-                event.dispatched = true;
+                return null;
             }
 
             return undefined;

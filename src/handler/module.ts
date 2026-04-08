@@ -1,6 +1,5 @@
 import { MethodName } from '../constants.ts';
-import type { IDispatcher } from '../dispatcher/index.ts';
-import type { RoutupEvent } from '../event/index.ts';
+import type { IDispatcher, IDispatcherEvent } from '../dispatcher/index.ts';
 import { createError, isError } from '../error/index.ts';
 import { HookManager, HookName } from '../hook/index.ts';
 import type { Path } from '../path/index.ts';
@@ -52,7 +51,7 @@ export class Handler implements IDispatcher {
 
     // --------------------------------------------------
 
-    async dispatch(event: RoutupEvent): Promise<Response | undefined> {
+    async dispatch(event: IDispatcherEvent): Promise<Response | undefined> {
         if (this.pathMatcher) {
             const pathMatch = this.pathMatcher.exec(event.path);
             if (pathMatch) {
@@ -72,16 +71,17 @@ export class Handler implements IDispatcher {
 
         try {
             let result: unknown;
+            const handlerEvent = event.build();
 
             if (this.config.type === HandlerType.ERROR) {
                 if (event.error) {
-                    result = await this.config.fn(event.error, event);
+                    result = await this.config.fn(event.error, handlerEvent);
                 }
             } else {
-                result = await this.config.fn(event);
+                result = await this.config.fn(handlerEvent);
             }
 
-            response = await toResponse(result, event);
+            response = await toResponse(result, handlerEvent);
 
             if (response) {
                 event.dispatched = true;

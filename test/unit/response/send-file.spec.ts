@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
-import { RoutupEvent } from '../../../src/event/module';
 import {
     HeaderName,
     Router,
@@ -9,7 +8,7 @@ import {
     sendFile,
 } from '../../../src';
 import type { SendFileOptions } from '../../../src';
-import { createTestRequest } from '../../helpers';
+import { createTestEvent, createTestRequest } from '../../helpers';
 
 const buildSendFileOptions = (
     filePath: string,
@@ -36,7 +35,7 @@ const buildSendFileOptions = (
 
 describe('src/helpers/response/send-file', () => {
     it('should send file', async () => {
-        const event = new RoutupEvent(createTestRequest('/'));
+        const event = createTestEvent('/');
         const response = await sendFile(event, buildSendFileOptions('test/data/dummy.json'));
 
         expect(response.status).toEqual(200);
@@ -62,7 +61,7 @@ describe('src/helpers/response/send-file', () => {
     });
 
     it('should send file to download', async () => {
-        const event = new RoutupEvent(createTestRequest('/'));
+        const event = createTestEvent('/');
         const response = await sendFile(event, buildSendFileOptions('test/data/dummy.json', true));
 
         expect(response.status).toEqual(200);
@@ -79,7 +78,7 @@ describe('src/helpers/response/send-file', () => {
     });
 
     it('should shrink end of range if it results in an overflow', async () => {
-        const event = new RoutupEvent(createTestRequest('/', { headers: { 'range': 'bytes=10-9999999' } }));
+        const event = createTestEvent('/', { headers: { 'range': 'bytes=10-9999999' } });
         const response = await sendFile(event, buildSendFileOptions('test/data/dummy.txt'));
 
         expect(response).toBeDefined();
@@ -92,7 +91,7 @@ describe('src/helpers/response/send-file', () => {
     });
 
     it('should return 416 when start range exceeds file size', async () => {
-        const event = new RoutupEvent(createTestRequest('/', { headers: { 'range': 'bytes=999-999999' } }));
+        const event = createTestEvent('/', { headers: { 'range': 'bytes=999-999999' } });
         const response = await sendFile(event, buildSendFileOptions('test/data/dummy.txt'));
 
         expect(response).toBeDefined();
