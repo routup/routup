@@ -67,7 +67,6 @@ export async function sendFile(
                 contentOptions.start >= stats.size ||
                 contentOptions.start > contentOptions.end
             ) {
-                event.dispatched = true;
                 const rangeHeaders = new Headers(headers);
                 rangeHeaders.set(HeaderName.CONTENT_RANGE, `bytes */${stats.size}`);
                 return new Response(null, {
@@ -94,8 +93,6 @@ export async function sendFile(
     }
 
     const content = await options.content(contentOptions);
-
-    event.dispatched = true;
 
     return new Response(content as BodyInit, {
         status: statusCode,

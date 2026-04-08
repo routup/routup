@@ -1,6 +1,5 @@
 import type { ServerRequest } from 'srvx';
-import type { RoutupError } from '../error/module.ts';
-import type { RouterPathNode } from '../router/types.ts';
+import type { RouterOptions } from '../router/types.ts';
 
 export type RoutupResponse = {
     status: number;
@@ -9,6 +8,8 @@ export type RoutupResponse = {
 };
 
 export type RoutupRequest = ServerRequest;
+
+export type NextFn = (error?: Error) => unknown | Promise<unknown>;
 
 export interface IRoutupEvent {
     /**
@@ -19,12 +20,12 @@ export interface IRoutupEvent {
     /**
      * Route parameters extracted from the URL path pattern.
      */
-    params: Record<string, any>;
+    readonly params: Record<string, any>;
 
     /**
      * Current request path, adjusted relative to the mount point during router nesting.
      */
-    path: string;
+    readonly path: string;
 
     /**
      * HTTP method (GET, POST, PUT, etc.).
@@ -34,18 +35,7 @@ export interface IRoutupEvent {
     /**
      * Accumulated mount path from nested routers.
      */
-    mountPath: string;
-
-    /**
-     * Error that occurred during dispatch, if any.
-     */
-    error?: RoutupError;
-
-    /**
-     * Router stack for nesting tracking.
-     * Used internally by router options resolution.
-     */
-    routerPath: RouterPathNode[];
+    readonly mountPath: string;
 
     /**
      * Web Standard Headers from the request.
@@ -69,11 +59,6 @@ export interface IRoutupEvent {
     readonly response: RoutupResponse;
 
     /**
-     * Whether a response has been produced.
-     */
-    dispatched: boolean;
-
-    /**
      * Per-request store for caching and plugin state.
      *
      * Use symbol keys (e.g., `Symbol.for('routup:body')`) to avoid collisions.
@@ -82,10 +67,17 @@ export interface IRoutupEvent {
     readonly store: Record<string | symbol, unknown>;
 
     /**
+     * Pre-resolved router options for the current dispatch context.
+     *
+     * Contains merged options from the router path stack with defaults applied.
+     */
+    readonly routerOptions: RouterOptions;
+
+    /**
      * Call the next handler in the pipeline (onion model).
      *
      * The result is cached — calling `next()` multiple times returns the same response.
      * Returns the downstream `Response`, or `undefined` if no handler matched.
      */
-    next(): Promise<Response | undefined>;
+    next(error?: Error): Promise<Response | undefined>;
 }

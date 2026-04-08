@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { RoutupEvent } from '../../../src/event/module';
-import { createTestRequest } from '../../helpers';
+import { createTestEvent } from '../../helpers';
 
 describe('src/event/store', () => {
     it('should set & get values', () => {
-        const event = new RoutupEvent(createTestRequest('/'));
+        const event = createTestEvent('/');
 
         event.store.foo = 'bar';
         event.store.bar = 'baz';
@@ -14,7 +13,7 @@ describe('src/event/store', () => {
     });
 
     it('should support symbol keys', () => {
-        const event = new RoutupEvent(createTestRequest('/'));
+        const event = createTestEvent('/');
         const key = Symbol.for('test:key');
 
         event.store[key] = 'value';
@@ -23,7 +22,7 @@ describe('src/event/store', () => {
     });
 
     it('should delete values', () => {
-        const event = new RoutupEvent(createTestRequest('/'));
+        const event = createTestEvent('/');
 
         event.store.foo = 'bar';
         delete event.store.foo;
@@ -32,13 +31,13 @@ describe('src/event/store', () => {
     });
 
     it('should start empty', () => {
-        const event = new RoutupEvent(createTestRequest('/'));
+        const event = createTestEvent('/');
 
         expect(Object.keys(event.store)).toEqual([]);
     });
 
     it('should not have prototype properties', () => {
-        const event = new RoutupEvent(createTestRequest('/'));
+        const event = createTestEvent('/');
 
         expect(event.store.toString).toBeUndefined();
         expect(event.store.hasOwnProperty).toBeUndefined();

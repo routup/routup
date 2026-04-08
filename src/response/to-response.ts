@@ -1,5 +1,4 @@
 import type { IRoutupEvent } from '../event/index.ts';
-import { getRouterOption } from '../helpers/get-router-option.ts';
 
 function stripWeakPrefix(etag: string): string {
     return etag.startsWith('W/') ? etag.slice(2) : etag;
@@ -10,7 +9,7 @@ async function applyEtag(
     event: IRoutupEvent,
     headers: Headers,
 ): Promise<Response | undefined> {
-    const etagFn = getRouterOption(event, 'etag');
+    const etagFn = event.routerOptions.etag;
     if (!etagFn) return undefined;
 
     const etag = await etagFn(body);

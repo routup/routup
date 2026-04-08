@@ -1,107 +1,69 @@
-import { FastURL } from 'srvx';
-import type { RoutupError } from '../error/module.ts';
-import type { RouterPathNode } from '../router/types.ts';
-import type { IRoutupEvent, RoutupRequest, RoutupResponse } from './types.ts';
+import type { RouterOptions } from '../router/types.ts';
+import type {
+    IRoutupEvent,
+    RoutupRequest,
+    RoutupResponse,
+} from './types.ts';
+
+export type RoutupEventCreateContext = {
+    request: RoutupRequest;
+    params: Record<string, any>;
+    path: string;
+    method: string;
+    mountPath: string;
+    headers: Headers;
+    searchParams: URLSearchParams;
+    response: RoutupResponse;
+    store: Record<string | symbol, unknown>;
+    routerOptions: () => RouterOptions;
+    next: (event: IRoutupEvent, error?: Error) => Promise<Response | undefined>;
+};
 
 export class RoutupEvent implements IRoutupEvent {
     readonly request: RoutupRequest;
 
-    params: Record<string, any>;
+    readonly params: Record<string, any>;
 
-    path: string;
+    readonly path: string;
 
     readonly method: string;
 
-    mountPath: string;
+    readonly mountPath: string;
 
-    error?: RoutupError;
+    readonly headers: Headers;
 
-    routerPath: RouterPathNode[];
+    readonly searchParams: URLSearchParams;
 
-    /**
-     * Collected allowed methods (for OPTIONS).
-     */
-    methodsAllowed: string[];
+    readonly response: RoutupResponse;
 
     readonly store: Record<string | symbol, unknown>;
 
-    protected _dispatched: boolean;
+    protected _context: RoutupEventCreateContext;
 
-    protected _response?: RoutupResponse;
+    protected _routerOptions?: RouterOptions;
 
-    /**
-     * Cached parsed URL (avoids double-parsing).
-     */
-    protected _url: InstanceType<typeof FastURL>;
-
-    protected _searchParams?: URLSearchParams;
-
-    /**
-     * Continuation function for middleware onion model.
-     */
-    _next?: () => Promise<Response | undefined>;
-
-    /**
-     * Whether _next has already been called (guard against double-invocation).
-     */
-    _nextCalled: boolean;
-
-    /**
-     * The cached result of the next handler.
-     */
-    _nextResult?: Promise<Response | undefined>;
-
-    constructor(request: RoutupRequest) {
-        this.request = request;
-        this._url = new FastURL(request.url);
-        this.method = request.method;
-        this.path = this._url.pathname;
-        this.mountPath = '/';
-        this.params = {};
-        this.routerPath = [];
-        this.methodsAllowed = [];
-        this.store = Object.create(null);
-        this._dispatched = false;
-        this._nextCalled = false;
+    constructor(context: RoutupEventCreateContext) {
+        this._context = context;
+        this.request = context.request;
+        this.params = context.params;
+        this.path = context.path;
+        this.method = context.method;
+        this.mountPath = context.mountPath;
+        this.headers = context.headers;
+        this.searchParams = context.searchParams;
+        this.response = context.response;
+        this.store = context.store;
     }
 
-    get headers(): Headers {
-        return this.request.headers;
-    }
-
-    get searchParams(): URLSearchParams {
-        if (!this._searchParams) {
-            this._searchParams = new URLSearchParams(this._url.search);
-        }
-        return this._searchParams;
-    }
-
-    get response(): RoutupResponse {
-        if (!this._response) {
-            this._response = { status: 200, headers: new Headers() };
+    get routerOptions(): RouterOptions {
+        if (!this._routerOptions) {
+            this._routerOptions = this._context.routerOptions();
         }
 
-        return this._response;
+        return this._routerOptions;
     }
 
-    get dispatched(): boolean {
-        return this._dispatched;
-    }
-
-    set dispatched(value: boolean) {
-        this._dispatched = value;
-    }
-
-    async next(): Promise<Response | undefined> {
-        if (this._nextCalled) {
-            return this._nextResult;
-        }
-        this._nextCalled = true;
-
-        if (this._next) {
-            this._nextResult = this._next();
-        }
-
-        return this._nextResult;
+    async next(error?: Error): Promise<Response | undefined> {
+        return this._context.next(this, error);
     }
 }

@@ -1,6 +1,5 @@
 export * from './cache.ts';
 export * from './event-stream/index.ts';
-export * from './gone.ts';
 export * from './header.ts';
 export * from './header-attachment.ts';
 export * from './header-content-type.ts';

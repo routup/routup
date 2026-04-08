@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { RoutupEvent } from '../../../src/event/module';
 import {
     HeaderName,
     appendResponseHeader,
@@ -7,11 +6,11 @@ import {
     setResponseHeaderAttachment,
     setResponseHeaderContentType,
 } from '../../../src';
-import { createTestRequest } from '../../helpers';
+import { createTestEvent } from '../../helpers';
 
 describe('src/helpers/response/header', () => {
     it('should set header attachment', () => {
-        const event = new RoutupEvent(createTestRequest('/'));
+        const event = createTestEvent('/');
 
         setResponseHeaderAttachment(event);
 
@@ -20,7 +19,7 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should set header attachment by filename', () => {
-        const event = new RoutupEvent(createTestRequest('/'));
+        const event = createTestEvent('/');
 
         setResponseHeaderAttachment(event, 'dummy.json');
 
@@ -31,7 +30,7 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should append value', () => {
-        const event = new RoutupEvent(createTestRequest('/'));
+        const event = createTestEvent('/');
 
         appendResponseHeader(event, HeaderName.SET_COOKIE, 'foo=bar; Path=/');
         appendResponseHeader(event, HeaderName.SET_COOKIE, 'bar=baz; Path=/');
@@ -44,7 +43,7 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should set header directive value', () => {
-        const event = new RoutupEvent(createTestRequest('/'));
+        const event = createTestEvent('/');
 
         appendResponseHeaderDirective(event, HeaderName.CONTENT_TYPE, 'boundary=something');
 
@@ -53,7 +52,7 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should set multiple header directive values', () => {
-        const event = new RoutupEvent(createTestRequest('/'));
+        const event = createTestEvent('/');
 
         appendResponseHeaderDirective(event, HeaderName.CONTENT_TYPE, [
             'application/json',
@@ -65,7 +64,7 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should append single header directive value', () => {
-        const event = new RoutupEvent(createTestRequest('/'));
+        const event = createTestEvent('/');
 
         setResponseHeaderAttachment(event, 'dummy.json');
         appendResponseHeaderDirective(event, HeaderName.CONTENT_TYPE, 'boundary=something');
@@ -75,7 +74,7 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should append multiple header directive values', () => {
-        const event = new RoutupEvent(createTestRequest('/'));
+        const event = createTestEvent('/');
 
         setResponseHeaderAttachment(event, 'dummy.json');
         appendResponseHeaderDirective(event, HeaderName.CONTENT_TYPE, [
@@ -88,7 +87,7 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should set response content type', () => {
-        const event = new RoutupEvent(createTestRequest('/'));
+        const event = createTestEvent('/');
 
         setResponseHeaderContentType(event, 'application/json');
         setResponseHeaderContentType(event, 'text/html', true);
@@ -98,7 +97,7 @@ describe('src/helpers/response/header', () => {
     });
 
     it('should overwrite response content-type', () => {
-        const event = new RoutupEvent(createTestRequest('/'));
+        const event = createTestEvent('/');
 
         setResponseHeaderContentType(event, 'application/json');
         setResponseHeaderContentType(event, 'text/html');

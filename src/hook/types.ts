@@ -1,7 +1,7 @@
-import type { IRoutupEvent } from '../event/index.ts';
+import type { IDispatcherEvent } from '../dispatcher/types.ts';
 
-export type HookErrorListener = (event: IRoutupEvent) => Promise<unknown> | unknown;
-export type HookDefaultListener = (event: IRoutupEvent) => Promise<unknown> | unknown;
+export type HookErrorListener = (event: IDispatcherEvent) => Promise<unknown> | unknown;
+export type HookDefaultListener = (event: IDispatcherEvent) => Promise<unknown> | unknown;
 
 export type HookListener = HookErrorListener | HookDefaultListener;
 

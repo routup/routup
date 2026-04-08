@@ -1,4 +1,6 @@
 import type { RoutupRequest } from '../src/index';
+import { DispatcherEvent } from '../src/dispatcher/module';
+import type { RoutupEvent } from '../src/event/module';
 
 /**
  * Create a mock ServerRequest for testing.
@@ -16,4 +18,15 @@ export function createTestRequest(
     }
 
     return request;
+}
+
+/**
+ * Create a RoutupEvent for testing helpers.
+ * Shorthand for creating a DispatcherEvent and building the public event.
+ */
+export function createTestEvent(
+    url: string,
+    options?: RequestInit & { ip?: string },
+): RoutupEvent {
+    return new DispatcherEvent(createTestRequest(url, options)).build();
 }
