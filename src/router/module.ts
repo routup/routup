@@ -153,27 +153,24 @@ export class Router implements IRouter {
     // --------------------------------------------------
 
     protected async executePipelineStep(context: RouterPipelineContext): Promise<void> {
-        switch (context.step) {
-            case RouterPipelineStep.START: {
-                return this.executePipelineStepStart(context);
-            }
-            case RouterPipelineStep.LOOKUP: {
-                return this.executePipelineStepLookup(context);
-            }
-            case RouterPipelineStep.CHILD_BEFORE: {
-                return this.executePipelineStepChildBefore(context);
-            }
-            case RouterPipelineStep.CHILD_DISPATCH: {
-                return this.executePipelineStepChildDispatch(context);
-            }
-            case RouterPipelineStep.CHILD_AFTER: {
-                return this.executePipelineStepChildAfter(context);
-            }
-            case RouterPipelineStep.FINISH:
-            default: {
-                return this.executePipelineStepFinish(context);
+        while (context.step !== RouterPipelineStep.FINISH) {
+            switch (context.step) {
+                case RouterPipelineStep.START:
+                    await this.executePipelineStepStart(context); break;
+                case RouterPipelineStep.LOOKUP:
+                    await this.executePipelineStepLookup(context); break;
+                case RouterPipelineStep.CHILD_BEFORE:
+                    await this.executePipelineStepChildBefore(context); break;
+                case RouterPipelineStep.CHILD_DISPATCH:
+                    await this.executePipelineStepChildDispatch(context); break;
+                case RouterPipelineStep.CHILD_AFTER:
+                    await this.executePipelineStepChildAfter(context); break;
+                default:
+                    context.step = RouterPipelineStep.FINISH; break;
             }
         }
+
+        await this.executePipelineStepFinish(context);
     }
 
     protected async executePipelineStepStart(context: RouterPipelineContext): Promise<void> {
@@ -184,8 +181,6 @@ export class Router implements IRouter {
         } else {
             context.step = RouterPipelineStep.LOOKUP;
         }
-
-        return this.executePipelineStep(context);
     }
 
     protected async executePipelineStepLookup(context: RouterPipelineContext): Promise<void> {
@@ -220,7 +215,7 @@ export class Router implements IRouter {
                             context.step = RouterPipelineStep.CHILD_BEFORE;
                         }
 
-                        return this.executePipelineStep(context);
+                        return;
                     }
                 }
 
@@ -239,14 +234,13 @@ export class Router implements IRouter {
                     context.step = RouterPipelineStep.CHILD_BEFORE;
                 }
 
-                return this.executePipelineStep(context);
+                return;
             }
 
             context.stackIndex++;
         }
 
         context.step = RouterPipelineStep.FINISH;
-        return this.executePipelineStep(context);
     }
 
     protected async executePipelineStepChildBefore(context: RouterPipelineContext): Promise<void> {
@@ -257,8 +251,6 @@ export class Router implements IRouter {
         } else {
             context.step = RouterPipelineStep.CHILD_DISPATCH;
         }
-
-        return this.executePipelineStep(context);
     }
 
     protected async executePipelineStepChildAfter(context: RouterPipelineContext): Promise<void> {
@@ -269,8 +261,6 @@ export class Router implements IRouter {
         } else {
             context.step = RouterPipelineStep.LOOKUP;
         }
-
-        return this.executePipelineStep(context);
     }
 
     protected async executePipelineStepChildDispatch(context: RouterPipelineContext): Promise<void> {
@@ -279,7 +269,7 @@ export class Router implements IRouter {
             typeof this.stack[context.stackIndex] === 'undefined'
         ) {
             context.step = RouterPipelineStep.FINISH;
-            return this.executePipelineStep(context);
+            return;
         }
 
         const item = this.stack[context.stackIndex]!;
@@ -318,8 +308,6 @@ export class Router implements IRouter {
 
         context.stackIndex++;
         context.step = RouterPipelineStep.CHILD_AFTER;
-
-        return this.executePipelineStep(context);
     }
 
     protected async executePipelineStepFinish(context: RouterPipelineContext): Promise<void> {
