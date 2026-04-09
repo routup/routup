@@ -87,7 +87,7 @@ export class DispatcherEvent implements IDispatcherEvent {
 
     get signal(): AbortSignal {
         if (!this._signal) {
-            this._signal = new AbortController().signal;
+            this._signal = this.request.signal;
         }
 
         return this._signal;
