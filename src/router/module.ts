@@ -1,4 +1,3 @@
-import { distinctArray } from 'smob';
 import { HeaderName, MethodName } from '../constants.ts';
 import { DispatcherEvent } from '../dispatcher/index.ts';
 import type { IDispatcherEvent } from '../dispatcher/index.ts';
@@ -203,7 +202,7 @@ export class Router implements IRouter {
 
                 if (match) {
                     if (item.method) {
-                        context.event.methodsAllowed.push(item.method);
+                        context.event.methodsAllowed.add(item.method);
                     }
 
                     if (item.matchMethod(context.event.method as `${MethodName}`)) {
@@ -321,13 +320,11 @@ export class Router implements IRouter {
             context.event.method &&
             context.event.method === MethodName.OPTIONS
         ) {
-            if (context.event.methodsAllowed.includes(MethodName.GET)) {
-                context.event.methodsAllowed.push(MethodName.HEAD);
+            if (context.event.methodsAllowed.has(MethodName.GET)) {
+                context.event.methodsAllowed.add(MethodName.HEAD);
             }
 
-            distinctArray(context.event.methodsAllowed);
-
-            const options = context.event.methodsAllowed
+            const options = [...context.event.methodsAllowed]
                 .map((key) => key.toUpperCase())
                 .join(',');
 

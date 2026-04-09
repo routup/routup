@@ -53,7 +53,7 @@ export interface IDispatcherEvent {
     /**
      * Collected allowed methods for the current path (used for OPTIONS / 405 responses).
      */
-    methodsAllowed: string[];
+    methodsAllowed: Set<string>;
 
     /**
      * Set the continuation function for this event.

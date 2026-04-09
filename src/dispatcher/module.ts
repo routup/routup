@@ -24,7 +24,7 @@ export class DispatcherEvent implements IDispatcherEvent {
     /**
      * Collected allowed methods (for OPTIONS).
      */
-    methodsAllowed: string[];
+    methodsAllowed: Set<string>;
 
     mountPath: string;
 
@@ -68,7 +68,7 @@ export class DispatcherEvent implements IDispatcherEvent {
         this.mountPath = '/';
         this.params = {};
         this.routerPath = [];
-        this.methodsAllowed = [];
+        this.methodsAllowed = new Set();
         this._dispatched = false;
         this._nextCalled = false;
     }
