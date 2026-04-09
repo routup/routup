@@ -80,8 +80,12 @@ export interface IDispatcherEvent {
      *
      * Creates a lightweight snapshot with shared references (store, response, headers)
      * and pre-resolved router options. This is the event passed to handler functions.
+     *
+     * @param signal - Optional AbortSignal override. When provided, the built event
+     *                 uses this signal instead of the dispatcher event's own signal.
+     *                 Used by per-handler timeout to provide a handler-scoped signal.
      */
-    build(): RoutupEvent;
+    build(signal?: AbortSignal): RoutupEvent;
 }
 
 export interface IDispatcher {
