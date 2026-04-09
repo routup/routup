@@ -29,7 +29,35 @@ import type { RouterPipelineStep } from './constants.ts';
 export type RouterOptions = {
     path?: Path,
     name?: string,
+
+    /**
+     * Global request timeout in milliseconds.
+     *
+     * Applies to the entire dispatch pipeline in `fetch()`. When exceeded,
+     * the request is aborted and a 408 response is returned. The AbortSignal
+     * on the event is also aborted for cooperative cancellation.
+     */
     timeout?: number,
+
+    /**
+     * Default per-handler timeout in milliseconds.
+     *
+     * Applies individually to each handler's `fn()` execution. Handlers can
+     * override this value via their own `timeout` option — see
+     * `handlerTimeoutOverridable` to control whether overrides can extend
+     * or only narrow this default.
+     */
+    handlerTimeout?: number,
+
+    /**
+     * Whether handlers can extend the `handlerTimeout` default.
+     *
+     * When `false` (default), a handler's `timeout` is clamped to
+     * `Math.min(handlerTimeout, handler.timeout)`. When `true`, the
+     * handler's `timeout` fully replaces the router default.
+     */
+    handlerTimeoutOverridable?: boolean,
+
     subdomainOffset: number,
     proxyIpMax: number,
     etag: EtagFn,

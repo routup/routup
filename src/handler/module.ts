@@ -5,6 +5,7 @@ import { HookManager, HookName } from '../hook/index.ts';
 import type { Path } from '../path/index.ts';
 import { PathMatcher } from '../path/index.ts';
 import { toResponse } from '../response/index.ts';
+import type { RouterOptions } from '../router/types.ts';
 import { toMethodName, withLeadingSlash } from '../utils/index.ts';
 import { HandlerSymbol, HandlerType } from './constants.ts';
 import type { HandlerOptions } from './types.ts';
@@ -75,10 +76,19 @@ export class Handler implements IDispatcher {
 
             if (this.config.type === HandlerType.ERROR) {
                 if (event.error) {
-                    result = await this.config.fn(event.error, handlerEvent);
+                    const { fn } = this.config;
+                    const { error } = event;
+                    result = await this.executeWithTimeout(
+                        () => fn(error, handlerEvent),
+                        handlerEvent.routerOptions,
+                    );
                 }
             } else {
-                result = await this.config.fn(handlerEvent);
+                const { fn } = this.config;
+                result = await this.executeWithTimeout(
+                    () => fn(handlerEvent),
+                    handlerEvent.routerOptions,
+                );
             }
 
             response = await toResponse(result, handlerEvent);
@@ -147,6 +157,58 @@ export class Handler implements IDispatcher {
     }
 
     // --------------------------------------------------
+
+    protected async executeWithTimeout(
+        fn: () => unknown | Promise<unknown>,
+        routerOptions: RouterOptions,
+    ): Promise<unknown> {
+        const effectiveTimeout = this.resolveTimeout(routerOptions);
+
+        if (!effectiveTimeout) {
+            return fn();
+        }
+
+        let timerId: ReturnType<typeof setTimeout> | undefined;
+
+        try {
+            return await Promise.race([
+                fn(),
+                new Promise<never>((_, reject) => {
+                    timerId = setTimeout(() => {
+                        reject(createError({
+                            statusCode: 408,
+                            statusMessage: 'Request Timeout',
+                        }));
+                    }, effectiveTimeout);
+                }),
+            ]);
+        } finally {
+            clearTimeout(timerId);
+        }
+    }
+
+    protected resolveTimeout(routerOptions: RouterOptions): number | undefined {
+        const routerDefault = routerOptions.handlerTimeout;
+        const handlerOverride = this.config.timeout;
+
+        if (!routerDefault && !handlerOverride) {
+            return undefined;
+        }
+
+        if (!routerDefault) {
+            return handlerOverride;
+        }
+
+        if (!handlerOverride) {
+            return routerDefault;
+        }
+
+        if (routerOptions.handlerTimeoutOverridable) {
+            return handlerOverride;
+        }
+
+        return Math.min(routerDefault, handlerOverride);
+    }
 
     protected mountHooks() {
         if (this.config.onBefore) {

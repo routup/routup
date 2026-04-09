@@ -20,5 +20,15 @@ export function normalizeRouterOptions(input: RouterOptionsInput): Partial<Route
         }
     }
 
+    if (typeof input.handlerTimeout !== 'undefined') {
+        if (
+            typeof input.handlerTimeout !== 'number' ||
+            !Number.isFinite(input.handlerTimeout) ||
+            input.handlerTimeout <= 0
+        ) {
+            delete input.handlerTimeout;
+        }
+    }
+
     return input as Partial<RouterOptions>;
 }

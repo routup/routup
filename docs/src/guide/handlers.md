@@ -100,7 +100,18 @@ const handler = defineCoreHandler({
 });
 ```
 
-The verbose form also supports handler-level hooks:
+The verbose form supports a per-handler `timeout` (in milliseconds) that overrides the router's `handlerTimeout` default:
+
+```typescript
+const handler = defineCoreHandler({
+    timeout: 5000, // 5 seconds for this handler
+    fn: async (event) => {
+        return fetchSlowData();
+    }
+});
+```
+
+It also supports handler-level hooks:
 
 ```typescript
 const handler = defineCoreHandler({
