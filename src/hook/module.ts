@@ -1,5 +1,5 @@
 import type { IDispatcherEvent } from '../dispatcher/types.ts';
-import type { RoutupError } from '../error/module.ts';
+import { createError } from '../error/create.ts';
 import { HookName } from './constants.ts';
 import type {
     HookDefaultListener,
@@ -80,7 +80,9 @@ export class HookManager {
                 }
             }
         } catch (e) {
-            event.error = e as RoutupError;
+            if (!event.error) {
+                event.error = createError(e);
+            }
 
             if (!this.isErrorListenerHook(name)) {
                 await this.trigger(HookName.ERROR, event);

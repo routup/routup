@@ -58,3 +58,4 @@ export function createError(input: HTTPErrorInput | unknown) : RoutupError {
 
     return new RoutupError(options as HTTPErrorInput);
 }
+
