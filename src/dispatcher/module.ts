@@ -50,6 +50,8 @@ export class DispatcherEvent implements IDispatcherEvent {
 
     protected _signal?: AbortSignal;
 
+    protected _signalCleanup?: () => void;
+
     /**
      * Whether _next has already been called (guard against double-invocation).
      */
@@ -94,7 +96,42 @@ export class DispatcherEvent implements IDispatcherEvent {
     }
 
     set signal(value: AbortSignal) {
-        this._signal = value;
+        // Clean up listeners from a previous merge
+        if (this._signalCleanup) {
+            this._signalCleanup();
+            this._signalCleanup = undefined;
+        }
+
+        if (value === this.request.signal) {
+            this._signal = value;
+            return;
+        }
+
+        const controller = new AbortController();
+        const abort = (e?: Event) => {
+            const reason = e?.target instanceof AbortSignal ?
+                e.target.reason :
+                undefined;
+            this.request.signal.removeEventListener('abort', abort);
+            value.removeEventListener('abort', abort);
+            controller.abort(reason);
+        };
+
+        if (this.request.signal.aborted || value.aborted) {
+            const reason = this.request.signal.aborted ?
+                this.request.signal.reason :
+                value.reason;
+            controller.abort(reason);
+        } else {
+            this.request.signal.addEventListener('abort', abort, { once: true });
+            value.addEventListener('abort', abort, { once: true });
+            this._signalCleanup = () => {
+                this.request.signal.removeEventListener('abort', abort);
+                value.removeEventListener('abort', abort);
+            };
+        }
+
+        this._signal = controller.signal;
     }
 
     get dispatched(): boolean {
