@@ -121,4 +121,19 @@ describe('src/response/to-response', () => {
         const result = await toResponse('ok', event);
         expect(result!.headers.get('x-custom')).toBe('value');
     });
+
+    it('should throw RoutupError when JSON.stringify fails', async () => {
+        const event = createTestEvent('/');
+        const circular: Record<string, unknown> = {};
+        circular.self = circular;
+
+        try {
+            await toResponse(circular, event);
+            expect.unreachable('should have thrown');
+        } catch (e: any) {
+            expect(e.statusCode).toBe(500);
+            expect(e.message).toBe('JSON serialization failed');
+            expect(e.cause).toBeInstanceOf(TypeError);
+        }
+    });
 });

@@ -1,3 +1,4 @@
+import { createError } from '../error/create.ts';
 import type { IRoutupEvent } from '../event/index.ts';
 
 function stripWeakPrefix(etag: string): string {
@@ -104,7 +105,16 @@ export async function toResponse(
         headers.set('content-type', 'application/json; charset=utf-8');
     }
 
-    const json = JSON.stringify(value);
+    let json: string;
+    try {
+        json = JSON.stringify(value);
+    } catch (e) {
+        throw createError({
+            message: 'JSON serialization failed',
+            statusCode: 500,
+            cause: e,
+        });
+    }
 
     const cached = await applyEtag(json, event, headers);
     if (cached) return cached;
