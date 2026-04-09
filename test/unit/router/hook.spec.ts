@@ -184,6 +184,51 @@ describe('src/router/hooks', () => {
         expect(onErrorFn).toHaveBeenCalled();
     });
 
+    it('should execute hooks in priority order (higher first)', async () => {
+        const router = new Router();
+        router.use(defineCoreHandler(() => 'ok'));
+
+        const order: number[] = [];
+
+        router.on(HookName.REQUEST, () => { order.push(1); }, 0);
+        router.on(HookName.REQUEST, () => { order.push(2); }, 10);
+        router.on(HookName.REQUEST, () => { order.push(3); }, 5);
+
+        await router.fetch(createTestRequest('/'));
+
+        expect(order).toEqual([2, 3, 1]);
+    });
+
+    it('should execute hooks with same priority in registration order', async () => {
+        const router = new Router();
+        router.use(defineCoreHandler(() => 'ok'));
+
+        const order: string[] = [];
+
+        router.on(HookName.REQUEST, () => { order.push('first'); });
+        router.on(HookName.REQUEST, () => { order.push('second'); });
+        router.on(HookName.REQUEST, () => { order.push('third'); });
+
+        await router.fetch(createTestRequest('/'));
+
+        expect(order).toEqual(['first', 'second', 'third']);
+    });
+
+    it('should support negative priority', async () => {
+        const router = new Router();
+        router.use(defineCoreHandler(() => 'ok'));
+
+        const order: string[] = [];
+
+        router.on(HookName.REQUEST, () => { order.push('default'); }, 0);
+        router.on(HookName.REQUEST, () => { order.push('late'); }, -10);
+        router.on(HookName.REQUEST, () => { order.push('early'); }, 10);
+
+        await router.fetch(createTestRequest('/'));
+
+        expect(order).toEqual(['early', 'default', 'late']);
+    });
+
     it('should trigger handler hooks', async () => {
         const router = new Router();
 
