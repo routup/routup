@@ -173,7 +173,7 @@ export class DispatcherEvent implements IDispatcherEvent {
 
     // ------------------------------------------------------------------------
 
-    build(): RoutupEvent {
+    build(signal?: AbortSignal): RoutupEvent {
         return new RoutupEvent({
             request: this.request,
             params: this.params,
@@ -184,7 +184,7 @@ export class DispatcherEvent implements IDispatcherEvent {
             searchParams: new URLSearchParams(this._url.search),
             response: this.response,
             store: this.store,
-            signal: this.signal,
+            signal: signal ?? this.signal,
             routerOptions: () => this.resolveOptions(),
             next: (event: IRoutupEvent, error?: Error) => this.next(event, error),
         });

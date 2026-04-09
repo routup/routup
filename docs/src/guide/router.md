@@ -103,7 +103,7 @@ const router = new Router({ timeout: 5000 }); // 5 seconds
 
 ### Per-Handler Timeout
 
-Set a default timeout for individual handler execution. Each handler's `fn()` is independently timed:
+Set a default timeout for individual handler execution. Each handler's `fn()` is independently timed. When the timeout fires, `event.signal` inside the handler is aborted for cooperative cancellation:
 
 ```typescript
 const router = new Router({
@@ -125,7 +125,7 @@ When `handlerTimeoutOverridable` is `false`, the effective timeout is `Math.min(
 
 ### Cooperative Cancellation
 
-Both timeout levels expose an `AbortSignal` via `event.signal` that handlers can pass to signal-aware APIs:
+Both timeout levels abort `event.signal` when the deadline fires. Handlers can pass it to signal-aware APIs:
 
 ```typescript
 defineCoreHandler(async (event) => {

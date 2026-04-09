@@ -186,6 +186,80 @@ describe('src/router/timeout', () => {
             expect(response.status).toBe(408);
         });
 
+        it('should abort signal when per-handler timeout is exceeded', async () => {
+            const router = new Router({ handlerTimeout: 50 });
+            let signalAborted = false;
+
+            router.use(defineCoreHandler(async (event) => {
+                await new Promise<void>((resolve) => {
+                    event.signal.addEventListener('abort', () => {
+                        signalAborted = true;
+                        resolve();
+                    });
+                });
+                return 'too late';
+            }));
+
+            await router.fetch(createTestRequest('/'));
+
+            expect(signalAborted).toBe(true);
+        });
+
+        it('should abort signal when handler-level timeout is exceeded', async () => {
+            const router = new Router();
+            let signalAborted = false;
+
+            router.use(defineCoreHandler({
+                timeout: 50,
+                fn: async (event) => {
+                    await new Promise<void>((resolve) => {
+                        event.signal.addEventListener('abort', () => {
+                            signalAborted = true;
+                            resolve();
+                        });
+                    });
+                    return 'too late';
+                },
+            }));
+
+            await router.fetch(createTestRequest('/'));
+
+            expect(signalAborted).toBe(true);
+        });
+
+        it('should provide non-aborted signal when handler completes before timeout', async () => {
+            const router = new Router({ handlerTimeout: 1000 });
+            let signalAborted = true;
+
+            router.use(defineCoreHandler((event) => {
+                signalAborted = event.signal.aborted;
+                return 'ok';
+            }));
+
+            await router.fetch(createTestRequest('/'));
+
+            expect(signalAborted).toBe(false);
+        });
+
+        it('should propagate parent signal abort to handler signal', async () => {
+            const router = new Router({ timeout: 50, handlerTimeout: 500 });
+            let signalAborted = false;
+
+            router.use(defineCoreHandler(async (event) => {
+                await new Promise<void>((resolve) => {
+                    event.signal.addEventListener('abort', () => {
+                        signalAborted = true;
+                        resolve();
+                    });
+                });
+                return 'too late';
+            }));
+
+            await router.fetch(createTestRequest('/'));
+
+            expect(signalAborted).toBe(true);
+        });
+
         it('should not affect handlers without timeout when handlerTimeout is unset', async () => {
             const router = new Router();
 

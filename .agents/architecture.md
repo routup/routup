@@ -209,7 +209,7 @@ const router = new Router({ timeout: 5000 }); // 5s for entire request
 
 ### Per-handler timeout (`handlerTimeout`)
 
-Applied in `Handler.dispatch()` around each handler's `fn()` execution. Handlers can override this default via their own `timeout` option.
+Applied in `Handler.dispatch()` around each handler's `fn()` execution. Handlers can override this default via their own `timeout` option. When the per-handler timeout fires, a handler-scoped `AbortController` is aborted so that `event.signal` inside the handler reflects the timeout — enabling cooperative cancellation for signal-aware APIs.
 
 ```typescript
 const router = new Router({
@@ -226,9 +226,11 @@ router.get('/fast', defineCoreHandler({
 // With handlerTimeoutOverridable: true, handlers can extend beyond the default
 ```
 
+The child signal is linked to the parent signal (from the global timeout or request lifecycle), so a parent abort propagates to the handler. After handler execution, the parent→child listener is cleaned up.
+
 ### Cooperative cancellation
 
-Handlers can use `event.signal` for cooperative cancellation with signal-aware APIs:
+Both timeout levels abort `event.signal` when the deadline fires. Handlers can use `event.signal` for cooperative cancellation with signal-aware APIs:
 
 ```typescript
 defineCoreHandler(async (event) => {
