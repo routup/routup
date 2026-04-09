@@ -74,6 +74,15 @@ export interface IRoutupEvent {
     readonly routerOptions: RouterOptions;
 
     /**
+     * Abort signal tied to the request lifecycle.
+     *
+     * When a `timeout` router option is set, this signal aborts after the
+     * specified duration. Handlers performing long I/O (fetch, streams, DB queries)
+     * can pass this signal to those operations for cooperative cancellation.
+     */
+    readonly signal: AbortSignal;
+
+    /**
      * Call the next handler in the pipeline (onion model).
      *
      * The result is cached — calling `next()` multiple times returns the same response.

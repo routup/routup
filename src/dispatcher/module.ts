@@ -48,6 +48,10 @@ export class DispatcherEvent implements IDispatcherEvent {
      */
     protected _next?: (event: IRoutupEvent, error?: Error) => Promise<Response | undefined>;
 
+    protected _signal?: AbortSignal;
+
+    protected _signalCleanup?: () => void;
+
     /**
      * Whether _next has already been called (guard against double-invocation).
      */
@@ -81,6 +85,53 @@ export class DispatcherEvent implements IDispatcherEvent {
         }
 
         return this._response;
+    }
+
+    get signal(): AbortSignal {
+        if (!this._signal) {
+            this._signal = this.request.signal;
+        }
+
+        return this._signal;
+    }
+
+    set signal(value: AbortSignal) {
+        // Clean up listeners from a previous merge
+        if (this._signalCleanup) {
+            this._signalCleanup();
+            this._signalCleanup = undefined;
+        }
+
+        if (value === this.request.signal) {
+            this._signal = value;
+            return;
+        }
+
+        const controller = new AbortController();
+        const abort = (e?: Event) => {
+            const reason = e?.target instanceof AbortSignal ?
+                e.target.reason :
+                undefined;
+            this.request.signal.removeEventListener('abort', abort);
+            value.removeEventListener('abort', abort);
+            controller.abort(reason);
+        };
+
+        if (this.request.signal.aborted || value.aborted) {
+            const reason = this.request.signal.aborted ?
+                this.request.signal.reason :
+                value.reason;
+            controller.abort(reason);
+        } else {
+            this.request.signal.addEventListener('abort', abort, { once: true });
+            value.addEventListener('abort', abort, { once: true });
+            this._signalCleanup = () => {
+                this.request.signal.removeEventListener('abort', abort);
+                value.removeEventListener('abort', abort);
+            };
+        }
+
+        this._signal = controller.signal;
     }
 
     get dispatched(): boolean {
@@ -133,6 +184,7 @@ export class DispatcherEvent implements IDispatcherEvent {
             searchParams: new URLSearchParams(this._url.search),
             response: this.response,
             store: this.store,
+            signal: this.signal,
             routerOptions: () => this.resolveOptions(),
             next: (event: IRoutupEvent, error?: Error) => this.next(event, error),
         });
