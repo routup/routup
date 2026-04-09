@@ -141,17 +141,7 @@ Many request helpers are replaced by event properties:
 
 ### Body parsing
 
-```typescript
-import { readBody } from 'routup';
-
-defineCoreHandler(async (event) => {
-    const body = await readBody(event);     // auto-detects JSON, form-urlencoded
-});
-```
-
-`readBody()` is cached — calling it multiple times returns the same parsed result.
-
-For binary or streaming access, use the request directly:
+For body parsing, use the `@routup/body` plugin. For binary or streaming access, use the request directly:
 
 ```typescript
 defineCoreHandler(async (event) => {

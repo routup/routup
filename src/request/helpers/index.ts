@@ -1,4 +1,3 @@
-export * from './body.ts';
 export * from './cache.ts';
 export * from './header.ts';
 export * from './header-accept.ts';

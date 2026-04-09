@@ -20,18 +20,9 @@ defineCoreHandler((event) => {
 });
 ```
 
-## Reading the Body <Badge type="warning" text="experimental" />
+## Reading the Body
 
-Use `readBody()` to parse the request body. It automatically handles JSON and form-urlencoded data. Results are cached for repeated access.
-
-```typescript
-import { defineCoreHandler, readBody } from 'routup';
-
-router.post('/users', defineCoreHandler(async (event) => {
-    const body = await readBody(event);
-    return { created: body.name };
-}));
-```
+For body parsing (JSON, form-urlencoded), use the `@routup/body` plugin.
 
 For binary or streaming access, use the underlying request methods directly:
 
