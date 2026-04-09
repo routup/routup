@@ -46,7 +46,7 @@ All helpers are standalone, tree-shakeable functions that take `event: IRoutupEv
 | `get*` | Pure read, no side effects | No | No | `getRequestIP`, `getRequestHeader`, `getRouterOption` |
 | `set*` | Mutate event state (headers, status) | No | No | `setResponseCacheHeaders`, `setResponseGone` |
 | `send*` | Build and return a `Response` | No | No | `sendRedirect`, `sendStream`, `sendFormat` |
-| `read*` | Async I/O read, cached in `event.store` | Yes | Yes | `readBody` |
+| `read*` | Async I/O read, cached in `event.store` | Yes | Yes | — |
 | `use*` | Create an object, cached in `event.store` | Yes | No | `useRequestNegotiator` |
 | `is*` | Boolean check | No | No | `isRequestCacheable`, `isResponseGone` |
 | `match*` | Pattern match check | No | No | `matchRequestContentType` |

@@ -59,7 +59,7 @@ routup/
 | `hook/` | Lifecycle events: `request`, `response`, `error` |
 | `plugin/` | Plugin system — objects with `name` and `install(router)` method |
 | `path/` | `PathMatcher` — wraps `path-to-regexp` for URL pattern matching with query string support |
-| `request/helpers/` | Tree-shakeable request helpers (`readBody`, `getRequestHeader`, `getRequestIP`, etc.) |
+| `request/helpers/` | Tree-shakeable request helpers (`getRequestHeader`, `getRequestIP`, etc.) |
 | `response/helpers/` | Tree-shakeable response helpers (`sendFile`, `sendRedirect`, `sendCreated`, etc.) |
 | `response/to-response.ts` | Converts handler return values (string, object, Response, etc.) into a Web `Response` with automatic ETag/304 |
 | `error/` | `RoutupError` extending `@ebec/http` `HTTPError` with statusCode/statusMessage |

@@ -181,7 +181,6 @@ Helpers are standalone, tree-shakeable functions:
 
 ```typescript
 // Request helpers
-readBody(event)                          // parse request body
 getRequestHeader(event, name)            // single header
 getRequestHostName(event)                // hostname
 getRequestIP(event)                      // client IP (proxy-aware)
