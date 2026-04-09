@@ -1,4 +1,3 @@
-import { getStatusText } from '@ebec/http';
 import { HeaderName, MethodName } from '../constants.ts';
 import { DispatcherEvent } from '../dispatcher/index.ts';
 import type { IDispatcherEvent } from '../dispatcher/index.ts';
@@ -132,7 +131,7 @@ export class Router implements IRouter {
                                 controller.abort();
                                 reject(createError({
                                     status: 408,
-                                    statusMessage: 'Request Timeout',
+                                    message: 'Request Timeout',
                                 }));
                             }, timeoutMs);
                         }),
@@ -152,9 +151,12 @@ export class Router implements IRouter {
         }
 
         if (event.error) {
-            const status = event.error.status || 500;
-            const message = event.error.statusMessage || getStatusText(status) || 'Unknown Error';
-            return this.buildFallbackResponse(request, event, status, message);
+            return this.buildFallbackResponse(
+                request,
+                event,
+                event.error.status || 500,
+                event.error.message,
+            );
         }
 
         return this.buildFallbackResponse(request, event, 404, 'Not Found');
@@ -162,13 +164,11 @@ export class Router implements IRouter {
 
     protected buildFallbackResponse(request: RoutupRequest, event: IDispatcherEvent, status: number, message: string): Response {
         const headers = new Headers(event.response.headers);
-        const statusText = getStatusText(status) || 'Unknown Error';
 
         if (acceptsJson(request)) {
             headers.set('content-type', 'application/json; charset=utf-8');
             return new Response(JSON.stringify({ status, message }), {
                 status,
-                statusText,
                 headers,
             });
         }
@@ -176,7 +176,6 @@ export class Router implements IRouter {
         headers.set('content-type', 'text/plain; charset=utf-8');
         return new Response(message, {
             status,
-            statusText,
             headers,
         });
     }
@@ -364,7 +363,6 @@ export class Router implements IRouter {
             optionsHeaders.set(HeaderName.ALLOW, options);
             context.response = new Response(options, {
                 status: context.event.response.status || 200,
-                statusText: context.event.response.statusText,
                 headers: optionsHeaders,
             });
 

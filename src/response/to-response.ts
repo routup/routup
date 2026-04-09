@@ -40,7 +40,6 @@ export async function toResponse(
     if (value === null) {
         return new Response(null, {
             status: event.response.status,
-            statusText: event.response.statusText,
             headers: event.response.headers,
         });
     }
@@ -52,7 +51,6 @@ export async function toResponse(
     const {
         status,
         headers,
-        statusText,
     } = event.response;
 
     if (typeof value === 'string') {
@@ -65,7 +63,6 @@ export async function toResponse(
 
         return new Response(value, {
             status,
-            statusText,
             headers,
         });
     }
@@ -76,7 +73,6 @@ export async function toResponse(
         }
         return new Response(value as BodyInit, {
             status,
-            statusText,
             headers,
         });
     }
@@ -84,7 +80,6 @@ export async function toResponse(
     if (value instanceof ReadableStream) {
         return new Response(value, {
             status,
-            statusText,
             headers,
         });
     }
@@ -95,7 +90,6 @@ export async function toResponse(
         }
         return new Response(value, {
             status,
-            statusText,
             headers,
         });
     }
@@ -121,7 +115,6 @@ export async function toResponse(
 
     return new Response(json, {
         status,
-        statusText,
         headers,
     });
 }

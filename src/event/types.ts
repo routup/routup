@@ -4,7 +4,6 @@ import type { RouterOptions } from '../router/types.ts';
 export type RoutupResponse = {
     status: number;
     headers: Headers;
-    statusText?: string
 };
 
 export type RoutupRequest = ServerRequest;

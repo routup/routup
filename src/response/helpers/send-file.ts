@@ -71,7 +71,6 @@ export async function sendFile(
                 rangeHeaders.set(HeaderName.CONTENT_RANGE, `bytes */${stats.size}`);
                 return new Response(null, {
                     status: 416,
-                    statusText: event.response.statusText,
                     headers: rangeHeaders,
                 });
             }
@@ -96,7 +95,6 @@ export async function sendFile(
 
     return new Response(content as BodyInit, {
         status: statusCode,
-        statusText: event.response.statusText,
         headers,
     });
 }

@@ -214,7 +214,7 @@ export class Handler implements IDispatcher {
                         }
                         reject(createError({
                             status: 408,
-                            statusMessage: 'Request Timeout',
+                            message: 'Request Timeout',
                         }));
                     }, effectiveTimeout);
                 }),

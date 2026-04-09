@@ -20,10 +20,8 @@ describe('src/response/to-response', () => {
     it('should return custom status for null when set', async () => {
         const event = createTestEvent('/');
         event.response.status = 204;
-        event.response.statusText = 'No Content';
         const result = await toResponse(null, event);
         expect(result!.status).toBe(204);
-        expect(result!.statusText).toBe('No Content');
     });
 
     it('should pass through Response as-is', async () => {

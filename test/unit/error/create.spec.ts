@@ -17,10 +17,10 @@ describe('src/error/create', () => {
     it('should create error by options', () => {
         const error = createError({
             status: 510,
-            statusMessage: 'foo',
+            message: 'foo',
         });
         expect(error.status).toEqual(510);
-        expect(error.statusMessage).toEqual('foo');
+        expect(error.message).toEqual('foo');
     });
 
     it('should create error for client error', () => {
@@ -29,7 +29,7 @@ describe('src/error/create', () => {
 
         expect(error).toBeDefined();
         expect(error.status).toEqual(notFoundError.status);
-        expect(error.statusMessage).toEqual(notFoundError.statusMessage);
+        expect(error.message).toEqual(notFoundError.message);
     });
 
     it('should create error for server error', () => {
@@ -38,6 +38,6 @@ describe('src/error/create', () => {
 
         expect(error).toBeDefined();
         expect(error.status).toEqual(internalServerError.status);
-        expect(error.statusMessage).toEqual(internalServerError.statusMessage);
+        expect(error.message).toEqual(internalServerError.message);
     });
 });
