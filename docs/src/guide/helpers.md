@@ -6,7 +6,6 @@ Helpers are standalone, tree-shakeable functions for interacting with requests a
 
 | Helper | Description |
 |--------|-------------|
-| `readBody(event)` | Parse request body (JSON, form-urlencoded) with caching *(experimental)* |
 | `getRequestHeader(event, name)` | Get a single request header |
 | `getRequestHostName(event, options?)` | Get the request hostname (proxy-aware) |
 | `getRequestIP(event, options?)` | Get the client IP address (proxy-aware) |

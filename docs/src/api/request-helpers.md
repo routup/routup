@@ -2,24 +2,6 @@
 
 All request helpers take an `IRoutupEvent` as the first argument.
 
-## Body Parsing
-
-### `readBody`
-
-Parse the request body based on `Content-Type`. Handles `application/json` and `application/x-www-form-urlencoded`. The result is cached on the event store — subsequent calls return the same parsed value.
-
-For binary or streaming access, use `event.request.arrayBuffer()`, `event.request.blob()`, or `event.request.body` directly.
-
-> **Experimental**
-
-```typescript
-declare function readBody<T = unknown>(event: IRoutupEvent): Promise<T | undefined>;
-```
-
-```typescript
-const data = await readBody<{ name: string }>(event);
-```
-
 ## Headers & Content Negotiation
 
 ### `getRequestHeader`
