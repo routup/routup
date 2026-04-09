@@ -29,6 +29,7 @@ import type { RouterPipelineStep } from './constants.ts';
 export type RouterOptions = {
     path?: Path,
     name?: string,
+    timeout?: number,
     subdomainOffset: number,
     proxyIpMax: number,
     etag: EtagFn,

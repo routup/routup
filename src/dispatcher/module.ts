@@ -48,6 +48,8 @@ export class DispatcherEvent implements IDispatcherEvent {
      */
     protected _next?: (event: IRoutupEvent, error?: Error) => Promise<Response | undefined>;
 
+    protected _signal?: AbortSignal;
+
     /**
      * Whether _next has already been called (guard against double-invocation).
      */
@@ -81,6 +83,18 @@ export class DispatcherEvent implements IDispatcherEvent {
         }
 
         return this._response;
+    }
+
+    get signal(): AbortSignal {
+        if (!this._signal) {
+            this._signal = new AbortController().signal;
+        }
+
+        return this._signal;
+    }
+
+    set signal(value: AbortSignal) {
+        this._signal = value;
     }
 
     get dispatched(): boolean {
@@ -133,6 +147,7 @@ export class DispatcherEvent implements IDispatcherEvent {
             searchParams: new URLSearchParams(this._url.search),
             response: this.response,
             store: this.store,
+            signal: this.signal,
             routerOptions: () => this.resolveOptions(),
             next: (event: IRoutupEvent, error?: Error) => this.next(event, error),
         });
