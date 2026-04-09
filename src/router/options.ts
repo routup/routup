@@ -10,5 +10,25 @@ export function normalizeRouterOptions(input: RouterOptionsInput): Partial<Route
         input.trustProxy = buildTrustProxyFn(input.trustProxy);
     }
 
+    if (typeof input.timeout !== 'undefined') {
+        if (
+            typeof input.timeout !== 'number' ||
+            !Number.isFinite(input.timeout) ||
+            input.timeout <= 0
+        ) {
+            delete input.timeout;
+        }
+    }
+
+    if (typeof input.handlerTimeout !== 'undefined') {
+        if (
+            typeof input.handlerTimeout !== 'number' ||
+            !Number.isFinite(input.handlerTimeout) ||
+            input.handlerTimeout <= 0
+        ) {
+            delete input.handlerTimeout;
+        }
+    }
+
     return input as Partial<RouterOptions>;
 }

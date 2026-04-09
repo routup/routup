@@ -15,6 +15,7 @@ export type RoutupEventCreateContext = {
     searchParams: URLSearchParams;
     response: RoutupResponse;
     store: Record<string | symbol, unknown>;
+    signal: AbortSignal;
     routerOptions: () => RouterOptions;
     next: (event: IRoutupEvent, error?: Error) => Promise<Response | undefined>;
 };
@@ -38,6 +39,8 @@ export class RoutupEvent implements IRoutupEvent {
 
     readonly store: Record<string | symbol, unknown>;
 
+    readonly signal: AbortSignal;
+
     protected _context: RoutupEventCreateContext;
 
     protected _routerOptions?: RouterOptions;
@@ -53,6 +56,7 @@ export class RoutupEvent implements IRoutupEvent {
         this.searchParams = context.searchParams;
         this.response = context.response;
         this.store = context.store;
+        this.signal = context.signal;
     }
 
     get routerOptions(): RouterOptions {

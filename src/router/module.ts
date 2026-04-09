@@ -22,7 +22,11 @@ import { PathMatcher, isPath } from '../path/index.ts';
 import type { Plugin, PluginInstallContext } from '../plugin/index.ts';
 import { isPlugin } from '../plugin/index.ts';
 import { normalizeRouterOptions } from './options.ts';
-import { cleanDoubleSlashes, withLeadingSlash, withoutTrailingSlash } from '../utils/index.ts';
+import {
+    cleanDoubleSlashes,
+    withLeadingSlash,
+    withoutTrailingSlash,
+} from '../utils/index.ts';
 import { RouterPipelineStep, RouterSymbol } from './constants.ts';
 import type {
     IRouter,
@@ -111,7 +115,33 @@ export class Router implements IRouter {
         let response: Response | undefined;
 
         try {
-            response = await this.dispatch(event);
+            const timeoutMs = this._options.timeout;
+
+            if (timeoutMs) {
+                const controller = new AbortController();
+                event.signal = controller.signal;
+
+                let timerId: ReturnType<typeof setTimeout> | undefined;
+
+                try {
+                    response = await Promise.race([
+                        this.dispatch(event),
+                        new Promise<never>((_, reject) => {
+                            timerId = setTimeout(() => {
+                                controller.abort();
+                                reject(createError({
+                                    statusCode: 408,
+                                    statusMessage: 'Request Timeout',
+                                }));
+                            }, timeoutMs);
+                        }),
+                    ]);
+                } finally {
+                    clearTimeout(timerId);
+                }
+            } else {
+                response = await this.dispatch(event);
+            }
         } catch (e) {
             event.error = createError(e);
         }

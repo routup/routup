@@ -51,6 +51,15 @@ export interface IDispatcherEvent {
     routerPath: RouterPathNode[];
 
     /**
+     * Abort signal for cooperative cancellation.
+     *
+     * When a `timeout` router option is set, this signal aborts after the
+     * specified duration. Handlers can pass it to fetch(), streams, or other
+     * AbortSignal-aware APIs.
+     */
+    signal: AbortSignal;
+
+    /**
      * Collected allowed methods for the current path (used for OPTIONS / 405 responses).
      */
     methodsAllowed: Set<string>;

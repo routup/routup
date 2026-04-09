@@ -90,6 +90,7 @@ npm run build:types    # tsc --noEmit (type-check only)
 
 ## Design Conventions
 
+- **Type checks**: Use `isObject()` from `src/utils/` instead of `typeof x === 'object'` for object checks
 - **Tree-shakeable helpers**: Request/response operations are standalone functions, not object methods
 - **Factory pattern**: `defineCoreHandler()` and `defineErrorHandler()` factories for type-safe handler creation
 - **Dual syntax**: Handlers support both shorthand (function) and verbose (config object) forms
