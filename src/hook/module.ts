@@ -8,8 +8,13 @@ import type {
     HookUnsubscribeFn,
 } from './types.ts';
 
+type HookEntry = {
+    fn: HookListener;
+    priority: number;
+};
+
 export class HookManager {
-    protected items: Record<string, HookListener[]>;
+    protected items: Record<string, HookEntry[]>;
 
     // --------------------------------------------------
 
@@ -22,9 +27,18 @@ export class HookManager {
     addListener(
         name: `${HookName}`,
         fn: HookListener,
+        priority: number = 0,
     ): HookUnsubscribeFn {
         this.items[name] = this.items[name] || [];
-        this.items[name].push(fn);
+
+        const entry: HookEntry = { fn, priority };
+
+        // Insert in sorted position (higher priority first)
+        let i = 0;
+        while (i < this.items[name].length && this.items[name][i]!.priority >= priority) {
+            i++;
+        }
+        this.items[name].splice(i, 0, entry);
 
         return () => {
             this.removeListener(name, fn);
@@ -46,7 +60,7 @@ export class HookManager {
         }
 
         if (typeof fn === 'function') {
-            const index = this.items[name].indexOf(fn);
+            const index = this.items[name].findIndex((entry) => entry.fn === fn);
             if (index !== -1) {
                 this.items[name].splice(index, 1);
             }
@@ -69,8 +83,8 @@ export class HookManager {
 
         try {
             for (let i = 0; i < this.items[name].length; i++) {
-                const listener = this.items[name][i]!;
-                await this.triggerListener(name, event, listener);
+                const { fn } = this.items[name][i]!;
+                await this.triggerListener(name, event, fn);
 
                 if (event.dispatched) {
                     if (event.error) {

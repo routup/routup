@@ -580,21 +580,24 @@ export class Router implements IRouter {
             `${HookName.RESPONSE}` |
             `${HookName.CHILD_DISPATCH_BEFORE}` |
             `${HookName.CHILD_DISPATCH_AFTER}`,
-        fn: HookDefaultListener
+        fn: HookDefaultListener,
+        priority?: number,
     ): HookUnsubscribeFn;
 
     on(
         name: `${HookName.CHILD_MATCH}`,
-        fn: HookDefaultListener
+        fn: HookDefaultListener,
+        priority?: number,
     ): HookUnsubscribeFn;
 
     on(
         name: `${HookName.ERROR}`,
-        fn: HookErrorListener
+        fn: HookErrorListener,
+        priority?: number,
     ): HookUnsubscribeFn;
 
-    on(name: `${HookName}`, fn: HookListener): HookUnsubscribeFn {
-        return this.hookManager.addListener(name, fn);
+    on(name: `${HookName}`, fn: HookListener, priority?: number): HookUnsubscribeFn {
+        return this.hookManager.addListener(name, fn, priority);
     }
 
     /**
