@@ -113,6 +113,7 @@ The `RoutupEvent` (implementing `IRoutupEvent`) is the central object passed to 
 | `headers` | `Headers` | Request headers |
 | `searchParams` | `URLSearchParams` | Query string parameters |
 | `response` | `RoutupResponse` | Response accumulator for status, headers, statusText |
+| `signal` | `AbortSignal` | Abort signal for cooperative cancellation (aborted on timeout) |
 | `dispatched` | `boolean` | Whether a response has been produced |
 | `store` | `Record<string \| symbol, unknown>` | Per-request state store for caching and plugin state |
 
@@ -193,6 +194,48 @@ setResponseCacheHeaders(event, options)  // set cache headers
 ```
 
 This design keeps the core lightweight — unused helpers are tree-shaken from the final bundle.
+
+## Timeout
+
+Routup supports two levels of timeout, both returning `408 Request Timeout`:
+
+### Global timeout (`timeout`)
+
+Applied in `Router.fetch()` around the entire dispatch pipeline. Uses `AbortController` internally — when the timeout fires, `event.signal` is aborted for cooperative cancellation.
+
+```typescript
+const router = new Router({ timeout: 5000 }); // 5s for entire request
+```
+
+### Per-handler timeout (`handlerTimeout`)
+
+Applied in `Handler.dispatch()` around each handler's `fn()` execution. Handlers can override this default via their own `timeout` option.
+
+```typescript
+const router = new Router({
+    handlerTimeout: 2000,              // default: 2s per handler
+    handlerTimeoutOverridable: false,  // handlers can only narrow, not extend
+});
+
+// This handler gets a shorter timeout (1s)
+router.get('/fast', defineCoreHandler({
+    timeout: 1000,
+    fn: (event) => fetchFastData(),
+}));
+
+// With handlerTimeoutOverridable: true, handlers can extend beyond the default
+```
+
+### Cooperative cancellation
+
+Handlers can use `event.signal` for cooperative cancellation with signal-aware APIs:
+
+```typescript
+defineCoreHandler(async (event) => {
+    const data = await fetch('https://api.example.com', { signal: event.signal });
+    return data.json();
+});
+```
 
 ## Error Handling
 
