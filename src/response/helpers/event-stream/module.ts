@@ -9,7 +9,7 @@ export type EventStreamOptions = {
 };
 
 export type EventStreamHandle = {
-    write(message: string | EventStreamMessage): void;
+    write(message: string | EventStreamMessage): boolean;
     end(): void;
     response: Response;
 };
@@ -50,12 +50,11 @@ export function createEventStream(
     });
 
     const handle: EventStreamHandle = {
-        write(message: string | EventStreamMessage): void {
-            if (closed) return;
+        write(message: string | EventStreamMessage): boolean {
+            if (closed) return false;
 
             if (typeof message === 'string') {
-                handle.write({ data: message });
-                return;
+                return handle.write({ data: message });
             }
 
             const serialized = serializeEventStreamMessage(message);
@@ -63,11 +62,12 @@ export function createEventStream(
             if (options?.maxMessageSize !== undefined) {
                 const serializedSize = encoder.encode(serialized).byteLength;
                 if (serializedSize > options.maxMessageSize) {
-                    return;
+                    return false;
                 }
             }
 
             controller.enqueue(encoder.encode(serialized));
+            return true;
         },
 
         end(): void {

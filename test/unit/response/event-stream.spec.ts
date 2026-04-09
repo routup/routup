@@ -34,6 +34,31 @@ describe('src/helpers/response/event-stream', () => {
         expect(result).toContain('data: second message');
     });
 
+    it('should return true on successful write', () => {
+        const event = createTestEvent('/');
+        const stream = createEventStream(event);
+
+        expect(stream.write({ data: 'hello' })).toBe(true);
+        expect(stream.write('hello')).toBe(true);
+        stream.end();
+    });
+
+    it('should return false when stream is closed', () => {
+        const event = createTestEvent('/');
+        const stream = createEventStream(event);
+
+        stream.end();
+
+        expect(stream.write({ data: 'hello' })).toBe(false);
+    });
+
+    it('should return false when message exceeds maxMessageSize', () => {
+        const event = createTestEvent('/');
+        const stream = createEventStream(event, { maxMessageSize: 10 });
+
+        expect(stream.write({ data: 'this is a very long message' })).toBe(false);
+    });
+
     it('should write string messages', async () => {
         const event = createTestEvent('/');
         const stream = createEventStream(event);
