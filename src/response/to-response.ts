@@ -111,7 +111,7 @@ export async function toResponse(
     } catch (e) {
         throw createError({
             message: 'JSON serialization failed',
-            statusCode: 500,
+            status: 500,
             cause: e,
         });
     }

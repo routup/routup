@@ -16,10 +16,10 @@ describe('src/error/create', () => {
 
     it('should create error by options', () => {
         const error = createError({
-            statusCode: 510,
-            statusMessage: 'foo', 
+            status: 510,
+            statusMessage: 'foo',
         });
-        expect(error.statusCode).toEqual(510);
+        expect(error.status).toEqual(510);
         expect(error.statusMessage).toEqual('foo');
     });
 
@@ -28,7 +28,7 @@ describe('src/error/create', () => {
         const error = createError(notFoundError);
 
         expect(error).toBeDefined();
-        expect(error.statusCode).toEqual(notFoundError.statusCode);
+        expect(error.status).toEqual(notFoundError.status);
         expect(error.statusMessage).toEqual(notFoundError.statusMessage);
     });
 
@@ -37,7 +37,7 @@ describe('src/error/create', () => {
         const error = createError(internalServerError);
 
         expect(error).toBeDefined();
-        expect(error.statusCode).toEqual(internalServerError.statusCode);
+        expect(error.status).toEqual(internalServerError.status);
         expect(error.statusMessage).toEqual(internalServerError.statusMessage);
     });
 });

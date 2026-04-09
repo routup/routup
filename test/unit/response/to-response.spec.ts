@@ -131,7 +131,7 @@ describe('src/response/to-response', () => {
             await toResponse(circular, event);
             expect.unreachable('should have thrown');
         } catch (e: any) {
-            expect(e.statusCode).toBe(500);
+            expect(e.status).toBe(500);
             expect(e.message).toBe('JSON serialization failed');
             expect(e.cause).toBeInstanceOf(TypeError);
         }

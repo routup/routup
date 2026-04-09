@@ -1,3 +1,4 @@
+import { getStatusText } from '@ebec/http';
 import { HeaderName, MethodName } from '../constants.ts';
 import { DispatcherEvent } from '../dispatcher/index.ts';
 import type { IDispatcherEvent } from '../dispatcher/index.ts';
@@ -130,7 +131,7 @@ export class Router implements IRouter {
                             timerId = setTimeout(() => {
                                 controller.abort();
                                 reject(createError({
-                                    statusCode: 408,
+                                    status: 408,
                                     statusMessage: 'Request Timeout',
                                 }));
                             }, timeoutMs);
@@ -151,8 +152,8 @@ export class Router implements IRouter {
         }
 
         if (event.error) {
-            const status = event.error.statusCode || 500;
-            const message = event.error.statusMessage || 'Internal Server Error';
+            const status = event.error.status || 500;
+            const message = event.error.statusMessage || getStatusText(status) || 'Unknown Error';
             return this.buildFallbackResponse(request, event, status, message);
         }
 
@@ -161,12 +162,13 @@ export class Router implements IRouter {
 
     protected buildFallbackResponse(request: RoutupRequest, event: IDispatcherEvent, status: number, message: string): Response {
         const headers = new Headers(event.response.headers);
+        const statusText = getStatusText(status) || 'Unknown Error';
 
         if (acceptsJson(request)) {
             headers.set('content-type', 'application/json; charset=utf-8');
             return new Response(JSON.stringify({ status, message }), {
                 status,
-                statusText: message,
+                statusText,
                 headers,
             });
         }
@@ -174,7 +176,7 @@ export class Router implements IRouter {
         headers.set('content-type', 'text/plain; charset=utf-8');
         return new Response(message, {
             status,
-            statusText: message,
+            statusText,
             headers,
         });
     }

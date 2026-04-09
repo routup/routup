@@ -15,7 +15,7 @@ function isNativeError(input: unknown): input is Error {
  * - an existing RoutupError (returned as-is)
  * - an HTTPError (wrapped into a RoutupError preserving status)
  * - an Error (wrapped preserving message and cause)
- * - an options object (statusCode, statusMessage, etc.)
+ * - an options object (status, statusMessage, etc.)
  * - a message string
  *
  * @param input
@@ -33,7 +33,7 @@ export function createError(input: HTTPErrorInput | unknown) : RoutupError {
         return new RoutupError({
             message: input.message,
             code: input.code,
-            statusCode: input.statusCode,
+            status: input.status,
             statusMessage: input.statusMessage,
             redirectURL: input.redirectURL,
             cause: input,

@@ -213,7 +213,7 @@ export class Handler implements IDispatcher {
                             controller.abort();
                         }
                         reject(createError({
-                            statusCode: 408,
+                            status: 408,
                             statusMessage: 'Request Timeout',
                         }));
                     }, effectiveTimeout);
