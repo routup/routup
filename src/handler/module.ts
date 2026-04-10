@@ -173,7 +173,7 @@ export class Handler implements IDispatcher {
 
     // --------------------------------------------------
 
-    matchMethod(method: `${MethodName}`): boolean {
+    matchMethod(method: MethodName): boolean {
         return !this.method ||
             method === this.method ||
             (
@@ -182,7 +182,7 @@ export class Handler implements IDispatcher {
             );
     }
 
-    setMethod(input?: `${MethodName}`): void {
+    setMethod(input?: MethodName): void {
         const method = toMethodName(input);
 
         this.config.method = method;

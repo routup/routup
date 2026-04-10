@@ -150,24 +150,24 @@ export interface IRouter extends IDispatcher {
      * Add a hook listener.
      */
     on(
-        name: `${HookName.REQUEST}` |
-            `${HookName.RESPONSE}` |
-            `${HookName.CHILD_DISPATCH_BEFORE}` |
-            `${HookName.CHILD_DISPATCH_AFTER}`,
+        name: typeof HookName.REQUEST |
+            typeof HookName.RESPONSE |
+            typeof HookName.CHILD_DISPATCH_BEFORE |
+            typeof HookName.CHILD_DISPATCH_AFTER,
         fn: HookDefaultListener,
     ): HookUnsubscribeFn;
     on(
-        name: `${HookName.CHILD_MATCH}`,
+        name: typeof HookName.CHILD_MATCH,
         fn: HookDefaultListener,
     ): HookUnsubscribeFn;
     on(
-        name: `${HookName.ERROR}`,
+        name: typeof HookName.ERROR,
         fn: HookErrorListener,
     ): HookUnsubscribeFn;
 
     /**
      * Remove a specific or all hook listeners for the given hook name.
      */
-    off(name: `${HookName}`): this;
-    off(name: `${HookName}`, fn: HookListener): this;
+    off(name: HookName): this;
+    off(name: HookName, fn: HookListener): this;
 }

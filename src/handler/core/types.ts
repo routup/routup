@@ -7,6 +7,6 @@ export type CoreHandler = (
 ) => unknown | Promise<unknown>;
 
 export type CoreHandlerOptions = HandlerBaseOptions & {
-    type: `${HandlerType.CORE}`,
+    type: typeof HandlerType.CORE,
     fn: CoreHandler
 };

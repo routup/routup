@@ -1,10 +1,12 @@
 export const RouterSymbol = /* @__PURE__ */ Symbol.for('Router');
 
-export enum RouterPipelineStep {
-    START,
-    LOOKUP,
-    CHILD_BEFORE,
-    CHILD_DISPATCH,
-    CHILD_AFTER,
-    FINISH,
-}
+export const RouterPipelineStep = {
+    START: 0,
+    LOOKUP: 1,
+    CHILD_BEFORE: 2,
+    CHILD_DISPATCH: 3,
+    CHILD_AFTER: 4,
+    FINISH: 5,
+} as const;
+
+export type RouterPipelineStep = typeof RouterPipelineStep[keyof typeof RouterPipelineStep];

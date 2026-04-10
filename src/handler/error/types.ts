@@ -9,6 +9,6 @@ export type ErrorHandler = (
 ) => unknown | Promise<unknown>;
 
 export type ErrorHandlerOptions = HandlerBaseOptions & {
-    type: `${HandlerType.ERROR}`,
+    type: typeof HandlerType.ERROR,
     fn: ErrorHandler
 };
