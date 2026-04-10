@@ -236,7 +236,7 @@ export class Router implements IRouter {
                         context.event.methodsAllowed.add(item.method);
                     }
 
-                    if (item.matchMethod(context.event.method as `${MethodName}`)) {
+                    if (item.matchMethod(context.event.method as MethodName)) {
                         await this.hookManager.trigger(HookName.CHILD_MATCH, context.event);
 
                         if (context.event.dispatched) {
@@ -606,27 +606,27 @@ export class Router implements IRouter {
      * @param fn
      */
     on(
-        name: `${HookName.REQUEST}` |
-            `${HookName.RESPONSE}` |
-            `${HookName.CHILD_DISPATCH_BEFORE}` |
-            `${HookName.CHILD_DISPATCH_AFTER}`,
+        name: typeof HookName.REQUEST |
+            typeof HookName.RESPONSE |
+            typeof HookName.CHILD_DISPATCH_BEFORE |
+            typeof HookName.CHILD_DISPATCH_AFTER,
         fn: HookDefaultListener,
         priority?: number,
     ): HookUnsubscribeFn;
 
     on(
-        name: `${HookName.CHILD_MATCH}`,
+        name: typeof HookName.CHILD_MATCH,
         fn: HookDefaultListener,
         priority?: number,
     ): HookUnsubscribeFn;
 
     on(
-        name: `${HookName.ERROR}`,
+        name: typeof HookName.ERROR,
         fn: HookErrorListener,
         priority?: number,
     ): HookUnsubscribeFn;
 
-    on(name: `${HookName}`, fn: HookListener, priority?: number): HookUnsubscribeFn {
+    on(name: HookName, fn: HookListener, priority?: number): HookUnsubscribeFn {
         return this.hookManager.addListener(name, fn, priority);
     }
 
@@ -635,11 +635,11 @@ export class Router implements IRouter {
      *
      * @param name
      */
-    off(name: `${HookName}`): this;
+    off(name: HookName): this;
 
-    off(name: `${HookName}`, fn: HookListener): this;
+    off(name: HookName, fn: HookListener): this;
 
-    off(name: `${HookName}`, fn?: HookListener): this {
+    off(name: HookName, fn?: HookListener): this {
         if (typeof fn === 'undefined') {
             this.hookManager.removeListener(name);
 

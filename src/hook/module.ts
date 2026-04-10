@@ -25,7 +25,7 @@ export class HookManager {
     // --------------------------------------------------
 
     addListener(
-        name: `${HookName}`,
+        name: HookName,
         fn: HookListener,
         priority: number = 0,
     ): HookUnsubscribeFn {
@@ -45,11 +45,11 @@ export class HookManager {
         };
     }
 
-    removeListener(name: `${HookName}`): void;
+    removeListener(name: HookName): void;
 
-    removeListener(name: `${HookName}`, fn: HookListener): void;
+    removeListener(name: HookName, fn: HookListener): void;
 
-    removeListener(name: `${HookName}`, fn?: HookListener): void {
+    removeListener(name: HookName, fn?: HookListener): void {
         if (!this.items[name]) {
             return;
         }
@@ -74,7 +74,7 @@ export class HookManager {
     // --------------------------------------------------
 
     async trigger(
-        name: `${HookName}`,
+        name: HookName,
         event: IDispatcherEvent,
     ): Promise<void> {
         if (!this.items[name] || this.items[name].length === 0) {
@@ -110,7 +110,7 @@ export class HookManager {
         }
     }
 
-    private triggerListener(name: `${HookName}`, event: IDispatcherEvent, listener: HookListener) {
+    private triggerListener(name: HookName, event: IDispatcherEvent, listener: HookListener) {
         if (this.isErrorListenerHook(name)) {
             if (event.error) {
                 return (listener as HookErrorListener)(event);
@@ -121,7 +121,7 @@ export class HookManager {
         return (listener as HookDefaultListener)(event);
     }
 
-    private isErrorListenerHook(input: `${HookName}`) {
+    private isErrorListenerHook(input: HookName) {
         return input === HookName.ERROR;
     }
 }

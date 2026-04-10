@@ -2,7 +2,7 @@ import Negotiator from 'negotiator';
 
 import type { IRoutupEvent } from '../../event/index.ts';
 
-const NEGOTIATOR_KEY = /* @__PURE__ */ Symbol.for('routup:negotiator');
+const NEGOTIATOR_KEY = Symbol.for('routup:negotiator');
 
 function headersToPlainObject(headers: Headers) : Record<string, string> {
     const result: Record<string, string> = {};
