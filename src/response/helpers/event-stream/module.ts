@@ -45,7 +45,6 @@ export function createEventStream(
 
     const response = new Response(stream, {
         status: event.response.status,
-        statusText: event.response.statusText,
         headers,
     });
 

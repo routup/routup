@@ -31,8 +31,8 @@ function isAllowedRedirectUrl(location: string) : boolean {
 export function sendRedirect(event: IRoutupEvent, location: string, statusCode = 302): Response {
     if (!isAllowedRedirectUrl(location)) {
         throw new RoutupError({
-            statusCode: 400,
-            statusMessage: 'Invalid redirect URL scheme.',
+            status: 400,
+            message: 'Invalid redirect URL scheme.',
         });
     }
 
@@ -47,7 +47,6 @@ export function sendRedirect(event: IRoutupEvent, location: string, statusCode =
 
     const response = new Response(html, {
         status: statusCode,
-        statusText: event.response.statusText,
         headers,
     });
 

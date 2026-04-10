@@ -28,7 +28,6 @@ describe('src/response/helpers/send-stream', () => {
 
         router.get('/', defineCoreHandler((event) => {
             event.response.status = 206;
-            event.response.statusText = 'Partial Content';
             event.response.headers.set('x-custom', 'stream-header');
 
             const stream = new ReadableStream({

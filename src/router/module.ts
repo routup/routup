@@ -130,8 +130,8 @@ export class Router implements IRouter {
                             timerId = setTimeout(() => {
                                 controller.abort();
                                 reject(createError({
-                                    statusCode: 408,
-                                    statusMessage: 'Request Timeout',
+                                    status: 408,
+                                    message: 'Request Timeout',
                                 }));
                             }, timeoutMs);
                         }),
@@ -151,9 +151,12 @@ export class Router implements IRouter {
         }
 
         if (event.error) {
-            const status = event.error.statusCode || 500;
-            const message = event.error.statusMessage || 'Internal Server Error';
-            return this.buildFallbackResponse(request, event, status, message);
+            return this.buildFallbackResponse(
+                request,
+                event,
+                event.error.status || 500,
+                event.error.message,
+            );
         }
 
         return this.buildFallbackResponse(request, event, 404, 'Not Found');
@@ -166,7 +169,6 @@ export class Router implements IRouter {
             headers.set('content-type', 'application/json; charset=utf-8');
             return new Response(JSON.stringify({ status, message }), {
                 status,
-                statusText: message,
                 headers,
             });
         }
@@ -174,7 +176,6 @@ export class Router implements IRouter {
         headers.set('content-type', 'text/plain; charset=utf-8');
         return new Response(message, {
             status,
-            statusText: message,
             headers,
         });
     }
@@ -362,7 +363,6 @@ export class Router implements IRouter {
             optionsHeaders.set(HeaderName.ALLOW, options);
             context.response = new Response(options, {
                 status: context.event.response.status || 200,
-                statusText: context.event.response.statusText,
                 headers: optionsHeaders,
             });
 

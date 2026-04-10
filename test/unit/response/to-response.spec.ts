@@ -20,10 +20,8 @@ describe('src/response/to-response', () => {
     it('should return custom status for null when set', async () => {
         const event = createTestEvent('/');
         event.response.status = 204;
-        event.response.statusText = 'No Content';
         const result = await toResponse(null, event);
         expect(result!.status).toBe(204);
-        expect(result!.statusText).toBe('No Content');
     });
 
     it('should pass through Response as-is', async () => {
@@ -131,7 +129,7 @@ describe('src/response/to-response', () => {
             await toResponse(circular, event);
             expect.unreachable('should have thrown');
         } catch (e: any) {
-            expect(e.statusCode).toBe(500);
+            expect(e.status).toBe(500);
             expect(e.message).toBe('JSON serialization failed');
             expect(e.cause).toBeInstanceOf(TypeError);
         }
