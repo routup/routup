@@ -1,4 +1,4 @@
-export const RouterSymbol = /* @__PURE__ */ Symbol.for('Router');
+export const RouterSymbol = Symbol.for('Router');
 
 export const RouterPipelineStep = {
     START: 0,

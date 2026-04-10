@@ -5,4 +5,4 @@ export const HandlerType = {
 
 export type HandlerType = typeof HandlerType[keyof typeof HandlerType];
 
-export const HandlerSymbol = /* @__PURE__ */ Symbol.for('Handler');
+export const HandlerSymbol = Symbol.for('Handler');

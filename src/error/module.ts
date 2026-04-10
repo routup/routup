@@ -3,7 +3,7 @@ import type { HTTPErrorInput } from '@ebec/http';
 
 export type { HTTPErrorInput };
 
-export const ErrorSymbol = /* @__PURE__ */ Symbol.for('RoutupError');
+export const ErrorSymbol = Symbol.for('RoutupError');
 
 export class RoutupError extends HTTPError {
     readonly '@instanceof' = ErrorSymbol;
