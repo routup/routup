@@ -59,6 +59,15 @@ describe('src/plugin/semver', () => {
             expect(satisfiesVersion('0.0.3', '^0.0.3')).toBe(true);
             expect(satisfiesVersion('0.0.4', '^0.0.3')).toBe(false);
         });
+
+        it('^1.2.3-beta.2 rejects prereleases of other tuples', () => {
+            expect(satisfiesVersion('1.2.3-beta.2', '^1.2.3-beta.2')).toBe(true);
+            expect(satisfiesVersion('1.2.3-beta.3', '^1.2.3-beta.2')).toBe(true);
+            expect(satisfiesVersion('1.2.3', '^1.2.3-beta.2')).toBe(true);
+            expect(satisfiesVersion('1.3.0', '^1.2.3-beta.2')).toBe(true);
+            expect(satisfiesVersion('1.3.0-beta.1', '^1.2.3-beta.2')).toBe(false);
+            expect(satisfiesVersion('1.2.4-beta.1', '^1.2.3-beta.2')).toBe(false);
+        });
     });
 
     describe('tilde ranges', () => {
@@ -67,6 +76,14 @@ describe('src/plugin/semver', () => {
             expect(satisfiesVersion('1.2.9', '~1.2.3')).toBe(true);
             expect(satisfiesVersion('1.3.0', '~1.2.3')).toBe(false);
             expect(satisfiesVersion('1.2.2', '~1.2.3')).toBe(false);
+        });
+
+        it('~1.2.3-beta.2 rejects prereleases of other tuples', () => {
+            expect(satisfiesVersion('1.2.3-beta.2', '~1.2.3-beta.2')).toBe(true);
+            expect(satisfiesVersion('1.2.3-beta.5', '~1.2.3-beta.2')).toBe(true);
+            expect(satisfiesVersion('1.2.3', '~1.2.3-beta.2')).toBe(true);
+            expect(satisfiesVersion('1.2.4', '~1.2.3-beta.2')).toBe(true);
+            expect(satisfiesVersion('1.2.4-beta.1', '~1.2.3-beta.2')).toBe(false);
         });
     });
 

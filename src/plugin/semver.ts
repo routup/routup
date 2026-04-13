@@ -121,11 +121,31 @@ function satisfiesSingle(version: ParsedVersion, constraint: string): boolean {
     return !!target && compareVersions(version, target) === 0;
 }
 
+/**
+ * When the version under test has a prerelease tag, it only matches if it
+ * shares the same [major, minor, patch] tuple as the range's lower bound.
+ * This follows npm semver semantics where prereleases are scoped to their
+ * exact version tuple.
+ */
+function prereleaseAllowed(version: ParsedVersion, min: ParsedVersion): boolean {
+    if (!version.prerelease) {
+        return true;
+    }
+
+    return version.major === min.major &&
+        version.minor === min.minor &&
+        version.patch === min.patch;
+}
+
 function satisfiesCaret(version: ParsedVersion, range: string): boolean {
     const min = parseVersion(range);
     if (!min) return false;
 
     if (compareVersions(version, min) < 0) return false;
+
+    if (min.prerelease && !prereleaseAllowed(version, min)) {
+        return false;
+    }
 
     // ^1.2.3 → <2.0.0 (major must match for major > 0)
     // ^0.2.3 → <0.3.0 (minor must match for major === 0, minor > 0)
@@ -146,6 +166,10 @@ function satisfiesTilde(version: ParsedVersion, range: string): boolean {
     if (!min) return false;
 
     if (compareVersions(version, min) < 0) return false;
+
+    if (min.prerelease && !prereleaseAllowed(version, min)) {
+        return false;
+    }
 
     // ~1.2.3 → >=1.2.3 <1.3.0
     return version.major === min.major && version.minor === min.minor;
