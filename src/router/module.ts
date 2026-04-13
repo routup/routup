@@ -20,7 +20,7 @@ import { HookManager, HookName } from '../hook/index.ts';
 import type { Path } from '../path/index.ts';
 import { PathMatcher, isPath } from '../path/index.ts';
 import type { Plugin, PluginDependency, PluginInstallContext } from '../plugin/index.ts';
-import { PluginDependencyError, isPlugin, satisfies } from '../plugin/index.ts';
+import { PluginDependencyError, isPlugin, satisfiesVersion } from '../plugin/index.ts';
 import { normalizeRouterOptions } from './options.ts';
 import {
     cleanDoubleSlashes,
@@ -664,7 +664,7 @@ export class Router implements IRouter {
                     );
                 }
 
-                if (!satisfies(installedVersion, dependency.version)) {
+                if (!satisfiesVersion(installedVersion, dependency.version)) {
                     if (dependency.optional) {
                         continue;
                     }

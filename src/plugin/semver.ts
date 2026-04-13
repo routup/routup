@@ -6,7 +6,7 @@ type ParsedVersion = {
 };
 
 function parseVersion(version: string): ParsedVersion | undefined {
-    const match = version.match(/^v?(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*))?(?:\+.+)?$/);
+    const match = version.match(/^v?(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*))?(?:\+.+)?$/);
     if (!match) {
         return undefined;
     }
@@ -72,7 +72,7 @@ function compareVersions(a: ParsedVersion, b: ParsedVersion): number {
  * - Caret: '^1.2.3' (>=1.2.3 <2.0.0)
  * - Tilde: '~1.2.3' (>=1.2.3 <1.3.0)
  */
-export function satisfies(version: string, constraint: string): boolean {
+export function satisfiesVersion(version: string, constraint: string): boolean {
     const parsed = parseVersion(version);
     if (!parsed) {
         return false;
