@@ -6,6 +6,40 @@
 * **deps:** bump negotiator from 0.6.3 to 1.0.0 ([#700](https://github.com/routup/routup/issues/700)) ([84edd77](https://github.com/routup/routup/commit/84edd778b87d8baa9072319909385324f265e8a7))
 * **deps:** bump the minorandpatch group with 3 updates ([#758](https://github.com/routup/routup/issues/758)) ([c0117b3](https://github.com/routup/routup/commit/c0117b34c81f3be26f5c60a5ce71e7e81b6ed4ed))
 
+## [5.0.0](https://github.com/routup/routup/compare/v4.1.0...v5.0.0) (2026-04-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* CJS consumers must switch to ESM imports
+* node req/res to web api
+
+### Features
+
+* add request timeout (globally and per handler) ([#852](https://github.com/routup/routup/issues/852)) ([a0a6727](https://github.com/routup/routup/commit/a0a672733c42f5812232d74452fd82adeffffc53))
+* **handler:** abort signal on per-handler timeout for cooperative cancellation ([#856](https://github.com/routup/routup/issues/856)) ([59b55ca](https://github.com/routup/routup/commit/59b55ca16f0cf16fda31249b7c4954be9306683a))
+* **hook:** add optional priority parameter to hook listeners ([#851](https://github.com/routup/routup/issues/851)) ([8260e64](https://github.com/routup/routup/commit/8260e64a0f808d54124a07ae614ed0b75df71022))
+* **plugin:** add plugin dependency validation at install time ([#862](https://github.com/routup/routup/issues/862)) ([d8b405b](https://github.com/routup/routup/commit/d8b405b963b06a594ec0d9df333be792b1aff035))
+* **plugin:** add plugin error class hierarchy ([#859](https://github.com/routup/routup/issues/859)) ([e9b3ec2](https://github.com/routup/routup/commit/e9b3ec2224a963c91e5e2d1b35c4f4ffabe2f422))
+* remove readBody helper ([853ecbb](https://github.com/routup/routup/commit/853ecbba94ad81939490a20836baf4d036291f26))
+* rewrite framework for runtime-agnostic dispatch ([#832](https://github.com/routup/routup/issues/832)) ([9741aa0](https://github.com/routup/routup/commit/9741aa0203cf22f63b87f447827fbec7e6a4d40a))
+
+
+### Bug Fixes
+
+* address security vulnerabilities across request/response helpers ([#827](https://github.com/routup/routup/issues/827)) ([fb157d3](https://github.com/routup/routup/commit/fb157d37940d2d62ef73afb1798811c39c85f9dc))
+* **deps:** bump the minorandpatch group with 5 updates ([#847](https://github.com/routup/routup/issues/847)) ([a96beeb](https://github.com/routup/routup/commit/a96beeb3ace4925054a797a411a0fa7d5232b246))
+* **hook:** prevent hook errors from overwriting original event error ([d1e289b](https://github.com/routup/routup/commit/d1e289bc1f71fee2d2f34a09dd9faef4870829e4))
+* **request:** restore proxy chain walk in getRequestIP ([#842](https://github.com/routup/routup/issues/842)) ([8604ef6](https://github.com/routup/routup/commit/8604ef61fbbb0cc6921a56062d224f0870cd9abf))
+* **response:** handle JSON serialization failure in toResponse ([#849](https://github.com/routup/routup/issues/849)) ([ff52286](https://github.com/routup/routup/commit/ff522861440d5dff0a81c122b09244404262efd0))
+* **router:** use standard HTTP status text instead of arbitrary statu… ([#858](https://github.com/routup/routup/issues/858)) ([635ea2a](https://github.com/routup/routup/commit/635ea2a6b7ff38ef5532c86c28b5e749b05352ee))
+* safe url parse in useRequestPath ([4b9ae29](https://github.com/routup/routup/commit/4b9ae293aa5aec369219553a728773eda29bcd5b))
+
+
+### Build System
+
+* drop CJS output and make package ESM-only ([6a7d296](https://github.com/routup/routup/commit/6a7d2964f7691cbed711cad3c9daba8d15f2a34a))
+
 ## [4.1.0](https://github.com/routup/routup/compare/v4.0.2...v4.1.0) (2026-01-30)
 
 
