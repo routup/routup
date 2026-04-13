@@ -78,14 +78,40 @@ describe('src/plugin/semver', () => {
         });
     });
 
+    describe('prerelease comparison', () => {
+        it('should compare numeric identifiers numerically', () => {
+            expect(satisfies('1.0.0-beta.10', '>=1.0.0-beta.2')).toBe(true);
+            expect(satisfies('1.0.0-beta.1', '>=1.0.0-beta.2')).toBe(false);
+        });
+
+        it('should order numeric before non-numeric', () => {
+            expect(satisfies('1.0.0-1', '<1.0.0-alpha')).toBe(true);
+        });
+
+        it('should compare non-numeric identifiers lexically', () => {
+            expect(satisfies('1.0.0-alpha', '<1.0.0-beta')).toBe(true);
+        });
+
+        it('should treat no prerelease as higher than prerelease', () => {
+            expect(satisfies('1.0.0', '>=1.0.0-beta.1')).toBe(true);
+            expect(satisfies('1.0.0-beta.1', '>=1.0.0')).toBe(false);
+            expect(satisfies('1.0.0-alpha', '<1.0.0')).toBe(true);
+        });
+
+        it('should handle multi-segment prerelease', () => {
+            expect(satisfies('1.0.0-alpha.1', '<1.0.0-alpha.2')).toBe(true);
+            expect(satisfies('1.0.0-alpha.1', '<1.0.0-alpha.1.1')).toBe(true);
+        });
+    });
+
     describe('edge cases', () => {
         it('should reject invalid version', () => {
             expect(satisfies('not-a-version', '>=1.0.0')).toBe(false);
         });
 
-        it('should handle prerelease versions', () => {
-            expect(satisfies('1.0.0-beta.1', '>=1.0.0')).toBe(false);
-            expect(satisfies('1.0.0-alpha', '<1.0.0')).toBe(true);
+        it('should ignore build metadata', () => {
+            expect(satisfies('1.2.3+build.001', '1.2.3')).toBe(true);
+            expect(satisfies('1.2.3+build.001', '>=1.2.0')).toBe(true);
         });
     });
 });

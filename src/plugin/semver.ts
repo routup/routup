@@ -2,11 +2,11 @@ type ParsedVersion = {
     major: number,
     minor: number,
     patch: number,
-    prerelease: string | undefined,
+    prerelease: string[] | undefined,
 };
 
 function parseVersion(version: string): ParsedVersion | undefined {
-    const match = version.match(/^v?(\d+)\.(\d+)\.(\d+)(?:-(.+))?$/);
+    const match = version.match(/^v?(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*))?(?:\+.+)?$/);
     if (!match) {
         return undefined;
     }
@@ -15,8 +15,37 @@ function parseVersion(version: string): ParsedVersion | undefined {
         major: Number(match[1]),
         minor: Number(match[2]),
         patch: Number(match[3]),
-        prerelease: match[4],
+        prerelease: match[4] ? match[4].split('.') : undefined,
     };
+}
+
+function comparePrereleaseIdentifiers(a: string[], b: string[]): number {
+    const len = Math.max(a.length, b.length);
+    for (let i = 0; i < len; i++) {
+        if (i >= a.length) return -1; // shorter array has lower precedence
+        if (i >= b.length) return 1;
+
+        const aId = a[i]!;
+        const bId = b[i]!;
+        const aNum = /^\d+$/.test(aId) ? Number(aId) : undefined;
+        const bNum = /^\d+$/.test(bId) ? Number(bId) : undefined;
+
+        // both numeric: compare numerically
+        if (aNum !== undefined && bNum !== undefined) {
+            if (aNum !== bNum) return aNum - bNum;
+            continue;
+        }
+
+        // numeric < non-numeric
+        if (aNum !== undefined) return -1;
+        if (bNum !== undefined) return 1;
+
+        // both non-numeric: compare lexically
+        if (aId < bId) return -1;
+        if (aId > bId) return 1;
+    }
+
+    return 0;
 }
 
 function compareVersions(a: ParsedVersion, b: ParsedVersion): number {
@@ -28,9 +57,7 @@ function compareVersions(a: ParsedVersion, b: ParsedVersion): number {
     if (!a.prerelease && b.prerelease) return 1;
     if (a.prerelease && !b.prerelease) return -1;
     if (a.prerelease && b.prerelease) {
-        if (a.prerelease < b.prerelease) return -1;
-        if (a.prerelease > b.prerelease) return 1;
-        return 0;
+        return comparePrereleaseIdentifiers(a.prerelease, b.prerelease);
     }
 
     return 0;

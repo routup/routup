@@ -12,7 +12,7 @@ export class PluginDependencyError extends PluginError {
             message = `Plugin "${pluginName}" requires "${dependencyName}": ${detail}`;
         } else {
             message = `Plugin "${pluginName}" requires plugin "${dependencyName}" to be installed first. ` +
-                `Register it with: router.use(${dependencyName}())`;
+                'Register the dependency plugin before this one.';
         }
 
         super({

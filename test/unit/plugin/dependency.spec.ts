@@ -107,8 +107,18 @@ describe('src/plugin dependency validation', () => {
     });
 
     it('should skip optional dependency version mismatch gracefully', () => {
-        // optional + no version on installed plugin → skip
         const router = new Router();
+        router.use(cookiePlugin('0.5.0'));
+
+        expect(() => router.use(basicPlugin({
+            cookieVersion: '>=1.0.0',
+            optional: true,
+        }))).not.toThrow();
+    });
+
+    it('should skip optional dependency with no version gracefully', () => {
+        const router = new Router();
+        router.use(cookiePlugin());
 
         expect(() => router.use(basicPlugin({
             cookieVersion: '>=1.0.0',
@@ -123,8 +133,8 @@ describe('src/plugin dependency validation', () => {
         const child = new Router();
         parent.use(child);
 
-        // basicPlugin installed directly on parent should see cookie
-        expect(() => parent.use(basicPlugin())).not.toThrow();
+        // basicPlugin installed on child should resolve cookie via parent
+        expect(() => child.use(basicPlugin())).not.toThrow();
     });
 
     it('should track plugin via hasPlugin', () => {

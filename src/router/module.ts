@@ -665,6 +665,10 @@ export class Router implements IRouter {
                 }
 
                 if (!satisfies(installedVersion, dependency.version)) {
+                    if (dependency.optional) {
+                        continue;
+                    }
+
                     throw new PluginDependencyError(
                         plugin.name,
                         dependency.name,
