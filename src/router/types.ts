@@ -108,6 +108,18 @@ export interface IRouter extends IDispatcher {
     setPath(value?: Path): void;
 
     /**
+     * Check if a plugin with the given name is installed on this router
+     * or any parent router.
+     */
+    hasPlugin(name: string): boolean;
+
+    /**
+     * Get the version of an installed plugin by name,
+     * searching this router and parent routers.
+     */
+    getPluginVersion(name: string): string | undefined;
+
+    /**
      * Register a handler, router, or plugin.
      * When a path is provided, the item is mounted at that path.
      */
