@@ -44,6 +44,10 @@ export default defineConfig({
                 link: '/api/',
                 activeMatch: '/api/',
             },
+            {
+                text: 'Plugins',
+                link: 'https://plugins.routup.dev',
+            },
         ],
         sidebar: {
             '/guide/': [
