@@ -84,11 +84,17 @@ Handlers return values directly instead of calling `send()`. The `toResponse()` 
 - **Blob** → `Response` with blob's content type
 - **Response** → passed through as-is
 - **null** → empty `Response` (status from `event.response`)
-- **undefined** → no response (middleware pass-through; pipeline continues)
+
+### Returning `undefined`
+
+`undefined` is **not** treated as an implicit pass-through. A handler that returns `undefined` is making a contract: it must have either called `event.next()` (forwarding the downstream result) or it must intend `event.next()` to be invoked later from an async callback.
+
+- **`undefined` after `event.next()` was called** → the captured downstream result becomes the response (so `event.next()` and `return event.next()` are equivalent).
+- **`undefined` before `event.next()` is called** → the handler is considered unresolved. The pipeline waits until either `event.next()` is invoked (e.g. from a `setTimeout` or other async callback) or `event.signal` aborts. A global or per-handler `timeout` surfaces as a `408 Request Timeout`. With no timeout configured and no eventual `event.next()` call, the request hangs by design — bugs become loud (deadlock) rather than silent (404 / wrong body).
 
 ### Middleware and `event.next()`
 
-Middleware handlers call `event.next()` to continue the pipeline (onion model):
+Middleware handlers call `event.next()` to continue the pipeline (onion model). Always `return` (or `await` and re-return) the result so the response propagates:
 
 ```typescript
 defineCoreHandler(async (event) => {
@@ -96,6 +102,15 @@ defineCoreHandler(async (event) => {
     const response = await event.next();
     // After
     return response;
+});
+```
+
+A side-effect middleware that just forwards downstream:
+
+```typescript
+defineCoreHandler((event) => {
+    event.response.headers.set('x-trace', '...');
+    return event.next();
 });
 ```
 

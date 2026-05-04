@@ -1,6 +1,7 @@
 import { MethodName } from '../constants.ts';
 import type { IDispatcher, IDispatcherEvent } from '../dispatcher/index.ts';
 import { createError, isError } from '../error/index.ts';
+import type { IRoutupEvent } from '../event/index.ts';
 import { HookManager, HookName } from '../hook/index.ts';
 import type { Path } from '../path/index.ts';
 import { PathMatcher } from '../path/index.ts';
@@ -105,7 +106,10 @@ export class Handler implements IDispatcher {
                         const { fn } = this.config;
                         const { error } = event;
                         result = await this.executeWithTimeout(
-                            () => fn(error, handlerEvent),
+                            () => this.resolveHandlerResult(
+                                fn(error, handlerEvent),
+                                handlerEvent,
+                            ),
                             handlerEvent.routerOptions,
                             childController,
                         );
@@ -113,7 +117,10 @@ export class Handler implements IDispatcher {
                 } else {
                     const { fn } = this.config;
                     result = await this.executeWithTimeout(
-                        () => fn(handlerEvent),
+                        () => this.resolveHandlerResult(
+                            fn(handlerEvent),
+                            handlerEvent,
+                        ),
                         handlerEvent.routerOptions,
                         childController,
                     );
@@ -190,6 +197,54 @@ export class Handler implements IDispatcher {
     }
 
     // --------------------------------------------------
+
+    /**
+     * Resolve a handler's return value into the final value handed to `toResponse`.
+     *
+     * Contract:
+     * - non-undefined value → return as-is (becomes the response)
+     * - `undefined` + `event.next()` was called → forward downstream result
+     * - `undefined` + `event.next()` not yet called → wait until either `next()` is
+     *   invoked (e.g. from an async callback) or `signal` aborts. A global or
+     *   per-handler timeout aborts `signal` and surfaces as 408. With no timeout
+     *   configured and no eventual `next()` call, the request hangs by design.
+     */
+    protected async resolveHandlerResult(
+        invocation: unknown | Promise<unknown>,
+        handlerEvent: IRoutupEvent,
+    ): Promise<unknown> {
+        const value = await invocation;
+        if (typeof value !== 'undefined') {
+            return value;
+        }
+
+        if (handlerEvent.nextCalled) {
+            return handlerEvent.nextResult;
+        }
+
+        const { signal } = handlerEvent;
+
+        if (signal.aborted) {
+            throw createError({ status: 408, message: 'Request Timeout' });
+        }
+
+        return new Promise<unknown>((resolve, reject) => {
+            const onAbort = () => {
+                signal.removeEventListener('abort', onAbort);
+                reject(createError({
+                    status: 408,
+                    message: 'Request Timeout',
+                }));
+            };
+
+            signal.addEventListener('abort', onAbort, { once: true });
+
+            handlerEvent.whenNextCalled().then(() => {
+                signal.removeEventListener('abort', onAbort);
+                resolve(handlerEvent.nextResult);
+            });
+        });
+    }
 
     protected async executeWithTimeout(
         fn: () => unknown | Promise<unknown>,

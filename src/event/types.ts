@@ -88,4 +88,30 @@ export interface IRoutupEvent {
      * Returns the downstream `Response`, or `undefined` if no handler matched.
      */
     next(error?: Error): Promise<Response | undefined>;
+
+    /**
+     * Whether `next()` has been invoked on this event.
+     *
+     * Used by the dispatch pipeline to disambiguate an `undefined` return value:
+     * a handler that returns `undefined` after calling `next()` is forwarding the
+     * downstream result; one that returns `undefined` without calling `next()` is
+     * unresolved and will wait on `signal` (timeout-bounded).
+     */
+    readonly nextCalled: boolean;
+
+    /**
+     * The cached promise returned by the first `next()` call on this event,
+     * or `undefined` if `next()` has not been invoked.
+     */
+    readonly nextResult: Promise<Response | undefined> | undefined;
+
+    /**
+     * Returns a promise that resolves the first time `next()` is invoked on this event.
+     *
+     * If `next()` has already been called, the returned promise is already resolved.
+     * Used by the dispatch pipeline so a handler that returns `undefined` and later
+     * calls `next()` asynchronously (e.g. from a `setTimeout`) still propagates the
+     * downstream response instead of hanging until `signal` aborts.
+     */
+    whenNextCalled(): Promise<void>;
 }
