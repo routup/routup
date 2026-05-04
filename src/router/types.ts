@@ -108,14 +108,18 @@ export interface IRouter extends IDispatcher {
     setPath(value?: Path): void;
 
     /**
-     * Check if a plugin with the given name is installed on this router
-     * or any parent router.
+     * Check if a plugin with the given name is installed on this router.
+     *
+     * Plugin scope is local to each router. Wrapper plugins propagate the
+     * names of the plugins they install so siblings can satisfy their
+     * dependencies, but mounted sub-routers do not contribute to nor inherit
+     * from this registry.
      */
     hasPlugin(name: string): boolean;
 
     /**
-     * Get the version of an installed plugin by name,
-     * searching this router and parent routers.
+     * Get the version of an installed plugin by name on this router,
+     * or `undefined` if the plugin is not installed here.
      */
     getPluginVersion(name: string): string | undefined;
 

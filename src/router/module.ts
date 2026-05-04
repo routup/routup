@@ -78,16 +78,12 @@ export class Router implements IRouter {
     /**
      * Registry of installed plugins (name → version).
      *
-     * @protected
-     */
-    protected plugins: Map<string, string | undefined> = new Map();
-
-    /**
-     * Parent router reference for dependency lookups.
+     * Includes plugins installed directly on this router as well as plugins
+     * exposed by wrapper plugins (propagated up at install time).
      *
      * @protected
      */
-    protected parent: Router | undefined;
+    protected plugins: Map<string, string | undefined> = new Map();
 
     // --------------------------------------------------
 
@@ -567,7 +563,6 @@ export class Router implements IRouter {
                 if (path) {
                     item.setPath(path);
                 }
-                item.parent = this;
                 this.stack.push(item);
                 continue;
             }
@@ -601,35 +596,23 @@ export class Router implements IRouter {
     // --------------------------------------------------
 
     /**
-     * Check if a plugin with the given name is installed on this router
-     * or any parent router.
+     * Check if a plugin with the given name is installed on this router.
+     *
+     * Plugin scope is local to each router. Wrapper plugins propagate the
+     * names of the plugins they install so siblings can satisfy their
+     * dependencies, but mounted sub-routers do not contribute to nor inherit
+     * from this registry.
      */
     hasPlugin(name: string): boolean {
-        if (this.plugins.has(name)) {
-            return true;
-        }
-
-        if (this.parent) {
-            return this.parent.hasPlugin(name);
-        }
-
-        return false;
+        return this.plugins.has(name);
     }
 
     /**
-     * Get the version of an installed plugin by name,
-     * searching this router and parent routers.
+     * Get the version of an installed plugin by name on this router,
+     * or `undefined` if the plugin is not installed here.
      */
     getPluginVersion(name: string): string | undefined {
-        if (this.plugins.has(name)) {
-            return this.plugins.get(name);
-        }
-
-        if (this.parent) {
-            return this.parent.getPluginVersion(name);
-        }
-
-        return undefined;
+        return this.plugins.get(name);
     }
 
     // --------------------------------------------------
@@ -695,17 +678,13 @@ export class Router implements IRouter {
         this.validatePluginDependencies(plugin);
 
         const router = new Router({ name: plugin.name });
+        plugin.install(router);
 
-        // Mount before running the plugin's install so the parent link is in
-        // place — nested `router.use(...)` calls can then resolve their own
-        // declared dependencies against ancestors during installation.
         if (context.path) {
             this.use(context.path, router);
         } else {
             this.use(router);
         }
-
-        plugin.install(router);
 
         // Expose plugins installed by a wrapper at this level too, so sibling
         // plugins can satisfy their dependencies against the bundled names.

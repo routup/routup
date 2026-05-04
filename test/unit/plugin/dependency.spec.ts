@@ -127,17 +127,6 @@ describe('src/plugin dependency validation', () => {
         }))).not.toThrow();
     });
 
-    it('should find dependency on parent router', () => {
-        const parent = new Router();
-        parent.use(cookiePlugin('1.0.0'));
-
-        const child = new Router();
-        parent.use(child);
-
-        // basicPlugin installed on child should resolve cookie via parent
-        expect(() => child.use(basicPlugin())).not.toThrow();
-    });
-
     it('should track plugin via hasPlugin', () => {
         const router = new Router();
 
@@ -311,25 +300,15 @@ describe('src/plugin dependency validation', () => {
         expect(router.hasPlugin('@routup/cookie')).toBe(true);
     });
 
-    it('should resolve nested plugin dependencies against ancestors during wrapper install', () => {
-        const consumer: Plugin = {
-            name: '@routup/inner-consumer',
-            dependencies: ['@routup/cookie'],
-            install: () => { /* no-op */ },
-        };
+    it('should not let mounted sub-routers contribute to a parent\'s plugin scope', () => {
+        const parent = new Router();
+        const child = new Router();
 
-        const wrapperPlugin: Plugin = {
-            name: '@routup/wrapper',
-            install: (router) => {
-                // consumer's dependency lives on the parent router and must
-                // be visible during the wrapper's install execution
-                router.use(consumer);
-            },
-        };
+        child.use(cookiePlugin('1.0.0'));
+        parent.use(child);
 
-        const router = new Router();
-        router.use(cookiePlugin('1.0.0'));
-
-        expect(() => router.use(wrapperPlugin)).not.toThrow();
+        // Plugin scope is local to each router — mounting a child does not
+        // expose the child's plugins to the parent.
+        expect(parent.hasPlugin('@routup/cookie')).toBe(false);
     });
 });
