@@ -224,4 +224,112 @@ describe('src/plugin dependency validation', () => {
 
         expect(() => child.use(cookiePlugin('1.0.0'))).not.toThrow();
     });
+
+    it('should expose plugins installed by a wrapper plugin via hasPlugin', () => {
+        const wrapperPlugin: Plugin = {
+            name: '@routup/basic',
+            version: '1.0.0',
+            install: (router) => {
+                router.use(cookiePlugin('2.1.0'));
+            },
+        };
+
+        const router = new Router();
+        router.use(wrapperPlugin);
+
+        expect(router.hasPlugin('@routup/basic')).toBe(true);
+        expect(router.hasPlugin('@routup/cookie')).toBe(true);
+        expect(router.getPluginVersion('@routup/cookie')).toBe('2.1.0');
+    });
+
+    it('should satisfy a dependency installed inside a wrapper plugin', () => {
+        const wrapperPlugin: Plugin = {
+            name: '@routup/basic',
+            version: '1.0.0',
+            install: (router) => {
+                router.use(cookiePlugin('2.1.0'));
+            },
+        };
+
+        const consumer: Plugin = {
+            name: '@routup/decorators',
+            dependencies: ['@routup/cookie'],
+            install: (router) => {
+                router.get('/', defineCoreHandler(() => 'decorators'));
+            },
+        };
+
+        const router = new Router();
+        router.use(wrapperPlugin);
+
+        expect(() => router.use(consumer)).not.toThrow();
+    });
+
+    it('should satisfy a versioned dependency installed inside a wrapper plugin', () => {
+        const wrapperPlugin: Plugin = {
+            name: '@routup/basic',
+            version: '1.0.0',
+            install: (router) => {
+                router.use(cookiePlugin('2.1.0'));
+            },
+        };
+
+        const consumer: Plugin = {
+            name: '@routup/decorators',
+            dependencies: [{ name: '@routup/cookie', version: '>=2.0.0' }],
+            install: (router) => {
+                router.get('/', defineCoreHandler(() => 'decorators'));
+            },
+        };
+
+        const router = new Router();
+        router.use(wrapperPlugin);
+
+        expect(() => router.use(consumer)).not.toThrow();
+    });
+
+    it('should propagate inner plugins transitively through nested wrappers', () => {
+        const innerWrapper: Plugin = {
+            name: '@routup/basic',
+            install: (router) => {
+                router.use(cookiePlugin('1.0.0'));
+            },
+        };
+
+        const outerWrapper: Plugin = {
+            name: '@routup/preset',
+            install: (router) => {
+                router.use(innerWrapper);
+            },
+        };
+
+        const router = new Router();
+        router.use(outerWrapper);
+
+        expect(router.hasPlugin('@routup/preset')).toBe(true);
+        expect(router.hasPlugin('@routup/basic')).toBe(true);
+        expect(router.hasPlugin('@routup/cookie')).toBe(true);
+    });
+
+    it('should resolve nested plugin dependencies against ancestors during wrapper install', () => {
+        const consumer: Plugin = {
+            name: '@routup/inner-consumer',
+            dependencies: ['@routup/cookie'],
+            install: () => { /* no-op */ },
+        };
+
+        const wrapperPlugin: Plugin = {
+            name: '@routup/wrapper',
+            install: (router) => {
+                // consumer's dependency lives on the parent router and must
+                // be visible during the wrapper's install execution
+                router.use(consumer);
+            },
+        };
+
+        const router = new Router();
+        router.use(cookiePlugin('1.0.0'));
+
+        expect(() => router.use(wrapperPlugin)).not.toThrow();
+    });
 });

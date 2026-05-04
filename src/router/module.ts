@@ -695,12 +695,24 @@ export class Router implements IRouter {
         this.validatePluginDependencies(plugin);
 
         const router = new Router({ name: plugin.name });
+        // Link parent before running the plugin's install so that any nested
+        // `router.use(...)` calls can resolve dependencies against ancestors.
+        router.parent = this;
+
         plugin.install(router);
 
         if (context.path) {
             this.use(context.path, router);
         } else {
             this.use(router);
+        }
+
+        // Expose plugins installed by a wrapper at this level too, so sibling
+        // plugins can satisfy their dependencies against the bundled names.
+        for (const [name, version] of router.plugins) {
+            if (!this.plugins.has(name)) {
+                this.plugins.set(name, version);
+            }
         }
 
         this.plugins.set(plugin.name, plugin.version);
