@@ -20,40 +20,7 @@ router.use('/api', myPlugin({ /* options */ }));
 
 ## Writing a Plugin
 
-Define a plugin as a factory function that returns a `Plugin` object:
-
-```typescript
-import { defineCoreHandler } from 'routup';
-import type { Plugin } from 'routup';
-
-export type Options = {
-    path?: string;
-};
-
-export function myPlugin(options: Options = {}): Plugin {
-    const path = options.path || '/hello';
-
-    return {
-        name: 'myPlugin',
-        install: (router) => {
-            router.get(path, defineCoreHandler((event) => {
-                return 'Hello from plugin!';
-            }));
-        }
-    };
-}
-```
-
-## Using a Plugin
-
-```typescript
-import { Router } from 'routup';
-import { myPlugin } from '@routup/my-plugin';
-
-const router = new Router();
-
-router.use(myPlugin({ path: '/hello' }));
-```
+For the full plugin authoring contract — interface, dependencies, version constraints, and conventions — see the [Plugin Authoring](./plugin-authoring/) guide.
 
 ## Ecosystem
 

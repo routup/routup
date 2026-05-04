@@ -79,6 +79,14 @@ export default defineConfig({
                     ],
                 },
                 {
+                    text: 'Plugin Authoring',
+                    items: [
+                        { text: 'Overview', link: '/guide/plugin-authoring/' },
+                        { text: 'Dependencies', link: '/guide/plugin-authoring/dependencies' },
+                        { text: 'Conventions', link: '/guide/plugin-authoring/conventions' },
+                    ],
+                },
+                {
                     text: 'Migration',
                     items: [
                         { text: 'Express Compatibility', link: '/guide/express-compatibility' },
