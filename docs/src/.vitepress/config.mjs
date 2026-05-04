@@ -10,6 +10,11 @@ export default defineConfig({
     ignoreDeadLinks: 'localhostLinks',
 
     head: [
+        ['link', {
+            rel: 'icon',
+            type: 'image/svg+xml',
+            href: '/logo.svg',
+        }],
         ['meta', { name: 'theme-color', content: '#7c3aed' }],
         ['meta', { property: 'og:type', content: 'website' }],
         ['meta', { property: 'og:title', content: 'Routup — runtime-agnostic HTTP routing' }],
@@ -20,6 +25,7 @@ export default defineConfig({
     ],
 
     themeConfig: {
+        logo: '/logo.svg',
         search: { provider: 'local' },
         socialLinks: [
             { icon: 'github', link: 'https://github.com/routup/routup' },
@@ -82,7 +88,6 @@ export default defineConfig({
                     text: 'Plugin Authoring',
                     items: [
                         { text: 'Overview', link: '/guide/plugin-authoring/' },
-                        { text: 'Dependencies', link: '/guide/plugin-authoring/dependencies' },
                         { text: 'Conventions', link: '/guide/plugin-authoring/conventions' },
                     ],
                 },

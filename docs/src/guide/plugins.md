@@ -20,7 +20,7 @@ router.use('/api', myPlugin({ /* options */ }));
 
 ## Writing a Plugin
 
-For the full plugin authoring contract — interface, dependencies, version constraints, and conventions — see the [Plugin Authoring](./plugin-authoring/) guide.
+For the full plugin authoring contract — interface, mounting semantics, and conventions — see the [Plugin Authoring](./plugin-authoring/) guide.
 
 ## Ecosystem
 

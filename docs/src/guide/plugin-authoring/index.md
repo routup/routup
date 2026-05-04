@@ -7,8 +7,8 @@ A routup **plugin** is a plain object with a `name` and an `install(router)` fun
 | Write a plugin when… | Write a tree-shakeable helper module when… |
 |---|---|
 | You need to register middleware on a router | You only export pure functions like `getRequestHeader(event, name)` |
-| You want a reusable name + version + dependency contract | The host app already mounts whatever middleware your helpers depend on |
-| You want to fail loudly if the host forgot to install a dependency | You're happy with `event.store` being whatever the host put there |
+| You want a reusable name + version contract | The host app already mounts whatever middleware your helpers depend on |
+| You want install-time uniqueness (the same plugin can't be registered twice on the same router) | You're happy with `event.store` being whatever the host put there |
 
 Most published plugins ship **both**: a plugin factory (`cookie()`, `body()`, `decorators()`) plus tree-shakeable helpers (`useRequestCookie`, `readRequestBody`). The factory installs the parser middleware once; the helpers read from the cached state.
 
@@ -20,16 +20,14 @@ import type { Plugin } from 'routup';
 export type Plugin = {
     name: string;
     version?: string;
-    dependencies?: (string | PluginDependency)[];
     install: (router: Router) => any;
 };
 ```
 
 | Field | Required? | Purpose |
 |---|---|---|
-| `name` | yes | Used by `router.hasPlugin(name)`, dependency lookups, and error messages. Convention: a short bare name matching the plugin's purpose (`'cookie'`, `'body'`, `'decorators'`) — not the npm package name. |
-| `version` | recommended | A semver string. Lets other plugins constrain on it via `dependencies`. Mirror the package's `version`. |
-| `dependencies` | optional | Plugins that must be installed before this one. Either bare names (`'body'`) or `{ name, version?, optional? }` objects. See [Dependencies](./dependencies). |
+| `name` | yes | Used by `router.hasPlugin(name)` and error messages. Convention: a short bare name matching the plugin's purpose (`'cookie'`, `'body'`, `'decorators'`) — not the npm package name. |
+| `version` | recommended | A semver string surfaced via `router.getPluginVersion(name)`. Mirror the package's `version`. |
 | `install(router)` | yes | Receives a child router that's already named after the plugin. Mount middleware, register routes, attach hooks. Return value is ignored. |
 
 ## A minimal plugin
@@ -101,11 +99,10 @@ router.hasPlugin('body');                      // boolean
 router.getPluginVersion('body');               // string | undefined
 ```
 
-Both walk up the parent chain, so a child router can ask about plugins installed on its grandparent.
+Lookup is local to the router — it does not walk into mounted sub-routers or up to ancestors.
 
 This is what helpers like `readRequestBody(event)` use under the hood: they look up the body plugin's installed version via `event.routerOptions` and throw `PluginNotInstalledError` if absent.
 
 ## See also
 
-- [Dependencies](./dependencies) — declaring required plugins and version constraints
 - [Conventions](./conventions) — helper naming, store keys, package shape

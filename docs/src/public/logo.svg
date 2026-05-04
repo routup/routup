@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="rt-grad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#rt-grad)" fill-rule="evenodd"
+        d="M12 8 H36 A14 14 0 0 1 36 36 L54 56 H40 L22 36 V56 H12 Z M22 17 H36 A5 5 0 0 1 36 27 H22 Z"/>
+</svg>

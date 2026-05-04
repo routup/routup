@@ -150,4 +150,3 @@ No mocks, no test server — `router.fetch(request)` is the entire surface.
 ## See also
 
 - [Authoring overview](./) — the Plugin interface, factory pattern, mounting
-- [Dependencies](./dependencies) — declaring required plugins and version constraints

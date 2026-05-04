@@ -19,12 +19,10 @@ import type {
 import { HookManager, HookName } from '../hook/index.ts';
 import type { Path } from '../path/index.ts';
 import { PathMatcher, isPath } from '../path/index.ts';
-import type { Plugin, PluginDependency, PluginInstallContext } from '../plugin/index.ts';
+import type { Plugin, PluginInstallContext } from '../plugin/index.ts';
 import {
     PluginAlreadyInstalledError,
-    PluginDependencyError,
     isPlugin,
-    satisfiesVersion,
 } from '../plugin/index.ts';
 import { normalizeRouterOptions } from './options.ts';
 import {
@@ -76,18 +74,11 @@ export class Router implements IRouter {
     protected _options: Partial<RouterOptions>;
 
     /**
-     * Registry of installed plugins (name → version).
+     * Registry of installed plugins (name → version) on this router.
      *
      * @protected
      */
     protected plugins: Map<string, string | undefined> = new Map();
-
-    /**
-     * Parent router reference for dependency lookups.
-     *
-     * @protected
-     */
-    protected parent: Router | undefined;
 
     // --------------------------------------------------
 
@@ -567,7 +558,6 @@ export class Router implements IRouter {
                 if (path) {
                     item.setPath(path);
                 }
-                item.parent = this;
                 this.stack.push(item);
                 continue;
             }
@@ -601,88 +591,21 @@ export class Router implements IRouter {
     // --------------------------------------------------
 
     /**
-     * Check if a plugin with the given name is installed on this router
-     * or any parent router.
+     * Check if a plugin with the given name is installed on this router.
      */
     hasPlugin(name: string): boolean {
-        if (this.plugins.has(name)) {
-            return true;
-        }
-
-        if (this.parent) {
-            return this.parent.hasPlugin(name);
-        }
-
-        return false;
+        return this.plugins.has(name);
     }
 
     /**
-     * Get the version of an installed plugin by name,
-     * searching this router and parent routers.
+     * Get the version of an installed plugin by name on this router,
+     * or `undefined` if the plugin is not installed here.
      */
     getPluginVersion(name: string): string | undefined {
-        if (this.plugins.has(name)) {
-            return this.plugins.get(name);
-        }
-
-        if (this.parent) {
-            return this.parent.getPluginVersion(name);
-        }
-
-        return undefined;
+        return this.plugins.get(name);
     }
 
     // --------------------------------------------------
-
-    protected validatePluginDependencies(plugin: Plugin): void {
-        if (!plugin.dependencies || plugin.dependencies.length === 0) {
-            return;
-        }
-
-        for (const dep of plugin.dependencies) {
-            const dependency: PluginDependency = typeof dep === 'string' ?
-                { name: dep } :
-                dep;
-
-            if (!this.hasPlugin(dependency.name)) {
-                if (dependency.optional) {
-                    continue;
-                }
-
-                throw new PluginDependencyError(
-                    plugin.name,
-                    dependency.name,
-                );
-            }
-
-            if (dependency.version) {
-                const installedVersion = this.getPluginVersion(dependency.name);
-                if (!installedVersion) {
-                    if (dependency.optional) {
-                        continue;
-                    }
-
-                    throw new PluginDependencyError(
-                        plugin.name,
-                        dependency.name,
-                        `version "${dependency.version}" required but "${dependency.name}" has no version`,
-                    );
-                }
-
-                if (!satisfiesVersion(installedVersion, dependency.version)) {
-                    if (dependency.optional) {
-                        continue;
-                    }
-
-                    throw new PluginDependencyError(
-                        plugin.name,
-                        dependency.name,
-                        `version "${dependency.version}" required but "${installedVersion}" is installed`,
-                    );
-                }
-            }
-        }
-    }
 
     protected install(
         plugin: Plugin,
@@ -691,8 +614,6 @@ export class Router implements IRouter {
         if (this.plugins.has(plugin.name)) {
             throw new PluginAlreadyInstalledError(plugin.name);
         }
-
-        this.validatePluginDependencies(plugin);
 
         const router = new Router({ name: plugin.name });
         plugin.install(router);
