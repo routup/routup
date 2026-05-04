@@ -1,0 +1,82 @@
+/*
+ * routup design tokens. The marketing components on the landing page
+ * read every color/border/radius through these custom properties so
+ * dark-mode flips work without per-component overrides.
+ *
+ * VitePress's `--vp-c-brand-*` tokens are aliased to the routup primary
+ * scale so the docs chrome (sidebar accents, hero buttons, heading
+ * underlines) follows the marketing palette.
+ */
+:root {
+    --rt-color-bg: #ffffff;
+    --rt-color-bg-elevated: #f8fafc;
+    --rt-color-bg-muted: #f4f4fb;
+
+    --rt-color-fg: #0f172a;
+    --rt-color-fg-muted: #475569;
+
+    --rt-color-border: #e2e8f0;
+    --rt-color-border-muted: #f1f5f9;
+
+    --rt-color-primary-300: #c4b5fd;
+    --rt-color-primary-400: #a78bfa;
+    --rt-color-primary-500: #8b5cf6;
+    --rt-color-primary-600: #7c3aed;
+    --rt-color-primary-700: #6d28d9;
+
+    --rt-color-accent-400: #22d3ee;
+    --rt-color-accent-500: #06b6d4;
+    --rt-color-accent-600: #0891b2;
+
+    --rt-color-info-500: #3b82f6;
+    --rt-color-warning-500: #f59e0b;
+    --rt-color-error-500: #ef4444;
+    --rt-color-success-500: #10b981;
+
+    --rt-color-on-primary: #ffffff;
+
+    --rt-method-get: #10b981;
+    --rt-method-post: #f59e0b;
+    --rt-method-put: #3b82f6;
+    --rt-method-patch: #8b5cf6;
+    --rt-method-delete: #ef4444;
+
+    --vp-c-brand-1: var(--rt-color-primary-600);
+    --vp-c-brand-2: var(--rt-color-primary-700);
+    --vp-c-brand-3: var(--rt-color-primary-500);
+    --vp-c-brand-soft: color-mix(in oklab, var(--rt-color-primary-500) 15%, transparent);
+    --vp-c-brand-next: var(--rt-color-primary-500);
+
+    --vp-button-brand-bg: var(--rt-color-primary-600);
+    --vp-button-brand-hover-bg: var(--rt-color-primary-500);
+    --vp-button-brand-active-bg: var(--rt-color-primary-700);
+    --vp-button-brand-border: var(--rt-color-primary-600);
+    --vp-button-brand-hover-border: var(--rt-color-primary-500);
+    --vp-button-brand-active-border: var(--rt-color-primary-700);
+
+    --vp-home-hero-name-color: transparent;
+    --vp-home-hero-name-background: linear-gradient(120deg, var(--rt-color-primary-500), var(--rt-color-accent-500));
+}
+
+.dark {
+    --rt-color-bg: #0b1020;
+    --rt-color-bg-elevated: #161c33;
+    --rt-color-bg-muted: #131a30;
+
+    --rt-color-fg: #e2e8f0;
+    --rt-color-fg-muted: #94a3b8;
+
+    --rt-color-border: #2a3251;
+    --rt-color-border-muted: #1c2440;
+
+    --rt-color-primary-300: #c4b5fd;
+    --rt-color-primary-400: #a78bfa;
+    --rt-color-primary-500: #8b5cf6;
+    --rt-color-primary-600: #7c3aed;
+    --rt-color-primary-700: #6d28d9;
+
+    --vp-c-brand-1: var(--rt-color-primary-400);
+    --vp-c-brand-2: var(--rt-color-primary-300);
+    --vp-c-brand-3: var(--rt-color-primary-500);
+    --vp-c-brand-soft: color-mix(in oklab, var(--rt-color-primary-400) 18%, transparent);
+}

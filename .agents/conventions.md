@@ -95,3 +95,11 @@ npm run build:types    # tsc --noEmit (type-check only)
 - **Factory pattern**: `defineCoreHandler()` and `defineErrorHandler()` factories for type-safe handler creation
 - **Dual syntax**: Handlers support both shorthand (function) and verbose (config object) forms
 - **Runtime agnostic**: Core code avoids Node.js-specific APIs; adapters bridge to specific runtimes
+
+## References
+External project references live in .agents/references/. When looking up source code in a referenced project (e.g., tsoa), always update the corresponding reference file with:
+
+The source file path / function name in the external project
+The corresponding local file path / function name
+Any behavioral differences between the implementations
+This builds a cumulative mapping over time so future work can quickly find corresponding code without re-searching.

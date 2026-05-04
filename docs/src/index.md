@@ -1,28 +1,19 @@
 ---
-layout: home
-hero:
-    name: Routup
-    text: Routing Framework
-    tagline: A minimalistic, runtime-agnostic HTTP routing framework built on srvx and Web Standards
-    actions:
-       - theme: brand
-         text: Get Started
-         link: /guide/
-       - theme: alt
-         text: View on GitHub
-         link: https://github.com/routup/routup
-
-features:
-    - icon: 🌐
-      title: Web Standards
-      details: Built on srvx — uses Web API Request/Response everywhere
-    - icon: 🏃‍♂️
-      title: Runtime Agnostic
-      details: Run on Node.js, Bun, Deno, Cloudflare Workers, and more
-    - icon: 🚀
-      title: Return-based Responses
-      details: Return strings, objects, streams, or Response — automatically converted
-    - icon: 🔌
-      title: Plugin & Hook System
-      details: Powerful plugin system and lifecycle hooks for cross-cutting concerns
+layout: page
+title: Routup
+description: A minimalistic, runtime-agnostic HTTP routing framework built on srvx and Web Standards.
 ---
+
+<script setup>
+import Hero from './.vitepress/theme/components/Hero.vue';
+import FeatureGrid from './.vitepress/theme/components/FeatureGrid.vue';
+import RuntimeShowcase from './.vitepress/theme/components/RuntimeShowcase.vue';
+import CodeTabs from './.vitepress/theme/components/CodeTabs.vue';
+import NodeSpotlight from './.vitepress/theme/components/NodeSpotlight.vue';
+</script>
+
+<Hero />
+<FeatureGrid />
+<RuntimeShowcase />
+<CodeTabs />
+<NodeSpotlight />

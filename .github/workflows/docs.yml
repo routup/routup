@@ -54,7 +54,7 @@ jobs:
                   path: ./dist
 
             - name: CNAME
-              run: echo "routup.net" > ./dist/CNAME
+              run: echo "routup.dev" > ./dist/CNAME
 
             - name: Deploy
               uses: peaceiris/actions-gh-pages@v4
