@@ -45,6 +45,15 @@ export class RoutupEvent implements IRoutupEvent {
 
     protected _routerOptions?: RouterOptions;
 
+    protected _nextCalled = false;
+
+    protected _nextResult: Promise<Response | undefined> | undefined;
+
+    protected _nextCalledDeferred: {
+        promise: Promise<void>,
+        resolve: () => void,
+    } | undefined;
+
     constructor(context: RoutupEventCreateContext) {
         this._context = context;
         this.request = context.request;
@@ -67,7 +76,40 @@ export class RoutupEvent implements IRoutupEvent {
         return this._routerOptions;
     }
 
+    get nextCalled(): boolean {
+        return this._nextCalled;
+    }
+
+    get nextResult(): Promise<Response | undefined> | undefined {
+        return this._nextResult;
+    }
+
+    whenNextCalled(): Promise<void> {
+        if (!this._nextCalledDeferred) {
+            let resolve!: () => void;
+            const promise = new Promise<void>((r) => { resolve = r; });
+            this._nextCalledDeferred = { promise, resolve };
+
+            if (this._nextCalled) {
+                resolve();
+            }
+        }
+
+        return this._nextCalledDeferred.promise;
+    }
+
     async next(error?: Error): Promise<Response | undefined> {
-        return this._context.next(this, error);
+        if (this._nextCalled) {
+            return this._nextResult;
+        }
+
+        this._nextCalled = true;
+        this._nextResult = this._context.next(this, error);
+
+        if (this._nextCalledDeferred) {
+            this._nextCalledDeferred.resolve();
+        }
+
+        return this._nextResult;
     }
 }

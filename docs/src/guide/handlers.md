@@ -46,10 +46,14 @@ defineCoreHandler(() => new Blob(['data']));
 
 // null — empty response
 defineCoreHandler(() => null);
-
-// undefined — middleware pass-through (pipeline continues)
-defineCoreHandler(() => undefined);
 ```
+
+### Returning `undefined`
+
+`undefined` is **not** an implicit pass-through. A handler that returns `undefined` is making a contract: it must have either called `event.next()` (forwarding the downstream result) or it must intend `event.next()` to be invoked later from an async callback.
+
+- Returning `undefined` after calling `event.next()` forwards the downstream result — `event.next()` and `return event.next()` are equivalent in outcome.
+- Returning `undefined` without ever calling `event.next()` leaves the handler unresolved. The pipeline waits until either `event.next()` is invoked or `event.signal` aborts. With a global or per-handler `timeout`, this surfaces as `408 Request Timeout`. With no timeout configured, the request hangs by design — bugs become loud (deadlock) rather than silent (404 / wrong body).
 
 ## Middleware
 

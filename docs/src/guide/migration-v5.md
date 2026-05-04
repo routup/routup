@@ -80,7 +80,8 @@ Handlers can return any of these values — `toResponse()` converts them automat
 | `ArrayBuffer` / `Uint8Array` | Binary response |
 | `Blob` | Response with blob's content-type |
 | `null` | Empty response |
-| `undefined` | No response (middleware pass-through; pipeline continues) |
+
+`undefined` is **not** an implicit pass-through: a handler that returns `undefined` must call `event.next()` (now or from a later async callback) — otherwise the pipeline waits on `event.signal` and a configured `timeout` surfaces as `408`. See [Handlers → Returning `undefined`](./handlers.md#returning-undefined).
 
 To set custom status or headers without constructing a full `Response`:
 
