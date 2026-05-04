@@ -68,6 +68,11 @@ describe('src/plugin/semver', () => {
             expect(satisfiesVersion('1.3.0-beta.1', '^1.2.3-beta.2')).toBe(false);
             expect(satisfiesVersion('1.2.4-beta.1', '^1.2.3-beta.2')).toBe(false);
         });
+
+        it('^1.2.3 rejects prereleases of other tuples', () => {
+            expect(satisfiesVersion('1.2.4-beta.1', '^1.2.3')).toBe(false);
+            expect(satisfiesVersion('1.3.0-beta.1', '^1.2.3')).toBe(false);
+        });
     });
 
     describe('tilde ranges', () => {
@@ -84,6 +89,10 @@ describe('src/plugin/semver', () => {
             expect(satisfiesVersion('1.2.3', '~1.2.3-beta.2')).toBe(true);
             expect(satisfiesVersion('1.2.4', '~1.2.3-beta.2')).toBe(true);
             expect(satisfiesVersion('1.2.4-beta.1', '~1.2.3-beta.2')).toBe(false);
+        });
+
+        it('~1.2.3 rejects prereleases of other patch versions', () => {
+            expect(satisfiesVersion('1.2.4-beta.1', '~1.2.3')).toBe(false);
         });
     });
 

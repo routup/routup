@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+    PluginAlreadyInstalledError,
     PluginDependencyError,
     Router,
     defineCoreHandler,
@@ -205,5 +206,22 @@ describe('src/plugin dependency validation', () => {
         expect(() => router.use(basicPlugin({ cookieVersion: '^1.0.0' }))).toThrowError(
             /version "\^1.0.0" required but "2.0.0" is installed/,
         );
+    });
+
+    it('should throw when installing the same plugin twice on the same router', () => {
+        const router = new Router();
+        router.use(cookiePlugin());
+
+        expect(() => router.use(cookiePlugin())).toThrowError(PluginAlreadyInstalledError);
+    });
+
+    it('should allow installing the same plugin on a child router when the parent already has it', () => {
+        const parent = new Router();
+        parent.use(cookiePlugin('1.0.0'));
+
+        const child = new Router();
+        parent.use(child);
+
+        expect(() => child.use(cookiePlugin('1.0.0'))).not.toThrow();
     });
 });
