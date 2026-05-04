@@ -19,12 +19,10 @@ import type {
 import { HookManager, HookName } from '../hook/index.ts';
 import type { Path } from '../path/index.ts';
 import { PathMatcher, isPath } from '../path/index.ts';
-import type { Plugin, PluginDependency, PluginInstallContext } from '../plugin/index.ts';
+import type { Plugin, PluginInstallContext } from '../plugin/index.ts';
 import {
     PluginAlreadyInstalledError,
-    PluginDependencyError,
     isPlugin,
-    satisfiesVersion,
 } from '../plugin/index.ts';
 import { normalizeRouterOptions } from './options.ts';
 import {
@@ -76,10 +74,7 @@ export class Router implements IRouter {
     protected _options: Partial<RouterOptions>;
 
     /**
-     * Registry of installed plugins (name → version).
-     *
-     * Includes plugins installed directly on this router as well as plugins
-     * exposed by wrapper plugins (propagated up at install time).
+     * Registry of installed plugins (name → version) on this router.
      *
      * @protected
      */
@@ -597,11 +592,6 @@ export class Router implements IRouter {
 
     /**
      * Check if a plugin with the given name is installed on this router.
-     *
-     * Plugin scope is local to each router. Wrapper plugins propagate the
-     * names of the plugins they install so siblings can satisfy their
-     * dependencies, but mounted sub-routers do not contribute to nor inherit
-     * from this registry.
      */
     hasPlugin(name: string): boolean {
         return this.plugins.has(name);
@@ -617,56 +607,6 @@ export class Router implements IRouter {
 
     // --------------------------------------------------
 
-    protected validatePluginDependencies(plugin: Plugin): void {
-        if (!plugin.dependencies || plugin.dependencies.length === 0) {
-            return;
-        }
-
-        for (const dep of plugin.dependencies) {
-            const dependency: PluginDependency = typeof dep === 'string' ?
-                { name: dep } :
-                dep;
-
-            if (!this.hasPlugin(dependency.name)) {
-                if (dependency.optional) {
-                    continue;
-                }
-
-                throw new PluginDependencyError(
-                    plugin.name,
-                    dependency.name,
-                );
-            }
-
-            if (dependency.version) {
-                const installedVersion = this.getPluginVersion(dependency.name);
-                if (!installedVersion) {
-                    if (dependency.optional) {
-                        continue;
-                    }
-
-                    throw new PluginDependencyError(
-                        plugin.name,
-                        dependency.name,
-                        `version "${dependency.version}" required but "${dependency.name}" has no version`,
-                    );
-                }
-
-                if (!satisfiesVersion(installedVersion, dependency.version)) {
-                    if (dependency.optional) {
-                        continue;
-                    }
-
-                    throw new PluginDependencyError(
-                        plugin.name,
-                        dependency.name,
-                        `version "${dependency.version}" required but "${installedVersion}" is installed`,
-                    );
-                }
-            }
-        }
-    }
-
     protected install(
         plugin: Plugin,
         context: PluginInstallContext = {},
@@ -675,8 +615,6 @@ export class Router implements IRouter {
             throw new PluginAlreadyInstalledError(plugin.name);
         }
 
-        this.validatePluginDependencies(plugin);
-
         const router = new Router({ name: plugin.name });
         plugin.install(router);
 
@@ -684,14 +622,6 @@ export class Router implements IRouter {
             this.use(context.path, router);
         } else {
             this.use(router);
-        }
-
-        // Expose plugins installed by a wrapper at this level too, so sibling
-        // plugins can satisfy their dependencies against the bundled names.
-        for (const [name, version] of router.plugins) {
-            if (!this.plugins.has(name)) {
-                this.plugins.set(name, version);
-            }
         }
 
         this.plugins.set(plugin.name, plugin.version);

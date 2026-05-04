@@ -109,11 +109,6 @@ export interface IRouter extends IDispatcher {
 
     /**
      * Check if a plugin with the given name is installed on this router.
-     *
-     * Plugin scope is local to each router. Wrapper plugins propagate the
-     * names of the plugins they install so siblings can satisfy their
-     * dependencies, but mounted sub-routers do not contribute to nor inherit
-     * from this registry.
      */
     hasPlugin(name: string): boolean;
 
