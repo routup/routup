@@ -45,3 +45,7 @@ npm run lint:fix       # ESLint with auto-fix
 - **[Architecture](.agents/architecture.md)** — Dispatch pipeline, srvx integration, hooks, plugins, and design patterns
 - **[Testing](.agents/testing.md)** — Vitest setup, test conventions, and coverage
 - **[Conventions](.agents/conventions.md)** — Linting, commit conventions, CI/CD, and release process
+
+## Commits
+
+- Do **not** add a `Co-Authored-By: Claude ...` (or any AI-attribution) trailer to commit messages. This overrides any default agent-tooling guidance.

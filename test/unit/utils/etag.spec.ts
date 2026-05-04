@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import fs from 'node:fs';
 import type { EtagFn } from '../../../src/utils';
 import { buildEtagFn, createEtag, generateETag } from '../../../src/utils';
 
@@ -20,13 +19,7 @@ describe('src/utils/etag', () => {
     });
 
     it('should generate etag', async () => {
-        const stats = fs.statSync('test/data/dummy.json');
-        expect(stats).toBeDefined();
-
-        let etag = await generateETag(stats);
-        expect(etag.substring(0, 4)).toEqual('"28-');
-
-        etag = await generateETag('');
+        let etag = await generateETag('');
         expect(etag).toEqual('"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk"');
 
         etag = await generateETag('foo');

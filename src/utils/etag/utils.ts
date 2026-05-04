@@ -1,7 +1,7 @@
 import { merge } from 'smob';
 import { isObject } from '../object.ts';
 import { createEtag } from './module.ts';
-import type { EtagFn, EtagOptions } from './type.ts';
+import type { EtagFn, EtagOptions } from './types.ts';
 
 const textEncoder = /* @__PURE__ */ new TextEncoder();
 
@@ -22,19 +22,15 @@ export function buildEtagFn(input?: boolean | EtagOptions | EtagFn) : EtagFn {
         options = merge(input, options);
     }
 
-    return async (body: any, _encoding?: BufferEncoding, size?: number) => {
-        const entity: string = typeof body === 'string' ?
-            body :
-            body?.toString?.('utf-8') ?? String(body);
-
+    return async (body: string, size?: number) => {
         if (typeof options.threshold !== 'undefined') {
-            const measured = size ?? textEncoder.encode(entity).byteLength;
+            const measured = size ?? textEncoder.encode(body).byteLength;
 
             if (measured <= options.threshold) {
                 return undefined;
             }
         }
 
-        return createEtag(entity, options);
+        return createEtag(body, options);
     };
 }
