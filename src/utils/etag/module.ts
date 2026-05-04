@@ -1,6 +1,6 @@
-import { Buffer } from 'node:buffer';
+import type { Buffer } from 'node:buffer';
 import { subtle } from 'uncrypto';
-import { type Stats } from 'node:fs';
+import type { Stats } from 'node:fs';
 import { isObject } from '../object.ts';
 import type { EtagOptions } from './type.ts';
 
@@ -43,9 +43,9 @@ export async function generateETag(input: string | Buffer | Stats) : Promise<str
         return '"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk"';
     }
 
-    const entity = Buffer.isBuffer(input) ?
-        input.toString('utf-8') :
-        input;
+    const entity = typeof input === 'string' ?
+        input :
+        input.toString('utf-8');
 
     // compute hash of entity
     const hash = await sha1(entity);
