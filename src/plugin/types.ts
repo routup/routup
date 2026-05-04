@@ -41,10 +41,6 @@ export type Plugin = {
 
 export type PluginInstallContext = {
     /**
-     * The name property overwrites the name defined by the plugin.
-     */
-    name?: string,
-    /**
      * By specifying a path, the plugin will be installed as a child router.
      */
     path?: Path,

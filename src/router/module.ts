@@ -20,7 +20,12 @@ import { HookManager, HookName } from '../hook/index.ts';
 import type { Path } from '../path/index.ts';
 import { PathMatcher, isPath } from '../path/index.ts';
 import type { Plugin, PluginDependency, PluginInstallContext } from '../plugin/index.ts';
-import { PluginDependencyError, isPlugin, satisfiesVersion } from '../plugin/index.ts';
+import {
+    PluginAlreadyInstalledError,
+    PluginDependencyError,
+    isPlugin,
+    satisfiesVersion,
+} from '../plugin/index.ts';
 import { normalizeRouterOptions } from './options.ts';
 import {
     cleanDoubleSlashes,
@@ -683,11 +688,13 @@ export class Router implements IRouter {
         plugin: Plugin,
         context: PluginInstallContext = {},
     ): this {
+        if (this.plugins.has(plugin.name)) {
+            throw new PluginAlreadyInstalledError(plugin.name);
+        }
+
         this.validatePluginDependencies(plugin);
 
-        const name = context.name || plugin.name;
-
-        const router = new Router({ name });
+        const router = new Router({ name: plugin.name });
         plugin.install(router);
 
         if (context.path) {
@@ -696,7 +703,7 @@ export class Router implements IRouter {
             this.use(router);
         }
 
-        this.plugins.set(name, plugin.version);
+        this.plugins.set(plugin.name, plugin.version);
 
         return this;
     }

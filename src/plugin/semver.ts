@@ -143,7 +143,7 @@ function satisfiesCaret(version: ParsedVersion, range: string): boolean {
 
     if (compareVersions(version, min) < 0) return false;
 
-    if (min.prerelease && !prereleaseAllowed(version, min)) {
+    if (version.prerelease && !prereleaseAllowed(version, min)) {
         return false;
     }
 
@@ -167,7 +167,7 @@ function satisfiesTilde(version: ParsedVersion, range: string): boolean {
 
     if (compareVersions(version, min) < 0) return false;
 
-    if (min.prerelease && !prereleaseAllowed(version, min)) {
+    if (version.prerelease && !prereleaseAllowed(version, min)) {
         return false;
     }
 
