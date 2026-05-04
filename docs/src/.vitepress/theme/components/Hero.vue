@@ -1,7 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, shallowRef } from 'vue';
+import { 
+    computed, 
+    onMounted, 
+    reactive, 
+    ref, 
+    shallowRef, 
+} from 'vue';
 import { useData } from 'vitepress';
-import { Router, defineCoreHandler, type IRoutupEvent } from 'routup';
+import { type IRoutupEvent, Router, defineCoreHandler } from 'routup';
 
 const { isDark } = useData();
 
@@ -93,9 +99,9 @@ async function runDispatch() {
         const url = new URL(form.path, 'http://localhost');
         const request = new Request(url, { method: form.method });
         const response = await router.fetch(request);
-        const matchedIndex = lastMatchedSpec.value
-            ? specs.indexOf(lastMatchedSpec.value)
-            : -1;
+        const matchedIndex = lastMatchedSpec.value ?
+            specs.indexOf(lastMatchedSpec.value) :
+            -1;
         const params: Record<string, string> = {};
         if (matchedIndex !== -1) {
             for (const [k, v] of extractParams(specs[matchedIndex].pattern, url.pathname)) {
@@ -122,8 +128,7 @@ function extractParams(pattern: string, path: string): Array<[string, string]> {
     const patternParts = pattern.split('/').filter(Boolean);
     const pathParts = path.split('/').filter(Boolean);
     const result: Array<[string, string]> = [];
-    for (let i = 0; i < patternParts.length; i++) {
-        const seg = patternParts[i];
+    for (const [i, seg] of patternParts.entries()) {
         if (seg.startsWith('*')) {
             result.push([seg.slice(1), pathParts.slice(i).join('/')]);
             return result;
@@ -282,11 +287,21 @@ serve(router, { port: 3000 });`);
                             :style="{ color: methodColor(form.method) }"
                             @change="scheduleDispatch"
                         >
-                            <option value="GET">GET</option>
-                            <option value="POST">POST</option>
-                            <option value="PUT">PUT</option>
-                            <option value="PATCH">PATCH</option>
-                            <option value="DELETE">DELETE</option>
+                            <option value="GET">
+                                GET
+                            </option>
+                            <option value="POST">
+                                POST
+                            </option>
+                            <option value="PUT">
+                                PUT
+                            </option>
+                            <option value="PATCH">
+                                PATCH
+                            </option>
+                            <option value="DELETE">
+                                DELETE
+                            </option>
                         </select>
                         <input
                             v-model="form.path"

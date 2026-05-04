@@ -1,11 +1,7 @@
 import { defineConfig } from 'vitepress';
 
 export default defineConfig({
-    vite: {
-        ssr: {
-            noExternal: ['routup'],
-        },
-    },
+    vite: { ssr: { noExternal: ['routup'] } },
     title: 'Routup',
     description: 'A minimalistic, runtime-agnostic HTTP routing framework built on srvx and Web Standards. Runs on Node.js, Bun, Deno, and Cloudflare Workers.',
     base: '/',
