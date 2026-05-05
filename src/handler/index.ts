@@ -7,3 +7,4 @@ export * from './is.ts';
 export * from './module.ts';
 export * from './types.ts';
 export * from './types-base.ts';
+export * from './utils.ts';

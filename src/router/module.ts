@@ -7,6 +7,7 @@ import {
     Handler,
     type HandlerOptions,
     HandlerType,
+    buildHandlerPathMatcher,
     isHandler,
     isHandlerOptions,
 } from '../handler/index.ts';
@@ -89,8 +90,7 @@ export class Router implements IRouter {
 
         this.hookManager = new HookManager();
         this._options = normalizeRouterOptions(input);
-
-        this.setPath(input.path);
+        this.pathMatcher = buildRouterPathMatcher(input.path);
     }
 
     // --------------------------------------------------
@@ -101,10 +101,6 @@ export class Router implements IRouter {
         }
 
         return true;
-    }
-
-    setPath(value?: Path) {
-        this.pathMatcher = buildRouterPathMatcher(value);
     }
 
     // --------------------------------------------------
@@ -235,7 +231,9 @@ export class Router implements IRouter {
                     continue;
                 }
 
-                const match = handler.matchPath(context.event.path);
+                const match = entry.pathMatcher ?
+                    entry.pathMatcher.test(context.event.path) :
+                    handler.matchPath(context.event.path);
 
                 if (match) {
                     if (handler.method) {
@@ -312,10 +310,10 @@ export class Router implements IRouter {
         const { event } = context;
 
         if (entry.type === RouterStackEntryType.ROUTER && entry.pathMatcher) {
-            // Apply the mount-specific matcher; strip the matched prefix off
-            // event.path so the child router's pipeline sees a mount-relative
-            // path. The child router's intrinsic pathMatcher (if any) is
-            // applied on top inside its own dispatch.
+            // Router mount: strip the matched prefix off event.path so the
+            // child router's pipeline sees a mount-relative path. The child
+            // router's intrinsic pathMatcher (if any) is applied on top
+            // inside its own dispatch.
             const output = entry.pathMatcher.exec(event.path);
             if (typeof output !== 'undefined') {
                 event.mountPath = cleanDoubleSlashes(`${event.mountPath}/${output.path}`);
@@ -326,6 +324,16 @@ export class Router implements IRouter {
                     event.path = withLeadingSlash(event.path.substring(output.path.length));
                 }
 
+                event.params = {
+                    ...event.params,
+                    ...output.params,
+                };
+            }
+        } else if (entry.type === RouterStackEntryType.HANDLER && entry.pathMatcher) {
+            // Handler mount: extract route params from the mount matcher.
+            // Handlers don't strip the path — they're leaves.
+            const output = entry.pathMatcher.exec(event.path);
+            if (typeof output !== 'undefined') {
                 event.params = {
                     ...event.params,
                     ...output.params,
@@ -539,13 +547,13 @@ export class Router implements IRouter {
             }
 
             if (isHandler(element)) {
-                if (path) {
-                    element.setPath(path);
-                }
-
                 element.setMethod(method);
 
-                this.use(element);
+                if (path) {
+                    this.use(path, element);
+                } else {
+                    this.use(element);
+                }
             }
         }
     }
@@ -592,9 +600,11 @@ export class Router implements IRouter {
             }
 
             if (isHandler(item)) {
-                item.setPath(path || item.path);
-
-                this.stack.push({ type: RouterStackEntryType.HANDLER, data: item });
+                this.stack.push({
+                    type: RouterStackEntryType.HANDLER,
+                    data: item,
+                    pathMatcher: buildHandlerPathMatcher(path, !!item.method),
+                });
                 continue;
             }
 

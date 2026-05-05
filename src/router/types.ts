@@ -93,6 +93,14 @@ export type StackRouterEntry = {
 export type StackHandlerEntry = {
     type: typeof RouterStackEntryType.HANDLER,
     data: Handler,
+    /**
+     * Mount-specific path matcher.
+     *
+     * Set when the handler was registered under a path (e.g.
+     * `parent.use('/api', handler)`). When undefined, the lookup falls back
+     * to the handler's own intrinsic matcher.
+     */
+    pathMatcher?: PathMatcher,
 };
 
 export type StackEntry = StackRouterEntry | StackHandlerEntry;
@@ -124,11 +132,6 @@ export interface IRouter extends IDispatcher {
      * Test if a path matches this router's mount path.
      */
     matchPath(path: string): boolean;
-
-    /**
-     * Set or clear the router's mount path.
-     */
-    setPath(value?: Path): void;
 
     /**
      * Check if a plugin with the given name is installed on this router.
