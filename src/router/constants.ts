@@ -10,3 +10,11 @@ export const RouterPipelineStep = {
 } as const;
 
 export type RouterPipelineStep = typeof RouterPipelineStep[keyof typeof RouterPipelineStep];
+
+export const RouterStackEntryType = {
+    ROUTER: 'router',
+    HANDLER: 'handler',
+} as const;
+
+
+export type RouterStackEntryType = typeof RouterStackEntryType[keyof typeof RouterStackEntryType];

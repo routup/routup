@@ -20,7 +20,7 @@ import type {
     TrustProxyFn,
     TrustProxyInput,
 } from '../utils/index.ts';
-import type { RouterPipelineStep } from './constants.ts';
+import type { RouterPipelineStep, RouterStackEntryType  } from './constants.ts';
 
 // --------------------------------------------------
 // Router Options
@@ -73,6 +73,22 @@ export type RouterPathNode = {
     readonly name?: string;
     readonly options: Partial<RouterOptions>;
 };
+
+// --------------------------------------------------
+// Stack
+// --------------------------------------------------
+
+export type StackRouterEntry = {
+    type: typeof RouterStackEntryType.ROUTER,
+    data: IRouter,
+};
+
+export type StackHandlerEntry = {
+    type: typeof RouterStackEntryType.HANDLER,
+    data: Handler,
+};
+
+export type StackEntry = StackRouterEntry | StackHandlerEntry;
 
 // --------------------------------------------------
 // Pipeline
