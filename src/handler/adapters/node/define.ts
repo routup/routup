@@ -129,7 +129,7 @@ function createNodeBridge(handler: NodeHandler | NodeMiddleware, isMiddleware: b
                 return null;
             }
 
-            return undefined;
+            return event.next();
         }) as CoreHandler,
     });
 }
