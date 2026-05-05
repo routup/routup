@@ -312,6 +312,15 @@ export class Router implements IRouter {
 
         const { event } = context;
 
+        // Snapshot routing state so we can restore it if the entry yields no
+        // response. Without this, a child router that walks past its last
+        // handler (e.g. its tail middleware calls next()) would leave the
+        // event's path stripped of this entry's mount prefix, and subsequent
+        // siblings in the parent's stack would fail to match.
+        const savedPath = event.path;
+        const savedMountPath = event.mountPath;
+        const savedParams = event.params;
+
         if (entry.type === RouterStackEntryType.ROUTER && entry.pathMatcher) {
             // Router mount: strip the matched prefix off event.path so the
             // child router's pipeline sees a mount-relative path. The child
@@ -375,6 +384,12 @@ export class Router implements IRouter {
             await this.hookManager.trigger(HookName.ERROR, event);
         }
 
+        if (!event.dispatched) {
+            event.path = savedPath;
+            event.mountPath = savedMountPath;
+            event.params = savedParams;
+        }
+
         context.stackIndex++;
         context.step = RouterPipelineStep.CHILD_AFTER;
     }
@@ -416,6 +431,10 @@ export class Router implements IRouter {
     async dispatch(
         event: IDispatcherEvent,
     ): Promise<Response | undefined> {
+        const savedPath = event.path;
+        const savedMountPath = event.mountPath;
+        const savedParams = event.params;
+
         if (this.pathMatcher) {
             const output = this.pathMatcher.exec(event.path);
             if (typeof output !== 'undefined') {
@@ -446,6 +465,15 @@ export class Router implements IRouter {
             await this.executePipelineStep(context);
         } finally {
             event.routerPath.pop();
+
+            // Restore routing state when this router did not produce a
+            // response, so the caller's pipeline (a parent router) sees its
+            // own pre-dispatch path/mountPath/params for subsequent siblings.
+            if (!event.dispatched) {
+                event.path = savedPath;
+                event.mountPath = savedMountPath;
+                event.params = savedParams;
+            }
         }
 
         return context.response;

@@ -65,4 +65,30 @@ describe('src/router mounting', () => {
         const response = await router.fetch(createTestRequest('/foo'));
         expect(await response.text()).toEqual('ok');
     });
+
+    it('should let the parent continue when a child router\'s tail handler calls next()', async () => {
+        const child = new Router();
+        child.use(defineCoreHandler((event) => event.next()));
+
+        const parent = new Router();
+        parent.use('/api', child);
+        parent.get('/api/foo', defineCoreHandler(() => 'after-child'));
+
+        const response = await parent.fetch(createTestRequest('/api/foo'));
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('after-child');
+    });
+
+    it('should let the parent continue when a child router with intrinsic path yields no response', async () => {
+        const child = new Router({ path: '/api' });
+        child.use(defineCoreHandler((event) => event.next()));
+
+        const parent = new Router();
+        parent.use(child);
+        parent.get('/api/foo', defineCoreHandler(() => 'after-child'));
+
+        const response = await parent.fetch(createTestRequest('/api/foo'));
+        expect(response.status).toEqual(200);
+        expect(await response.text()).toEqual('after-child');
+    });
 });
