@@ -1,3 +1,4 @@
+import type { MethodName } from '../constants.ts';
 import type { IDispatcher, IDispatcherEvent } from '../dispatcher/index.ts';
 import type { RoutupRequest } from '../event/index.ts';
 import type {
@@ -101,6 +102,14 @@ export type StackHandlerEntry = {
      * to the handler's own intrinsic matcher.
      */
     pathMatcher?: PathMatcher,
+    /**
+     * Mount-specific HTTP method.
+     *
+     * Set when the handler was registered via a method-bound shortcut
+     * (e.g. `router.get(handler)` sets this to `GET`). When undefined,
+     * dispatch falls back to the handler's own intrinsic method.
+     */
+    method?: MethodName,
 };
 
 export type StackEntry = StackRouterEntry | StackHandlerEntry;

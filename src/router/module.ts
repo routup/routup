@@ -10,6 +10,7 @@ import {
     buildHandlerPathMatcher,
     isHandler,
     isHandlerOptions,
+    matchHandlerMethod,
 } from '../handler/index.ts';
 import type {
     HookDefaultListener,
@@ -236,11 +237,13 @@ export class Router implements IRouter {
                     handler.matchPath(context.event.path);
 
                 if (match) {
-                    if (handler.method) {
-                        context.event.methodsAllowed.add(handler.method);
+                    const method = entry.method ?? handler.method;
+
+                    if (method) {
+                        context.event.methodsAllowed.add(method);
                     }
 
-                    if (handler.matchMethod(context.event.method as MethodName)) {
+                    if (matchHandlerMethod(method, context.event.method as MethodName)) {
                         await this.hookManager.trigger(HookName.CHILD_MATCH, context.event);
 
                         if (context.event.dispatched) {
@@ -534,27 +537,27 @@ export class Router implements IRouter {
                 continue;
             }
 
+            let handler: Handler;
             if (isHandlerOptions(element)) {
-                if (path) {
-                    element.path = path;
-                }
-
-                element.method = method;
-
-                this.use(element);
-
+                // Construct a fresh Handler from a copy of the options so the
+                // user's options object is never mutated.
+                handler = new Handler({
+                    ...element,
+                    method,
+                    path: path ?? element.path,
+                });
+            } else if (isHandler(element)) {
+                handler = element;
+            } else {
                 continue;
             }
 
-            if (isHandler(element)) {
-                element.setMethod(method);
-
-                if (path) {
-                    this.use(path, element);
-                } else {
-                    this.use(element);
-                }
-            }
+            this.stack.push({
+                type: RouterStackEntryType.HANDLER,
+                data: handler,
+                method,
+                pathMatcher: buildHandlerPathMatcher(path ?? handler.path, true),
+            });
         }
     }
 
@@ -590,11 +593,14 @@ export class Router implements IRouter {
             }
 
             if (isHandlerOptions(item)) {
-                item.path = path || item.path;
+                const handler = new Handler({
+                    ...item,
+                    path: path ?? item.path,
+                });
 
                 this.stack.push({
                     type: RouterStackEntryType.HANDLER,
-                    data: new Handler(item),
+                    data: handler,
                 });
                 continue;
             }

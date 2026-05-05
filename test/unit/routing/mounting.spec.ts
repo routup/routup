@@ -51,4 +51,18 @@ describe('src/router mounting', () => {
         const response = await parent.fetch(createTestRequest('/api/ping'));
         expect(await response.text()).toEqual('pong');
     });
+
+    it('should not mutate a handler\'s method when registered via a method shortcut', async () => {
+        const handler = defineCoreHandler(() => 'ok');
+        const before = handler.method;
+
+        const router = new Router();
+        router.get('/foo', handler);
+
+        // Method bound on the entry, not on the handler itself.
+        expect(handler.method).toEqual(before);
+
+        const response = await router.fetch(createTestRequest('/foo'));
+        expect(await response.text()).toEqual('ok');
+    });
 });

@@ -1,4 +1,4 @@
-import { MethodName } from '../constants.ts';
+import type { MethodName } from '../constants.ts';
 import type { IDispatcher, IDispatcherEvent } from '../dispatcher/index.ts';
 import { createError, isError } from '../error/index.ts';
 import type { IRoutupEvent } from '../event/index.ts';
@@ -20,7 +20,7 @@ export class Handler implements IDispatcher {
 
     protected pathMatcher: PathMatcher | undefined;
 
-    protected _method: MethodName | undefined;
+    readonly method: MethodName | undefined;
 
     // --------------------------------------------------
 
@@ -35,6 +35,7 @@ export class Handler implements IDispatcher {
         }
 
         this.pathMatcher = buildHandlerPathMatcher(this.config.path, !!this.config.method);
+        this.method = this.config.method ? toMethodName(this.config.method) : undefined;
     }
 
     // --------------------------------------------------
@@ -45,15 +46,6 @@ export class Handler implements IDispatcher {
 
     get path() {
         return this.config.path;
-    }
-
-    get method() {
-        if (this._method || !this.config.method) {
-            return this._method;
-        }
-
-        this._method = toMethodName(this.config.method);
-        return this._method;
     }
 
     // --------------------------------------------------
@@ -166,24 +158,6 @@ export class Handler implements IDispatcher {
         }
 
         return this.pathMatcher.test(path);
-    }
-
-    // --------------------------------------------------
-
-    matchMethod(method: MethodName): boolean {
-        return !this.method ||
-            method === this.method ||
-            (
-                method === MethodName.HEAD &&
-                this.method === MethodName.GET
-            );
-    }
-
-    setMethod(input?: MethodName): void {
-        const method = toMethodName(input);
-
-        this.config.method = method;
-        this._method = method;
     }
 
     // --------------------------------------------------
