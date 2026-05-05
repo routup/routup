@@ -1,3 +1,4 @@
+import type { MethodName } from '../constants.ts';
 import type { IDispatcher, IDispatcherEvent } from '../dispatcher/index.ts';
 import type { RoutupRequest } from '../event/index.ts';
 import type {
@@ -12,7 +13,7 @@ import type {
     HookUnsubscribeFn,
 } from '../hook/index.ts';
 
-import type { Path } from '../path/index.ts';
+import type { Path, PathMatcher } from '../path/index.ts';
 import type { Plugin } from '../plugin/index.ts';
 import type {
     EtagFn,
@@ -81,11 +82,34 @@ export type RouterPathNode = {
 export type StackRouterEntry = {
     type: typeof RouterStackEntryType.ROUTER,
     data: IRouter,
+    /**
+     * Mount-specific path matcher.
+     *
+     * Set when the router was mounted under a path (e.g. `parent.use('/api', child)`).
+     * When undefined, the lookup falls back to the router's own intrinsic matcher.
+     */
+    pathMatcher?: PathMatcher,
 };
 
 export type StackHandlerEntry = {
     type: typeof RouterStackEntryType.HANDLER,
     data: Handler,
+    /**
+     * Mount-specific path matcher.
+     *
+     * Set when the handler was registered under a path (e.g.
+     * `parent.use('/api', handler)`). When undefined, the lookup falls back
+     * to the handler's own intrinsic matcher.
+     */
+    pathMatcher?: PathMatcher,
+    /**
+     * Mount-specific HTTP method.
+     *
+     * Set when the handler was registered via a method-bound shortcut
+     * (e.g. `router.get(handler)` sets this to `GET`). When undefined,
+     * dispatch falls back to the handler's own intrinsic method.
+     */
+    method?: MethodName,
 };
 
 export type StackEntry = StackRouterEntry | StackHandlerEntry;
@@ -117,11 +141,6 @@ export interface IRouter extends IDispatcher {
      * Test if a path matches this router's mount path.
      */
     matchPath(path: string): boolean;
-
-    /**
-     * Set or clear the router's mount path.
-     */
-    setPath(value?: Path): void;
 
     /**
      * Check if a plugin with the given name is installed on this router.

@@ -1,9 +1,28 @@
-import { isInstance } from '../utils/index.ts';
+import type { Path } from '../path/index.ts';
+import { PathMatcher } from '../path/index.ts';
+import { isInstance, withLeadingSlash, withoutTrailingSlash } from '../utils/index.ts';
 import { RouterSymbol } from './constants.ts';
 import type { Router } from './module.ts';
 
 export function isRouterInstance(input: unknown): input is Router {
     return isInstance(input, RouterSymbol);
+}
+
+/**
+ * Build a non-terminal `PathMatcher` for a router mount path.
+ *
+ * Returns `undefined` when the path is the root (`/`) or omitted entirely —
+ * a router mounted at the root has no intrinsic path filter.
+ */
+export function buildRouterPathMatcher(value?: Path): PathMatcher | undefined {
+    if (value === '/' || typeof value === 'undefined') {
+        return undefined;
+    }
+
+    return new PathMatcher(
+        withLeadingSlash(withoutTrailingSlash(`${value}`)),
+        { end: false },
+    );
 }
 
 /**
