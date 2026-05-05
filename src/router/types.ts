@@ -12,7 +12,7 @@ import type {
     HookUnsubscribeFn,
 } from '../hook/index.ts';
 
-import type { Path } from '../path/index.ts';
+import type { Path, PathMatcher } from '../path/index.ts';
 import type { Plugin } from '../plugin/index.ts';
 import type {
     EtagFn,
@@ -81,6 +81,13 @@ export type RouterPathNode = {
 export type StackRouterEntry = {
     type: typeof RouterStackEntryType.ROUTER,
     data: IRouter,
+    /**
+     * Mount-specific path matcher.
+     *
+     * Set when the router was mounted under a path (e.g. `parent.use('/api', child)`).
+     * When undefined, the lookup falls back to the router's own intrinsic matcher.
+     */
+    pathMatcher?: PathMatcher,
 };
 
 export type StackHandlerEntry = {
