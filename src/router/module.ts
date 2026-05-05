@@ -30,12 +30,13 @@ import {
     withLeadingSlash,
     withoutTrailingSlash,
 } from '../utils/index.ts';
-import { RouterPipelineStep, RouterSymbol } from './constants.ts';
+import { RouterPipelineStep, RouterStackEntryType, RouterSymbol } from './constants.ts';
 import type {
     IRouter,
     RouterOptions,
     RouterOptionsInput,
     RouterPipelineContext,
+    StackEntry,
 } from './types.ts';
 import { acceptsJson, isRouterInstance } from './utils.ts';
 
@@ -48,11 +49,13 @@ export class Router implements IRouter {
     readonly name?: string;
 
     /**
-     * Array of mounted layers, routes & routers.
+     * Array of mounted layers, routes & routers, each tagged by kind so the
+     * dispatch loop can discriminate without `isRouterInstance`/`isHandler`
+     * runtime checks.
      *
      * @protected
      */
-    protected stack: (Router | Handler)[] = [];
+    protected stack: StackEntry[] = [];
 
     /**
      * Path matcher for the current mount path.
@@ -228,25 +231,27 @@ export class Router implements IRouter {
             !context.event.dispatched &&
             context.stackIndex < this.stack.length
         ) {
-            const item = this.stack[context.stackIndex]!;
+            const entry = this.stack[context.stackIndex]!;
 
-            if (isHandler(item)) {
+            if (entry.type === RouterStackEntryType.HANDLER) {
+                const handler = entry.data;
+
                 if (
-                    (context.event.error && item.type === HandlerType.CORE) ||
-                    (!context.event.error && item.type === HandlerType.ERROR)
+                    (context.event.error && handler.type === HandlerType.CORE) ||
+                    (!context.event.error && handler.type === HandlerType.ERROR)
                 ) {
                     context.stackIndex++;
                     continue;
                 }
 
-                const match = item.matchPath(context.event.path);
+                const match = handler.matchPath(context.event.path);
 
                 if (match) {
-                    if (item.method) {
-                        context.event.methodsAllowed.add(item.method);
+                    if (handler.method) {
+                        context.event.methodsAllowed.add(handler.method);
                     }
 
-                    if (item.matchMethod(context.event.method as MethodName)) {
+                    if (handler.matchMethod(context.event.method as MethodName)) {
                         await this.hookManager.trigger(HookName.CHILD_MATCH, context.event);
 
                         if (context.event.dispatched) {
@@ -263,7 +268,7 @@ export class Router implements IRouter {
                 continue;
             }
 
-            const match = item.matchPath(context.event.path);
+            const match = entry.data.matchPath(context.event.path);
 
             if (match) {
                 await this.hookManager.trigger(HookName.CHILD_MATCH, context.event);
@@ -304,15 +309,13 @@ export class Router implements IRouter {
     }
 
     protected async executePipelineStepChildDispatch(context: RouterPipelineContext): Promise<void> {
-        if (
-            context.event.dispatched ||
-            typeof this.stack[context.stackIndex] === 'undefined'
-        ) {
+        const entry = this.stack[context.stackIndex];
+
+        if (context.event.dispatched || typeof entry === 'undefined') {
             context.step = RouterPipelineStep.FINISH;
             return;
         }
 
-        const item = this.stack[context.stackIndex]!;
         const { event } = context;
 
         try {
@@ -334,7 +337,7 @@ export class Router implements IRouter {
                 return nextContext.response;
             });
 
-            const response = await item.dispatch(event);
+            const response = await entry.data.dispatch(event);
 
             if (response) {
                 context.response = response;
@@ -558,21 +561,24 @@ export class Router implements IRouter {
                 if (path) {
                     item.setPath(path);
                 }
-                this.stack.push(item);
+                this.stack.push({ type: RouterStackEntryType.ROUTER, data: item });
                 continue;
             }
 
             if (isHandlerOptions(item)) {
                 item.path = path || item.path;
 
-                this.stack.push(new Handler(item));
+                this.stack.push({
+                    type: RouterStackEntryType.HANDLER,
+                    data: new Handler(item),
+                });
                 continue;
             }
 
             if (isHandler(item)) {
                 item.setPath(path || item.path);
 
-                this.stack.push(item);
+                this.stack.push({ type: RouterStackEntryType.HANDLER, data: item });
                 continue;
             }
 
