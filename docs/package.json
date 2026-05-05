@@ -12,7 +12,7 @@
         "vue": "^3.4.31"
     },
     "devDependencies": {
-        "flexsearch": "^0.7.43",
+        "flexsearch": "^0.8.212",
         "vitepress-plugin-search": "^1.0.4-alpha.22"
     }
 }
