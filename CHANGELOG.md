@@ -6,6 +6,13 @@
 * **deps:** bump negotiator from 0.6.3 to 1.0.0 ([#700](https://github.com/routup/routup/issues/700)) ([84edd77](https://github.com/routup/routup/commit/84edd778b87d8baa9072319909385324f265e8a7))
 * **deps:** bump the minorandpatch group with 3 updates ([#758](https://github.com/routup/routup/issues/758)) ([c0117b3](https://github.com/routup/routup/commit/c0117b34c81f3be26f5c60a5ce71e7e81b6ed4ed))
 
+## [5.0.1](https://github.com/routup/routup/compare/v5.0.0...v5.0.1) (2026-05-05)
+
+
+### Bug Fixes
+
+* **handler:** advance pipeline when node middleware calls next() without ending the response ([17ed270](https://github.com/routup/routup/commit/17ed2707141ec3229e4ca244ffd2c9e6556bcf6a)), closes [#881](https://github.com/routup/routup/issues/881)
+
 ## [5.0.0](https://github.com/routup/routup/compare/v4.1.0...v5.0.0) (2026-05-05)
 
 
