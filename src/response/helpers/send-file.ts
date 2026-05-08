@@ -9,6 +9,19 @@ export type SendFileContentOptions = {
     start?: number;
 };
 
+/**
+ * File metadata used by {@link sendFile}. All fields are optional, but each
+ * missing field disables related response features:
+ *
+ * - `size`  — without it, range requests, `Accept-Ranges`, `Content-Length`,
+ *             `ETag`, and `Last-Modified` are all omitted (the response is sent
+ *             without HTTP-level caching or seekability).
+ * - `mtime` — without it, `Last-Modified` is omitted and the `ETag` is not
+ *             emitted (`ETag` requires both `size` and `mtime`).
+ * - `name`  — falls back to `SendFileOptions.name` when set; if both are
+ *             missing, no `Content-Disposition` or extension-derived
+ *             `Content-Type` is set.
+ */
 export type SendFileStats = {
     size?: number,
     mtime?: Date | number | string,
