@@ -145,7 +145,7 @@ setResponseHeaderAttachment(event, 'data.csv');
 
 ### `setResponseHeaderInline`
 
-Set the `Content-Disposition` header to `inline`. Same encoding rules as `setResponseHeaderAttachment`. Use this when you want the browser to render the response natively (PDF viewer, image, video) but still suggest a filename if the user later saves it.
+Set the `Content-Disposition` header to `inline`. When a filename is provided, adds the `filename` (and, for non-ASCII names, `filename*=UTF-8''…`) directive per RFC 6266 and sets `Content-Type` based on the file extension, following the same encoding rules as `setResponseHeaderAttachment`. Use this when you want the browser to render the response natively (PDF viewer, image, video) but still suggest a filename if the user later saves it.
 
 ```typescript
 declare function setResponseHeaderInline(
