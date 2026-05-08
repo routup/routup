@@ -1,7 +1,7 @@
 import { HeaderName } from '../../constants.ts';
 import { basename } from '../../utils/index.ts';
 import type { IRoutupEvent } from '../../event/index.ts';
-import { setResponseHeaderAttachment } from './header-attachment.ts';
+import { setResponseHeaderAttachment, setResponseHeaderInline } from './header-disposition.ts';
 import { setResponseContentTypeByFileName } from './utils.ts';
 
 export type SendFileContentOptions = {
@@ -15,12 +15,14 @@ export type SendFileStats = {
     name?: string
 };
 
+export type SendFileDisposition = 'attachment' | 'inline';
+
 export type SendFileOptions = {
     stats: () => Promise<SendFileStats> | SendFileStats,
     content: (
         options: SendFileContentOptions,
     ) => Promise<ReadableStream | ArrayBuffer | Uint8Array> | ReadableStream | ArrayBuffer | Uint8Array,
-    attachment?: boolean,
+    disposition?: SendFileDisposition,
     name?: string
 };
 
@@ -36,10 +38,14 @@ export async function sendFile(
     if (name) {
         const fileName = basename(name);
 
-        if (options.attachment) {
+        if (options.disposition) {
             const dispositionHeader = headers.get(HeaderName.CONTENT_DISPOSITION);
             if (!dispositionHeader) {
-                setResponseHeaderAttachment(event, fileName);
+                if (options.disposition === 'inline') {
+                    setResponseHeaderInline(event, fileName);
+                } else {
+                    setResponseHeaderAttachment(event, fileName);
+                }
             }
         } else {
             setResponseContentTypeByFileName(event, fileName);
