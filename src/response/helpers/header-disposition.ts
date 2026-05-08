@@ -38,14 +38,14 @@ function setDisposition(
     type: 'attachment' | 'inline',
     filename?: string,
 ) {
-    if (typeof filename === 'string') {
-        setResponseContentTypeByFileName(event, filename);
-    }
-
     let disposition: string = type;
 
-    if (filename !== undefined) {
-        const isAsciiSafe = ASCII_TEXT_REGEXP.test(filename) && !HEX_ESCAPE_REGEXP.test(filename);
+    if (typeof filename === 'string') {
+        setResponseContentTypeByFileName(event, filename);
+
+        const isAsciiSafe = ASCII_TEXT_REGEXP.test(filename) &&
+            !HEX_ESCAPE_REGEXP.test(filename);
+
         if (isAsciiSafe) {
             disposition += `; ${formatFilename(filename)}`;
         } else {
