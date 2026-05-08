@@ -39,7 +39,7 @@ type SendFileOptions = {
     content: (
         options: SendFileContentOptions,
     ) => Promise<ReadableStream | ArrayBuffer | Uint8Array> | ReadableStream | ArrayBuffer | Uint8Array;
-    attachment?: boolean;
+    disposition?: 'attachment' | 'inline';
     name?: string;
 };
 ```
@@ -53,6 +53,7 @@ return await sendFile(event, {
     stats: () => fs.stat(filePath),
     content: (opts) => Readable.toWeb(createReadStream(filePath, opts)) as ReadableStream,
     name: 'report.pdf',
+    disposition: 'attachment', // 'inline' to render in-browser with a suggested save name
 });
 ```
 
@@ -128,7 +129,7 @@ return sendFormat(event, {
 
 ### `setResponseHeaderAttachment`
 
-Set the `Content-Disposition` header to `attachment`. When a filename is provided, adds the `filename` directive and sets `Content-Type` based on the file extension.
+Set the `Content-Disposition` header to `attachment`. When a filename is provided, adds the `filename` (and, for non-ASCII names, `filename*=UTF-8''…`) directive per RFC 6266 and sets `Content-Type` based on the file extension.
 
 ```typescript
 declare function setResponseHeaderAttachment(
@@ -139,6 +140,23 @@ declare function setResponseHeaderAttachment(
 
 ```typescript
 setResponseHeaderAttachment(event, 'data.csv');
+// Content-Disposition: attachment; filename=data.csv
+```
+
+### `setResponseHeaderInline`
+
+Set the `Content-Disposition` header to `inline`. Same encoding rules as `setResponseHeaderAttachment`. Use this when you want the browser to render the response natively (PDF viewer, image, video) but still suggest a filename if the user later saves it.
+
+```typescript
+declare function setResponseHeaderInline(
+    event: IRoutupEvent,
+    filename?: string,
+): void;
+```
+
+```typescript
+setResponseHeaderInline(event, 'invoice.pdf');
+// Content-Disposition: inline; filename=invoice.pdf
 ```
 
 ### `setResponseHeaderContentType`
