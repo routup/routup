@@ -26,7 +26,7 @@ describe('src/helpers/response/header', () => {
         expect(event.response.headers.get(HeaderName.CONTENT_TYPE))
             .toEqual('application/json; charset=utf-8');
         expect(event.response.headers.get(HeaderName.CONTENT_DISPOSITION))
-            .toEqual('attachment; filename="dummy.json"; filename*=UTF-8\'\'dummy.json');
+            .toEqual('attachment; filename=dummy.json');
     });
 
     it('should append value', () => {
