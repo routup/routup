@@ -30,11 +30,10 @@ export type SendFileStats = {
 
 export type SendFileDisposition = 'attachment' | 'inline';
 
+export type SendFileContent = ReadableStream | ArrayBuffer | Uint8Array;
 export type SendFileOptions = {
-    stats: () => Promise<SendFileStats> | SendFileStats,
-    content: (
-        options: SendFileContentOptions,
-    ) => Promise<ReadableStream | ArrayBuffer | Uint8Array> | ReadableStream | ArrayBuffer | Uint8Array,
+    stats: (() => Promise<SendFileStats> | SendFileStats) | SendFileStats,
+    content: (options: SendFileContentOptions) => Promise<SendFileContent> | SendFileContent,
     /**
      * @deprecated Use `disposition: 'attachment'` instead. Kept for backwards
      * compatibility — when `disposition` is set, it takes precedence.
@@ -48,7 +47,12 @@ export async function sendFile(
     event: IRoutupEvent,
     options: SendFileOptions,
 ) : Promise<Response> {
-    const stats = await options.stats();
+    let stats : SendFileStats;
+    if (typeof options.stats === 'function') {
+        stats = await options.stats();
+    } else {
+        stats = options.stats;
+    }
 
     const name = options.name || stats.name;
     const { headers } = event.response;
