@@ -6,6 +6,14 @@
 * **deps:** bump negotiator from 0.6.3 to 1.0.0 ([#700](https://github.com/routup/routup/issues/700)) ([84edd77](https://github.com/routup/routup/commit/84edd778b87d8baa9072319909385324f265e8a7))
 * **deps:** bump the minorandpatch group with 3 updates ([#758](https://github.com/routup/routup/issues/758)) ([c0117b3](https://github.com/routup/routup/commit/c0117b34c81f3be26f5c60a5ce71e7e81b6ed4ed))
 
+## [5.1.0](https://github.com/routup/routup/compare/v5.0.1...v5.1.0) (2026-05-08)
+
+
+### Features
+
+* align Content-Disposition with RFC 6266 and add inline support ([#885](https://github.com/routup/routup/issues/885)) ([52fae4d](https://github.com/routup/routup/commit/52fae4d6eba23be96b4094d09ea454f753e59216))
+* **response:** allow SendFileOptions.stats as a direct value ([286dacc](https://github.com/routup/routup/commit/286dacc5f47d1d450e7bb489aaafaaa20d874d1d))
+
 ## [5.0.1](https://github.com/routup/routup/compare/v5.0.0...v5.0.1) (2026-05-05)
 
 
