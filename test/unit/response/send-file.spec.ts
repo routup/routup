@@ -7,12 +7,12 @@ import {
     defineCoreHandler,
     sendFile,
 } from '../../../src';
-import type { SendFileOptions } from '../../../src';
+import type { SendFileDisposition, SendFileOptions } from '../../../src';
 import { createTestEvent, createTestRequest } from '../../helpers';
 
 const buildSendFileOptions = (
     filePath: string,
-    attachment?: boolean,
+    disposition?: SendFileDisposition,
 ): SendFileOptions => ({
     name: filePath,
     async stats() {
@@ -30,7 +30,7 @@ const buildSendFileOptions = (
         }
         return buffer;
     },
-    attachment,
+    disposition,
 });
 
 describe('src/helpers/response/send-file', () => {
@@ -62,19 +62,28 @@ describe('src/helpers/response/send-file', () => {
 
     it('should send file to download', async () => {
         const event = createTestEvent('/');
-        const response = await sendFile(event, buildSendFileOptions('test/data/dummy.json', true));
+        const response = await sendFile(event, buildSendFileOptions('test/data/dummy.json', 'attachment'));
 
         expect(response.status).toEqual(200);
         expect(response.headers.get(HeaderName.CONTENT_TYPE))
             .toEqual('application/json; charset=utf-8');
         expect(response.headers.get(HeaderName.CONTENT_DISPOSITION))
-            .toEqual('attachment; filename="dummy.json"; filename*=UTF-8\'\'dummy.json');
+            .toEqual('attachment; filename=dummy.json');
 
         const body = await response.json();
         expect(body).toEqual({
             id: 1,
             name: 'tada5hi',
         });
+    });
+
+    it('should send file inline with suggested filename', async () => {
+        const event = createTestEvent('/');
+        const response = await sendFile(event, buildSendFileOptions('test/data/dummy.json', 'inline'));
+
+        expect(response.status).toEqual(200);
+        expect(response.headers.get(HeaderName.CONTENT_DISPOSITION))
+            .toEqual('inline; filename=dummy.json');
     });
 
     it('should shrink end of range if it results in an overflow', async () => {

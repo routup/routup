@@ -28,6 +28,7 @@ Helpers are standalone, tree-shakeable functions for interacting with requests a
 | `createEventStream(event, options?)` | Create a Server-Sent Events stream |
 | `setResponseCacheHeaders(event, options?)` | Set cache-related headers |
 | `setResponseHeaderAttachment(event, filename?)` | Set Content-Disposition attachment |
+| `setResponseHeaderInline(event, filename?)` | Set Content-Disposition inline |
 | `setResponseHeaderContentType(event, type)` | Set Content-Type header |
 | `appendResponseHeader(event, name, value)` | Append to a response header |
 
