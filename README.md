@@ -21,6 +21,7 @@ Handlers return values directly — routup converts them to Web `Response` objec
 - [Features](#features)
 - [Documentation](#documentation)
 - [Usage](#usage)
+- [Templates](#templates)
 - [Plugins](#plugins)
 - [Comparison](#comparison)
 - [Contributing](#contributing)
@@ -126,6 +127,20 @@ serve(router, { port: 3000 });
 ```
 
 For runtime-specific APIs (e.g. `toNodeHandler`), use the corresponding entrypoint like `routup/node`.
+
+## Templates
+
+Scaffold a new project from any starter in [`routup/templates`](https://github.com/routup/templates) with [`degit`](https://github.com/Rich-Harris/degit):
+
+```bash
+npx degit routup/templates/node-api my-app
+```
+
+| Template | Runtime | Highlights |
+|----------|---------|------------|
+| [node-api](https://github.com/routup/templates/tree/master/node-api) | Node.js >=22 | JSON API with `@routup/body` |
+| [cloudflare-worker](https://github.com/routup/templates/tree/master/cloudflare-worker) | Cloudflare Workers | Configured with `wrangler` |
+| [bun-decorators](https://github.com/routup/templates/tree/master/bun-decorators) | Bun | Class-based routing via `@routup/decorators` |
 
 ## Plugins
 
