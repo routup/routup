@@ -1,6 +1,6 @@
 # Migrating to v5
 
-Routup v5 is a major rewrite built on [srvx](https://srvx.unjs.io/) and Web Standard APIs. Handlers now receive a single `event` object and return responses instead of mutating `res`.
+Routup v5 is a major rewrite built on Web Standard APIs. Handlers now receive a single `event` object and return responses instead of mutating `res`.
 
 ## Quick summary
 

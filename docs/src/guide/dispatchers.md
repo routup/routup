@@ -1,6 +1,6 @@
 # Serving
 
-Routup provides multiple ways to serve your application, all built on srvx for cross-runtime compatibility.
+Routup provides multiple ways to serve your application, all built on Web standard APIs for cross-runtime compatibility.
 
 ## serve()
 
@@ -15,7 +15,7 @@ router.get('/', defineCoreHandler(() => 'Hello, World!'));
 serve(router, { port: 3000 });
 ```
 
-The `serve()` function accepts the same options as srvx (port, hostname, etc.).
+The `serve()` function accepts standard server options (port, hostname, etc.).
 
 ## router.fetch()
 

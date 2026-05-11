@@ -1,6 +1,6 @@
 # Runtime Environments
 
-Routup runs on any JavaScript runtime via [srvx](https://srvx.unjs.io/). Import from `routup` — the correct runtime entry is selected automatically via conditional exports.
+Routup runs on any JavaScript runtime that supports Web standard `Request` and `Response`. Import from `routup` — the correct runtime entry is selected automatically via conditional exports.
 
 ```typescript
 import { Router, defineCoreHandler, serve } from 'routup';

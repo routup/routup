@@ -136,7 +136,7 @@ defineCoreHandler(async (event) => {
 
 ## router.fetch()
 
-You can call `router.fetch()` directly with a `Request` object to get a `Response`. This is the Web Fetch API compatible entry point that srvx calls internally:
+You can call `router.fetch()` directly with a `Request` object to get a `Response`. This is the Web Fetch API compatible entry point that runtime adapters call internally:
 
 ```typescript
 const router = new Router();

@@ -1,6 +1,6 @@
 # What is it?
 
-**Routup** is a minimalistic, runtime-agnostic HTTP routing framework built on [srvx](https://srvx.unjs.io/) and Web Standards. Handlers receive an event object (`IRoutupEvent`) and return values that are automatically converted to `Response` objects.
+**Routup** is a minimalistic, runtime-agnostic HTTP routing framework built on Web standard `Request` and `Response`. Handlers receive an event object (`IRoutupEvent`) and return values that are automatically converted to `Response` objects.
 
 It runs on Node.js, Bun, Deno, Cloudflare Workers, and any runtime that supports the Web API.
 
@@ -24,7 +24,7 @@ serve(router, { port: 3000 });
 
 ## Features
 
-- Built on srvx and Web Standards (Request/Response)
+- Built on Web standard APIs (Request/Response)
 - Return-based response model — return strings, objects, Response, streams, and more
 - Event-based handler signature: `(event) => value`
 - Runtime agnostic (Node.js, Bun, Deno, Cloudflare Workers)

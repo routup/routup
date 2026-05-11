@@ -1,6 +1,6 @@
 # Installation
 
-Install routup as a dependency. The srvx runtime is included automatically.
+Install routup as a dependency. Runtime adapters are included automatically.
 
 ```sh
 npm install routup

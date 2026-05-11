@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Routup
-description: A minimalistic, runtime-agnostic HTTP routing framework built on srvx and Web Standards.
+description: A minimalistic, runtime-agnostic HTTP routing framework built on Web standard Request and Response.
 ---
 
 <script setup>

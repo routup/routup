@@ -38,7 +38,7 @@ These are accessed directly on the event object, not through helper functions:
 
 | Property | Description |
 |----------|-------------|
-| `event.request` | The underlying `ServerRequest` (srvx) |
+| `event.request` | The underlying `ServerRequest` |
 | `event.method` | HTTP method (GET, POST, etc.) |
 | `event.path` | URL path |
 | `event.params` | Route parameters |

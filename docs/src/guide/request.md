@@ -8,7 +8,7 @@ The event provides direct access to common request data:
 
 ```typescript
 defineCoreHandler((event) => {
-    event.request;      // ServerRequest (srvx)
+    event.request;      // ServerRequest
     event.method;       // "GET", "POST", etc.
     event.path;         // URL path (e.g. "/users/123")
     event.params;       // Route parameters (e.g. { id: "123" })

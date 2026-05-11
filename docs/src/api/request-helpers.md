@@ -146,7 +146,7 @@ const host = getRequestHostName(event, { trustProxy: true });
 
 ### `getRequestIP`
 
-Get the client IP address. Uses the srvx runtime value when available, falling back to `X-Forwarded-For` header inspection when `trustProxy` is enabled.
+Get the client IP address. Uses the runtime-native value when available, falling back to `X-Forwarded-For` header inspection when `trustProxy` is enabled.
 
 ```typescript
 declare function getRequestIP(
