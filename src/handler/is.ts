@@ -1,4 +1,5 @@
-import { isInstance, isObject } from '../utils/index.ts';
+import { hasInstanceof } from '@ebec/core';
+import { isObject } from '../utils/index.ts';
 import { HandlerSymbol } from './constants.ts';
 import type { Handler } from './module.ts';
 import type { HandlerOptions } from './types.ts';
@@ -10,6 +11,6 @@ export function isHandlerOptions(input: unknown) : input is HandlerOptions {
 }
 
 export function isHandler(input: unknown): input is Handler {
-    return isInstance(input, HandlerSymbol);
+    return hasInstanceof(input, HandlerSymbol);
 }
 

@@ -1,3 +1,4 @@
+import { markInstanceof } from '@ebec/core';
 import type { MethodName } from '../constants.ts';
 import type { IDispatcher, IDispatcherEvent } from '../dispatcher/index.ts';
 import { createError, isError } from '../error/index.ts';
@@ -12,8 +13,6 @@ import type { HandlerOptions } from './types.ts';
 import { buildHandlerPathMatcher } from './utils.ts';
 
 export class Handler implements IDispatcher {
-    readonly '@instanceof' = HandlerSymbol;
-
     protected config: HandlerOptions;
 
     protected hookManager: HookManager;
@@ -36,6 +35,8 @@ export class Handler implements IDispatcher {
 
         this.pathMatcher = buildHandlerPathMatcher(this.config.path, !!this.config.method);
         this.method = this.config.method ? toMethodName(this.config.method) : undefined;
+
+        markInstanceof(this, HandlerSymbol);
     }
 
     // --------------------------------------------------

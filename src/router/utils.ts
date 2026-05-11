@@ -1,11 +1,12 @@
+import { hasInstanceof } from '@ebec/core';
 import type { Path } from '../path/index.ts';
 import { PathMatcher } from '../path/index.ts';
-import { isInstance, withLeadingSlash, withoutTrailingSlash } from '../utils/index.ts';
+import { withLeadingSlash, withoutTrailingSlash } from '../utils/index.ts';
 import { RouterSymbol } from './constants.ts';
 import type { Router } from './module.ts';
 
 export function isRouterInstance(input: unknown): input is Router {
-    return isInstance(input, RouterSymbol);
+    return hasInstanceof(input, RouterSymbol);
 }
 
 /**
