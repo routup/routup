@@ -6,6 +6,14 @@
 * **deps:** bump negotiator from 0.6.3 to 1.0.0 ([#700](https://github.com/routup/routup/issues/700)) ([84edd77](https://github.com/routup/routup/commit/84edd778b87d8baa9072319909385324f265e8a7))
 * **deps:** bump the minorandpatch group with 3 updates ([#758](https://github.com/routup/routup/issues/758)) ([c0117b3](https://github.com/routup/routup/commit/c0117b34c81f3be26f5c60a5ce71e7e81b6ed4ed))
 
+## [5.1.1](https://github.com/routup/routup/compare/v5.1.0...v5.1.1) (2026-05-11)
+
+
+### Bug Fixes
+
+* adopt ebec markInstanceof/hasInstanceof for class markers ([#890](https://github.com/routup/routup/issues/890)) ([e990b13](https://github.com/routup/routup/commit/e990b134c4cda7b6014d80a2fe982313173f33b4))
+* **deps:** bump the minorandpatch group across 1 directory with 4 updates ([#888](https://github.com/routup/routup/issues/888)) ([b15155a](https://github.com/routup/routup/commit/b15155a9346ab2c86a1fedc16a783ea19af9d0c3))
+
 ## [5.1.0](https://github.com/routup/routup/compare/v5.0.1...v5.1.0) (2026-05-08)
 
 
