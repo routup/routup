@@ -135,12 +135,15 @@ Routup is minimalistic by design. [Plugins](https://github.com/routup/plugins) e
 | [basic](https://github.com/routup/plugins/tree/master/packages/basic) | Bundle of body, cookie, and query plugins |
 | [body](https://github.com/routup/plugins/tree/master/packages/body) | Read and parse the request body |
 | [cookie](https://github.com/routup/plugins/tree/master/packages/cookie) | Read and parse request cookies |
+| [cors](https://github.com/routup/plugins/tree/master/packages/cors) | Cross-Origin Resource Sharing (CORS) middleware |
 | [decorators](https://github.com/routup/plugins/tree/master/packages/decorators) | Class, method, and parameter decorators |
+| [i18n](https://github.com/routup/plugins/tree/master/packages/i18n) | Translation and internationalization |
+| [logger](https://github.com/routup/plugins/tree/master/packages/logger) | HTTP request logger with morgan-compatible tokens and presets |
 | [prometheus](https://github.com/routup/plugins/tree/master/packages/prometheus) | Collect and serve Prometheus metrics |
 | [query](https://github.com/routup/plugins/tree/master/packages/query) | Parse URL query strings |
 | [rate-limit](https://github.com/routup/plugins/tree/master/packages/rate-limit) | Rate limit incoming requests |
 | [rate-limit-redis](https://github.com/routup/plugins/tree/master/packages/rate-limit-redis) | Redis adapter for rate-limit |
-| [swagger](https://github.com/routup/plugins/tree/master/packages/swagger) | Serve Swagger/OpenAPI docs |
+| [swagger-ui](https://github.com/routup/plugins/tree/master/packages/swagger-ui) | Mount swagger-ui-dist on any path |
 
 ## Benchmarks
 
