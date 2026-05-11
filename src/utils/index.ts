@@ -2,7 +2,6 @@ export * from './cookie.ts';
 export * from './header.ts';
 export * from './etag/index.ts';
 export * from './trust-proxy/index.ts';
-export * from './is-instance.ts';
 export * from './mime.ts';
 export * from './method.ts';
 export * from './object.ts';

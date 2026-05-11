@@ -1,3 +1,4 @@
+import { markInstanceof } from '@ebec/core';
 import { HeaderName, MethodName } from '../constants.ts';
 import { DispatcherEvent } from '../dispatcher/index.ts';
 import type { IDispatcherEvent } from '../dispatcher/index.ts';
@@ -42,8 +43,6 @@ import type {
 import { acceptsJson, buildRouterPathMatcher, isRouterInstance } from './utils.ts';
 
 export class Router implements IRouter {
-    readonly '@instanceof' = RouterSymbol;
-
     /**
      * A label for the router instance.
      */
@@ -92,6 +91,8 @@ export class Router implements IRouter {
         this.hookManager = new HookManager();
         this._options = normalizeRouterOptions(input);
         this.pathMatcher = buildRouterPathMatcher(input.path);
+
+        markInstanceof(this, RouterSymbol);
     }
 
     // --------------------------------------------------
