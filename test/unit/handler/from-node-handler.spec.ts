@@ -39,7 +39,7 @@ describe('src/handler/helpers/from-node-handler', () => {
         expect(handler.type).toBe(HandlerType.CORE);
     });
 
-    // Regression: https://github.com/Tada5hi/routup/issues/881
+    // Regression: https://github.com/routup/routup/issues/881
     it('should advance the pipeline when node middleware calls next() without ending the response', async () => {
         const router = new Router({ timeout: 1000 });
 

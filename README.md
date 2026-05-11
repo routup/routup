@@ -7,9 +7,9 @@
 # Routup 🧙‍
 
 [![npm version](https://badge.fury.io/js/routup.svg)](https://badge.fury.io/js/routup)
-[![main](https://github.com/Tada5hi/routup/actions/workflows/main.yml/badge.svg)](https://github.com/Tada5hi/routup/actions/workflows/main.yml)
-[![codecov](https://codecov.io/gh/tada5hi/routup/branch/master/graph/badge.svg?token=CLIA667K6V)](https://codecov.io/gh/tada5hi/routup)
-[![Known Vulnerabilities](https://snyk.io/test/github/Tada5hi/routup/badge.svg)](https://snyk.io/test/github/Tada5hi/routup)
+[![main](https://github.com/routup/routup/actions/workflows/main.yml/badge.svg)](https://github.com/routup/routup/actions/workflows/main.yml)
+[![codecov](https://codecov.io/gh/routup/routup/branch/master/graph/badge.svg?token=CLIA667K6V)](https://codecov.io/gh/routup/routup)
+[![Known Vulnerabilities](https://snyk.io/test/github/routup/routup/badge.svg)](https://snyk.io/test/github/routup/routup)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
 **Routup** is a minimalistic, runtime-agnostic HTTP routing framework for Node.js, Bun, Deno, and Cloudflare Workers.
@@ -22,6 +22,7 @@ Handlers return values directly — routup converts them to Web `Response` objec
 - [Documentation](#documentation)
 - [Usage](#usage)
 - [Plugins](#plugins)
+- [Comparison](#comparison)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -34,6 +35,7 @@ npm install routup --save
 ## Features
 
 - 🚀 **Runtime agnostic** — Node.js, Bun, Deno, Cloudflare Workers
+- 🌐 **Web-standard APIs** — built on `Request` / `Response` for portability
 - 📝 **Return-based handlers** — return strings, objects, streams, or `Response` directly
 - ✨ **Async middleware** — onion model with `event.next()`
 - 📌 **Lifecycle hooks** — `request`, `response`, `error` for cross-cutting concerns
@@ -144,6 +146,23 @@ Routup is minimalistic by design. [Plugins](https://github.com/routup/plugins) e
 | [rate-limit](https://github.com/routup/plugins/tree/master/packages/rate-limit) | Rate limit incoming requests |
 | [rate-limit-redis](https://github.com/routup/plugins/tree/master/packages/rate-limit-redis) | Redis adapter for rate-limit |
 | [swagger-ui](https://github.com/routup/plugins/tree/master/packages/swagger-ui) | Mount swagger-ui-dist on any path |
+
+## Comparison
+
+How routup stacks up against other popular Node.js routing frameworks. This is a best-effort summary; check each project's docs for the full picture.
+
+|                                       | routup            | [Hono](https://hono.dev) | [Express](https://expressjs.com) | [Fastify](https://fastify.dev) |
+|---------------------------------------|-------------------|--------------------------|----------------------------------|--------------------------------|
+| **Runtimes**                          | Node, Bun, Deno, Cloudflare, Service Worker | Node, Bun, Deno, Cloudflare, Lambda, Vercel | Node | Node |
+| **Web-standard `Request` / `Response`** | ✅ | ✅ | ❌ | ❌ |
+| **Return-based handlers**             | ✅ | ✅ | ❌ | ❌ |
+| **TypeScript-first**                  | ✅ | ✅ | community types | ✅ |
+| **Tree-shakeable helpers**            | ✅ | ✅ | ❌ | ❌ |
+| **Onion middleware (`next()`)**       | ✅ | ✅ | linear `next()` | lifecycle hooks |
+| **Class-based routes (decorators)**   | ✅ via plugin | ❌ | ❌ | ❌ |
+| **Express middleware bridge**         | ✅ `fromNodeHandler` | ❌ | n/a | limited |
+| **Per-handler timeout + `AbortSignal`** | ✅ | ❌ | ❌ | server-level |
+| **Schema validation built-in**        | ❌ | ❌ | ❌ | ✅ |
 
 ## Benchmarks
 
