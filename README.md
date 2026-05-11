@@ -1,6 +1,6 @@
 <div align="center">
 
-[![Routup banner](./.github/assets/banner.png)](https://routup.net)
+[![Routup banner](.github/assets/banner.png)](https://routup.dev)
 
 </div>
 
