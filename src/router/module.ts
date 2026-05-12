@@ -737,7 +737,7 @@ export class Router implements IRouter {
      * multiple paths — each mount can receive its own clone so subsequent
      * mutations on one mount do not bleed into the others.
      */
-    clone(): Router {
+    clone(): IRouter {
         const next = new Router({
             ...this._options,
             hooks: this.hooks.clone(),
