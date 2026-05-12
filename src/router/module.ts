@@ -233,7 +233,7 @@ export class Router implements IRouter {
     ): Promise<Response | undefined> {
         let response: Response | undefined;
 
-        if (fireRequestHook) {
+        if (fireRequestHook && this.hooks.hasListeners(HookName.REQUEST)) {
             await this.hooks.trigger(HookName.REQUEST, event);
         }
 
@@ -282,14 +282,18 @@ export class Router implements IRouter {
                 }
             }
 
-            await this.hooks.trigger(HookName.CHILD_MATCH, event);
-            if (event.dispatched) {
-                break;
+            if (this.hooks.hasListeners(HookName.CHILD_MATCH)) {
+                await this.hooks.trigger(HookName.CHILD_MATCH, event);
+                if (event.dispatched) {
+                    break;
+                }
             }
 
-            await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, event);
-            if (event.dispatched) {
-                break;
+            if (this.hooks.hasListeners(HookName.CHILD_DISPATCH_BEFORE)) {
+                await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, event);
+                if (event.dispatched) {
+                    break;
+                }
             }
 
             // Snapshot routing state so we can restore it if the entry yields no
@@ -352,7 +356,9 @@ export class Router implements IRouter {
             } catch (e) {
                 event.error = createError(e);
 
-                await this.hooks.trigger(HookName.ERROR, event);
+                if (this.hooks.hasListeners(HookName.ERROR)) {
+                    await this.hooks.trigger(HookName.ERROR, event);
+                }
             }
 
             if (!event.dispatched) {
@@ -361,10 +367,12 @@ export class Router implements IRouter {
                 event.params = savedParams;
             }
 
-            await this.hooks.trigger(HookName.CHILD_DISPATCH_AFTER, event);
+            if (this.hooks.hasListeners(HookName.CHILD_DISPATCH_AFTER)) {
+                await this.hooks.trigger(HookName.CHILD_DISPATCH_AFTER, event);
 
-            if (event.dispatched) {
-                break;
+                if (event.dispatched) {
+                    break;
+                }
             }
 
             stackIndex++;

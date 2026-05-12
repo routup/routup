@@ -62,9 +62,11 @@ export class Handler implements IDispatcher {
             }
         }
 
-        await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, event);
-        if (event.dispatched) {
-            return undefined;
+        if (this.hooks.hasListeners(HookName.CHILD_DISPATCH_BEFORE)) {
+            await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, event);
+            if (event.dispatched) {
+                return undefined;
+            }
         }
 
         let response: Response | undefined;
@@ -137,7 +139,9 @@ export class Handler implements IDispatcher {
         } catch (e) {
             event.error = isError(e) ? e : createError(e);
 
-            await this.hooks.trigger(HookName.ERROR, event);
+            if (this.hooks.hasListeners(HookName.ERROR)) {
+                await this.hooks.trigger(HookName.ERROR, event);
+            }
 
             if (event.dispatched) {
                 event.error = undefined;
@@ -146,7 +150,9 @@ export class Handler implements IDispatcher {
             }
         }
 
-        await this.hooks.trigger(HookName.CHILD_DISPATCH_AFTER, event);
+        if (this.hooks.hasListeners(HookName.CHILD_DISPATCH_AFTER)) {
+            await this.hooks.trigger(HookName.CHILD_DISPATCH_AFTER, event);
+        }
 
         return response;
     }
