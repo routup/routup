@@ -17,12 +17,6 @@ type HookEntry = {
 export class Hooks implements IHooks {
     protected items: Record<string, HookEntry[]>;
 
-    /**
-     * Aggregate count of registered listeners across all hook names.
-     * Maintained alongside `items` so `isEmpty()` is O(1).
-     */
-    protected listenerCount: number = 0;
-
     // --------------------------------------------------
 
     constructor() {
@@ -30,10 +24,6 @@ export class Hooks implements IHooks {
     }
 
     // --------------------------------------------------
-
-    isEmpty(): boolean {
-        return this.listenerCount === 0;
-    }
 
     addListener(
         name: HookName,
@@ -50,7 +40,6 @@ export class Hooks implements IHooks {
             i++;
         }
         this.items[name].splice(i, 0, entry);
-        this.listenerCount++;
 
         return () => {
             this.removeListener(name, fn);
@@ -67,7 +56,6 @@ export class Hooks implements IHooks {
         }
 
         if (typeof fn === 'undefined') {
-            this.listenerCount -= this.items[name].length;
             delete this.items[name];
             return;
         }
@@ -76,7 +64,6 @@ export class Hooks implements IHooks {
             const index = this.items[name].findIndex((entry) => entry.fn === fn);
             if (index !== -1) {
                 this.items[name].splice(index, 1);
-                this.listenerCount--;
             }
         }
 

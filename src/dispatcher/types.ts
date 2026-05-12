@@ -1,6 +1,10 @@
 import type { RoutupError } from '../error/module.ts';
-import type { NextFn, RoutupRequest, RoutupResponse } from '../event/types.ts';
-import type { RoutupEvent } from '../event/module.ts';
+import type {
+    IRoutupEvent,
+    NextFn,
+    RoutupRequest,
+    RoutupResponse,
+} from '../event/types.ts';
 import type { RouterPathNode } from '../router/types.ts';
 
 export interface IDispatcherEvent {
@@ -85,7 +89,7 @@ export interface IDispatcherEvent {
      *                 uses this signal instead of the dispatcher event's own signal.
      *                 Used by per-handler timeout to provide a handler-scoped signal.
      */
-    build(signal?: AbortSignal): RoutupEvent;
+    build(signal?: AbortSignal): IRoutupEvent;
 }
 
 export interface IDispatcher {

@@ -21,19 +21,11 @@ export class Handler implements IDispatcher {
 
     readonly method: MethodName | undefined;
 
-    /**
-     * Direct reference to the user function — assigned once at
-     * construction so the Router fast path can read it as a plain
-     * property (no getter call) on the hot path.
-     */
-    readonly fn: HandlerOptions['fn'];
-
     // --------------------------------------------------
 
     constructor(handler: HandlerOptions) {
         this.config = handler;
         this.hooks = new Hooks();
-        this.fn = handler.fn;
 
         this.mountHooks();
 
@@ -55,20 +47,6 @@ export class Handler implements IDispatcher {
 
     get path() {
         return this.config.path;
-    }
-
-    /**
-     * Whether this handler can be invoked via the Router's
-     * single-handler fast path. A handler is eligible when it has no
-     * per-handler timeout and no lifecycle hooks (`onBefore`, `onAfter`,
-     * `onError`) — i.e. nothing the fast path would silently skip.
-     * Error handlers are excluded too (different signature).
-     */
-    canFastPath(): boolean {
-        if (this.config.type === HandlerType.ERROR) return false;
-        if (this.config.timeout) return false;
-        if (this.config.onBefore || this.config.onAfter || this.config.onError) return false;
-        return true;
     }
 
     // --------------------------------------------------
