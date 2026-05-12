@@ -86,11 +86,6 @@ export type RouterOptionsInput = Omit<Partial<RouterOptions>, 'etag' | 'trustPro
     plugins?: Map<string, string | undefined>
 };
 
-export type RouterPathNode = {
-    readonly name?: string;
-    readonly options: Partial<RouterOptions>;
-};
-
 // --------------------------------------------------
 // Stack
 // --------------------------------------------------

@@ -28,7 +28,11 @@ import {
     PluginAlreadyInstalledError,
     isPlugin,
 } from '../plugin/index.ts';
-import { normalizeRouterOptions } from './options.ts';
+import {
+    DEFAULT_ROUTER_OPTIONS,
+    mergeRouterOptions,
+    normalizeRouterOptions,
+} from './options.ts';
 import {
     cleanDoubleSlashes,
     withLeadingSlash,
@@ -87,6 +91,14 @@ export class Router implements IRouter {
     protected _options: Partial<RouterOptions>;
 
     /**
+     * Framework defaults merged with this router's options. Used as a
+     * fast-path on the `Router.dispatch` entry when this router sits at
+     * the root of the dispatch chain — avoids re-merging defaults on
+     * every request.
+     */
+    protected _resolvedRoot: RouterOptions;
+
+    /**
      * Registry of installed plugins (name → version) on this router.
      *
      * @protected
@@ -108,6 +120,7 @@ export class Router implements IRouter {
         this.plugins = new Map<string, string | undefined>(plugins);
 
         this._options = normalizeRouterOptions(options);
+        this._resolvedRoot = mergeRouterOptions(DEFAULT_ROUTER_OPTIONS, this._options);
         this.pathMatcher = buildRouterPathMatcher(options.path);
 
         markInstanceof(this, RouterSymbol);
@@ -360,7 +373,7 @@ export class Router implements IRouter {
         if (
             !event.error &&
             !event.dispatched &&
-            event.routerPath.length === 1 &&
+            event.routerDepth === 1 &&
             event.method === MethodName.OPTIONS
         ) {
             if (event.methodsAllowed.has(MethodName.GET)) {
@@ -413,13 +426,21 @@ export class Router implements IRouter {
             }
         }
 
-        event.routerPath.push({ name: this.name, options: this._options });
+        const savedResolvedOptions = event.resolvedOptions;
+        // Fast path: when entering as the root router, the resolved
+        // options are this router's defaults-merged snapshot — no
+        // per-request merge needed.
+        event.resolvedOptions = savedResolvedOptions === DEFAULT_ROUTER_OPTIONS ?
+            this._resolvedRoot :
+            mergeRouterOptions(savedResolvedOptions, this._options);
+        event.routerDepth++;
 
         let response: Response | undefined;
         try {
             response = await this.executePipelineStep(event, 0, true);
         } finally {
-            event.routerPath.pop();
+            event.resolvedOptions = savedResolvedOptions;
+            event.routerDepth--;
 
             // Restore routing state when this router did not produce a
             // response, so the caller's pipeline (a parent router) sees its

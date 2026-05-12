@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DispatcherEvent } from '../../../src/dispatcher/module';
 import { RoutupEvent } from '../../../src/event/module';
+import { DEFAULT_ROUTER_OPTIONS, mergeRouterOptions } from '../../../src/router/options';
 import { createTestRequest } from '../../helpers';
 
 describe('src/dispatcher/module (DispatcherEvent)', () => {
@@ -158,9 +159,12 @@ describe('src/dispatcher/module (DispatcherEvent)', () => {
             expect(routup2.store.shared).toBe('yes');
         });
 
-        it('should lazily resolve routerOptions', () => {
+        it('should expose resolvedOptions as routerOptions', () => {
             const dispatch = new DispatcherEvent(createTestRequest('/'));
-            dispatch.routerPath = [{ options: { subdomainOffset: 5 } }];
+            dispatch.resolvedOptions = mergeRouterOptions(
+                DEFAULT_ROUTER_OPTIONS,
+                { subdomainOffset: 5 },
+            );
 
             const routup = dispatch.build();
 
@@ -210,7 +214,8 @@ describe('src/dispatcher/module (DispatcherEvent)', () => {
 
             expect('dispatched' in routup).toBe(false);
             expect('error' in routup).toBe(false);
-            expect('routerPath' in routup).toBe(false);
+            expect('resolvedOptions' in routup).toBe(false);
+            expect('routerDepth' in routup).toBe(false);
             expect('methodsAllowed' in routup).toBe(false);
             expect('setNext' in routup).toBe(false);
         });

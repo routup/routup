@@ -8,19 +8,9 @@ import type {
     RoutupResponse,
 } from '../event/types.ts';
 import { toResponse } from '../response/index.ts';
-import type { RouterOptions, RouterPathNode } from '../router/types.ts';
-import { buildEtagFn } from '../utils/index.ts';
+import { DEFAULT_ROUTER_OPTIONS } from '../router/options.ts';
+import type { RouterOptions } from '../router/types.ts';
 import type { IDispatcherEvent } from './types.ts';
-
-// Framework defaults applied beneath any router-level overrides. Hoisted
-// to module scope so resolveOptions() doesn't allocate a fresh defaults
-// object — including a new `etag` closure via buildEtagFn() — per request.
-const DEFAULT_ROUTER_OPTIONS: RouterOptions = {
-    trustProxy: () => false,
-    subdomainOffset: 2,
-    etag: buildEtagFn(),
-    proxyIpMax: 0,
-};
 
 export class DispatcherEvent implements IDispatcherEvent {
     readonly request: RoutupRequest;
@@ -40,7 +30,23 @@ export class DispatcherEvent implements IDispatcherEvent {
 
     error?: RoutupError;
 
-    routerPath: RouterPathNode[];
+    /**
+     * Resolved router options at the current point in the dispatch chain.
+     *
+     * Maintained eagerly by `Router.dispatch`: on entry, it merges the
+     * router's options on top of the parent-resolved value; on exit, it
+     * restores the previous value. Replaces the previous lazy walk over
+     * `routerPath` inside `resolveOptions()` — handler reads via
+     * `event.routerOptions` are now O(1).
+     */
+    resolvedOptions: RouterOptions;
+
+    /**
+     * Depth of the active dispatch chain (number of routers currently in
+     * play). Used by the OPTIONS auto-Allow gate to detect the top-level
+     * router, replacing the previous `routerPath.length === 1` check.
+     */
+    routerDepth: number;
 
     protected _dispatched: boolean;
 
@@ -81,7 +87,8 @@ export class DispatcherEvent implements IDispatcherEvent {
         this.path = this._url.pathname;
         this.mountPath = '/';
         this.params = {};
-        this.routerPath = [];
+        this.resolvedOptions = DEFAULT_ROUTER_OPTIONS;
+        this.routerDepth = 0;
         this.methodsAllowed = new Set();
         this._dispatched = false;
         this._nextCalled = false;
@@ -184,6 +191,7 @@ export class DispatcherEvent implements IDispatcherEvent {
     // ------------------------------------------------------------------------
 
     build(signal?: AbortSignal): RoutupEvent {
+        const resolved = this.resolvedOptions;
         return new RoutupEvent({
             request: this.request,
             params: this.params,
@@ -195,7 +203,7 @@ export class DispatcherEvent implements IDispatcherEvent {
             response: this.response,
             store: this.store,
             signal: signal ?? this.signal,
-            routerOptions: () => this.resolveOptions(),
+            routerOptions: () => resolved,
             next: (event: IRoutupEvent, error?: Error) => this.next(event, error),
         });
     }
@@ -208,21 +216,5 @@ export class DispatcherEvent implements IDispatcherEvent {
         }
 
         return this._store!;
-    }
-
-    protected resolveOptions(): RouterOptions {
-        const resolved: RouterOptions = { ...DEFAULT_ROUTER_OPTIONS };
-
-        for (let i = 0; i < this.routerPath.length; i++) {
-            const options = this.routerPath[i]!.options;
-            for (const key in options) {
-                const value = (options as Record<string, unknown>)[key];
-                if (typeof value !== 'undefined') {
-                    (resolved as Record<string, unknown>)[key] = value;
-                }
-            }
-        }
-
-        return resolved;
     }
 }

@@ -1,50 +1,46 @@
 import { describe, expect, it } from 'vitest';
-import { DispatcherEvent } from '../../../src/dispatcher/module';
-import type { RouterPathNode } from '../../../src/router';
-import { createTestRequest } from '../../helpers';
+import { DEFAULT_ROUTER_OPTIONS, mergeRouterOptions } from '../../../src/router/options';
+import type { RouterOptions } from '../../../src/router/types';
 
-function node(options: RouterPathNode['options']): RouterPathNode {
-    return { options };
-}
-
-function createEvent(nodes: RouterPathNode[]) {
-    const event = new DispatcherEvent(createTestRequest('/'));
-    event.routerPath = nodes;
-    return event.build();
+function merge(...layers: Partial<RouterOptions>[]): RouterOptions {
+    let resolved: RouterOptions = DEFAULT_ROUTER_OPTIONS;
+    for (const layer of layers) {
+        resolved = mergeRouterOptions(resolved, layer);
+    }
+    return resolved;
 }
 
 describe('src/router/options', () => {
     it('should return default when no options set', () => {
-        const event = createEvent([]);
-        expect(typeof event.routerOptions.trustProxy).toBe('function');
-        expect(event.routerOptions.trustProxy('127.0.0.1', 0)).toBe(false);
+        const resolved = merge();
+        expect(typeof resolved.trustProxy).toBe('function');
+        expect(resolved.trustProxy('127.0.0.1', 0)).toBe(false);
     });
 
     it('should return default when path is empty', () => {
-        expect(createEvent([]).routerOptions.subdomainOffset).toBe(2);
+        expect(merge().subdomainOffset).toBe(2);
     });
 
     it('should return option set for router', () => {
-        const event = createEvent([node({ subdomainOffset: 5 })]);
-        expect(event.routerOptions.subdomainOffset).toBe(5);
+        expect(merge({ subdomainOffset: 5 }).subdomainOffset).toBe(5);
     });
 
     it('should walk path from end to find nearest option', () => {
-        const parent = node({ subdomainOffset: 3 });
-        const child = node({ subdomainOffset: 7 });
+        const parent = { subdomainOffset: 3 };
+        const child = { subdomainOffset: 7 };
 
-        expect(createEvent([parent, child]).routerOptions.subdomainOffset).toBe(7);
-        expect(createEvent([parent]).routerOptions.subdomainOffset).toBe(3);
+        expect(merge(parent, child).subdomainOffset).toBe(7);
+        expect(merge(parent).subdomainOffset).toBe(3);
     });
 
     it('should fall back to parent when child has no option', () => {
-        const parent = node({ subdomainOffset: 4 });
-        const child = node({});
+        const parent = { subdomainOffset: 4 };
+        const child = {};
 
-        expect(createEvent([parent, child]).routerOptions.subdomainOffset).toBe(4);
+        expect(merge(parent, child).subdomainOffset).toBe(4);
     });
 
-    it('should return default when no node has the option', () => {
-        expect(createEvent([node({})]).routerOptions.subdomainOffset).toBe(2);
+    it('should return default when no layer has the option', () => {
+        expect(merge({}).subdomainOffset).toBe(2);
     });
 });
