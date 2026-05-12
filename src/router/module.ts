@@ -33,12 +33,11 @@ import {
     cleanDoubleSlashes,
     withLeadingSlash,
 } from '../utils/index.ts';
-import { RouterPipelineStep, RouterStackEntryType, RouterSymbol } from './constants.ts';
+import { RouterStackEntryType, RouterSymbol } from './constants.ts';
 import type {
     IRouter,
     RouterOptions,
     RouterOptionsInput,
-    RouterPipelineContext,
     StackEntry,
 } from './types.ts';
 import { acceptsJson, buildRouterPathMatcher, isRouterInstance } from './utils.ts';
@@ -203,247 +202,188 @@ export class Router implements IRouter {
 
     // --------------------------------------------------
 
-    protected async executePipelineStep(context: RouterPipelineContext): Promise<void> {
-        while (context.step !== RouterPipelineStep.FINISH) {
-            switch (context.step) {
-                case RouterPipelineStep.START:
-                    await this.executePipelineStepStart(context); break;
-                case RouterPipelineStep.LOOKUP:
-                    await this.executePipelineStepLookup(context); break;
-                case RouterPipelineStep.CHILD_BEFORE:
-                    await this.executePipelineStepChildBefore(context); break;
-                case RouterPipelineStep.CHILD_DISPATCH:
-                    await this.executePipelineStepChildDispatch(context); break;
-                case RouterPipelineStep.CHILD_AFTER:
-                    await this.executePipelineStepChildAfter(context); break;
-                default:
-                    context.step = RouterPipelineStep.FINISH; break;
-            }
+    /**
+     * Walk the router's stack starting at `startIndex`, firing lifecycle
+     * hooks in order and dispatching the first matching handler/router.
+     *
+     * Replaces the previous START/LOOKUP/CHILD_BEFORE/CHILD_DISPATCH/CHILD_AFTER/FINISH
+     * state machine with a single linear walk. `fireRequestHook` is true on
+     * the outermost invocation from `dispatch()` and false on recursive
+     * invocations from middleware `event.next()` — REQUEST fires once per
+     * router; RESPONSE fires at the end of each (sub-)walk to match the
+     * pre-collapse behavior.
+     */
+    protected async executePipelineStep(
+        event: IDispatcherEvent,
+        startIndex: number,
+        fireRequestHook: boolean,
+    ): Promise<Response | undefined> {
+        let response: Response | undefined;
+
+        if (fireRequestHook) {
+            await this.hooks.trigger(HookName.REQUEST, event);
         }
 
-        await this.executePipelineStepFinish(context);
-    }
+        let stackIndex = startIndex;
 
-    protected async executePipelineStepStart(context: RouterPipelineContext): Promise<void> {
-        await this.hooks.trigger(HookName.REQUEST, context.event);
-
-        if (context.event.dispatched) {
-            context.step = RouterPipelineStep.FINISH;
-        } else {
-            context.step = RouterPipelineStep.LOOKUP;
-        }
-    }
-
-    protected async executePipelineStepLookup(context: RouterPipelineContext): Promise<void> {
-        while (
-            !context.event.dispatched &&
-            context.stackIndex < this.stack.length
-        ) {
-            const entry = this.stack[context.stackIndex]!;
+        while (!event.dispatched && stackIndex < this.stack.length) {
+            const entry = this.stack[stackIndex]!;
 
             if (entry.type === RouterStackEntryType.HANDLER) {
                 const handler = entry.data;
 
                 if (
-                    (context.event.error && handler.type === HandlerType.CORE) ||
-                    (!context.event.error && handler.type === HandlerType.ERROR)
+                    (event.error && handler.type === HandlerType.CORE) ||
+                    (!event.error && handler.type === HandlerType.ERROR)
                 ) {
-                    context.stackIndex++;
+                    stackIndex++;
                     continue;
                 }
 
                 const match = entry.pathMatcher ?
-                    entry.pathMatcher.test(context.event.path) :
-                    handler.matchPath(context.event.path);
+                    entry.pathMatcher.test(event.path) :
+                    handler.matchPath(event.path);
 
-                if (match) {
-                    const method = entry.method ?? handler.method;
+                if (!match) {
+                    stackIndex++;
+                    continue;
+                }
 
-                    if (method) {
-                        context.event.methodsAllowed.add(method);
+                const method = entry.method ?? handler.method;
+                if (method) {
+                    event.methodsAllowed.add(method);
+                }
+
+                if (!matchHandlerMethod(method, event.method as MethodName)) {
+                    stackIndex++;
+                    continue;
+                }
+            } else {
+                const match = entry.pathMatcher ?
+                    entry.pathMatcher.test(event.path) :
+                    entry.data.matchPath(event.path);
+
+                if (!match) {
+                    stackIndex++;
+                    continue;
+                }
+            }
+
+            await this.hooks.trigger(HookName.CHILD_MATCH, event);
+            if (event.dispatched) {
+                break;
+            }
+
+            await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, event);
+            if (event.dispatched) {
+                break;
+            }
+
+            // Snapshot routing state so we can restore it if the entry yields no
+            // response. Without this, a child router that walks past its last
+            // handler (e.g. its tail middleware calls next()) would leave the
+            // event's path stripped of this entry's mount prefix, and subsequent
+            // siblings in the parent's stack would fail to match.
+            const savedPath = event.path;
+            const savedMountPath = event.mountPath;
+            const savedParams = event.params;
+
+            if (entry.type === RouterStackEntryType.ROUTER && entry.pathMatcher) {
+                // Router mount: strip the matched prefix off event.path so the
+                // child router's pipeline sees a mount-relative path. The child
+                // router's intrinsic pathMatcher (if any) is applied on top
+                // inside its own dispatch.
+                const output = entry.pathMatcher.exec(event.path);
+                if (typeof output !== 'undefined') {
+                    event.mountPath = cleanDoubleSlashes(`${event.mountPath}/${output.path}`);
+
+                    if (event.path === output.path) {
+                        event.path = '/';
+                    } else {
+                        event.path = withLeadingSlash(event.path.substring(output.path.length));
                     }
 
-                    if (matchHandlerMethod(method, context.event.method as MethodName)) {
-                        await this.hooks.trigger(HookName.CHILD_MATCH, context.event);
+                    event.params = {
+                        ...event.params,
+                        ...output.params,
+                    };
+                }
+            } else if (entry.type === RouterStackEntryType.HANDLER && entry.pathMatcher) {
+                // Handler mount: extract route params from the mount matcher.
+                // Handlers don't strip the path — they're leaves.
+                const output = entry.pathMatcher.exec(event.path);
+                if (typeof output !== 'undefined') {
+                    event.params = {
+                        ...event.params,
+                        ...output.params,
+                    };
+                }
+            }
 
-                        if (context.event.dispatched) {
-                            context.step = RouterPipelineStep.FINISH;
-                        } else {
-                            context.step = RouterPipelineStep.CHILD_BEFORE;
-                        }
-
-                        return;
+            try {
+                const currentIndex = stackIndex;
+                event.setNext(async (error?: Error) => {
+                    if (error) {
+                        event.error = createError(error);
                     }
+
+                    return this.executePipelineStep(event, currentIndex + 1, false);
+                });
+
+                const dispatchResponse = await entry.data.dispatch(event);
+
+                if (dispatchResponse) {
+                    response = dispatchResponse;
+                    event.dispatched = true;
                 }
+            } catch (e) {
+                event.error = createError(e);
 
-                context.stackIndex++;
-                continue;
+                await this.hooks.trigger(HookName.ERROR, event);
             }
 
-            const match = entry.pathMatcher ?
-                entry.pathMatcher.test(context.event.path) :
-                entry.data.matchPath(context.event.path);
-
-            if (match) {
-                await this.hooks.trigger(HookName.CHILD_MATCH, context.event);
-
-                if (context.event.dispatched) {
-                    context.step = RouterPipelineStep.FINISH;
-                } else {
-                    context.step = RouterPipelineStep.CHILD_BEFORE;
-                }
-
-                return;
+            if (!event.dispatched) {
+                event.path = savedPath;
+                event.mountPath = savedMountPath;
+                event.params = savedParams;
             }
 
-            context.stackIndex++;
-        }
+            await this.hooks.trigger(HookName.CHILD_DISPATCH_AFTER, event);
 
-        context.step = RouterPipelineStep.FINISH;
-    }
-
-    protected async executePipelineStepChildBefore(context: RouterPipelineContext): Promise<void> {
-        await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, context.event);
-
-        if (context.event.dispatched) {
-            context.step = RouterPipelineStep.FINISH;
-        } else {
-            context.step = RouterPipelineStep.CHILD_DISPATCH;
-        }
-    }
-
-    protected async executePipelineStepChildAfter(context: RouterPipelineContext): Promise<void> {
-        await this.hooks.trigger(HookName.CHILD_DISPATCH_AFTER, context.event);
-
-        if (context.event.dispatched) {
-            context.step = RouterPipelineStep.FINISH;
-        } else {
-            context.step = RouterPipelineStep.LOOKUP;
-        }
-    }
-
-    protected async executePipelineStepChildDispatch(context: RouterPipelineContext): Promise<void> {
-        const entry = this.stack[context.stackIndex];
-
-        if (context.event.dispatched || typeof entry === 'undefined') {
-            context.step = RouterPipelineStep.FINISH;
-            return;
-        }
-
-        const { event } = context;
-
-        // Snapshot routing state so we can restore it if the entry yields no
-        // response. Without this, a child router that walks past its last
-        // handler (e.g. its tail middleware calls next()) would leave the
-        // event's path stripped of this entry's mount prefix, and subsequent
-        // siblings in the parent's stack would fail to match.
-        const savedPath = event.path;
-        const savedMountPath = event.mountPath;
-        const savedParams = event.params;
-
-        if (entry.type === RouterStackEntryType.ROUTER && entry.pathMatcher) {
-            // Router mount: strip the matched prefix off event.path so the
-            // child router's pipeline sees a mount-relative path. The child
-            // router's intrinsic pathMatcher (if any) is applied on top
-            // inside its own dispatch.
-            const output = entry.pathMatcher.exec(event.path);
-            if (typeof output !== 'undefined') {
-                event.mountPath = cleanDoubleSlashes(`${event.mountPath}/${output.path}`);
-
-                if (event.path === output.path) {
-                    event.path = '/';
-                } else {
-                    event.path = withLeadingSlash(event.path.substring(output.path.length));
-                }
-
-                event.params = {
-                    ...event.params,
-                    ...output.params,
-                };
+            if (event.dispatched) {
+                break;
             }
-        } else if (entry.type === RouterStackEntryType.HANDLER && entry.pathMatcher) {
-            // Handler mount: extract route params from the mount matcher.
-            // Handlers don't strip the path — they're leaves.
-            const output = entry.pathMatcher.exec(event.path);
-            if (typeof output !== 'undefined') {
-                event.params = {
-                    ...event.params,
-                    ...output.params,
-                };
-            }
-        }
 
-        try {
-            event.setNext(async (error?: Error) => {
-                if (error) {
-                    event.error = createError(error);
-                }
-
-                // Continue pipeline from the next stack item
-                const nextContext: RouterPipelineContext = {
-                    step: RouterPipelineStep.LOOKUP,
-                    event,
-                    stackIndex: context.stackIndex + 1,
-                    response: undefined,
-                };
-
-                await this.executePipelineStep(nextContext);
-
-                return nextContext.response;
-            });
-
-            const response = await entry.data.dispatch(event);
-
-            if (response) {
-                context.response = response;
-                event.dispatched = true;
-            }
-        } catch (e) {
-            event.error = createError(e);
-
-            await this.hooks.trigger(HookName.ERROR, event);
-        }
-
-        if (!event.dispatched) {
-            event.path = savedPath;
-            event.mountPath = savedMountPath;
-            event.params = savedParams;
-        }
-
-        context.stackIndex++;
-        context.step = RouterPipelineStep.CHILD_AFTER;
-    }
-
-    protected async executePipelineStepFinish(context: RouterPipelineContext): Promise<void> {
-        if (context.event.error || context.event.dispatched) {
-            return this.hooks.trigger(HookName.RESPONSE, context.event);
+            stackIndex++;
         }
 
         if (
-            !context.event.dispatched &&
-            context.event.routerPath.length === 1 &&
-            context.event.method &&
-            context.event.method === MethodName.OPTIONS
+            !event.error &&
+            !event.dispatched &&
+            event.routerPath.length === 1 &&
+            event.method === MethodName.OPTIONS
         ) {
-            if (context.event.methodsAllowed.has(MethodName.GET)) {
-                context.event.methodsAllowed.add(MethodName.HEAD);
+            if (event.methodsAllowed.has(MethodName.GET)) {
+                event.methodsAllowed.add(MethodName.HEAD);
             }
 
-            const options = [...context.event.methodsAllowed]
+            const options = [...event.methodsAllowed]
                 .map((key) => key.toUpperCase())
                 .join(',');
 
-            const optionsHeaders = new Headers(context.event.response.headers);
+            const optionsHeaders = new Headers(event.response.headers);
             optionsHeaders.set(HeaderName.ALLOW, options);
-            context.response = new Response(options, {
-                status: context.event.response.status || 200,
+            response = new Response(options, {
+                status: event.response.status || 200,
                 headers: optionsHeaders,
             });
 
-            context.event.dispatched = true;
+            event.dispatched = true;
         }
 
-        return this.hooks.trigger(HookName.RESPONSE, context.event);
+        await this.hooks.trigger(HookName.RESPONSE, event);
+
+        return response;
     }
 
     // --------------------------------------------------
@@ -473,16 +413,11 @@ export class Router implements IRouter {
             }
         }
 
-        const context: RouterPipelineContext = {
-            step: RouterPipelineStep.START,
-            event,
-            stackIndex: 0,
-        };
-
         event.routerPath.push({ name: this.name, options: this._options });
 
+        let response: Response | undefined;
         try {
-            await this.executePipelineStep(context);
+            response = await this.executePipelineStep(event, 0, true);
         } finally {
             event.routerPath.pop();
 
@@ -496,7 +431,7 @@ export class Router implements IRouter {
             }
         }
 
-        return context.response;
+        return response;
     }
 
     // --------------------------------------------------

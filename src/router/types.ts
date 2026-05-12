@@ -1,5 +1,5 @@
 import type { MethodName } from '../constants.ts';
-import type { IDispatcher, IDispatcherEvent } from '../dispatcher/index.ts';
+import type { IDispatcher } from '../dispatcher/index.ts';
 import type { RoutupRequest } from '../event/index.ts';
 import type {
     Handler,
@@ -22,7 +22,7 @@ import type {
     TrustProxyFn,
     TrustProxyInput,
 } from '../utils/index.ts';
-import type { RouterPipelineStep, RouterStackEntryType  } from './constants.ts';
+import type { RouterStackEntryType  } from './constants.ts';
 
 // --------------------------------------------------
 // Router Options
@@ -141,15 +141,8 @@ export type StackHandlerEntry = {
 export type StackEntry = StackRouterEntry | StackHandlerEntry;
 
 // --------------------------------------------------
-// Pipeline
+// Router Interface
 // --------------------------------------------------
-
-export type RouterPipelineContext = {
-    step: RouterPipelineStep,
-    event: IDispatcherEvent,
-    stackIndex: number,
-    response?: Response,
-};
 
 export interface IRouter extends IDispatcher {
     /**
