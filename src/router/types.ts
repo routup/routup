@@ -5,12 +5,13 @@ import type {
     Handler,
     HandlerOptions,
 } from '../handler/index.ts';
-import type {
-    HookDefaultListener,
-    HookErrorListener,
-    HookListener,
-    HookName,
-    HookUnsubscribeFn,
+import {
+    type HookDefaultListener,
+    type HookErrorListener,
+    type HookListener,
+    type HookName,
+    type HookUnsubscribeFn,
+    type IHooks,
 } from '../hook/index.ts';
 
 import type { Path, PathMatcher } from '../path/index.ts';
@@ -68,6 +69,9 @@ export type RouterOptions = {
 export type RouterOptionsInput = Omit<Partial<RouterOptions>, 'etag' | 'trustProxy'> & {
     etag?: EtagInput,
     trustProxy?: TrustProxyInput,
+
+    hooks?: IHooks,
+    plugins?: Map<string, string | undefined>
 };
 
 export type RouterPathNode = {
@@ -83,6 +87,11 @@ export type StackRouterEntry = {
     type: typeof RouterStackEntryType.ROUTER,
     data: IRouter,
     /**
+     * Original mount path the entry was registered with, retained so
+     * `Router.clone()` can re-register the entry via the public API.
+     */
+    path?: Path,
+    /**
      * Mount-specific path matcher.
      *
      * Set when the router was mounted under a path (e.g. `parent.use('/api', child)`).
@@ -94,6 +103,11 @@ export type StackRouterEntry = {
 export type StackHandlerEntry = {
     type: typeof RouterStackEntryType.HANDLER,
     data: Handler,
+    /**
+     * Original mount path the entry was registered with, retained so
+     * `Router.clone()` can re-register the entry via the public API.
+     */
+    path?: Path,
     /**
      * Mount-specific path matcher.
      *
@@ -141,6 +155,17 @@ export interface IRouter extends IDispatcher {
      * Test if a path matches this router's mount path.
      */
     matchPath(path: string): boolean;
+
+    /**
+     * Return a new router that mirrors this one but owns independent
+     * mountable state — fresh stack of shallow-copied entries (handlers and
+     * child routers shared by reference), fresh `Hooks` seeded with the
+     * current listeners, shallow copy of options, and a fresh plugins map.
+     *
+     * Intended for mounting the same logical router under multiple paths
+     * without sharing mutable state across mount points.
+     */
+    clone(): IRouter;
 
     /**
      * Check if a plugin with the given name is installed on this router.

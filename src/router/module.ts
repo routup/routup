@@ -18,8 +18,9 @@ import type {
     HookErrorListener,
     HookListener,
     HookUnsubscribeFn,
+    IHooks,
 } from '../hook/index.ts';
-import { HookManager, HookName } from '../hook/index.ts';
+import { HookName, Hooks } from '../hook/index.ts';
 import type { Path, PathMatcher } from '../path/index.ts';
 import { isPath } from '../path/index.ts';
 import type { Plugin, PluginInstallContext } from '../plugin/index.ts';
@@ -41,6 +42,16 @@ import type {
     StackEntry,
 } from './types.ts';
 import { acceptsJson, buildRouterPathMatcher, isRouterInstance } from './utils.ts';
+
+const METHOD_TO_REGISTER = {
+    [MethodName.GET]: 'get',
+    [MethodName.POST]: 'post',
+    [MethodName.PUT]: 'put',
+    [MethodName.PATCH]: 'patch',
+    [MethodName.DELETE]: 'delete',
+    [MethodName.HEAD]: 'head',
+    [MethodName.OPTIONS]: 'options',
+} as const satisfies Record<MethodName, keyof Router>;
 
 export class Router implements IRouter {
     /**
@@ -65,11 +76,11 @@ export class Router implements IRouter {
     protected pathMatcher: PathMatcher | undefined;
 
     /**
-     * A hook manager.
+     * Lifecycle hook registry.
      *
      * @protected
      */
-    protected hookManager: HookManager;
+    protected hooks: IHooks;
 
     /**
      * Normalized options for this router instance.
@@ -88,9 +99,17 @@ export class Router implements IRouter {
     constructor(input: RouterOptionsInput = {}) {
         this.name = input.name;
 
-        this.hookManager = new HookManager();
-        this._options = normalizeRouterOptions(input);
-        this.pathMatcher = buildRouterPathMatcher(input.path);
+        const {
+            hooks = new Hooks(),
+            plugins = new Map<string, string | undefined>(),
+            ...options
+        } = input;
+
+        this.hooks = hooks;
+        this.plugins = new Map<string, string | undefined>(plugins);
+
+        this._options = normalizeRouterOptions(options);
+        this.pathMatcher = buildRouterPathMatcher(options.path);
 
         markInstanceof(this, RouterSymbol);
     }
@@ -206,7 +225,7 @@ export class Router implements IRouter {
     }
 
     protected async executePipelineStepStart(context: RouterPipelineContext): Promise<void> {
-        await this.hookManager.trigger(HookName.REQUEST, context.event);
+        await this.hooks.trigger(HookName.REQUEST, context.event);
 
         if (context.event.dispatched) {
             context.step = RouterPipelineStep.FINISH;
@@ -245,7 +264,7 @@ export class Router implements IRouter {
                     }
 
                     if (matchHandlerMethod(method, context.event.method as MethodName)) {
-                        await this.hookManager.trigger(HookName.CHILD_MATCH, context.event);
+                        await this.hooks.trigger(HookName.CHILD_MATCH, context.event);
 
                         if (context.event.dispatched) {
                             context.step = RouterPipelineStep.FINISH;
@@ -266,7 +285,7 @@ export class Router implements IRouter {
                 entry.data.matchPath(context.event.path);
 
             if (match) {
-                await this.hookManager.trigger(HookName.CHILD_MATCH, context.event);
+                await this.hooks.trigger(HookName.CHILD_MATCH, context.event);
 
                 if (context.event.dispatched) {
                     context.step = RouterPipelineStep.FINISH;
@@ -284,7 +303,7 @@ export class Router implements IRouter {
     }
 
     protected async executePipelineStepChildBefore(context: RouterPipelineContext): Promise<void> {
-        await this.hookManager.trigger(HookName.CHILD_DISPATCH_BEFORE, context.event);
+        await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, context.event);
 
         if (context.event.dispatched) {
             context.step = RouterPipelineStep.FINISH;
@@ -294,7 +313,7 @@ export class Router implements IRouter {
     }
 
     protected async executePipelineStepChildAfter(context: RouterPipelineContext): Promise<void> {
-        await this.hookManager.trigger(HookName.CHILD_DISPATCH_AFTER, context.event);
+        await this.hooks.trigger(HookName.CHILD_DISPATCH_AFTER, context.event);
 
         if (context.event.dispatched) {
             context.step = RouterPipelineStep.FINISH;
@@ -382,7 +401,7 @@ export class Router implements IRouter {
         } catch (e) {
             event.error = createError(e);
 
-            await this.hookManager.trigger(HookName.ERROR, event);
+            await this.hooks.trigger(HookName.ERROR, event);
         }
 
         if (!event.dispatched) {
@@ -397,7 +416,7 @@ export class Router implements IRouter {
 
     protected async executePipelineStepFinish(context: RouterPipelineContext): Promise<void> {
         if (context.event.error || context.event.dispatched) {
-            return this.hookManager.trigger(HookName.RESPONSE, context.event);
+            return this.hooks.trigger(HookName.RESPONSE, context.event);
         }
 
         if (
@@ -424,7 +443,7 @@ export class Router implements IRouter {
             context.event.dispatched = true;
         }
 
-        return this.hookManager.trigger(HookName.RESPONSE, context.event);
+        return this.hooks.trigger(HookName.RESPONSE, context.event);
     }
 
     // --------------------------------------------------
@@ -585,6 +604,7 @@ export class Router implements IRouter {
                 type: RouterStackEntryType.HANDLER,
                 data: handler,
                 method,
+                path,
                 pathMatcher: buildHandlerPathMatcher(path ?? handler.path, true),
             });
         }
@@ -592,13 +612,13 @@ export class Router implements IRouter {
 
     // --------------------------------------------------
 
-    use(router: Router): this;
+    use(router: IRouter): this;
 
     use(handler: Handler | HandlerOptions): this;
 
     use(plugin: Plugin): this;
 
-    use(path: Path, router: Router): this;
+    use(path: Path, router: IRouter): this;
 
     use(path: Path, handler: Handler | HandlerOptions): this;
 
@@ -616,6 +636,7 @@ export class Router implements IRouter {
                 this.stack.push({
                     type: RouterStackEntryType.ROUTER,
                     data: item,
+                    path,
                     pathMatcher: buildRouterPathMatcher(path),
                 });
                 continue;
@@ -630,6 +651,7 @@ export class Router implements IRouter {
                 this.stack.push({
                     type: RouterStackEntryType.HANDLER,
                     data: handler,
+                    path,
                 });
                 continue;
             }
@@ -638,6 +660,7 @@ export class Router implements IRouter {
                 this.stack.push({
                     type: RouterStackEntryType.HANDLER,
                     data: item,
+                    path,
                     pathMatcher: buildHandlerPathMatcher(path, !!item.method),
                 });
                 continue;
@@ -699,6 +722,62 @@ export class Router implements IRouter {
     //---------------------------------------------------------------------------------
 
     /**
+     * Return a new `Router` that mirrors this one but owns independent
+     * mountable state.
+     *
+     * The new router has:
+     * - a fresh `stack` array of shallow-copied entries (handlers and child
+     *   routers are shared by reference; only the wrapping entries are new)
+     * - the same `pathMatcher` reference (it is stateless)
+     * - a fresh `Hooks` instance seeded with the current listeners
+     * - a shallow copy of `_options`
+     * - a fresh `plugins` map with the same entries
+     *
+     * Use this when the same logical router needs to be mounted under
+     * multiple paths — each mount can receive its own clone so subsequent
+     * mutations on one mount do not bleed into the others.
+     */
+    clone(): IRouter {
+        const next = new Router({
+            ...this._options,
+            hooks: this.hooks.clone(),
+            plugins: this.plugins,
+        });
+
+        for (const entry of this.stack) {
+            if (entry.type === RouterStackEntryType.ROUTER) {
+                const data = entry.data.clone();
+                if (entry.path) {
+                    next.use(entry.path, data);
+                } else {
+                    next.use(data);
+                }
+                continue;
+            }
+
+            if (entry.method) {
+                const register = METHOD_TO_REGISTER[entry.method];
+                if (entry.path) {
+                    next[register](entry.path, entry.data);
+                } else {
+                    next[register](entry.data);
+                }
+                continue;
+            }
+
+            if (entry.path) {
+                next.use(entry.path, entry.data);
+            } else {
+                next.use(entry.data);
+            }
+        }
+
+        return next;
+    }
+
+    //---------------------------------------------------------------------------------
+
+    /**
      * Add a hook listener.
      *
      * @param name
@@ -726,7 +805,7 @@ export class Router implements IRouter {
     ): HookUnsubscribeFn;
 
     on(name: HookName, fn: HookListener, priority?: number): HookUnsubscribeFn {
-        return this.hookManager.addListener(name, fn, priority);
+        return this.hooks.addListener(name, fn, priority);
     }
 
     /**
@@ -740,12 +819,12 @@ export class Router implements IRouter {
 
     off(name: HookName, fn?: HookListener): this {
         if (typeof fn === 'undefined') {
-            this.hookManager.removeListener(name);
+            this.hooks.removeListener(name);
 
             return this;
         }
 
-        this.hookManager.removeListener(name, fn);
+        this.hooks.removeListener(name, fn);
         return this;
     }
 }
