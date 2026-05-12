@@ -3,7 +3,7 @@ import type { MethodName } from '../constants.ts';
 import type { IDispatcher, IDispatcherEvent } from '../dispatcher/index.ts';
 import { createError, isError } from '../error/index.ts';
 import type { IRoutupEvent } from '../event/index.ts';
-import { HookManager, HookName } from '../hook/index.ts';
+import { HookName, Hooks, type IHooks } from '../hook/index.ts';
 import type { PathMatcher } from '../path/index.ts';
 import { toResponse } from '../response/index.ts';
 import type { RouterOptions } from '../router/types.ts';
@@ -15,7 +15,7 @@ import { buildHandlerPathMatcher } from './utils.ts';
 export class Handler implements IDispatcher {
     protected config: HandlerOptions;
 
-    protected hookManager: HookManager;
+    protected hooks: IHooks;
 
     protected pathMatcher: PathMatcher | undefined;
 
@@ -25,7 +25,7 @@ export class Handler implements IDispatcher {
 
     constructor(handler: HandlerOptions) {
         this.config = handler;
-        this.hookManager = new HookManager();
+        this.hooks = new Hooks();
 
         this.mountHooks();
 
@@ -62,7 +62,7 @@ export class Handler implements IDispatcher {
             }
         }
 
-        await this.hookManager.trigger(HookName.CHILD_DISPATCH_BEFORE, event);
+        await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, event);
         if (event.dispatched) {
             return undefined;
         }
@@ -137,7 +137,7 @@ export class Handler implements IDispatcher {
         } catch (e) {
             event.error = isError(e) ? e : createError(e);
 
-            await this.hookManager.trigger(HookName.ERROR, event);
+            await this.hooks.trigger(HookName.ERROR, event);
 
             if (event.dispatched) {
                 event.error = undefined;
@@ -146,7 +146,7 @@ export class Handler implements IDispatcher {
             }
         }
 
-        await this.hookManager.trigger(HookName.CHILD_DISPATCH_AFTER, event);
+        await this.hooks.trigger(HookName.CHILD_DISPATCH_AFTER, event);
 
         return response;
     }
@@ -269,15 +269,15 @@ export class Handler implements IDispatcher {
 
     protected mountHooks() {
         if (this.config.onBefore) {
-            this.hookManager.addListener(HookName.CHILD_DISPATCH_BEFORE, this.config.onBefore);
+            this.hooks.addListener(HookName.CHILD_DISPATCH_BEFORE, this.config.onBefore);
         }
 
         if (this.config.onAfter) {
-            this.hookManager.addListener(HookName.CHILD_DISPATCH_AFTER, this.config.onAfter);
+            this.hooks.addListener(HookName.CHILD_DISPATCH_AFTER, this.config.onAfter);
         }
 
         if (this.config.onError) {
-            this.hookManager.addListener(HookName.ERROR, this.config.onError);
+            this.hooks.addListener(HookName.ERROR, this.config.onError);
         }
     }
 }

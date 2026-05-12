@@ -6,6 +6,7 @@ import type {
     HookErrorListener,
     HookListener,
     HookUnsubscribeFn,
+    IHooks,
 } from './types.ts';
 
 type HookEntry = {
@@ -13,7 +14,7 @@ type HookEntry = {
     priority: number;
 };
 
-export class HookManager {
+export class Hooks implements IHooks {
     protected items: Record<string, HookEntry[]>;
 
     // --------------------------------------------------
@@ -69,6 +70,28 @@ export class HookManager {
         if (this.items[name].length === 0) {
             delete this.items[name];
         }
+    }
+
+    // --------------------------------------------------
+
+    /**
+     * Create a new `Hooks` instance seeded with the same listeners as this
+     * one.
+     *
+     * Listener functions are shared by reference; priority and ordering are
+     * preserved. Future mutations on the returned instance do not affect this
+     * one (and vice versa).
+     */
+    clone(): IHooks {
+        const next = new Hooks();
+        const names = Object.keys(this.items);
+        for (const name of names) {
+            const entries = this.items[name]!;
+            for (const entry of entries) {
+                next.addListener(name as HookName, entry.fn, entry.priority);
+            }
+        }
+        return next;
     }
 
     // --------------------------------------------------
