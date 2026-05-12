@@ -21,6 +21,13 @@ export interface IHooks {
 
     removeListener(name: HookName, fn?: HookListener): void;
 
+    /**
+     * Returns true if no listeners are registered for any hook name.
+     * O(1) check used by the Router fast path to gate skipping the
+     * pipeline entirely.
+     */
+    isEmpty(): boolean;
+
     clone(): IHooks;
 
     trigger(

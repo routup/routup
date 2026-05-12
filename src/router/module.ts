@@ -28,6 +28,7 @@ import {
     PluginAlreadyInstalledError,
     isPlugin,
 } from '../plugin/index.ts';
+import { toResponse } from '../response/index.ts';
 import { normalizeRouterOptions } from './options.ts';
 import {
     cleanDoubleSlashes,
@@ -40,6 +41,7 @@ import type {
     RouterOptionsInput,
     RouterPipelineContext,
     StackEntry,
+    StackHandlerEntry,
 } from './types.ts';
 import { acceptsJson, buildRouterPathMatcher, isRouterInstance } from './utils.ts';
 
@@ -131,6 +133,26 @@ export class Router implements IRouter {
      * runs the pipeline, and returns a Response (with 404/500 fallbacks).
      */
     async fetch(request: RoutupRequest): Promise<Response> {
+        // Fast path: a single CORE handler bound directly to this root
+        // router with no hooks, no timeouts, no mount path, and no
+        // per-handler hooks. Skips the pipeline state machine, the
+        // routerPath push/pop, and all hook-trigger awaits.
+        if (
+            this.stack.length === 1 &&
+            this.pathMatcher === undefined &&
+            this._options.timeout === undefined &&
+            this._options.handlerTimeout === undefined &&
+            this.hooks.isEmpty()
+        ) {
+            const entry = this.stack[0]!;
+            if (
+                entry.type === RouterStackEntryType.HANDLER &&
+                entry.data.canFastPath()
+            ) {
+                return this.fetchFast(request, entry as StackHandlerEntry);
+            }
+        }
+
         const event = new DispatcherEvent(request);
 
         let response: Response | undefined;
@@ -181,6 +203,54 @@ export class Router implements IRouter {
         }
 
         return this.buildFallbackResponse(request, event, 404, 'Not Found');
+    }
+
+    /**
+     * Single-handler fast path. Preconditions checked by the caller.
+     *
+     * Skips the dispatch pipeline state machine, hook triggers,
+     * routerPath chain, RouterPipelineContext allocation, and the
+     * Handler.dispatch wrapper. Pushes router options into the
+     * routerPath so toResponse() sees configured `etag`, `trustProxy`,
+     * etc. instead of framework defaults.
+     */
+    protected async fetchFast(request: RoutupRequest, entry: StackHandlerEntry): Promise<Response> {
+        const event = new DispatcherEvent(request);
+        event.routerPath.push({ name: this.name, options: this._options });
+
+        const method = entry.method ?? entry.data.method;
+        if (!matchHandlerMethod(method, event.method as MethodName)) {
+            return this.buildFallbackResponse(request, event, 404, 'Not Found');
+        }
+
+        if (entry.pathMatcher) {
+            const m = entry.pathMatcher.exec(event.path);
+            if (!m) {
+                return this.buildFallbackResponse(request, event, 404, 'Not Found');
+            }
+            if (m.params && Object.keys(m.params).length > 0) {
+                event.params = m.params;
+            }
+        }
+
+        if (method) {
+            event.methodsAllowed.add(method);
+        }
+
+        try {
+            // canFastPath() guarantees a CORE handler, so fn has the
+            // single-argument signature.
+            const fn = entry.data.fn as (event: IDispatcherEvent) => unknown;
+            const result = await fn(event);
+            if (typeof result === 'undefined') {
+                return this.buildFallbackResponse(request, event, 404, 'Not Found');
+            }
+            const response = await toResponse(result, event);
+            return response ?? this.buildFallbackResponse(request, event, 404, 'Not Found');
+        } catch (e) {
+            const err = createError(e);
+            return this.buildFallbackResponse(request, event, err.status || 500, err.message);
+        }
     }
 
     protected buildFallbackResponse(request: RoutupRequest, event: IDispatcherEvent, status: number, message: string): Response {
@@ -586,7 +656,13 @@ export class Router implements IRouter {
             }
 
             let handler: Handler;
-            if (isHandlerOptions(element)) {
+            // Check isHandler (instanceof brand) BEFORE isHandlerOptions
+            // (structural). Handler exposes `fn` and `type` as fields and
+            // would otherwise match the structural check and get wrapped
+            // into a fresh Handler with an empty config.
+            if (isHandler(element)) {
+                handler = element;
+            } else if (isHandlerOptions(element)) {
                 // Construct a fresh Handler from a copy of the options so the
                 // user's options object is never mutated.
                 handler = new Handler({
@@ -594,8 +670,6 @@ export class Router implements IRouter {
                     method,
                     path: path ?? element.path,
                 });
-            } else if (isHandler(element)) {
-                handler = element;
             } else {
                 continue;
             }
@@ -642,6 +716,18 @@ export class Router implements IRouter {
                 continue;
             }
 
+            // Check isHandler (instanceof brand) BEFORE isHandlerOptions
+            // (structural) — see useForMethod for the same reasoning.
+            if (isHandler(item)) {
+                this.stack.push({
+                    type: RouterStackEntryType.HANDLER,
+                    data: item,
+                    path,
+                    pathMatcher: buildHandlerPathMatcher(path, !!item.method),
+                });
+                continue;
+            }
+
             if (isHandlerOptions(item)) {
                 const handler = new Handler({
                     ...item,
@@ -652,16 +738,6 @@ export class Router implements IRouter {
                     type: RouterStackEntryType.HANDLER,
                     data: handler,
                     path,
-                });
-                continue;
-            }
-
-            if (isHandler(item)) {
-                this.stack.push({
-                    type: RouterStackEntryType.HANDLER,
-                    data: item,
-                    path,
-                    pathMatcher: buildHandlerPathMatcher(path, !!item.method),
                 });
                 continue;
             }
