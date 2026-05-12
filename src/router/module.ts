@@ -2,7 +2,7 @@ import { markInstanceof } from '@ebec/core';
 import { HeaderName, MethodName } from '../constants.ts';
 import { DispatcherEvent } from '../dispatcher/index.ts';
 import type { IDispatcherEvent } from '../dispatcher/index.ts';
-import type { RoutupRequest } from '../event/index.ts';
+import type { IRoutupEvent, RoutupRequest } from '../event/index.ts';
 import { createError } from '../error/index.ts';
 import {
     Handler,
@@ -237,15 +237,17 @@ export class Router implements IRouter {
             event.methodsAllowed.add(method);
         }
 
+        const handlerEvent = event.build();
+
         try {
             // canFastPath() guarantees a CORE handler, so fn has the
             // single-argument signature.
-            const fn = entry.data.fn as (event: IDispatcherEvent) => unknown;
-            const result = await fn(event);
+            const fn = entry.data.fn as (event: IRoutupEvent) => unknown;
+            const result = await fn(handlerEvent);
             if (typeof result === 'undefined') {
                 return this.buildFallbackResponse(request, event, 404, 'Not Found');
             }
-            const response = await toResponse(result, event);
+            const response = await toResponse(result, handlerEvent);
             return response ?? this.buildFallbackResponse(request, event, 404, 'Not Found');
         } catch (e) {
             const err = createError(e);

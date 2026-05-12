@@ -22,7 +22,7 @@ const DEFAULT_ROUTER_OPTIONS: RouterOptions = {
     proxyIpMax: 0,
 };
 
-export class DispatcherEvent implements IDispatcherEvent, IRoutupEvent {
+export class DispatcherEvent implements IDispatcherEvent {
     readonly request: RoutupRequest;
 
     params: Record<string, any>;
@@ -72,24 +72,6 @@ export class DispatcherEvent implements IDispatcherEvent, IRoutupEvent {
      */
     protected _nextResult?: Promise<Response | undefined>;
 
-    /**
-     * Lazily-computed search params (most handlers don't read them).
-     */
-    protected _searchParams?: URLSearchParams;
-
-    /**
-     * Cached resolved router options.
-     */
-    protected _routerOptions?: RouterOptions;
-
-    /**
-     * Deferred resolver used by whenNextCalled().
-     */
-    protected _nextCalledDeferred?: {
-        promise: Promise<void>,
-        resolve: () => void,
-    };
-
     // ------------------------------------------------------------------------
 
     constructor(request: RoutupRequest) {
@@ -103,68 +85,6 @@ export class DispatcherEvent implements IDispatcherEvent, IRoutupEvent {
         this.methodsAllowed = new Set();
         this._dispatched = false;
         this._nextCalled = false;
-    }
-
-    // ------------------------------------------------------------------------
-    // IRoutupEvent compatibility — exposed so the Router fast path can
-    // hand user handlers the dispatcher event directly without first
-    // allocating a RoutupEvent wrapper via build().
-
-    get headers(): Headers {
-        return this.request.headers;
-    }
-
-    get searchParams(): URLSearchParams {
-        if (!this._searchParams) {
-            this._searchParams = new URLSearchParams(this._url.search);
-        }
-        return this._searchParams;
-    }
-
-    get routerOptions(): RouterOptions {
-        if (!this._routerOptions) {
-            this._routerOptions = this.resolveOptions();
-        }
-        return this._routerOptions;
-    }
-
-    get store(): Record<string | symbol, unknown> {
-        if (!this._store) {
-            this._store = Object.create(null) as Record<string | symbol, unknown>;
-        }
-        return this._store!;
-    }
-
-    get nextCalled(): boolean {
-        return this._nextCalled;
-    }
-
-    get nextResult(): Promise<Response | undefined> | undefined {
-        return this._nextResult;
-    }
-
-    whenNextCalled(): Promise<void> {
-        if (!this._nextCalledDeferred) {
-            let resolve!: () => void;
-            const promise = new Promise<void>((r) => { resolve = r; });
-            this._nextCalledDeferred = { promise, resolve };
-            if (this._nextCalled) {
-                resolve();
-            }
-        }
-        return this._nextCalledDeferred.promise;
-    }
-
-    /**
-     * IRoutupEvent.next() — public continuation.
-     *
-     * Forwards to the internal _invokeNext (renamed to avoid colliding
-     * with the protected next(event, error) signature kept for the
-     * chain dispatcher path, which still needs to thread the per-handler
-     * RoutupEvent into _next).
-     */
-    next(error?: Error): Promise<Response | undefined> {
-        return this._invokeNext(this, error);
     }
 
     // ------------------------------------------------------------------------
@@ -234,9 +154,9 @@ export class DispatcherEvent implements IDispatcherEvent, IRoutupEvent {
 
     // ------------------------------------------------------------------------
 
-    protected _invokeNext(event: IRoutupEvent, error?: Error): Promise<Response | undefined> {
+    protected async next(event: IRoutupEvent, error?: Error): Promise<Response | undefined> {
         if (this._nextCalled) {
-            return this._nextResult ?? Promise.resolve(undefined);
+            return this._nextResult;
         }
         this._nextCalled = true;
 
@@ -244,11 +164,7 @@ export class DispatcherEvent implements IDispatcherEvent, IRoutupEvent {
             this._nextResult = this._next(event, error);
         }
 
-        if (this._nextCalledDeferred) {
-            this._nextCalledDeferred.resolve();
-        }
-
-        return this._nextResult ?? Promise.resolve(undefined);
+        return this._nextResult;
     }
 
     setNext(fn?: NextFn): void {
@@ -263,7 +179,6 @@ export class DispatcherEvent implements IDispatcherEvent, IRoutupEvent {
 
         this._nextCalled = false;
         this._nextResult = undefined;
-        this._nextCalledDeferred = undefined;
     }
 
     // ------------------------------------------------------------------------
@@ -281,11 +196,19 @@ export class DispatcherEvent implements IDispatcherEvent, IRoutupEvent {
             store: this.store,
             signal: signal ?? this.signal,
             routerOptions: () => this.resolveOptions(),
-            next: (event: IRoutupEvent, error?: Error) => this._invokeNext(event, error),
+            next: (event: IRoutupEvent, error?: Error) => this.next(event, error),
         });
     }
 
     // ------------------------------------------------------------------------
+
+    protected get store(): Record<string | symbol, unknown> {
+        if (!this._store) {
+            this._store = Object.create(null) as Record<string | symbol, unknown>;
+        }
+
+        return this._store!;
+    }
 
     protected resolveOptions(): RouterOptions {
         const resolved: RouterOptions = { ...DEFAULT_ROUTER_OPTIONS };

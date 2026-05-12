@@ -62,12 +62,24 @@ export type RouterOptions = {
 
     subdomainOffset: number,
     proxyIpMax: number,
-    etag: EtagFn,
+    /**
+     * ETag generator, or `null` to disable ETag/304 entirely.
+     *
+     * Kept as a literal `null` (rather than a no-op function) so the
+     * response pipeline can branch synchronously and skip the
+     * `await applyEtag(...)` microtask hop on the hot path.
+     */
+    etag: EtagFn | null,
     trustProxy: TrustProxyFn,
 };
 
 export type RouterOptionsInput = Omit<Partial<RouterOptions>, 'etag' | 'trustProxy'> & {
-    etag?: EtagInput,
+    /**
+     * Accepts the user-facing `EtagInput` (boolean/options/function) and
+     * also the post-normalization `null` sentinel — letting `Router.clone()`
+     * spread already-normalized options back into a new Router constructor.
+     */
+    etag?: EtagInput | null,
     trustProxy?: TrustProxyInput,
 
     hooks?: IHooks,

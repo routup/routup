@@ -1,22 +1,16 @@
 import type { RoutupError } from '../error/module.ts';
-import type { IRoutupEvent, NextFn } from '../event/types.ts';
+import type { NextFn, RoutupRequest, RoutupResponse } from '../event/types.ts';
 import type { RoutupEvent } from '../event/module.ts';
 import type { RouterPathNode } from '../router/types.ts';
 
-/**
- * Internal dispatcher view of the request lifecycle.
- *
- * Extends the user-facing `IRoutupEvent` so the dispatcher can hand
- * the same event to handlers without a wrapper allocation (the fast
- * path), while also exposing the mutable internals (path mutation
- * across nested routers, pipeline state, error accumulation) that
- * user handlers don't need.
- */
-export interface IDispatcherEvent extends Omit<IRoutupEvent, 'params'> {
+export interface IDispatcherEvent {
     /**
-     * Route parameters — mutable here (replaced during nested-router
-     * mount-prefix stripping). User handlers receive this via the
-     * read-only `IRoutupEvent.params` view.
+     * The srvx ServerRequest (extends Web Standard Request).
+     */
+    readonly request: RoutupRequest;
+
+    /**
+     * Route parameters extracted from the URL path pattern.
      */
     params: Record<string, any>;
 
@@ -26,9 +20,19 @@ export interface IDispatcherEvent extends Omit<IRoutupEvent, 'params'> {
     path: string;
 
     /**
+     * HTTP method (GET, POST, PUT, etc.).
+     */
+    readonly method: string;
+
+    /**
      * Accumulated mount path from nested routers.
      */
     mountPath: string;
+
+    /**
+     * Response accumulator — set status/headers before returning a plain value.
+     */
+    readonly response: RoutupResponse;
 
     /**
      * Whether a response has been produced.
@@ -47,8 +51,11 @@ export interface IDispatcherEvent extends Omit<IRoutupEvent, 'params'> {
     routerPath: RouterPathNode[];
 
     /**
-     * Abort signal for cooperative cancellation. Settable (the global
-     * timeout in `Router.fetch` substitutes a controller-backed signal).
+     * Abort signal for cooperative cancellation.
+     *
+     * When a `timeout` router option is set, this signal aborts after the
+     * specified duration. Handlers can pass it to fetch(), streams, or other
+     * AbortSignal-aware APIs.
      */
     signal: AbortSignal;
 
