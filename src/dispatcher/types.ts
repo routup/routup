@@ -5,7 +5,7 @@ import type {
     RoutupRequest,
     RoutupResponse,
 } from '../event/types.ts';
-import type { RouterOptions } from '../router/types.ts';
+import type { RouterPathNode } from '../router/types.ts';
 
 export interface IDispatcherEvent {
     /**
@@ -49,20 +49,10 @@ export interface IDispatcherEvent {
     error?: RoutupError;
 
     /**
-     * Resolved router options at the current point in the dispatch chain.
-     *
-     * Maintained eagerly by `Router.dispatch`: routers push their merged
-     * options on entry and restore the previous value on exit. Reads from
-     * `event.routerOptions` are O(1) — no walk over a stack of nodes.
+     * Router stack for nesting tracking.
+     * Used internally by router options resolution.
      */
-    resolvedOptions: RouterOptions;
-
-    /**
-     * Depth of the active dispatch chain — number of routers currently in
-     * play. Used to detect the top-level router (for the OPTIONS auto-Allow
-     * response).
-     */
-    routerDepth: number;
+    routerPath: RouterPathNode[];
 
     /**
      * Abort signal for cooperative cancellation.
