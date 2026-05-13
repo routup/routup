@@ -8,8 +8,8 @@ Hooks let you listen to lifecycle events during request processing. They can ins
 
 | Hook | Fires when |
 |------|-----------|
-| `request` | A request enters the router |
-| `response` | The router has produced a response |
+| `start` | A request enters the router (once per `Router.dispatch`) |
+| `end` | The router has produced a response (once per `Router.dispatch`) |
 | `error` | An error occurs during dispatch |
 | `childMatch` | A matching child handler/router is found |
 | `childDispatchBefore` | Before dispatching to a matched child |
@@ -28,7 +28,7 @@ Hooks let you listen to lifecycle events during request processing. They can ins
 Use `router.on()` to register hook listeners. It returns an unsubscribe function:
 
 ```typescript
-const unsubscribe = router.on('request', (event) => {
+const unsubscribe = router.on('start', (event) => {
     console.log(`${event.method} ${event.path}`);
 });
 
@@ -41,7 +41,7 @@ unsubscribe();
 Hook listeners receive the event object with access to:
 
 ```typescript
-router.on('request', (event) => {
+router.on('start', (event) => {
     event.request;      // ServerRequest
     event.method;       // HTTP method
     event.path;         // Request path
@@ -60,34 +60,37 @@ Hooks support both synchronous and asynchronous listeners:
 
 ```typescript
 // Sync
-router.on('request', (event) => {
+router.on('start', (event) => {
     // synchronous logic
 });
 
 // Async
-router.on('request', async (event) => {
+router.on('start', async (event) => {
     await someAsyncOperation();
 });
 ```
 
 ## Router Hooks
 
-### request
+### start
 
-Triggered when a request enters the router:
+Triggered when a request enters the router. Fires once per
+`Router.dispatch` call — middleware that re-enters the pipeline via
+`event.next()` does not re-trigger it.
 
 ```typescript
-router.on('request', (event) => {
+router.on('start', (event) => {
     console.log('incoming request:', event.path);
 });
 ```
 
-### response
+### end
 
-Triggered when the router has produced a response:
+Triggered when the router has produced a response. Fires once per
+`Router.dispatch` call (symmetric with `start`).
 
 ```typescript
-router.on('response', (event) => {
+router.on('end', (event) => {
     console.log('response sent for:', event.path);
 });
 ```

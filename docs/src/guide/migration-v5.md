@@ -183,8 +183,8 @@ event.searchParams.getAll('tag');
 
 | v4 | v5 |
 |----|-----|
-| `router.on('dispatchStart', fn)` | `router.on('request', fn)` |
-| `router.on('dispatchEnd', fn)` | `router.on('response', fn)` |
+| `router.on('dispatchStart', fn)` | `router.on('start', fn)` |
+| `router.on('dispatchEnd', fn)` | `router.on('end', fn)` |
 | `router.on('error', fn)` | `router.on('error', fn)` |
 | `router.on('childMatch', fn)` | `router.on('childMatch', fn)` |
 | `router.on('childDispatchBefore', fn)` | `router.on('childDispatchBefore', fn)` |
