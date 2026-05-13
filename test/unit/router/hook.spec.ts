@@ -253,4 +253,23 @@ describe('src/router/hooks', () => {
         expect(onBefore).toHaveBeenCalled();
         expect(onAfter).toHaveBeenCalled();
     });
+
+    it('should fire REQUEST and RESPONSE exactly once when middleware calls event.next()', async () => {
+        const router = new Router();
+        router.use(defineCoreHandler(async (event) => event.next()));
+        router.use(defineCoreHandler(() => 'ok'));
+
+        const request = vi.fn();
+        const response = vi.fn();
+
+        router.on(HookName.REQUEST, () => { request(); });
+        router.on(HookName.RESPONSE, () => { response(); });
+
+        const res = await router.fetch(createTestRequest('/'));
+
+        expect(res.status).toEqual(200);
+        expect(await res.text()).toEqual('ok');
+        expect(request).toHaveBeenCalledTimes(1);
+        expect(response).toHaveBeenCalledTimes(1);
+    });
 });

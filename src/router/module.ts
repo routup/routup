@@ -207,20 +207,23 @@ export class Router implements IRouter {
      * hooks in order and dispatching the first matching handler/router.
      *
      * Replaces the previous START/LOOKUP/CHILD_BEFORE/CHILD_DISPATCH/CHILD_AFTER/FINISH
-     * state machine with a single linear walk. `fireRequestHook` is true on
-     * the outermost invocation from `dispatch()` and false on recursive
-     * invocations from middleware `event.next()` — REQUEST fires once per
-     * router; RESPONSE fires at the end of each (sub-)walk to match the
-     * pre-collapse behavior.
+     * state machine with a single linear walk.
+     *
+     * `fireBoundaryHooks` is true on the outermost invocation from `dispatch()`
+     * and false on recursive invocations from middleware `event.next()` —
+     * REQUEST and RESPONSE bracket this router's contribution to the dispatch
+     * and fire exactly once per `Router.dispatch` call (not per nested
+     * `setNext` recursion). Nested routers get their own boundary firings
+     * via their own `dispatch()` invocations.
      */
     protected async executePipelineStep(
         event: IDispatcherEvent,
         startIndex: number,
-        fireRequestHook: boolean,
+        fireBoundaryHooks: boolean,
     ): Promise<Response | undefined> {
         let response: Response | undefined;
 
-        if (fireRequestHook && this.hooks.hasListeners(HookName.REQUEST)) {
+        if (fireBoundaryHooks && this.hooks.hasListeners(HookName.REQUEST)) {
             await this.hooks.trigger(HookName.REQUEST, event);
         }
 
@@ -389,7 +392,9 @@ export class Router implements IRouter {
             event.dispatched = true;
         }
 
-        await this.hooks.trigger(HookName.RESPONSE, event);
+        if (fireBoundaryHooks && this.hooks.hasListeners(HookName.RESPONSE)) {
+            await this.hooks.trigger(HookName.RESPONSE, event);
+        }
 
         return response;
     }
