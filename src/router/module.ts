@@ -226,8 +226,8 @@ export class Router implements IRouter {
     }
 
     protected async executePipelineStepStart(context: RouterPipelineContext): Promise<void> {
-        if (this.hooks.hasListeners(HookName.REQUEST)) {
-            await this.hooks.trigger(HookName.REQUEST, context.event);
+        if (this.hooks.hasListeners(HookName.START)) {
+            await this.hooks.trigger(HookName.START, context.event);
         }
 
         if (context.event.dispatched) {
@@ -493,14 +493,13 @@ export class Router implements IRouter {
         try {
             await this.executePipelineStep(context);
 
-            // Fire RESPONSE here (not inside the pipeline) so it runs
-            // exactly once per `Router.dispatch` call. The setNext
-            // recursion only re-enters `executePipelineStep`, never
-            // `dispatch`, so nested router walks naturally skip this.
-            // Nested routers get their own RESPONSE firing via their
-            // own `dispatch()` invocation.
-            if (this.hooks.hasListeners(HookName.RESPONSE)) {
-                await this.hooks.trigger(HookName.RESPONSE, event);
+            // Fire END here (not inside the pipeline) so it runs exactly
+            // once per `Router.dispatch` call. The setNext recursion only
+            // re-enters `executePipelineStep`, never `dispatch`, so nested
+            // middleware walks naturally skip this. Nested routers get
+            // their own END firing via their own `dispatch()` invocation.
+            if (this.hooks.hasListeners(HookName.END)) {
+                await this.hooks.trigger(HookName.END, event);
             }
         } finally {
             event.routerPath.pop();
@@ -809,8 +808,8 @@ export class Router implements IRouter {
      * @param fn
      */
     on(
-        name: typeof HookName.REQUEST |
-            typeof HookName.RESPONSE |
+        name: typeof HookName.START |
+            typeof HookName.END |
             typeof HookName.CHILD_DISPATCH_BEFORE |
             typeof HookName.CHILD_DISPATCH_AFTER,
         fn: HookDefaultListener,

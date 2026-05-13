@@ -233,8 +233,8 @@ export interface IRouter extends IDispatcher {
      * Add a hook listener.
      */
     on(
-        name: typeof HookName.REQUEST |
-            typeof HookName.RESPONSE |
+        name: typeof HookName.START |
+            typeof HookName.END |
             typeof HookName.CHILD_DISPATCH_BEFORE |
             typeof HookName.CHILD_DISPATCH_AFTER,
         fn: HookDefaultListener,
