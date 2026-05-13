@@ -210,7 +210,7 @@ export class DispatcherEvent implements IDispatcherEvent {
         return this._store!;
     }
 
-    protected resolveOptions(): RouterOptions {
+    resolveOptions(): RouterOptions {
         const resolved: RouterOptions = { ...DEFAULT_ROUTER_OPTIONS };
 
         for (let i = 0; i < this.routerPath.length; i++) {

@@ -5,7 +5,7 @@ import type {
     RoutupRequest,
     RoutupResponse,
 } from '../event/types.ts';
-import type { RouterPathNode } from '../router/types.ts';
+import type { RouterOptions, RouterPathNode } from '../router/types.ts';
 
 export interface IDispatcherEvent {
     /**
@@ -90,6 +90,18 @@ export interface IDispatcherEvent {
      *                 Used by per-handler timeout to provide a handler-scoped signal.
      */
     build(signal?: AbortSignal): IRoutupEvent;
+
+    /**
+     * Resolve the effective router options at the current point in the
+     * dispatch chain — framework defaults merged with each router's
+     * options walked from `routerPath` (innermost wins).
+     *
+     * Exposed so `Handler.dispatch` can read `routerOptions` directly to
+     * decide on per-handler timeout without first wrapping into a
+     * `RoutupEvent` via `build()`. Each call recomputes; callers that
+     * read repeatedly should cache the result locally.
+     */
+    resolveOptions(): RouterOptions;
 }
 
 export interface IDispatcher {

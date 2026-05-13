@@ -806,6 +806,7 @@ export class Router implements IRouter {
      *
      * @param name
      * @param fn
+     * @param priority
      */
     on(
         name: typeof HookName.START |
