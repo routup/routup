@@ -1,5 +1,5 @@
 import type { MethodName } from '../constants.ts';
-import type { IDispatcher } from '../dispatcher/index.ts';
+import type { IDispatcher, IDispatcherEvent } from '../dispatcher/index.ts';
 import type { RoutupRequest } from '../event/index.ts';
 import type {
     Handler,
@@ -22,7 +22,7 @@ import type {
     TrustProxyFn,
     TrustProxyInput,
 } from '../utils/index.ts';
-import type { RouterStackEntryType  } from './constants.ts';
+import type { RouterPipelineStep, RouterStackEntryType  } from './constants.ts';
 
 // --------------------------------------------------
 // Router Options
@@ -141,8 +141,26 @@ export type StackHandlerEntry = {
 export type StackEntry = StackRouterEntry | StackHandlerEntry;
 
 // --------------------------------------------------
-// Router Interface
+// Pipeline
 // --------------------------------------------------
+
+export type RouterPipelineContext = {
+    step: RouterPipelineStep,
+    event: IDispatcherEvent,
+    stackIndex: number,
+    response?: Response,
+    /**
+     * Whether this is the outer pipeline call for the current router
+     * (set by `Router.dispatch`) vs. a nested re-entry from middleware
+     * `event.next()` via `setNext` (set to `false` there).
+     *
+     * Gates the RESPONSE hook in `executePipelineStepFinish` so it fires
+     * exactly once per `Router.dispatch` call instead of once per
+     * pipeline recursion. REQUEST is already only-once because nested
+     * calls start at LOOKUP (skipping the START step).
+     */
+    fireBoundaryHooks: boolean,
+};
 
 export interface IRouter extends IDispatcher {
     /**
