@@ -214,7 +214,7 @@ export class DispatcherEvent implements IDispatcherEvent {
         const resolved: RouterOptions = { ...DEFAULT_ROUTER_OPTIONS };
 
         for (let i = 0; i < this.routerPath.length; i++) {
-            const options = this.routerPath[i]!.options;
+            const { options } = this.routerPath[i]!;
             for (const key in options) {
                 const value = (options as Record<string, unknown>)[key];
                 if (typeof value !== 'undefined') {
