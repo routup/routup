@@ -390,15 +390,14 @@ export class Router implements IRouter {
                     event.error = createError(error);
                 }
 
-                // Continue pipeline from the next stack item. `fireBoundaryHooks`
-                // is false here so this nested re-entry skips the RESPONSE hook
-                // — the outer Router.dispatch call owns that firing.
+                // Continue pipeline from the next stack item. RESPONSE is
+                // not fired here — `Router.dispatch` owns that firing, so
+                // nested re-entry naturally skips it.
                 const nextContext: RouterPipelineContext = {
                     step: RouterPipelineStep.LOOKUP,
                     event,
                     stackIndex: context.stackIndex + 1,
                     response: undefined,
-                    fireBoundaryHooks: false,
                 };
 
                 await this.executePipelineStep(nextContext);
@@ -454,10 +453,6 @@ export class Router implements IRouter {
 
             context.event.dispatched = true;
         }
-
-        if (context.fireBoundaryHooks && this.hooks.hasListeners(HookName.RESPONSE)) {
-            await this.hooks.trigger(HookName.RESPONSE, context.event);
-        }
     }
 
     // --------------------------------------------------
@@ -491,13 +486,22 @@ export class Router implements IRouter {
             step: RouterPipelineStep.START,
             event,
             stackIndex: 0,
-            fireBoundaryHooks: true,
         };
 
         event.routerPath.push({ name: this.name, options: this._options });
 
         try {
             await this.executePipelineStep(context);
+
+            // Fire RESPONSE here (not inside the pipeline) so it runs
+            // exactly once per `Router.dispatch` call. The setNext
+            // recursion only re-enters `executePipelineStep`, never
+            // `dispatch`, so nested router walks naturally skip this.
+            // Nested routers get their own RESPONSE firing via their
+            // own `dispatch()` invocation.
+            if (this.hooks.hasListeners(HookName.RESPONSE)) {
+                await this.hooks.trigger(HookName.RESPONSE, event);
+            }
         } finally {
             event.routerPath.pop();
 

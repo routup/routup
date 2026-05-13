@@ -149,17 +149,6 @@ export type RouterPipelineContext = {
     event: IDispatcherEvent,
     stackIndex: number,
     response?: Response,
-    /**
-     * Whether this is the outer pipeline call for the current router
-     * (set by `Router.dispatch`) vs. a nested re-entry from middleware
-     * `event.next()` via `setNext` (set to `false` there).
-     *
-     * Gates the RESPONSE hook in `executePipelineStepFinish` so it fires
-     * exactly once per `Router.dispatch` call instead of once per
-     * pipeline recursion. REQUEST is already only-once because nested
-     * calls start at LOOKUP (skipping the START step).
-     */
-    fireBoundaryHooks: boolean,
 };
 
 export interface IRouter extends IDispatcher {
