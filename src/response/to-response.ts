@@ -5,16 +5,28 @@ function stripWeakPrefix(etag: string): string {
     return etag.startsWith('W/') ? etag.slice(2) : etag;
 }
 
+/**
+ * Compute an ETag and conditionally return a 304, or set the header and
+ * return undefined to let the caller emit the full response. Always
+ * async because the ETag generator may be async (and typically is, via
+ * `uncrypto`).
+ */
 async function applyEtag(
     body: string,
     event: IRoutupEvent,
     headers: Headers,
 ): Promise<Response | undefined> {
+    // etag === false short-circuit is handled by the caller so this
+    // function isn't even invoked on the hot path.
     const etagFn = event.routerOptions.etag;
-    if (!etagFn) return undefined;
+    if (!etagFn) {
+        return undefined;
+    }
 
     const etag = await etagFn(body);
-    if (!etag) return undefined;
+    if (!etag) {
+        return undefined;
+    }
 
     headers.set('etag', etag);
 
@@ -29,10 +41,22 @@ async function applyEtag(
     return undefined;
 }
 
-export async function toResponse(
+/**
+ * Convert a handler's return value into a Web `Response`.
+ *
+ * Returns synchronously for the common cases (string, JSON object,
+ * binary, stream, blob) when ETag generation is disabled. Returns a
+ * `Promise` when an ETag must be computed (the generator is async).
+ *
+ * Callers that want the async return uniformly can `await` the result
+ * — `await` on a non-Promise still works but pays a microtask hop.
+ * The Router fast path branches on `instanceof Promise` to keep the
+ * sync return truly sync.
+ */
+export function toResponse(
     value: unknown,
     event: IRoutupEvent,
-): Promise<Response | undefined> {
+): Response | undefined | Promise<Response | undefined> {
     if (value === undefined) {
         return undefined;
     }
@@ -58,8 +82,12 @@ export async function toResponse(
             headers.set('content-type', 'text/plain; charset=utf-8');
         }
 
-        const cached = await applyEtag(value, event, headers);
-        if (cached) return cached;
+        if (event.routerOptions.etag) {
+            return applyEtag(value, event, headers).then((cached) => cached ?? new Response(value, {
+                status,
+                headers,
+            }));
+        }
 
         return new Response(value, {
             status,
@@ -110,8 +138,12 @@ export async function toResponse(
         });
     }
 
-    const cached = await applyEtag(json, event, headers);
-    if (cached) return cached;
+    if (event.routerOptions.etag) {
+        return applyEtag(json, event, headers).then((cached) => cached ?? new Response(json, {
+            status,
+            headers,
+        }));
+    }
 
     return new Response(json, {
         status,

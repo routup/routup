@@ -21,6 +21,14 @@ export interface IHooks {
 
     removeListener(name: HookName, fn?: HookListener): void;
 
+    /**
+     * Returns true if at least one listener is registered for the given
+     * hook name. Used by the dispatch pipeline to skip the
+     * `await trigger(...)` microtask hop on the hot path when nothing
+     * is listening.
+     */
+    hasListeners(name: HookName): boolean;
+
     clone(): IHooks;
 
     trigger(

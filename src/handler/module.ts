@@ -62,9 +62,11 @@ export class Handler implements IDispatcher {
             }
         }
 
-        await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, event);
-        if (event.dispatched) {
-            return undefined;
+        if (this.hooks.hasListeners(HookName.CHILD_DISPATCH_BEFORE)) {
+            await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, event);
+            if (event.dispatched) {
+                return undefined;
+            }
         }
 
         let response: Response | undefined;
@@ -72,15 +74,17 @@ export class Handler implements IDispatcher {
         try {
             let result: unknown;
 
-            // Build a preliminary event to access routerOptions for timeout resolution
-            const previewEvent = event.build();
-            const effectiveTimeout = this.resolveTimeout(previewEvent.routerOptions);
+            // Read router options directly from the dispatcher event so we
+            // can decide on the per-handler timeout without first wrapping
+            // into a RoutupEvent — saves a `build()` allocation on the
+            // common no-timeout path.
+            const routerOptions = event.resolveOptions();
+            const effectiveTimeout = this.resolveTimeout(routerOptions);
 
             // When a per-handler timeout is active, create a child AbortController
             // linked to the parent signal so the handler's signal aborts on timeout
             let childController: AbortController | undefined;
             let cleanupParentListener: (() => void) | undefined;
-            let handlerEvent = previewEvent;
 
             if (effectiveTimeout) {
                 const parentSignal = event.signal;
@@ -93,10 +97,14 @@ export class Handler implements IDispatcher {
                     parentSignal.addEventListener('abort', onAbort, { once: true });
                     cleanupParentListener = () => parentSignal.removeEventListener('abort', onAbort);
                 }
-
-                // Rebuild with the child signal so the handler sees it via event.signal
-                handlerEvent = event.build(childController.signal);
             }
+
+            // Build the handler event exactly once — with the child signal
+            // when a timeout is configured, otherwise inheriting the
+            // dispatcher's own signal.
+            const handlerEvent = childController ?
+                event.build(childController.signal) :
+                event.build();
 
             try {
                 if (this.config.type === HandlerType.ERROR) {
@@ -108,7 +116,7 @@ export class Handler implements IDispatcher {
                                 fn(error, handlerEvent),
                                 handlerEvent,
                             ),
-                            handlerEvent.routerOptions,
+                            effectiveTimeout,
                             childController,
                         );
                     }
@@ -119,7 +127,7 @@ export class Handler implements IDispatcher {
                             fn(handlerEvent),
                             handlerEvent,
                         ),
-                        handlerEvent.routerOptions,
+                        effectiveTimeout,
                         childController,
                     );
                 }
@@ -137,7 +145,9 @@ export class Handler implements IDispatcher {
         } catch (e) {
             event.error = isError(e) ? e : createError(e);
 
-            await this.hooks.trigger(HookName.ERROR, event);
+            if (this.hooks.hasListeners(HookName.ERROR)) {
+                await this.hooks.trigger(HookName.ERROR, event);
+            }
 
             if (event.dispatched) {
                 event.error = undefined;
@@ -146,7 +156,9 @@ export class Handler implements IDispatcher {
             }
         }
 
-        await this.hooks.trigger(HookName.CHILD_DISPATCH_AFTER, event);
+        if (this.hooks.hasListeners(HookName.CHILD_DISPATCH_AFTER)) {
+            await this.hooks.trigger(HookName.CHILD_DISPATCH_AFTER, event);
+        }
 
         return response;
     }
@@ -213,11 +225,9 @@ export class Handler implements IDispatcher {
 
     protected async executeWithTimeout(
         fn: () => unknown | Promise<unknown>,
-        routerOptions: RouterOptions,
+        effectiveTimeout: number | undefined,
         controller?: AbortController,
     ): Promise<unknown> {
-        const effectiveTimeout = this.resolveTimeout(routerOptions);
-
         if (!effectiveTimeout) {
             return fn();
         }

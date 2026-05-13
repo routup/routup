@@ -11,7 +11,7 @@ describe('error context preservation', () => {
     it('should use createError instead of raw cast in hook trigger', async () => {
         const router = new Router();
 
-        router.on('request', () => {
+        router.on('start', () => {
             throw new Error('plain error in hook');
         });
 
@@ -33,7 +33,7 @@ describe('error context preservation', () => {
             throw new Error('error in error hook');
         });
 
-        router.on('response', (event) => {
+        router.on('end', (event) => {
             if (event.error) {
                 capturedErrors.push(event.error);
             }

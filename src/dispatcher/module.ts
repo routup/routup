@@ -1,8 +1,5 @@
 import { FastURL } from 'srvx';
 import type { RoutupError } from '../error/module.ts';
-import type { RouterOptions, RouterPathNode } from '../router/types.ts';
-import { toResponse } from '../response/index.ts';
-import { buildEtagFn } from '../utils/index.ts';
 import { RoutupEvent } from '../event/module.ts';
 import type {
     IRoutupEvent,
@@ -10,7 +7,20 @@ import type {
     RoutupRequest,
     RoutupResponse,
 } from '../event/types.ts';
+import { toResponse } from '../response/index.ts';
+import type { RouterOptions, RouterPathNode } from '../router/types.ts';
+import { buildEtagFn } from '../utils/index.ts';
 import type { IDispatcherEvent } from './types.ts';
+
+// Framework defaults applied beneath any router-level overrides. Hoisted
+// to module scope so resolveOptions() doesn't allocate a fresh defaults
+// object — including a new `etag` closure via buildEtagFn() — per request.
+const DEFAULT_ROUTER_OPTIONS: RouterOptions = {
+    trustProxy: () => false,
+    subdomainOffset: 2,
+    etag: buildEtagFn(),
+    proxyIpMax: 0,
+};
 
 export class DispatcherEvent implements IDispatcherEvent {
     readonly request: RoutupRequest;
@@ -200,19 +210,13 @@ export class DispatcherEvent implements IDispatcherEvent {
         return this._store!;
     }
 
-    protected resolveOptions(): RouterOptions {
-        const resolved: RouterOptions = {
-            trustProxy: () => false,
-            subdomainOffset: 2,
-            etag: buildEtagFn(),
-            proxyIpMax: 0,
-        };
+    resolveOptions(): RouterOptions {
+        const resolved: RouterOptions = { ...DEFAULT_ROUTER_OPTIONS };
 
         for (let i = 0; i < this.routerPath.length; i++) {
-            const node = this.routerPath[i]!;
-            const entries = Object.entries(node.options);
-            for (const entry of entries) {
-                const [key, value] = entry!;
+            const { options } = this.routerPath[i]!;
+            for (const key in options) {
+                const value = (options as Record<string, unknown>)[key];
                 if (typeof value !== 'undefined') {
                     (resolved as Record<string, unknown>)[key] = value;
                 }

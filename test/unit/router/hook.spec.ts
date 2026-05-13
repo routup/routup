@@ -25,8 +25,8 @@ describe('src/router/hooks', () => {
         const childBefore = vi.fn();
         const childAfter = vi.fn();
 
-        router.on(HookName.REQUEST, () => { request(); });
-        router.on(HookName.RESPONSE, () => { response(); });
+        router.on(HookName.START, () => { request(); });
+        router.on(HookName.END, () => { response(); });
         router.on(HookName.ERROR, () => { error(); });
         router.on(HookName.CHILD_MATCH, () => { childMatch(); });
         router.on(HookName.CHILD_DISPATCH_BEFORE, () => { childBefore(); });
@@ -55,8 +55,8 @@ describe('src/router/hooks', () => {
         const requestFn = vi.fn();
         const responseFn = vi.fn();
 
-        router.on(HookName.REQUEST, () => { requestFn(); });
-        router.on(HookName.RESPONSE, () => { responseFn(); });
+        router.on(HookName.START, () => { requestFn(); });
+        router.on(HookName.END, () => { responseFn(); });
         router.on(HookName.ERROR, () => { errorFn(); });
 
         const res = await router.fetch(createTestRequest('/'));
@@ -115,8 +115,8 @@ describe('src/router/hooks', () => {
             fnJest();
         };
 
-        router.on(HookName.REQUEST, fn);
-        router.off(HookName.REQUEST, fn);
+        router.on(HookName.START, fn);
+        router.off(HookName.START, fn);
 
         const res = await router.fetch(createTestRequest('/'));
 
@@ -150,7 +150,7 @@ describe('src/router/hooks', () => {
             fnJest();
         };
 
-        const unsubscribe = router.on(HookName.REQUEST, fn);
+        const unsubscribe = router.on(HookName.START, fn);
         unsubscribe();
 
         const res = await router.fetch(createTestRequest('/'));
@@ -190,9 +190,9 @@ describe('src/router/hooks', () => {
 
         const order: number[] = [];
 
-        router.on(HookName.REQUEST, () => { order.push(1); }, 0);
-        router.on(HookName.REQUEST, () => { order.push(2); }, 10);
-        router.on(HookName.REQUEST, () => { order.push(3); }, 5);
+        router.on(HookName.START, () => { order.push(1); }, 0);
+        router.on(HookName.START, () => { order.push(2); }, 10);
+        router.on(HookName.START, () => { order.push(3); }, 5);
 
         await router.fetch(createTestRequest('/'));
 
@@ -205,9 +205,9 @@ describe('src/router/hooks', () => {
 
         const order: string[] = [];
 
-        router.on(HookName.REQUEST, () => { order.push('first'); });
-        router.on(HookName.REQUEST, () => { order.push('second'); });
-        router.on(HookName.REQUEST, () => { order.push('third'); });
+        router.on(HookName.START, () => { order.push('first'); });
+        router.on(HookName.START, () => { order.push('second'); });
+        router.on(HookName.START, () => { order.push('third'); });
 
         await router.fetch(createTestRequest('/'));
 
@@ -220,9 +220,9 @@ describe('src/router/hooks', () => {
 
         const order: string[] = [];
 
-        router.on(HookName.REQUEST, () => { order.push('default'); }, 0);
-        router.on(HookName.REQUEST, () => { order.push('late'); }, -10);
-        router.on(HookName.REQUEST, () => { order.push('early'); }, 10);
+        router.on(HookName.START, () => { order.push('default'); }, 0);
+        router.on(HookName.START, () => { order.push('late'); }, -10);
+        router.on(HookName.START, () => { order.push('early'); }, 10);
 
         await router.fetch(createTestRequest('/'));
 
@@ -252,5 +252,24 @@ describe('src/router/hooks', () => {
 
         expect(onBefore).toHaveBeenCalled();
         expect(onAfter).toHaveBeenCalled();
+    });
+
+    it('should fire REQUEST and RESPONSE exactly once when middleware calls event.next()', async () => {
+        const router = new Router();
+        router.use(defineCoreHandler(async (event) => event.next()));
+        router.use(defineCoreHandler(() => 'ok'));
+
+        const request = vi.fn();
+        const response = vi.fn();
+
+        router.on(HookName.START, () => { request(); });
+        router.on(HookName.END, () => { response(); });
+
+        const res = await router.fetch(createTestRequest('/'));
+
+        expect(res.status).toEqual(200);
+        expect(await res.text()).toEqual('ok');
+        expect(request).toHaveBeenCalledTimes(1);
+        expect(response).toHaveBeenCalledTimes(1);
     });
 });

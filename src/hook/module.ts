@@ -25,6 +25,10 @@ export class Hooks implements IHooks {
 
     // --------------------------------------------------
 
+    hasListeners(name: HookName): boolean {
+        return this.items[name] !== undefined;
+    }
+
     addListener(
         name: HookName,
         fn: HookListener,

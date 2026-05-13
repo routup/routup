@@ -62,7 +62,14 @@ export type RouterOptions = {
 
     subdomainOffset: number,
     proxyIpMax: number,
-    etag: EtagFn,
+    /**
+     * ETag generator, or `null` to disable ETag/304 entirely.
+     *
+     * Kept as a literal `null` (rather than a no-op function) so the
+     * response pipeline can branch synchronously and skip the
+     * `await applyEtag(...)` microtask hop on the hot path.
+     */
+    etag: EtagFn | null,
     trustProxy: TrustProxyFn,
 };
 
@@ -221,8 +228,8 @@ export interface IRouter extends IDispatcher {
      * Add a hook listener.
      */
     on(
-        name: typeof HookName.REQUEST |
-            typeof HookName.RESPONSE |
+        name: typeof HookName.START |
+            typeof HookName.END |
             typeof HookName.CHILD_DISPATCH_BEFORE |
             typeof HookName.CHILD_DISPATCH_AFTER,
         fn: HookDefaultListener,

@@ -1,8 +1,8 @@
-import { 
-    describe, 
-    expect, 
-    it, 
-    vi, 
+import {
+    describe,
+    expect,
+    it,
+    vi,
 } from 'vitest';
 import {
     Router,
@@ -63,12 +63,12 @@ describe('src/router clone', () => {
         original.get('/', defineCoreHandler(() => 'ok'));
 
         const sharedListener = vi.fn();
-        original.on(HookName.REQUEST, sharedListener);
+        original.on(HookName.START, sharedListener);
 
         const clone = original.clone();
 
         const cloneOnlyListener = vi.fn();
-        clone.on(HookName.REQUEST, cloneOnlyListener);
+        clone.on(HookName.START, cloneOnlyListener);
 
         await clone.fetch(createTestRequest('/'));
         expect(sharedListener).toHaveBeenCalledTimes(1);

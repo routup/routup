@@ -203,6 +203,7 @@ export class Router implements IRouter {
 
     // --------------------------------------------------
 
+
     protected async executePipelineStep(context: RouterPipelineContext): Promise<void> {
         while (context.step !== RouterPipelineStep.FINISH) {
             switch (context.step) {
@@ -225,7 +226,9 @@ export class Router implements IRouter {
     }
 
     protected async executePipelineStepStart(context: RouterPipelineContext): Promise<void> {
-        await this.hooks.trigger(HookName.REQUEST, context.event);
+        if (this.hooks.hasListeners(HookName.START)) {
+            await this.hooks.trigger(HookName.START, context.event);
+        }
 
         if (context.event.dispatched) {
             context.step = RouterPipelineStep.FINISH;
@@ -264,7 +267,9 @@ export class Router implements IRouter {
                     }
 
                     if (matchHandlerMethod(method, context.event.method as MethodName)) {
-                        await this.hooks.trigger(HookName.CHILD_MATCH, context.event);
+                        if (this.hooks.hasListeners(HookName.CHILD_MATCH)) {
+                            await this.hooks.trigger(HookName.CHILD_MATCH, context.event);
+                        }
 
                         if (context.event.dispatched) {
                             context.step = RouterPipelineStep.FINISH;
@@ -285,7 +290,9 @@ export class Router implements IRouter {
                 entry.data.matchPath(context.event.path);
 
             if (match) {
-                await this.hooks.trigger(HookName.CHILD_MATCH, context.event);
+                if (this.hooks.hasListeners(HookName.CHILD_MATCH)) {
+                    await this.hooks.trigger(HookName.CHILD_MATCH, context.event);
+                }
 
                 if (context.event.dispatched) {
                     context.step = RouterPipelineStep.FINISH;
@@ -303,7 +310,9 @@ export class Router implements IRouter {
     }
 
     protected async executePipelineStepChildBefore(context: RouterPipelineContext): Promise<void> {
-        await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, context.event);
+        if (this.hooks.hasListeners(HookName.CHILD_DISPATCH_BEFORE)) {
+            await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, context.event);
+        }
 
         if (context.event.dispatched) {
             context.step = RouterPipelineStep.FINISH;
@@ -313,7 +322,9 @@ export class Router implements IRouter {
     }
 
     protected async executePipelineStepChildAfter(context: RouterPipelineContext): Promise<void> {
-        await this.hooks.trigger(HookName.CHILD_DISPATCH_AFTER, context.event);
+        if (this.hooks.hasListeners(HookName.CHILD_DISPATCH_AFTER)) {
+            await this.hooks.trigger(HookName.CHILD_DISPATCH_AFTER, context.event);
+        }
 
         if (context.event.dispatched) {
             context.step = RouterPipelineStep.FINISH;
@@ -379,7 +390,9 @@ export class Router implements IRouter {
                     event.error = createError(error);
                 }
 
-                // Continue pipeline from the next stack item
+                // Continue pipeline from the next stack item. RESPONSE is
+                // not fired here — `Router.dispatch` owns that firing, so
+                // nested re-entry naturally skips it.
                 const nextContext: RouterPipelineContext = {
                     step: RouterPipelineStep.LOOKUP,
                     event,
@@ -401,7 +414,9 @@ export class Router implements IRouter {
         } catch (e) {
             event.error = createError(e);
 
-            await this.hooks.trigger(HookName.ERROR, event);
+            if (this.hooks.hasListeners(HookName.ERROR)) {
+                await this.hooks.trigger(HookName.ERROR, event);
+            }
         }
 
         if (!event.dispatched) {
@@ -415,14 +430,10 @@ export class Router implements IRouter {
     }
 
     protected async executePipelineStepFinish(context: RouterPipelineContext): Promise<void> {
-        if (context.event.error || context.event.dispatched) {
-            return this.hooks.trigger(HookName.RESPONSE, context.event);
-        }
-
         if (
+            !context.event.error &&
             !context.event.dispatched &&
             context.event.routerPath.length === 1 &&
-            context.event.method &&
             context.event.method === MethodName.OPTIONS
         ) {
             if (context.event.methodsAllowed.has(MethodName.GET)) {
@@ -442,8 +453,6 @@ export class Router implements IRouter {
 
             context.event.dispatched = true;
         }
-
-        return this.hooks.trigger(HookName.RESPONSE, context.event);
     }
 
     // --------------------------------------------------
@@ -483,6 +492,15 @@ export class Router implements IRouter {
 
         try {
             await this.executePipelineStep(context);
+
+            // Fire END here (not inside the pipeline) so it runs exactly
+            // once per `Router.dispatch` call. The setNext recursion only
+            // re-enters `executePipelineStep`, never `dispatch`, so nested
+            // middleware walks naturally skip this. Nested routers get
+            // their own END firing via their own `dispatch()` invocation.
+            if (this.hooks.hasListeners(HookName.END)) {
+                await this.hooks.trigger(HookName.END, event);
+            }
         } finally {
             event.routerPath.pop();
 
@@ -586,7 +604,13 @@ export class Router implements IRouter {
             }
 
             let handler: Handler;
-            if (isHandlerOptions(element)) {
+            // Check isHandler (instanceof brand) BEFORE isHandlerOptions
+            // (structural). Handler exposes `fn` and `type` as fields and
+            // would otherwise match the structural check and get wrapped
+            // into a fresh Handler with an empty config.
+            if (isHandler(element)) {
+                handler = element;
+            } else if (isHandlerOptions(element)) {
                 // Construct a fresh Handler from a copy of the options so the
                 // user's options object is never mutated.
                 handler = new Handler({
@@ -594,8 +618,6 @@ export class Router implements IRouter {
                     method,
                     path: path ?? element.path,
                 });
-            } else if (isHandler(element)) {
-                handler = element;
             } else {
                 continue;
             }
@@ -642,6 +664,18 @@ export class Router implements IRouter {
                 continue;
             }
 
+            // Check isHandler (instanceof brand) BEFORE isHandlerOptions
+            // (structural) — see useForMethod for the same reasoning.
+            if (isHandler(item)) {
+                this.stack.push({
+                    type: RouterStackEntryType.HANDLER,
+                    data: item,
+                    path,
+                    pathMatcher: buildHandlerPathMatcher(path, !!item.method),
+                });
+                continue;
+            }
+
             if (isHandlerOptions(item)) {
                 const handler = new Handler({
                     ...item,
@@ -652,16 +686,6 @@ export class Router implements IRouter {
                     type: RouterStackEntryType.HANDLER,
                     data: handler,
                     path,
-                });
-                continue;
-            }
-
-            if (isHandler(item)) {
-                this.stack.push({
-                    type: RouterStackEntryType.HANDLER,
-                    data: item,
-                    path,
-                    pathMatcher: buildHandlerPathMatcher(path, !!item.method),
                 });
                 continue;
             }
@@ -782,10 +806,11 @@ export class Router implements IRouter {
      *
      * @param name
      * @param fn
+     * @param priority
      */
     on(
-        name: typeof HookName.REQUEST |
-            typeof HookName.RESPONSE |
+        name: typeof HookName.START |
+            typeof HookName.END |
             typeof HookName.CHILD_DISPATCH_BEFORE |
             typeof HookName.CHILD_DISPATCH_AFTER,
         fn: HookDefaultListener,

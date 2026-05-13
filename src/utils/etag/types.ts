@@ -15,4 +15,4 @@ export type EtagOptions = {
 
 export type EtagFn = (body: string, size?: number) => Promise<string | undefined>;
 
-export type EtagInput = boolean | EtagOptions | EtagFn;
+export type EtagInput = boolean | null | EtagOptions | EtagFn;
