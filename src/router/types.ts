@@ -74,12 +74,7 @@ export type RouterOptions = {
 };
 
 export type RouterOptionsInput = Omit<Partial<RouterOptions>, 'etag' | 'trustProxy'> & {
-    /**
-     * Accepts the user-facing `EtagInput` (boolean/options/function) and
-     * also the post-normalization `null` sentinel — letting `Router.clone()`
-     * spread already-normalized options back into a new Router constructor.
-     */
-    etag?: EtagInput | null,
+    etag?: EtagInput,
     trustProxy?: TrustProxyInput,
 
     hooks?: IHooks,
