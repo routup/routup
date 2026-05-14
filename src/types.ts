@@ -26,8 +26,12 @@ export type ObjectLiteral = Record<string, any>;
  */
 export type Route<T extends ObjectLiteral = ObjectLiteral> = {
     /**
-     * Mount path. `undefined` or `'/'` means "no path" — entry matches
-     * every request (middleware / mount-less nested app).
+     * Mount path.
+     * - `undefined` means "no path" (route matches every request).
+     * - `'/'` behaves like "no path" for method-agnostic prefix routes
+     *   (middleware / mount-less nested apps).
+     * - Method-bound `'/'` is treated as an exact root match
+     *   (`app.get('/', …)` matches only the root).
      */
     path?: Path;
     /**

@@ -2,21 +2,23 @@ import { spawn } from 'node:child_process';
 import { setTimeout as wait } from 'node:timers/promises';
 import autocannon from 'autocannon';
 
-function readPositiveNumber(name, fallback) {
+function readPositiveNumber(name, fallback, { integer = false } = {}) {
     const raw = process.env[name];
     if (raw === undefined || raw === '') return fallback;
     const value = Number(raw);
-    if (!Number.isFinite(value) || value <= 0) {
-        throw new Error(`Invalid ${name}: "${raw}". Expected a positive number.`);
+    if (!Number.isFinite(value) || value <= 0 || (integer && !Number.isInteger(value))) {
+        throw new Error(
+            `Invalid ${name}: "${raw}". Expected a positive${integer ? ' integer' : ' number'}.`,
+        );
     }
     return value;
 }
 
-const TRIALS = readPositiveNumber('TRIALS', 3);
+const TRIALS = readPositiveNumber('TRIALS', 3, { integer: true });
 const WARMUP = readPositiveNumber('WARMUP', 10);
 const DURATION = readPositiveNumber('DURATION', 10);
-const CONNECTIONS = readPositiveNumber('CONNECTIONS', 100);
-const PIPELINING = readPositiveNumber('PIPELINING', 10);
+const CONNECTIONS = readPositiveNumber('CONNECTIONS', 100, { integer: true });
+const PIPELINING = readPositiveNumber('PIPELINING', 10, { integer: true });
 const URL = process.env.URL ?? 'http://127.0.0.1:3000';
 const RUNTIME = process.env.RUNTIME ?? 'node';
 const RUNTIME_BIN = process.env.RUNTIME_BIN ?? RUNTIME;
