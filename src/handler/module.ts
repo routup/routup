@@ -90,25 +90,26 @@ export class Handler implements IDispatcher {
                 event.build();
 
             let result: unknown;
-            let skipFn = false;
-
-            // Invoke the handler fn first (sync); decide async strategy
-            // based on what it returned.
-            let invocation: unknown;
-            if (this.config.type === HandlerType.ERROR) {
-                if (event.error) {
-                    const { fn } = this.config;
-                    invocation = fn(event.error, handlerEvent);
-                } else {
-                    // ERROR handler with no pending error: no-op.
-                    skipFn = true;
-                }
-            } else {
-                const { fn } = this.config;
-                invocation = fn(handlerEvent);
-            }
 
             try {
+                // Invoke the handler fn inside the cleanup-protected
+                // try so a sync throw still releases the parent abort
+                // listener registered above.
+                let skipFn = false;
+                let invocation: unknown;
+                if (this.config.type === HandlerType.ERROR) {
+                    if (event.error) {
+                        const { fn } = this.config;
+                        invocation = fn(event.error, handlerEvent);
+                    } else {
+                        // ERROR handler with no pending error: no-op.
+                        skipFn = true;
+                    }
+                } else {
+                    const { fn } = this.config;
+                    invocation = fn(handlerEvent);
+                }
+
                 if (skipFn) {
                     // result stays undefined; falls through to toResponse(undefined) → undefined.
                 } else if (effectiveTimeout) {
@@ -150,6 +151,13 @@ export class Handler implements IDispatcher {
 
             if (response) {
                 event.dispatched = true;
+                // ERROR handler resolved the pending error — clear it
+                // so CHILD_DISPATCH_AFTER hooks and parent pipelines
+                // don't observe a stale error. Mirrors the clear in
+                // `Hooks.trigger` when a listener dispatches.
+                if (this.config.type === HandlerType.ERROR && event.error) {
+                    event.error = undefined;
+                }
             }
         } catch (e) {
             event.error = isError(e) ? e : createError(e);

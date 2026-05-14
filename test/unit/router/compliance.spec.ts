@@ -164,4 +164,18 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
         const res = await router.fetch(createTestRequest('/users/42'));
         expect(await res.text()).toBe('user-42');
     });
+
+    it('clone() returns a fresh empty router of the same shape', () => {
+        // IRouter.clone()'s contract: a fresh, **empty** router. Verifies
+        // App.install() / App.clone() can use it to preserve the router
+        // family without inheriting the parent's entries.
+        const router = factory();
+        const beforeLen = router.entries.length;
+        const cloned = router.clone();
+        expect(cloned.entries.length).toBe(0);
+        // Original is unchanged.
+        expect(router.entries.length).toBe(beforeLen);
+        // The clone is a distinct instance.
+        expect(cloned).not.toBe(router);
+    });
 });

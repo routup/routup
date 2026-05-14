@@ -288,24 +288,27 @@ export class App implements IApp {
 
             if (this.hooks.hasListeners(HookName.CHILD_MATCH)) {
                 await this.hooks.trigger(HookName.CHILD_MATCH, context.event);
-
-                // If the hook rewrote `event.path`, the current `match`
-                // is stale; restart LOOKUP so the next dispatch sees a
-                // match that corresponds to the new path.
-                if (context.event.path !== context.matchesPath) {
-                    context.matches = undefined;
-                    context.matchIndex = 0;
-                    context.step = AppPipelineStep.LOOKUP;
-                    return;
-                }
             }
 
+            // `dispatched` wins over a path rewrite — a hook that
+            // produced a response *and* rewrote the path is finished;
+            // restarting LOOKUP would discard the response.
             if (context.event.dispatched) {
                 context.step = AppPipelineStep.FINISH;
-            } else {
-                context.step = AppPipelineStep.CHILD_BEFORE;
+                return;
             }
 
+            // Otherwise, if the hook rewrote `event.path`, the current
+            // `match` is stale; restart LOOKUP so the next dispatch
+            // sees a match that corresponds to the new path.
+            if (context.event.path !== context.matchesPath) {
+                context.matches = undefined;
+                context.matchIndex = 0;
+                context.step = AppPipelineStep.LOOKUP;
+                return;
+            }
+
+            context.step = AppPipelineStep.CHILD_BEFORE;
             return;
         }
 
@@ -315,23 +318,22 @@ export class App implements IApp {
     protected async executePipelineStepChildBefore(context: AppPipelineContext): Promise<void> {
         if (this.hooks.hasListeners(HookName.CHILD_DISPATCH_BEFORE)) {
             await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, context.event);
-
-            // If the hook rewrote `event.path`, the cached `matches`
-            // may not include a route for the new path. Restart LOOKUP
-            // before dispatching anything.
-            if (context.event.path !== context.matchesPath) {
-                context.matches = undefined;
-                context.matchIndex = 0;
-                context.step = AppPipelineStep.LOOKUP;
-                return;
-            }
         }
 
+        // `dispatched` wins over a path rewrite — see CHILD_MATCH.
         if (context.event.dispatched) {
             context.step = AppPipelineStep.FINISH;
-        } else {
-            context.step = AppPipelineStep.CHILD_DISPATCH;
+            return;
         }
+
+        if (context.event.path !== context.matchesPath) {
+            context.matches = undefined;
+            context.matchIndex = 0;
+            context.step = AppPipelineStep.LOOKUP;
+            return;
+        }
+
+        context.step = AppPipelineStep.CHILD_DISPATCH;
     }
 
     protected async executePipelineStepChildAfter(context: AppPipelineContext): Promise<void> {
@@ -396,17 +398,22 @@ export class App implements IApp {
                     event.error = createError(error);
                 }
 
-                // Continue pipeline from the next matched entry. RESPONSE is
-                // not fired here — `App.dispatch` owns that firing, so
-                // nested re-entry naturally skips it. The match list is
-                // threaded through so we don't re-run `resolver.lookup`
-                // unless `event.path` has changed.
+                // Continue pipeline from the next matched entry. RESPONSE
+                // is not fired here — `App.dispatch` owns that firing,
+                // so nested re-entry naturally skips it.
+                //
+                // If `event.path` changed since this entry was matched
+                // (e.g. the handler mutated it before invoking next()),
+                // the captured `nextMatchIndex` is into a stale matches
+                // array. Reset to a fresh walk on the new path.
+                const pathChanged = event.path !== parentMatchesPath;
+
                 const nextContext: AppPipelineContext = {
                     step: AppPipelineStep.LOOKUP,
                     event,
-                    matchIndex: nextMatchIndex,
-                    matches: parentMatches,
-                    matchesPath: parentMatchesPath,
+                    matchIndex: pathChanged ? 0 : nextMatchIndex,
+                    matches: pathChanged ? undefined : parentMatches,
+                    matchesPath: pathChanged ? undefined : parentMatchesPath,
                     response: undefined,
                 };
 

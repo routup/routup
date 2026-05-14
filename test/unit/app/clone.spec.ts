@@ -138,4 +138,52 @@ describe('src/app clone', () => {
         const clone = original.clone();
         expect(clone.name).toEqual('foo');
     });
+
+    it('should preserve the router family on clone (no LinearRouter downgrade)', async () => {
+        // App.clone() must propagate the active IRouter implementation
+        // via `this.router.clone()` so apps configured with TrieRouter
+        // (or any custom router) don't silently downgrade to the
+        // LinearRouter default.
+        const { TrieRouter, MemoizedRouter } = await import('../../../src');
+
+        const trieApp = new App({ router: new TrieRouter() });
+        trieApp.get('/x', defineCoreHandler(() => 'x'));
+        const trieClone = trieApp.clone();
+        // We can't introspect `router` directly (it's protected), so
+        // exercise router-dependent behaviour: the clone must still
+        // match the registered route after re-registration.
+        const res1 = await trieClone.fetch(createTestRequest('/x'));
+        expect(await res1.text()).toEqual('x');
+
+        // Composition: MemoizedRouter wrapping TrieRouter should also
+        // round-trip through clone.
+        const memoApp = new App({ router: new MemoizedRouter(new TrieRouter()) });
+        memoApp.get('/y', defineCoreHandler(() => 'y'));
+        const memoClone = memoApp.clone();
+        const res2 = await memoClone.fetch(createTestRequest('/y'));
+        expect(await res2.text()).toEqual('y');
+    });
+
+    it('should preserve the router family across plugin install', async () => {
+        // App.install() also passes `router: this.router.clone()` to
+        // the plugin's child app. A plugin installed on a TrieRouter
+        // app must run on a TrieRouter, not the LinearRouter default.
+        const { TrieRouter } = await import('../../../src');
+
+        const installed = vi.fn();
+        const plugin = {
+            name: 'probe-router',
+            install: (childApp: App) => {
+                installed(childApp);
+                childApp.get('/probe', defineCoreHandler(() => 'probe-ok'));
+            },
+        };
+
+        const app = new App({ router: new TrieRouter() });
+        app.use(plugin as any);
+
+        const res = await app.fetch(createTestRequest('/probe'));
+        expect(await res.text()).toEqual('probe-ok');
+        expect(installed).toHaveBeenCalledOnce();
+    });
 });

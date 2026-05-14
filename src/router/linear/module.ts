@@ -52,7 +52,10 @@ export class LinearRouter implements IRouter {
             matches.push({
                 entry,
                 index: i,
-                params: {},
+                // Prototype-less for symmetry with TrieRouter — avoids
+                // `__proto__` / `hasOwnProperty` shadowing if user
+                // code does `'foo' in match.params`.
+                params: Object.create(null) as Record<string, any>,
             });
         }
 

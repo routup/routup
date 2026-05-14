@@ -10,7 +10,7 @@ import { createTrieNode } from './types.ts';
  * `add()` time and walks the tree at `lookup()` to collect candidates
  * by structure rather than by linear scan.
  *
- * Inspired by Hono's `TrieApp` and rou3. The trie handles routup's
+ * Inspired by Hono's `TrieRouter` and rou3. The trie handles routup's
  * path vocabulary (static segments, `:param`, `*` and `*name` splats);
  * registered paths that contain syntax outside this set (e.g. `{group}`,
  * regex bodies) safely fall through to a `universal` bucket walked
@@ -24,12 +24,12 @@ import { createTrieNode } from './types.ts';
  * exchange for skipping most non-matching entries entirely. T3 in
  * the trie roadmap removes the `matcher.exec` step.
  *
- * T1 fast path: when the request walks a purely-static spine (no
- * param siblings, no prefix entries, no splats encountered) the trie
- * walk degenerates into "lookup leaf entries by full path." The
- * `staticRoutes` map captures exactly that case — a single hash
- * probe replaces the per-segment descent. When the spine has any
- * branch the probe misses and the regular trie walk runs.
+ * Pure-static-spine fast path (`shortCircuit`): when the request
+ * walks a static spine with no param/splat/prefix siblings on any
+ * traversed node, the leaf's `exactEntries` is the full answer —
+ * no need to walk the param branch or collect prefix candidates at
+ * intermediate nodes. As soon as a branch is encountered, falls
+ * through to the regular `walk`.
  */
 export class TrieRouter implements IRouter {
     protected _entries: StackEntry[] = [];
@@ -43,14 +43,6 @@ export class TrieRouter implements IRouter {
      * in registration order.
      */
     protected universal: IndexedEntry[] = [];
-
-    /**
-     * T1 fast path. Each key is a canonicalized fully-static path; the
-     * value is the list of leaf exact-match entries registered at that
-     * path. Only consulted when the request path's static spine has
-     * no param/splat/prefix siblings on the way (`canShortCircuitToStatic`).
-     */
-    protected staticRoutes: Map<string, IndexedEntry[]> = new Map();
 
     add(entry: StackEntry): void {
         const index = this._entries.length;
@@ -74,19 +66,6 @@ export class TrieRouter implements IRouter {
         }
 
         this.insertIntoTrie(segments, indexed);
-
-        // T1: index in the static map when every segment is static
-        // *and* the entry is method-bound. The trie still holds the
-        // entry too — the map is a probe, not a replacement.
-        if (this.isExactMatchEntry(indexed.entry) && segments.every((s) => s.kind === 'static')) {
-            const key = this.canonicalize(entry.path);
-            let bucket = this.staticRoutes.get(key);
-            if (!bucket) {
-                bucket = [];
-                this.staticRoutes.set(key, bucket);
-            }
-            bucket.push(indexed);
-        }
     }
 
     lookup(path: string): readonly RouterMatch[] {
@@ -97,7 +76,7 @@ export class TrieRouter implements IRouter {
         }
 
         const segments = this.parseRequestPath(path);
-        const shortCircuit = this.shortCircuit(segments, path);
+        const shortCircuit = this.shortCircuit(segments);
         if (shortCircuit !== null) {
             for (const c of shortCircuit) {
                 candidates.push(c);
@@ -153,11 +132,13 @@ export class TrieRouter implements IRouter {
     /**
      * T1: returns the pre-computed candidate list when the request's
      * static spine has no param sibling, no prefix entries, and no
-     * splats along the way — meaning the regular `walk` would yield
-     * exactly the leaf entries the static map contains. Otherwise
-     * returns `null` and the caller falls through to `walk`.
+     * splats along the way. The leaf node's `exactEntries` is then
+     * the complete answer — no need to walk the param branch or
+     * collect prefix/splat candidates from intermediate nodes. When
+     * any branch is encountered, returns `null` and the caller falls
+     * through to the regular `walk`.
      */
-    protected shortCircuit(segments: string[], path: string): IndexedEntry[] | null {
+    protected shortCircuit(segments: string[]): IndexedEntry[] | null {
         let node = this.root;
 
         for (const segment of segments) {
@@ -180,11 +161,9 @@ export class TrieRouter implements IRouter {
             return null;
         }
 
-        // Reached the leaf node along a pure static spine.
-        // The static map is keyed by canonical path; the trie walk
-        // would arrive at this same leaf and emit `exactEntries`.
-        const leaf = this.staticRoutes.get(this.canonicalize(path));
-        return leaf ?? node.exactEntries;
+        // Pure static spine reached the leaf — `exactEntries` is the
+        // complete answer for this request.
+        return node.exactEntries;
     }
 
     /**
@@ -237,22 +216,6 @@ export class TrieRouter implements IRouter {
             }
         }
         return result;
-    }
-
-    /**
-     * Canonicalize a path string into the `staticRoutes` key. Strips
-     * a leading slash and a single trailing slash so registered
-     * `/users` and request `/users` share one bucket.
-     */
-    protected canonicalize(path: string): string {
-        let p = path;
-        if (p.charAt(0) === '/') {
-            p = p.slice(1);
-        }
-        if (p.length > 0 && p.charAt(p.length - 1) === '/') {
-            p = p.slice(0, -1);
-        }
-        return p;
     }
 
     protected insertIntoTrie(segments: Segment[], indexed: IndexedEntry): void {

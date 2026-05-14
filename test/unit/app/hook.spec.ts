@@ -272,4 +272,37 @@ describe('src/router/hooks', () => {
         expect(request).toHaveBeenCalledTimes(1);
         expect(response).toHaveBeenCalledTimes(1);
     });
+
+    it('should re-LOOKUP when CHILD_MATCH rewrites event.path', async () => {
+        // A CHILD_MATCH listener that mutates `event.path` must force
+        // the pipeline to refresh its match cache; the dispatched
+        // handler is the one registered at the *new* path.
+        const router = new App();
+        router.get('/original', defineCoreHandler(() => 'wrong'));
+        router.get('/rewritten', defineCoreHandler(() => 'right'));
+
+        router.on(HookName.CHILD_MATCH, (event) => {
+            if (event.path === '/original') {
+                event.path = '/rewritten';
+            }
+        });
+
+        const res = await router.fetch(createTestRequest('/original'));
+        expect(await res.text()).toEqual('right');
+    });
+
+    it('should re-LOOKUP when CHILD_DISPATCH_BEFORE rewrites event.path', async () => {
+        const router = new App();
+        router.get('/a', defineCoreHandler(() => 'wrong'));
+        router.get('/b', defineCoreHandler(() => 'right'));
+
+        router.on(HookName.CHILD_DISPATCH_BEFORE, (event) => {
+            if (event.path === '/a') {
+                event.path = '/b';
+            }
+        });
+
+        const res = await router.fetch(createTestRequest('/a'));
+        expect(await res.text()).toEqual('right');
+    });
 });
