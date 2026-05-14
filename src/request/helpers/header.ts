@@ -1,7 +1,7 @@
-import type { IRoutupEvent } from '../../event/index.ts';
+import type { IAppEvent } from '../../event/index.ts';
 
 export function getRequestHeader(
-    event: IRoutupEvent,
+    event: IAppEvent,
     name: string,
 ) : string | null {
     return event.headers.get(name);

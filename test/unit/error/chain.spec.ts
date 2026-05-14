@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-    Router,
-    RoutupError,
+    App,
+    AppError,
     defineCoreHandler,
     defineErrorHandler,
 } from '../../../src';
@@ -9,7 +9,7 @@ import { createTestRequest } from '../../helpers';
 
 describe('error context preservation', () => {
     it('should use createError instead of raw cast in hook trigger', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.on('start', () => {
             throw new Error('plain error in hook');
@@ -22,11 +22,11 @@ describe('error context preservation', () => {
     });
 
     it('should preserve original error when error handler throws', async () => {
-        const router = new Router();
-        const capturedErrors: RoutupError[] = [];
+        const router = new App();
+        const capturedErrors: AppError[] = [];
 
         router.use(defineCoreHandler(() => {
-            throw new RoutupError({ status: 400, message: 'Bad Request' });
+            throw new AppError({ status: 400, message: 'Bad Request' });
         }));
 
         router.on('error', () => {
@@ -50,14 +50,14 @@ describe('error context preservation', () => {
     });
 
     it('should allow error handler to transform the error', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.use(defineCoreHandler(() => {
-            throw new RoutupError({ status: 422, message: 'Unprocessable' });
+            throw new AppError({ status: 422, message: 'Unprocessable' });
         }));
 
         router.use(defineErrorHandler(() => {
-            throw new RoutupError({ status: 503, message: 'Service Unavailable' });
+            throw new AppError({ status: 503, message: 'Service Unavailable' });
         }));
 
         const response = await router.fetch(createTestRequest('/'));
@@ -67,10 +67,10 @@ describe('error context preservation', () => {
     });
 
     it('should set error normally when no previous error exists', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.use(defineCoreHandler(() => {
-            throw new RoutupError({ status: 404, message: 'Not Found' });
+            throw new AppError({ status: 404, message: 'Not Found' });
         }));
 
         const response = await router.fetch(createTestRequest('/'));

@@ -2,22 +2,18 @@ import { markInstanceof } from '@ebec/core';
 import type { MethodName } from '../constants.ts';
 import type { IDispatcher, IDispatcherEvent } from '../dispatcher/index.ts';
 import { createError, isError } from '../error/index.ts';
-import type { IRoutupEvent } from '../event/index.ts';
+import type { IAppEvent } from '../event/index.ts';
 import { HookName, Hooks, type IHooks } from '../hook/index.ts';
-import type { PathMatcher } from '../path/index.ts';
 import { toResponse } from '../response/index.ts';
-import type { RouterOptions } from '../router/types.ts';
-import { toMethodName, withLeadingSlash } from '../utils/index.ts';
+import type { AppOptions } from '../app/types.ts';
+import { isPromise, toMethodName, withLeadingSlash } from '../utils/index.ts';
 import { HandlerSymbol, HandlerType } from './constants.ts';
 import type { HandlerOptions } from './types.ts';
-import { buildHandlerPathMatcher } from './utils.ts';
 
 export class Handler implements IDispatcher {
     protected config: HandlerOptions;
 
     protected hooks: IHooks;
-
-    protected pathMatcher: PathMatcher | undefined;
 
     readonly method: MethodName | undefined;
 
@@ -33,7 +29,6 @@ export class Handler implements IDispatcher {
             this.config.path = withLeadingSlash(handler.path);
         }
 
-        this.pathMatcher = buildHandlerPathMatcher(this.config.path, !!this.config.method);
         this.method = this.config.method ? toMethodName(this.config.method) : undefined;
 
         markInstanceof(this, HandlerSymbol);
@@ -52,16 +47,6 @@ export class Handler implements IDispatcher {
     // --------------------------------------------------
 
     async dispatch(event: IDispatcherEvent): Promise<Response | undefined> {
-        if (this.pathMatcher) {
-            const pathMatch = this.pathMatcher.exec(event.path);
-            if (pathMatch) {
-                event.params = {
-                    ...event.params,
-                    ...pathMatch.params,
-                };
-            }
-        }
-
         if (this.hooks.hasListeners(HookName.CHILD_DISPATCH_BEFORE)) {
             await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, event);
             if (event.dispatched) {
@@ -72,14 +57,12 @@ export class Handler implements IDispatcher {
         let response: Response | undefined;
 
         try {
-            let result: unknown;
-
             // Read router options directly from the dispatcher event so we
             // can decide on the per-handler timeout without first wrapping
-            // into a RoutupEvent — saves a `build()` allocation on the
+            // into a AppEvent — saves a `build()` allocation on the
             // common no-timeout path.
-            const routerOptions = event.resolveOptions();
-            const effectiveTimeout = this.resolveTimeout(routerOptions);
+            const appOptions = event.resolveOptions();
+            const effectiveTimeout = this.resolveTimeout(appOptions);
 
             // When a per-handler timeout is active, create a child AbortController
             // linked to the parent signal so the handler's signal aborts on timeout
@@ -106,30 +89,51 @@ export class Handler implements IDispatcher {
                 event.build(childController.signal) :
                 event.build();
 
-            try {
-                if (this.config.type === HandlerType.ERROR) {
-                    if (event.error) {
-                        const { fn } = this.config;
-                        const { error } = event;
-                        result = await this.executeWithTimeout(
-                            () => this.resolveHandlerResult(
-                                fn(error, handlerEvent),
-                                handlerEvent,
-                            ),
-                            effectiveTimeout,
-                            childController,
-                        );
-                    }
-                } else {
+            let result: unknown;
+            let skipFn = false;
+
+            // Invoke the handler fn first (sync); decide async strategy
+            // based on what it returned.
+            let invocation: unknown;
+            if (this.config.type === HandlerType.ERROR) {
+                if (event.error) {
                     const { fn } = this.config;
+                    invocation = fn(event.error, handlerEvent);
+                } else {
+                    // ERROR handler with no pending error: no-op.
+                    skipFn = true;
+                }
+            } else {
+                const { fn } = this.config;
+                invocation = fn(handlerEvent);
+            }
+
+            try {
+                if (skipFn) {
+                    // result stays undefined; falls through to toResponse(undefined) → undefined.
+                } else if (effectiveTimeout) {
+                    // Race the (possibly-async) invocation against the timeout.
                     result = await this.executeWithTimeout(
-                        () => this.resolveHandlerResult(
-                            fn(handlerEvent),
-                            handlerEvent,
-                        ),
+                        () => this.resolveHandlerResult(invocation, handlerEvent),
                         effectiveTimeout,
                         childController,
                     );
+                } else if (isPromise(invocation)) {
+                    // Async handler return — await once. If it resolves
+                    // to undefined, fall back to the async resolver
+                    // (waits for `next()` or abort).
+                    const awaited = await invocation;
+
+                    result = typeof awaited === 'undefined' ?
+                        await this.resolveHandlerResult(undefined, handlerEvent) :
+                        awaited;
+                } else if (typeof invocation === 'undefined') {
+                    // Sync undefined: defer to async resolver — handler
+                    // may invoke `next()` later from a callback.
+                    result = await this.resolveHandlerResult(undefined, handlerEvent);
+                } else {
+                    // Sync non-undefined: zero internal microtasks.
+                    result = invocation;
                 }
             } finally {
                 if (cleanupParentListener) {
@@ -137,7 +141,12 @@ export class Handler implements IDispatcher {
                 }
             }
 
-            response = await toResponse(result, handlerEvent);
+            // `toResponse` returns sync when no ETag is configured —
+            // avoid an unconditional `await` to save a microtask.
+            const toResp = toResponse(result, handlerEvent);
+            response = isPromise(toResp) ?
+                await toResp :
+                toResp;
 
             if (response) {
                 event.dispatched = true;
@@ -165,16 +174,6 @@ export class Handler implements IDispatcher {
 
     // --------------------------------------------------
 
-    matchPath(path: string): boolean {
-        if (!this.pathMatcher) {
-            return true;
-        }
-
-        return this.pathMatcher.test(path);
-    }
-
-    // --------------------------------------------------
-
     /**
      * Resolve a handler's return value into the final value handed to `toResponse`.
      *
@@ -188,7 +187,7 @@ export class Handler implements IDispatcher {
      */
     protected async resolveHandlerResult(
         invocation: unknown | Promise<unknown>,
-        handlerEvent: IRoutupEvent,
+        handlerEvent: IAppEvent,
     ): Promise<unknown> {
         const value = await invocation;
         if (typeof value !== 'undefined') {
@@ -254,8 +253,8 @@ export class Handler implements IDispatcher {
         }
     }
 
-    protected resolveTimeout(routerOptions: RouterOptions): number | undefined {
-        const routerDefault = routerOptions.handlerTimeout;
+    protected resolveTimeout(appOptions: AppOptions): number | undefined {
+        const routerDefault = appOptions.handlerTimeout;
         const handlerOverride = this.config.timeout;
 
         if (!routerDefault && !handlerOverride) {
@@ -270,7 +269,7 @@ export class Handler implements IDispatcher {
             return routerDefault;
         }
 
-        if (routerOptions.handlerTimeoutOverridable) {
+        if (appOptions.handlerTimeoutOverridable) {
             return handlerOverride;
         }
 

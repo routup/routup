@@ -1,6 +1,6 @@
 import { HeaderName } from '../../../constants.ts';
-import type { IRoutupEvent } from '../../../event/index.ts';
-import { RoutupError } from '../../../error/module.ts';
+import type { IAppEvent } from '../../../event/index.ts';
+import { AppError } from '../../../error/module.ts';
 import type { EventStreamMessage } from './types.ts';
 import { serializeEventStreamMessage } from './utils.ts';
 
@@ -15,12 +15,12 @@ export type EventStreamHandle = {
 };
 
 export function createEventStream(
-    event: IRoutupEvent,
+    event: IAppEvent,
     options?: EventStreamOptions,
 ): EventStreamHandle {
     if (options?.maxMessageSize !== undefined) {
         if (!Number.isInteger(options.maxMessageSize) || options.maxMessageSize < 0) {
-            throw new RoutupError('maxMessageSize must be a non-negative integer.');
+            throw new AppError('maxMessageSize must be a non-negative integer.');
         }
     }
 

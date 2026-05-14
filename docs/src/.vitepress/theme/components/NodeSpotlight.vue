@@ -2,16 +2,16 @@
 const code = `// migrate.ts
 import http from 'node:http';
 import compression from 'compression';
-import { Router, defineCoreHandler } from 'routup';
+import { App, defineCoreHandler } from 'routup';
 import { toNodeHandler, fromNodeHandler } from 'routup/node';
 
-const router = new Router();
+const app = new App();
 
 // 1. Wrap an Express/Connect middleware as a routup handler.
-router.use(fromNodeHandler(compression()));
+app.use(fromNodeHandler(compression()));
 
 // 2. Add a return-based handler alongside it.
-router.get('/health', defineCoreHandler(() => ({ ok: true })));
+app.get('/health', defineCoreHandler(() => ({ ok: true })));
 
 // 3. Mount the whole router inside a plain Node http.Server.
 http.createServer(toNodeHandler(router)).listen(3000);`;
@@ -35,9 +35,9 @@ http.createServer(toNodeHandler(router)).listen(3000);`;
                 </p>
                 <ul class="rt-spot-list">
                     <li><strong>fromNodeHandler()</strong> — wrap any (req, res, next) middleware as a routup handler</li>
-                    <li><strong>toNodeHandler()</strong> — convert a Router to a Node-style (req, res) handler</li>
+                    <li><strong>toNodeHandler()</strong> — convert an App to a Node-style (req, res) handler</li>
                     <li><strong>No rewrite</strong> — Express middleware keeps working while you port routes one at a time</li>
-                    <li><strong>Same Router everywhere</strong> — the same routes ship to Bun, Deno, and Cloudflare unchanged</li>
+                    <li><strong>Same App everywhere</strong> — the same routes ship to Bun, Deno, and Cloudflare unchanged</li>
                 </ul>
                 <a
                     class="rt-btn rt-btn-primary"

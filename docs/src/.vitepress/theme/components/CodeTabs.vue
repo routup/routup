@@ -13,18 +13,18 @@ const tabs: Tab[] = [
     },
     {
         label: 'Define',
-        code: `// router.ts
-import { Router, defineCoreHandler } from 'routup';
+        code: `// app.ts
+import { App, defineCoreHandler } from 'routup';
 
-export const router = new Router();
+export const app = new App();
 
-router.get('/', defineCoreHandler(() => 'Hello, routup'));
+app.get('/', defineCoreHandler(() => 'Hello, routup'));
 
-router.get('/users/:id', defineCoreHandler((event) => ({
+app.get('/users/:id', defineCoreHandler((event) => ({
     id: Number(event.params.id),
 })));
 
-router.post('/users', defineCoreHandler(async (event) => {
+app.post('/users', defineCoreHandler(async (event) => {
     const body = await event.request.json();
     return { created: true, body };
 }));`,

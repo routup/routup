@@ -1,6 +1,6 @@
 # Request Helpers
 
-All request helpers take an `IRoutupEvent` as the first argument.
+All request helpers take an `IAppEvent` as the first argument.
 
 ## Headers & Content Negotiation
 
@@ -10,7 +10,7 @@ Get a single request header by name.
 
 ```typescript
 declare function getRequestHeader(
-    event: IRoutupEvent,
+    event: IAppEvent,
     name: string,
 ): string | null;
 ```
@@ -25,7 +25,7 @@ Check whether the request's `Content-Type` matches the given type.
 
 ```typescript
 declare function matchRequestContentType(
-    event: IRoutupEvent,
+    event: IAppEvent,
     type: string,
 ): boolean;
 ```
@@ -42,7 +42,7 @@ Return all content types the client accepts, from the `Accept` header.
 
 ```typescript
 declare function getRequestAcceptableContentTypes(
-    event: IRoutupEvent,
+    event: IAppEvent,
 ): string[];
 ```
 
@@ -52,7 +52,7 @@ Return the best matching content type from the `Accept` header, optionally filte
 
 ```typescript
 declare function getRequestAcceptableContentType(
-    event: IRoutupEvent,
+    event: IAppEvent,
     input?: string | string[],
 ): string | undefined;
 ```
@@ -70,7 +70,7 @@ Return all acceptable charsets from the `Accept-Charset` header.
 
 ```typescript
 declare function getRequestAcceptableCharsets(
-    event: IRoutupEvent,
+    event: IAppEvent,
 ): string[];
 ```
 
@@ -80,7 +80,7 @@ Return the best matching charset from the `Accept-Charset` header.
 
 ```typescript
 declare function getRequestAcceptableCharset(
-    event: IRoutupEvent,
+    event: IAppEvent,
     input: string | string[],
 ): string | undefined;
 ```
@@ -91,7 +91,7 @@ Return all acceptable encodings from the `Accept-Encoding` header.
 
 ```typescript
 declare function getRequestAcceptableEncodings(
-    event: IRoutupEvent,
+    event: IAppEvent,
 ): string[];
 ```
 
@@ -101,7 +101,7 @@ Return the best matching encoding from the `Accept-Encoding` header.
 
 ```typescript
 declare function getRequestAcceptableEncoding(
-    event: IRoutupEvent,
+    event: IAppEvent,
     input: string | string[],
 ): string | undefined;
 ```
@@ -112,7 +112,7 @@ Return all acceptable languages from the `Accept-Language` header.
 
 ```typescript
 declare function getRequestAcceptableLanguages(
-    event: IRoutupEvent,
+    event: IAppEvent,
 ): string[];
 ```
 
@@ -122,7 +122,7 @@ Return the best matching language from the `Accept-Language` header.
 
 ```typescript
 declare function getRequestAcceptableLanguage(
-    event: IRoutupEvent,
+    event: IAppEvent,
     input?: string | string[],
 ): string | undefined;
 ```
@@ -135,7 +135,7 @@ Get the hostname from the request, respecting proxy headers when configured.
 
 ```typescript
 declare function getRequestHostName(
-    event: IRoutupEvent,
+    event: IAppEvent,
     options?: RequestHostNameOptions,
 ): string | undefined;
 ```
@@ -150,7 +150,7 @@ Get the client IP address. Uses the runtime-native value when available, falling
 
 ```typescript
 declare function getRequestIP(
-    event: IRoutupEvent,
+    event: IAppEvent,
     options?: RequestIpOptions,
 ): string | undefined;
 ```
@@ -165,7 +165,7 @@ Get the request protocol (`http` or `https`), respecting proxy headers when conf
 
 ```typescript
 declare function getRequestProtocol(
-    event: IRoutupEvent,
+    event: IAppEvent,
     options?: RequestProtocolOptions,
 ): string;
 ```
@@ -182,7 +182,7 @@ Check the `If-Modified-Since` header against a modification time. Returns `true`
 
 ```typescript
 declare function isRequestCacheable(
-    event: IRoutupEvent,
+    event: IAppEvent,
     modifiedTime: string | Date,
 ): boolean;
 ```

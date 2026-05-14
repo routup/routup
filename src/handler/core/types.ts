@@ -1,9 +1,9 @@
-import type { IRoutupEvent } from '../../event/index.ts';
+import type { IAppEvent } from '../../event/index.ts';
 import type { HandlerType } from '../constants.ts';
 import type { HandlerBaseOptions } from '../types-base.ts';
 
 export type CoreHandler = (
-    event: IRoutupEvent,
+    event: IAppEvent,
 ) => unknown | Promise<unknown>;
 
 export type CoreHandlerOptions = HandlerBaseOptions & {

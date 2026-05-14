@@ -1,6 +1,6 @@
-import type { RoutupRequest } from '../src/index';
+import type { AppRequest } from '../src/index';
 import { DispatcherEvent } from '../src/dispatcher/module';
-import type { RoutupEvent } from '../src/event/module';
+import type { AppEvent } from '../src/event/module';
 
 /**
  * Create a mock ServerRequest for testing.
@@ -9,9 +9,9 @@ import type { RoutupEvent } from '../src/event/module';
 export function createTestRequest(
     url: string,
     options?: RequestInit & { ip?: string },
-): RoutupRequest {
+): AppRequest {
     const fullUrl = url.startsWith('http') ? url : `http://localhost${url}`;
-    const request = new Request(fullUrl, options) as RoutupRequest;
+    const request = new Request(fullUrl, options) as AppRequest;
 
     if (options?.ip) {
         request.ip = options.ip;
@@ -21,12 +21,12 @@ export function createTestRequest(
 }
 
 /**
- * Create a RoutupEvent for testing helpers.
+ * Create a AppEvent for testing helpers.
  * Shorthand for creating a DispatcherEvent and building the public event.
  */
 export function createTestEvent(
     url: string,
     options?: RequestInit & { ip?: string },
-): RoutupEvent {
+): AppEvent {
     return new DispatcherEvent(createTestRequest(url, options)).build();
 }

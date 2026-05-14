@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DispatcherEvent } from '../../../src/dispatcher/module';
-import { RoutupEvent } from '../../../src/event/module';
+import { AppEvent } from '../../../src/event/module';
 import { createTestRequest } from '../../helpers';
 
 describe('src/dispatcher/module (DispatcherEvent)', () => {
@@ -87,13 +87,13 @@ describe('src/dispatcher/module (DispatcherEvent)', () => {
     });
 
     describe('build', () => {
-        it('should create a RoutupEvent with shared references', () => {
+        it('should create a AppEvent with shared references', () => {
             const dispatch = new DispatcherEvent(createTestRequest('http://localhost/test'));
             dispatch.response.status = 201;
 
             const routup = dispatch.build();
 
-            expect(routup).toBeInstanceOf(RoutupEvent);
+            expect(routup).toBeInstanceOf(AppEvent);
             expect(routup.request).toBe(dispatch.request);
             expect(routup.params).toBe(dispatch.params);
             expect(routup.path).toBe(dispatch.path);
@@ -158,14 +158,14 @@ describe('src/dispatcher/module (DispatcherEvent)', () => {
             expect(routup2.store.shared).toBe('yes');
         });
 
-        it('should lazily resolve routerOptions', () => {
+        it('should lazily resolve appOptions', () => {
             const dispatch = new DispatcherEvent(createTestRequest('/'));
-            dispatch.routerPath = [{ options: { subdomainOffset: 5 } }];
+            dispatch.appPath = [{ options: { subdomainOffset: 5 } }];
 
             const routup = dispatch.build();
 
-            expect(routup.routerOptions.subdomainOffset).toBe(5);
-            expect(typeof routup.routerOptions.trustProxy).toBe('function');
+            expect(routup.appOptions.subdomainOffset).toBe(5);
+            expect(typeof routup.appOptions.trustProxy).toBe('function');
         });
 
         it('should cache next() result on repeated calls', async () => {
@@ -210,7 +210,7 @@ describe('src/dispatcher/module (DispatcherEvent)', () => {
 
             expect('dispatched' in routup).toBe(false);
             expect('error' in routup).toBe(false);
-            expect('routerPath' in routup).toBe(false);
+            expect('appPath' in routup).toBe(false);
             expect('methodsAllowed' in routup).toBe(false);
             expect('setNext' in routup).toBe(false);
         });

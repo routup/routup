@@ -1,6 +1,6 @@
-import { RoutupError } from '../../error/module.ts';
+import { AppError } from '../../error/module.ts';
 import { sanitizeHeaderValue } from '../../utils/index.ts';
-import type { IRoutupEvent } from '../../event/index.ts';
+import type { IAppEvent } from '../../event/index.ts';
 
 function escapeHtml(str: string) : string {
     return str
@@ -28,9 +28,9 @@ function isAllowedRedirectUrl(location: string) : boolean {
     }
 }
 
-export function sendRedirect(event: IRoutupEvent, location: string, statusCode = 302): Response {
+export function sendRedirect(event: IAppEvent, location: string, statusCode = 302): Response {
     if (!isAllowedRedirectUrl(location)) {
-        throw new RoutupError({
+        throw new AppError({
             status: 400,
             message: 'Invalid redirect URL scheme.',
         });

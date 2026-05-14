@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-    Router,
+    App,
     defineCoreHandler,
 } from '../../../src';
 import { createTestRequest } from '../../helpers';
@@ -8,7 +8,7 @@ import { createTestRequest } from '../../helpers';
 describe('src/router/timeout', () => {
     describe('global (timeout)', () => {
         it('should return normal response when handler completes before timeout', async () => {
-            const router = new Router({ timeout: 1000 });
+            const router = new App({ timeout: 1000 });
 
             router.use(defineCoreHandler(() => 'ok'));
 
@@ -19,7 +19,7 @@ describe('src/router/timeout', () => {
         });
 
         it('should return 408 when handler exceeds timeout', async () => {
-            const router = new Router({ timeout: 50 });
+            const router = new App({ timeout: 50 });
 
             router.use(defineCoreHandler(async () => {
                 await new Promise((resolve) => { setTimeout(resolve, 200); });
@@ -32,7 +32,7 @@ describe('src/router/timeout', () => {
         });
 
         it('should abort signal when timeout is exceeded', async () => {
-            const router = new Router({ timeout: 50 });
+            const router = new App({ timeout: 50 });
             let signalAborted = false;
 
             router.use(defineCoreHandler(async (event) => {
@@ -51,7 +51,7 @@ describe('src/router/timeout', () => {
         });
 
         it('should provide non-aborted signal to handlers within timeout', async () => {
-            const router = new Router({ timeout: 1000 });
+            const router = new App({ timeout: 1000 });
             let signalAborted = true;
 
             router.use(defineCoreHandler((event) => {
@@ -65,7 +65,7 @@ describe('src/router/timeout', () => {
         });
 
         it('should not apply timeout when option is not set', async () => {
-            const router = new Router();
+            const router = new App();
 
             router.use(defineCoreHandler(async () => {
                 await new Promise((resolve) => { setTimeout(resolve, 10); });
@@ -79,7 +79,7 @@ describe('src/router/timeout', () => {
         });
 
         it('should provide a default signal when no timeout is set', async () => {
-            const router = new Router();
+            const router = new App();
             let hasSignal = false;
 
             router.use(defineCoreHandler((event) => {
@@ -93,7 +93,7 @@ describe('src/router/timeout', () => {
         });
 
         it('should ignore invalid timeout values', async () => {
-            const router = new Router({ timeout: -100 });
+            const router = new App({ timeout: -100 });
 
             router.use(defineCoreHandler(() => 'ok'));
 
@@ -106,7 +106,7 @@ describe('src/router/timeout', () => {
 
     describe('per-handler (handlerTimeout)', () => {
         it('should apply handlerTimeout as default for all handlers', async () => {
-            const router = new Router({ handlerTimeout: 50 });
+            const router = new App({ handlerTimeout: 50 });
 
             router.use(defineCoreHandler(async () => {
                 await new Promise((resolve) => { setTimeout(resolve, 200); });
@@ -119,7 +119,7 @@ describe('src/router/timeout', () => {
         });
 
         it('should allow handler to set shorter timeout than handlerTimeout', async () => {
-            const router = new Router({ handlerTimeout: 500 });
+            const router = new App({ handlerTimeout: 500 });
 
             router.use(defineCoreHandler({
                 timeout: 50,
@@ -135,7 +135,7 @@ describe('src/router/timeout', () => {
         });
 
         it('should not allow handler to extend timeout when not overridable', async () => {
-            const router = new Router({ handlerTimeout: 50 });
+            const router = new App({ handlerTimeout: 50 });
 
             router.use(defineCoreHandler({
                 timeout: 500,
@@ -151,7 +151,7 @@ describe('src/router/timeout', () => {
         });
 
         it('should allow handler to extend timeout when overridable', async () => {
-            const router = new Router({
+            const router = new App({
                 handlerTimeout: 50,
                 handlerTimeoutOverridable: true,
             });
@@ -171,7 +171,7 @@ describe('src/router/timeout', () => {
         });
 
         it('should use handler timeout when no handlerTimeout is set on router', async () => {
-            const router = new Router();
+            const router = new App();
 
             router.use(defineCoreHandler({
                 timeout: 50,
@@ -187,7 +187,7 @@ describe('src/router/timeout', () => {
         });
 
         it('should abort signal when per-handler timeout is exceeded', async () => {
-            const router = new Router({ handlerTimeout: 50 });
+            const router = new App({ handlerTimeout: 50 });
             let signalAborted = false;
 
             router.use(defineCoreHandler(async (event) => {
@@ -206,7 +206,7 @@ describe('src/router/timeout', () => {
         });
 
         it('should abort signal when handler-level timeout is exceeded', async () => {
-            const router = new Router();
+            const router = new App();
             let signalAborted = false;
 
             router.use(defineCoreHandler({
@@ -228,7 +228,7 @@ describe('src/router/timeout', () => {
         });
 
         it('should provide non-aborted signal when handler completes before timeout', async () => {
-            const router = new Router({ handlerTimeout: 1000 });
+            const router = new App({ handlerTimeout: 1000 });
             let signalAborted = true;
 
             router.use(defineCoreHandler((event) => {
@@ -242,7 +242,7 @@ describe('src/router/timeout', () => {
         });
 
         it('should propagate parent signal abort to handler signal', async () => {
-            const router = new Router({ timeout: 50, handlerTimeout: 500 });
+            const router = new App({ timeout: 50, handlerTimeout: 500 });
             let signalAborted = false;
 
             router.use(defineCoreHandler(async (event) => {
@@ -261,7 +261,7 @@ describe('src/router/timeout', () => {
         });
 
         it('should not affect handlers without timeout when handlerTimeout is unset', async () => {
-            const router = new Router();
+            const router = new App();
 
             router.use(defineCoreHandler(async () => {
                 await new Promise((resolve) => { setTimeout(resolve, 10); });
@@ -275,7 +275,7 @@ describe('src/router/timeout', () => {
         });
 
         it('should apply global timeout even when handler timeout is longer', async () => {
-            const router = new Router({
+            const router = new App({
                 timeout: 50,
                 handlerTimeout: 500,
                 handlerTimeoutOverridable: true,

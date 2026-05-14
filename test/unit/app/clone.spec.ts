@@ -5,7 +5,7 @@ import {
     vi,
 } from 'vitest';
 import {
-    Router,
+    App,
     defineCoreHandler,
 } from '../../../src';
 import { HookName } from '../../../src/hook';
@@ -13,7 +13,7 @@ import { createTestRequest } from '../../helpers';
 
 describe('src/router clone', () => {
     it('should produce a router that responds independently', async () => {
-        const original = new Router();
+        const original = new App();
         original.get('/ping', defineCoreHandler(() => 'pong'));
 
         const clone = original.clone();
@@ -26,10 +26,10 @@ describe('src/router clone', () => {
     });
 
     it('should allow mounting clones under multiple paths', async () => {
-        const child = new Router();
+        const child = new App();
         child.get('/ping', defineCoreHandler(() => 'pong'));
 
-        const parent = new Router();
+        const parent = new App();
         for (const path of ['/users', '/members']) {
             parent.use(path, child.clone());
         }
@@ -42,7 +42,7 @@ describe('src/router clone', () => {
     });
 
     it('should not share stack mutations between original and clone', async () => {
-        const original = new Router();
+        const original = new App();
         original.get('/a', defineCoreHandler(() => 'A'));
 
         const clone = original.clone();
@@ -59,7 +59,7 @@ describe('src/router clone', () => {
     });
 
     it('should not share hook listener mutations between original and clone', async () => {
-        const original = new Router();
+        const original = new App();
         original.get('/', defineCoreHandler(() => 'ok'));
 
         const sharedListener = vi.fn();
@@ -83,7 +83,7 @@ describe('src/router clone', () => {
     });
 
     it('should not share plugin registration between original and clone', async () => {
-        const original = new Router();
+        const original = new App();
         original.use({
             name: 'plug',
             version: '1.0.0',
@@ -109,7 +109,7 @@ describe('src/router clone', () => {
 
     it('should share child handler references — clone is shallow', async () => {
         const handler = defineCoreHandler(() => 'shared');
-        const original = new Router();
+        const original = new App();
         original.get('/x', handler);
 
         const clone = original.clone();
@@ -120,21 +120,21 @@ describe('src/router clone', () => {
         expect(await fromOriginal.text()).toEqual('shared');
     });
 
-    it('should preserve the intrinsic mount path on the clone', async () => {
-        const original = new Router({ path: '/api' });
+    it('should preserve combined mount paths through clone()', async () => {
+        const original = new App();
         original.get('/ping', defineCoreHandler(() => 'pong'));
 
         const clone = original.clone();
 
-        const parent = new Router();
-        parent.use(clone);
+        const parent = new App();
+        parent.use('/api', clone);
 
         const response = await parent.fetch(createTestRequest('/api/ping'));
         expect(await response.text()).toEqual('pong');
     });
 
     it('should preserve the router name on the clone', () => {
-        const original = new Router({ name: 'foo' });
+        const original = new App({ name: 'foo' });
         const clone = original.clone();
         expect(clone.name).toEqual('foo');
     });

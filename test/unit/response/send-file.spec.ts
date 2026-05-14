@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import {
+    App,
     HeaderName,
-    Router,
     defineCoreHandler,
     sendFile,
 } from '../../../src';
@@ -50,7 +50,7 @@ describe('src/helpers/response/send-file', () => {
     });
 
     it('should return 500 for non-existent file', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.get('/', defineCoreHandler((event) =>
             sendFile(event, buildSendFileOptions('test/data/foo.json'))));

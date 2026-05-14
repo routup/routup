@@ -1,8 +1,8 @@
 import type { HTTPErrorInput } from '@ebec/http';
-import { RoutupError } from '../../error/module.ts';
+import { AppError } from '../../error/module.ts';
 import { PluginErrorCode } from './constants.ts';
 
-export class PluginError extends RoutupError {
+export class PluginError extends AppError {
     constructor(input: HTTPErrorInput = {}) {
         const options = typeof input === 'string' ? { message: input } : { ...(input as object) };
         if (!('code' in options) || !(options as Record<string, unknown>).code) {

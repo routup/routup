@@ -1,43 +1,41 @@
-import { hasInstanceof } from '@ebec/core';
-import type { Path } from '../path/index.ts';
 import { PathMatcher } from '../path/index.ts';
-import { withLeadingSlash, withoutTrailingSlash } from '../utils/index.ts';
-import { RouterSymbol } from './constants.ts';
-import type { Router } from './module.ts';
-
-export function isRouterInstance(input: unknown): input is Router {
-    return hasInstanceof(input, RouterSymbol);
-}
+import type { IPathMatcher } from '../path/index.ts';
+import { AppStackEntryType } from '../app/constants.ts';
+import type { StackEntry } from '../app/types.ts';
 
 /**
- * Build a non-terminal `PathMatcher` for a router mount path.
+ * Build a path-to-regexp-backed `PathMatcher` for the entry's mount
+ * path, applying the `end:` semantics every resolver should agree on:
  *
- * Returns `undefined` when the path is the root (`/`) or omitted entirely —
- * a router mounted at the root has no intrinsic path filter.
+ * - HANDLER entries with a bound method (verb shortcut, or pre-built
+ *   `Handler` instance whose own `.method` is set) → exact match
+ * - HANDLER entries without a method (middleware) → prefix match
+ * - ROUTER entries → prefix match
+ *
+ * Returns `undefined` when the entry has no mount path — middleware
+ * registered without a path matches every request.
+ *
+ * Resolvers are free to ignore this helper and build their own match
+ * mechanism (radix tree, single aggregated regex, etc.) — it's
+ * provided as a convenience for resolvers that want path-to-regexp
+ * semantics with minimal boilerplate.
  */
-export function buildRouterPathMatcher(value?: Path): PathMatcher | undefined {
-    if (value === '/' || typeof value === 'undefined') {
+export function buildEntryPathMatcher(entry: StackEntry): IPathMatcher | undefined {
+    if (typeof entry.path === 'undefined') {
         return undefined;
     }
 
-    return new PathMatcher(
-        withLeadingSlash(withoutTrailingSlash(`${value}`)),
-        { end: false },
+    const end = entry.type === AppStackEntryType.HANDLER && (
+        typeof entry.method !== 'undefined' ||
+        typeof entry.data.method !== 'undefined'
     );
-}
 
-/**
- * Check if the request accepts JSON responses.
- * Matches application/json and +json suffixes (e.g. application/vnd.api+json).
- * Returns true if no Accept header is present (API-first default).
- */
-export function acceptsJson(request: Request): boolean {
-    const accept = request.headers.get('accept');
-    if (!accept) {
-        return true;
+    // For prefix matchers a lone '/' contributes nothing useful (it
+    // matches every URL), so skip building it. Exact matchers must
+    // honor '/' — `router.get('/', …)` matches the root only.
+    if (!end && entry.path === '/') {
+        return undefined;
     }
 
-    return accept.includes('application/json') ||
-        accept.includes('+json') ||
-        accept.includes('*/*');
+    return new PathMatcher(entry.path, { end });
 }

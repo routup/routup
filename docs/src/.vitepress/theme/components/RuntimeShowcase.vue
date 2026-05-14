@@ -38,7 +38,7 @@ const runtimes: RuntimeCard[] = [
         accent: '#06b6d4',
         href: '/guide/runtime-environments',
         entry: "import { serve } from 'routup/deno'",
-        summary: 'Deno.serve() with permission boundaries and built-in TypeScript — same Router, same handlers.',
+        summary: 'Deno.serve() with permission boundaries and built-in TypeScript — same App, same handlers.',
         bullets: [
             'Deno.serve() integration',
             'Permission-scoped IO',
@@ -49,8 +49,8 @@ const runtimes: RuntimeCard[] = [
         name: 'Cloudflare Workers',
         accent: '#f97316',
         href: '/guide/runtime-environments',
-        entry: "import { Router } from 'routup/cloudflare'",
-        summary: 'Edge-deployable. Export router.fetch as the Worker entry — no server, no cold start.',
+        entry: "import { App } from 'routup/cloudflare'",
+        summary: 'Edge-deployable. Export app.fetch as the Worker entry — no server, no cold start.',
         bullets: [
             'Worker fetch handler',
             'Sub-1ms cold start',
@@ -61,8 +61,8 @@ const runtimes: RuntimeCard[] = [
         name: 'Generic / Fetch',
         accent: '#8b5cf6',
         href: '/guide/runtime-environments',
-        entry: "import { Router } from 'routup/generic'",
-        summary: 'Any host that speaks Web Standards. Wire router.fetch to whatever provides Request and Response.',
+        entry: "import { App } from 'routup/generic'",
+        summary: 'Any host that speaks Web Standards. Wire app.fetch to whatever provides Request and Response.',
         bullets: [
             'Pure Fetch interface',
             'Vercel Edge / Netlify Edge',
@@ -79,7 +79,7 @@ const runtimes: RuntimeCard[] = [
                 Pick your runtime
             </h2>
             <p class="rt-runtimes-sub">
-                One Router, six entry points. Conditional exports route the import to the adapter that
+                One App, six entry points. Conditional exports route the import to the adapter that
                 matches the current runtime — no plugin, no platform branch in your code.
             </p>
 

@@ -1,5 +1,5 @@
 import { HeaderName } from '../../constants.ts';
-import type { IRoutupEvent } from '../../event/index.ts';
+import type { IAppEvent } from '../../event/index.ts';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils/index.ts';
 import { buildTrustProxyFn } from '../../utils/index.ts';
 
@@ -14,12 +14,12 @@ export type RequestIpOptions = {
  * and returns the rightmost untrusted address (the actual client IP).
  * Falls back to `event.request.ip` (the direct connection IP).
  */
-export function getRequestIP(event: IRoutupEvent, options: RequestIpOptions = {}) : string | undefined {
+export function getRequestIP(event: IAppEvent, options: RequestIpOptions = {}) : string | undefined {
     let trustProxy : TrustProxyFn;
     if (typeof options.trustProxy !== 'undefined') {
         trustProxy = buildTrustProxyFn(options.trustProxy);
     } else {
-        trustProxy = event.routerOptions.trustProxy;
+        trustProxy = event.appOptions.trustProxy;
     }
 
     const socketAddr = event.request.ip;

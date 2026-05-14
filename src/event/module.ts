@@ -1,27 +1,27 @@
-import type { RouterOptions } from '../router/types.ts';
+import type { AppOptions } from '../app/types.ts';
 import type {
-    IRoutupEvent,
-    RoutupRequest,
-    RoutupResponse,
+    AppRequest,
+    AppResponse,
+    IAppEvent,
 } from './types.ts';
 
-export type RoutupEventCreateContext = {
-    request: RoutupRequest;
+export type AppEventCreateContext = {
+    request: AppRequest;
     params: Record<string, any>;
     path: string;
     method: string;
     mountPath: string;
     headers: Headers;
     searchParams: URLSearchParams;
-    response: RoutupResponse;
+    response: AppResponse;
     store: Record<string | symbol, unknown>;
     signal: AbortSignal;
-    routerOptions: () => RouterOptions;
-    next: (event: IRoutupEvent, error?: Error) => Promise<Response | undefined>;
+    appOptions: () => AppOptions;
+    next: (event: IAppEvent, error?: Error) => Promise<Response | undefined>;
 };
 
-export class RoutupEvent implements IRoutupEvent {
-    readonly request: RoutupRequest;
+export class AppEvent implements IAppEvent {
+    readonly request: AppRequest;
 
     readonly params: Record<string, any>;
 
@@ -35,15 +35,15 @@ export class RoutupEvent implements IRoutupEvent {
 
     readonly searchParams: URLSearchParams;
 
-    readonly response: RoutupResponse;
+    readonly response: AppResponse;
 
     readonly store: Record<string | symbol, unknown>;
 
     readonly signal: AbortSignal;
 
-    protected _context: RoutupEventCreateContext;
+    protected _context: AppEventCreateContext;
 
-    protected _routerOptions?: RouterOptions;
+    protected _appOptions?: AppOptions;
 
     protected _nextCalled = false;
 
@@ -54,7 +54,7 @@ export class RoutupEvent implements IRoutupEvent {
         resolve: () => void,
     } | undefined;
 
-    constructor(context: RoutupEventCreateContext) {
+    constructor(context: AppEventCreateContext) {
         this._context = context;
         this.request = context.request;
         this.params = context.params;
@@ -68,12 +68,12 @@ export class RoutupEvent implements IRoutupEvent {
         this.signal = context.signal;
     }
 
-    get routerOptions(): RouterOptions {
-        if (!this._routerOptions) {
-            this._routerOptions = this._context.routerOptions();
+    get appOptions(): AppOptions {
+        if (!this._appOptions) {
+            this._appOptions = this._context.appOptions();
         }
 
-        return this._routerOptions;
+        return this._appOptions;
     }
 
     get nextCalled(): boolean {

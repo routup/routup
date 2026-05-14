@@ -90,7 +90,7 @@ export function cookie(options: CookieOptions = {}): Plugin {
 }
 ```
 
-Even when your plugin has no options today, the factory shape lets you add them later without breaking the import surface (`router.use(plugin())` stays the same).
+Even when your plugin has no options today, the factory shape lets you add them later without breaking the import surface (`app.use(plugin())` stays the same).
 
 ## Failing loudly when a dep helper is called too early
 
@@ -99,32 +99,32 @@ Tree-shakeable helpers shouldn't return undefined just because the plugin isn't 
 ```typescript
 import { PluginNotInstalledError } from 'routup';
 
-export function useRequestCookie(event: IRoutupEvent, name: string): string | undefined {
-    if (!event.routerOptions.plugins?.has('cookie')) {
+export function useRequestCookie(event: IAppEvent, name: string): string | undefined {
+    if (!event.appOptions.plugins?.has('cookie')) {
         throw new PluginNotInstalledError('cookie', 'useRequestCookie');
     }
     return readCookieFromStore(event, name);
 }
 ```
 
-The error message tells the caller exactly which `router.use(...)` line they're missing.
+The error message tells the caller exactly which `app.use(...)` line they're missing.
 
 ## Test skeleton
 
-Plugins are easiest to test by registering them on a fresh `Router` and dispatching real `Request` objects through `router.fetch()`:
+Plugins are easiest to test by registering them on a fresh `App` and dispatching real `Request` objects through `app.fetch()`:
 
 ```typescript
 import { describe, expect, it } from 'vitest';
-import { Router, defineCoreHandler } from 'routup';
+import { App, defineCoreHandler } from 'routup';
 import { requestId, useRequestId } from '../src';
 
 describe('request-id', () => {
     it('exposes a generated id when no header is set', async () => {
-        const router = new Router();
-        router.use(requestId());
-        router.get('/', defineCoreHandler((event) => useRequestId(event)));
+        const app = new App();
+        app.use(requestId());
+        app.get('/', defineCoreHandler((event) => useRequestId(event)));
 
-        const response = await router.fetch(new Request('http://localhost/'));
+        const response = await app.fetch(new Request('http://localhost/'));
         const id = await response.text();
 
         expect(id).toMatch(/^[0-9a-f-]{36}$/);
@@ -132,11 +132,11 @@ describe('request-id', () => {
     });
 
     it('echoes an incoming x-request-id', async () => {
-        const router = new Router();
-        router.use(requestId());
-        router.get('/', defineCoreHandler((event) => useRequestId(event)));
+        const app = new App();
+        app.use(requestId());
+        app.get('/', defineCoreHandler((event) => useRequestId(event)));
 
-        const response = await router.fetch(new Request('http://localhost/', {
+        const response = await app.fetch(new Request('http://localhost/', {
             headers: { 'x-request-id': 'abc' },
         }));
 
@@ -145,7 +145,7 @@ describe('request-id', () => {
 });
 ```
 
-No mocks, no test server — `router.fetch(request)` is the entire surface.
+No mocks, no test server — `app.fetch(request)` is the entire surface.
 
 ## See also
 

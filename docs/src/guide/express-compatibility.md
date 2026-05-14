@@ -1,18 +1,18 @@
 # Express Compatibility
 
-Routup provides `fromNodeHandler()` and `fromNodeMiddleware()` to wrap existing Express or Connect middleware for use in routup.
+App provides `fromNodeHandler()` and `fromNodeMiddleware()` to wrap existing Express or Connect middleware for use in routup.
 
 ## fromNodeMiddleware()
 
 Wrap a Node.js `(req, res, next)` middleware. The `next()` callback is bridged back into routup's pipeline:
 
 ```typescript
-import { Router, fromNodeMiddleware } from 'routup';
+import { App, fromNodeMiddleware } from 'routup';
 import cors from 'cors';
 
-const router = new Router();
+const app = new App();
 
-router.use(fromNodeMiddleware(cors()));
+app.use(fromNodeMiddleware(cors()));
 ```
 
 This works with any Express-compatible middleware:
@@ -21,8 +21,8 @@ This works with any Express-compatible middleware:
 import helmet from 'helmet';
 import compression from 'compression';
 
-router.use(fromNodeMiddleware(helmet()));
-router.use(fromNodeMiddleware(compression()));
+app.use(fromNodeMiddleware(helmet()));
+app.use(fromNodeMiddleware(compression()));
 ```
 
 ## fromNodeHandler()
@@ -32,7 +32,7 @@ Wrap a Node.js `(req, res)` handler (without a `next` callback). If the handler 
 ```typescript
 import { fromNodeHandler } from 'routup';
 
-router.use(fromNodeHandler((req, res) => {
+app.use(fromNodeHandler((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('Hello from Node.js handler');
 }));

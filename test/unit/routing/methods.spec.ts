@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+    App,
     HeaderName,
-    Router,
     defineCoreHandler,
 } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
 describe('routing/methods', () => {
     it('should handle different methods', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.delete('/delete', defineCoreHandler(async () => 'delete'));
         router.get('/get', defineCoreHandler(async () => 'get'));
@@ -54,7 +54,7 @@ describe('routing/methods', () => {
     });
 
     it('should define global head handler', async () => {
-        const router = new Router();
+        const router = new App();
         router.head(defineCoreHandler(async () => 'HEAD'));
 
         const response = await router.fetch(createTestRequest('/', { method: 'HEAD' }));
@@ -63,7 +63,7 @@ describe('routing/methods', () => {
     });
 
     it('should define global options handler', async () => {
-        const router = new Router();
+        const router = new App();
         router.options(defineCoreHandler(async () => 'options'));
 
         const response = await router.fetch(createTestRequest('/', { method: 'OPTIONS' }));
@@ -73,7 +73,7 @@ describe('routing/methods', () => {
     });
 
     it('should handle different methods on same path', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.delete(defineCoreHandler(async () => 'delete'));
         router.get(defineCoreHandler(async () => 'get'));

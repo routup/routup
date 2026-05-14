@@ -1,4 +1,4 @@
-import type { IRoutupEvent } from '../../event/index.ts';
+import type { IAppEvent } from '../../event/index.ts';
 
 export type ResponseCacheHeadersOptions = {
     maxAge?: number,
@@ -6,7 +6,7 @@ export type ResponseCacheHeadersOptions = {
     cacheControls?: string[]
 };
 
-export function setResponseCacheHeaders(event: IRoutupEvent, options?: ResponseCacheHeadersOptions) {
+export function setResponseCacheHeaders(event: IAppEvent, options?: ResponseCacheHeadersOptions) {
     options = options || {};
 
     const cacheControls = ['public'].concat(options.cacheControls || []);

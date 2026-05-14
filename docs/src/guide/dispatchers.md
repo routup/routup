@@ -1,31 +1,31 @@
 # Serving
 
-Routup provides multiple ways to serve your application, all built on Web standard APIs for cross-runtime compatibility.
+App provides multiple ways to serve your application, all built on Web standard APIs for cross-runtime compatibility.
 
 ## serve()
 
 The primary way to start a server. Import from a runtime-specific entry point:
 
 ```typescript
-import { Router, defineCoreHandler, serve } from 'routup';
+import { App, defineCoreHandler, serve } from 'routup';
 
-const router = new Router();
-router.get('/', defineCoreHandler(() => 'Hello, World!'));
+const app = new App();
+app.get('/', defineCoreHandler(() => 'Hello, World!'));
 
-serve(router, { port: 3000 });
+serve(app, { port: 3000 });
 ```
 
 The `serve()` function accepts standard server options (port, hostname, etc.).
 
-## router.fetch()
+## app.fetch()
 
-Call `router.fetch()` directly with a `Request` to get a `Response`. Useful for testing or serverless environments:
+Call `app.fetch()` directly with a `Request` to get a `Response`. Useful for testing or serverless environments:
 
 ```typescript
-const router = new Router();
-router.get('/', defineCoreHandler(() => 'Hello'));
+const app = new App();
+app.get('/', defineCoreHandler(() => 'Hello'));
 
-const response = await router.fetch(
+const response = await app.fetch(
     new Request('http://localhost/')
 );
 console.log(await response.text()); // "Hello"
@@ -37,12 +37,12 @@ For Node.js interop, convert a router to a standard `(req, res)` handler. Availa
 
 ```typescript
 import { createServer } from 'node:http';
-import { Router, defineCoreHandler, toNodeHandler } from 'routup/node';
+import { App, defineCoreHandler, toNodeHandler } from 'routup/node';
 
-const router = new Router();
-router.get('/', defineCoreHandler(() => 'Hello'));
+const app = new App();
+app.get('/', defineCoreHandler(() => 'Hello'));
 
-const server = createServer(toNodeHandler(router));
+const server = createServer(toNodeHandler(app));
 server.listen(3000);
 ```
 

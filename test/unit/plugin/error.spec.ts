@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+    AppError,
     PluginError,
     PluginErrorCode,
     PluginInstallError,
     PluginNotInstalledError,
-    RoutupError,
     createError,
     isPluginError,
 } from '../../../src';
@@ -15,7 +15,7 @@ describe('src/plugin/error', () => {
         it('should create a plugin error', () => {
             const error = new PluginError({ message: 'something went wrong' });
             expect(error).toBeInstanceOf(PluginError);
-            expect(error).toBeInstanceOf(RoutupError);
+            expect(error).toBeInstanceOf(AppError);
             expect(error.name).toBe('PluginError');
             expect(error.code).toBe(PluginErrorCode.PLUGIN);
             expect(error.message).toBe('something went wrong');
@@ -37,7 +37,7 @@ describe('src/plugin/error', () => {
             const error = new PluginNotInstalledError('cookie', 'useRequestCookies');
             expect(error).toBeInstanceOf(PluginNotInstalledError);
             expect(error).toBeInstanceOf(PluginError);
-            expect(error).toBeInstanceOf(RoutupError);
+            expect(error).toBeInstanceOf(AppError);
             expect(error.name).toBe('PluginNotInstalledError');
             expect(error.code).toBe(PluginErrorCode.NOT_INSTALLED);
             expect(error.pluginName).toBe('cookie');
@@ -73,7 +73,7 @@ describe('src/plugin/error', () => {
             const error = new PluginInstallError('cookie');
             expect(error).toBeInstanceOf(PluginInstallError);
             expect(error).toBeInstanceOf(PluginError);
-            expect(error).toBeInstanceOf(RoutupError);
+            expect(error).toBeInstanceOf(AppError);
             expect(error.name).toBe('PluginInstallError');
             expect(error.code).toBe(PluginErrorCode.INSTALL);
             expect(error.pluginName).toBe('cookie');

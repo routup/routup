@@ -1,6 +1,6 @@
 # Handlers
 
-Handlers are functions that process requests. They receive an `IRoutupEvent` and return a value that becomes the response.
+Handlers are functions that process requests. They receive an `IAppEvent` and return a value that becomes the response.
 
 ## Core Handlers
 
@@ -137,7 +137,7 @@ const handler = defineCoreHandler({
 ### Global
 
 ```typescript
-router.use(defineCoreHandler((event) => {
+app.use(defineCoreHandler((event) => {
     return event.next();
 }));
 ```
@@ -145,14 +145,14 @@ router.use(defineCoreHandler((event) => {
 ### By Method
 
 ```typescript
-router.get('/', defineCoreHandler((event) => 'Hello'));
-router.post('/users', defineCoreHandler((event) => { /* ... */ }));
+app.get('/', defineCoreHandler((event) => 'Hello'));
+app.post('/users', defineCoreHandler((event) => { /* ... */ }));
 ```
 
 ### By Path
 
 ```typescript
-router.use('/api', defineCoreHandler((event) => {
+app.use('/api', defineCoreHandler((event) => {
     return { api: true };
 }));
 ```
@@ -160,7 +160,7 @@ router.use('/api', defineCoreHandler((event) => {
 ### By Path and Method
 
 ```typescript
-router.get('/users/:id', defineCoreHandler((event) => {
+app.get('/users/:id', defineCoreHandler((event) => {
     return { id: event.params.id };
 }));
 ```

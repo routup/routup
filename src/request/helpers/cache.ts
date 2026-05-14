@@ -1,8 +1,8 @@
 import { HeaderName } from '../../constants.ts';
 
-import type { IRoutupEvent } from '../../event/index.ts';
+import type { IAppEvent } from '../../event/index.ts';
 
-export function isRequestCacheable(event: IRoutupEvent, modifiedTime: string | Date) : boolean {
+export function isRequestCacheable(event: IAppEvent, modifiedTime: string | Date) : boolean {
     const modifiedSince = event.headers.get(HeaderName.IF_MODIFIED_SINCE);
     if (!modifiedSince) {
         return false;

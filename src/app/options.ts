@@ -4,13 +4,13 @@ import {
     buildEtagFn,
     buildTrustProxyFn,
 } from '../utils/index.ts';
-import type { RouterOptions, RouterOptionsInput } from './types.ts';
+import type { AppOptions, AppOptionsInput } from './types.ts';
 
-export function normalizeRouterOptions(input: RouterOptionsInput): Partial<RouterOptions> {
+export function normalizeAppOptions(input: AppOptionsInput): Partial<AppOptions> {
     let etag : EtagFn | null | undefined;
     if (typeof input.etag !== 'undefined') {
         // Keep `false` (and `null` from already-normalized options being
-        // re-spread, e.g. via Router.clone) as the literal `null`
+        // re-spread, e.g. via App.clone) as the literal `null`
         // sentinel so toResponse() can synchronously skip the ETag path.
         // A truthy no-op fn (the previous behavior) forced an
         // `await applyEtag(...)` microtask hop on every request.

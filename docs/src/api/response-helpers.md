@@ -1,6 +1,6 @@
 # Response Helpers
 
-All response helpers take an `IRoutupEvent` as the first argument. Most send helpers return a `Response` object. Header helpers mutate `event.response.headers` in place.
+All response helpers take an `IAppEvent` as the first argument. Most send helpers return a `Response` object. Header helpers mutate `event.response.headers` in place.
 
 ## Send Helpers
 
@@ -10,7 +10,7 @@ Redirect the client to another URL. Sends an HTML body with a `<meta>` refresh a
 
 ```typescript
 declare function sendRedirect(
-    event: IRoutupEvent,
+    event: IAppEvent,
     location: string,
     statusCode?: number,
 ): Response;
@@ -26,7 +26,7 @@ Send a file with support for range requests, ETag generation, and automatic cont
 
 ```typescript
 declare function sendFile(
-    event: IRoutupEvent,
+    event: IAppEvent,
     options: SendFileOptions,
 ): Promise<Response>;
 ```
@@ -65,7 +65,7 @@ Wrap a `ReadableStream` in a `Response`.
 
 ```typescript
 declare function sendStream(
-    event: IRoutupEvent,
+    event: IAppEvent,
     stream: ReadableStream,
 ): Response;
 ```
@@ -81,7 +81,7 @@ Send a `201 Created` response with optional body data.
 
 ```typescript
 declare function sendCreated(
-    event: IRoutupEvent,
+    event: IAppEvent,
     data?: unknown,
 ): Promise<Response>;
 ```
@@ -96,7 +96,7 @@ Send a `202 Accepted` response with optional body data.
 
 ```typescript
 declare function sendAccepted(
-    event: IRoutupEvent,
+    event: IAppEvent,
     data?: unknown,
 ): Promise<Response>;
 ```
@@ -111,7 +111,7 @@ Perform content negotiation and send the response in the format the client prefe
 
 ```typescript
 declare function sendFormat(
-    event: IRoutupEvent,
+    event: IAppEvent,
     formats: {
         default: () => unknown;
         [contentType: string]: () => unknown;
@@ -135,7 +135,7 @@ Set the `Content-Disposition` header to `attachment`. When a filename is provide
 
 ```typescript
 declare function setResponseHeaderAttachment(
-    event: IRoutupEvent,
+    event: IAppEvent,
     filename?: string,
 ): void;
 ```
@@ -151,7 +151,7 @@ Set the `Content-Disposition` header to `inline`. When a filename is provided, a
 
 ```typescript
 declare function setResponseHeaderInline(
-    event: IRoutupEvent,
+    event: IAppEvent,
     filename?: string,
 ): void;
 ```
@@ -167,7 +167,7 @@ Set the `Content-Type` response header. Optionally skip if a content type is alr
 
 ```typescript
 declare function setResponseHeaderContentType(
-    event: IRoutupEvent,
+    event: IAppEvent,
     type: string,
     ifNotExists?: boolean,
 ): void;
@@ -183,7 +183,7 @@ Set `Cache-Control` and `Last-Modified` headers based on the provided options.
 
 ```typescript
 declare function setResponseCacheHeaders(
-    event: IRoutupEvent,
+    event: IAppEvent,
     options?: ResponseCacheHeadersOptions,
 ): void;
 ```
@@ -211,7 +211,7 @@ Append a value to an existing response header (or create it).
 
 ```typescript
 declare function appendResponseHeader(
-    event: IRoutupEvent,
+    event: IAppEvent,
     name: string,
     value: string | string[],
 ): void;
@@ -227,7 +227,7 @@ Append a directive to an existing response header value (or create the header). 
 
 ```typescript
 declare function appendResponseHeaderDirective(
-    event: IRoutupEvent,
+    event: IAppEvent,
     name: string,
     value: string | string[],
 ): void;
@@ -244,7 +244,7 @@ appendResponseHeaderDirective(event, 'Cache-Control', 'no-cache');
 Check whether the response has already been dispatched (i.e., `event.dispatched` is `true`).
 
 ```typescript
-declare function isResponseGone(event: IRoutupEvent): boolean;
+declare function isResponseGone(event: IAppEvent): boolean;
 ```
 
 ### `setResponseGone`
@@ -252,7 +252,7 @@ declare function isResponseGone(event: IRoutupEvent): boolean;
 Mark the response as dispatched.
 
 ```typescript
-declare function setResponseGone(event: IRoutupEvent): void;
+declare function setResponseGone(event: IAppEvent): void;
 ```
 
 ## Event Stream (SSE)
@@ -263,7 +263,7 @@ Create a Server-Sent Events stream. Returns a handle with methods to write event
 
 ```typescript
 declare function createEventStream(
-    event: IRoutupEvent,
+    event: IAppEvent,
     options?: EventStreamOptions,
 ): EventStreamHandle;
 ```
@@ -322,7 +322,7 @@ Set the `Content-Type` header based on a file's extension.
 
 ```typescript
 declare function setResponseContentTypeByFileName(
-    event: IRoutupEvent,
+    event: IAppEvent,
     fileName: string,
 ): void;
 ```

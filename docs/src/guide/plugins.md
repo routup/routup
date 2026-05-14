@@ -1,21 +1,21 @@
 # Plugins
 
-Routup is minimalistic by design. Plugins extend the framework with additional functionality that is not part of the core.
+App is minimalistic by design. Plugins extend the framework with additional functionality that is not part of the core.
 
-A plugin is an object with a `name` and an `install` method that receives the router instance.
+A plugin is an object with a `name` and an `install` method that receives the app instance.
 
 ## Mounting
 
 Mount a plugin globally:
 
 ```typescript
-router.use(myPlugin({ /* options */ }));
+app.use(myPlugin({ /* options */ }));
 ```
 
 Mount a plugin on a specific path:
 
 ```typescript
-router.use('/api', myPlugin({ /* options */ }));
+app.use('/api', myPlugin({ /* options */ }));
 ```
 
 ## Writing a Plugin

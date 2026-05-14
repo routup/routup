@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { Router, defineCoreHandler } from '../../../src';
+import { App, defineCoreHandler } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
 describe('routing/paths', () => {
     it('should handle path', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.get('/foo', defineCoreHandler(async () => '/foo'));
         router.get('/foo/bar/baz', defineCoreHandler(async () => '/foo/bar/baz'));
@@ -20,10 +20,39 @@ describe('routing/paths', () => {
         expect(await response.text()).toEqual('/foo/bar/baz');
     });
 
-    it('should handle path by mount path', async () => {
-        const router = new Router({ path: '/foo' });
+    it('should prepend AppOptions.path to every registered entry', async () => {
+        const router = new App({ path: '/api' });
+        router.get('/users', defineCoreHandler(() => 'users'));
+        router.get('/users/:id', defineCoreHandler((event) => `user-${event.params.id}`));
 
-        router.get('/bar', defineCoreHandler(() => '/foo/bar'));
+        const list = await router.fetch(createTestRequest('/api/users'));
+        expect(await list.text()).toEqual('users');
+
+        const item = await router.fetch(createTestRequest('/api/users/42'));
+        expect(await item.text()).toEqual('user-42');
+
+        // Unprefixed paths should not match.
+        const miss = await router.fetch(createTestRequest('/users'));
+        expect(miss.status).toEqual(404);
+    });
+
+    it('should compose AppOptions.path with explicit child mounts', async () => {
+        const inner = new App();
+        inner.get('/list', defineCoreHandler(() => 'list'));
+
+        const outer = new App({ path: '/api' });
+        outer.use('/v1', inner);
+
+        const ok = await outer.fetch(createTestRequest('/api/v1/list'));
+        expect(await ok.text()).toEqual('list');
+    });
+
+    it('should bind a router under a mount path via use()', async () => {
+        const inner = new App();
+        inner.get('/bar', defineCoreHandler(() => '/foo/bar'));
+
+        const router = new App();
+        router.use('/foo', inner);
 
         const response = await router.fetch(createTestRequest('/foo/bar'));
 
@@ -32,12 +61,14 @@ describe('routing/paths', () => {
     });
 
     it('should handle path for nested routers', async () => {
-        const child = new Router({ path: '/bar' });
-
+        const child = new App();
         child.get('/baz', defineCoreHandler(() => '/foo/bar/baz'));
 
-        const router = new Router({ path: '/foo' });
-        router.use(child);
+        const middle = new App();
+        middle.use('/bar', child);
+
+        const router = new App();
+        router.use('/foo', middle);
 
         const response = await router.fetch(createTestRequest('/foo/bar/baz'));
 
@@ -46,7 +77,7 @@ describe('routing/paths', () => {
     });
 
     it('should handle named parameters', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.get('/users/:id', defineCoreHandler((event) => ({ id: event.params.id })));
 
@@ -57,7 +88,7 @@ describe('routing/paths', () => {
     });
 
     it('should handle multiple named parameters', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.get('/users/:id/roles/:roleId', defineCoreHandler((event) => ({
             id: event.params.id,
@@ -71,7 +102,7 @@ describe('routing/paths', () => {
     });
 
     it('should handle wildcard parameters', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.get('/files/{*path}', defineCoreHandler((event) => ({ path: event.params.path })));
 
@@ -82,7 +113,7 @@ describe('routing/paths', () => {
     });
 
     it('should handle optional parameters with value', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.get('/users{/:id}', defineCoreHandler((event) => ({ id: event.params.id || 'none' })));
 
@@ -93,7 +124,7 @@ describe('routing/paths', () => {
     });
 
     it('should handle optional parameters without value', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.get('/users{/:id}', defineCoreHandler((event) => ({ id: event.params.id || 'none' })));
 

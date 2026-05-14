@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
-    Router,
+    App,
     defineCoreHandler,
 } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
 describe('routing/parameters', () => {
     it('should capture parameters', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.get('/:id/:action', defineCoreHandler(async (event) => event.params));
 
@@ -20,10 +20,12 @@ describe('routing/parameters', () => {
         });
     });
 
-    it('should pass on captured parameters', async () => {
-        const router = new Router({ path: '/:id' });
+    it('should pass on captured parameters through nested mount', async () => {
+        const inner = new App();
+        inner.get('/:action', defineCoreHandler(async (event) => event.params));
 
-        router.get('/:action', defineCoreHandler(async (event) => event.params));
+        const router = new App();
+        router.use('/:id', inner);
 
         const response = await router.fetch(createTestRequest('/123/run'));
 

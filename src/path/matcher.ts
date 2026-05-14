@@ -1,6 +1,11 @@
 import type { Key } from 'path-to-regexp';
 import { pathToRegexp } from 'path-to-regexp';
-import type { Path, PathMatcherExecResult, PathMatcherOptions } from './type.ts';
+import type {
+    IPathMatcher,
+    Path,
+    PathMatcherExecResult,
+    PathMatcherOptions,
+} from './type.ts';
 
 function decodeParam(val: unknown) {
     /* istanbul ignore next */
@@ -15,7 +20,7 @@ function decodeParam(val: unknown) {
     }
 }
 
-export class PathMatcher {
+export class PathMatcher implements IPathMatcher {
     protected path: Path;
 
     protected regexp : RegExp;
@@ -34,7 +39,7 @@ export class PathMatcher {
         this.regexpKeys = regexp.keys;
     }
 
-    test(path: string) {
+    test(path: string) : boolean {
         return this.regexp.test(path);
     }
 

@@ -1,11 +1,11 @@
-import type { IRoutupEvent } from '../../event/index.ts';
-import type { RoutupError } from '../../error/module.ts';
+import type { IAppEvent } from '../../event/index.ts';
+import type { AppError } from '../../error/module.ts';
 import type { HandlerType } from '../constants.ts';
 import type { HandlerBaseOptions } from '../types-base.ts';
 
 export type ErrorHandler = (
-    error: RoutupError,
-    event: IRoutupEvent,
+    error: AppError,
+    event: IAppEvent,
 ) => unknown | Promise<unknown>;
 
 export type ErrorHandlerOptions = HandlerBaseOptions & {

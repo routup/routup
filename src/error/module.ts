@@ -4,12 +4,12 @@ import type { HTTPErrorInput } from '@ebec/http';
 
 export type { HTTPErrorInput };
 
-export const ErrorSymbol = Symbol.for('RoutupError');
+export const ErrorSymbol = Symbol.for('AppError');
 
-export class RoutupError extends HTTPError {
+export class AppError extends HTTPError {
     constructor(input: HTTPErrorInput = {}) {
         super(input);
-        this.name = 'RoutupError';
+        this.name = 'AppError';
         markInstanceof(this, ErrorSymbol);
     }
 }

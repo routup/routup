@@ -1,17 +1,17 @@
-import type { RoutupError } from '../error/module.ts';
+import type { AppError } from '../error/module.ts';
 import type {
-    IRoutupEvent,
+    AppRequest,
+    AppResponse,
+    IAppEvent,
     NextFn,
-    RoutupRequest,
-    RoutupResponse,
 } from '../event/types.ts';
-import type { RouterOptions, RouterPathNode } from '../router/types.ts';
+import type { AppOptions, AppPathNode } from '../app/types.ts';
 
 export interface IDispatcherEvent {
     /**
      * The srvx ServerRequest (extends Web Standard Request).
      */
-    readonly request: RoutupRequest;
+    readonly request: AppRequest;
 
     /**
      * Route parameters extracted from the URL path pattern.
@@ -36,7 +36,7 @@ export interface IDispatcherEvent {
     /**
      * Response accumulator — set status/headers before returning a plain value.
      */
-    readonly response: RoutupResponse;
+    readonly response: AppResponse;
 
     /**
      * Whether a response has been produced.
@@ -46,13 +46,13 @@ export interface IDispatcherEvent {
     /**
      * Error that occurred during dispatch, if any.
      */
-    error?: RoutupError;
+    error?: AppError;
 
     /**
-     * Router stack for nesting tracking.
+     * App stack for nesting tracking.
      * Used internally by router options resolution.
      */
-    routerPath: RouterPathNode[];
+    appPath: AppPathNode[];
 
     /**
      * Abort signal for cooperative cancellation.
@@ -80,7 +80,7 @@ export interface IDispatcherEvent {
     setNext(fn?: NextFn): void;
 
     /**
-     * Build a public RoutupEvent from the current dispatch state.
+     * Build a public AppEvent from the current dispatch state.
      *
      * Creates a lightweight snapshot with shared references (store, response, headers)
      * and pre-resolved router options. This is the event passed to handler functions.
@@ -89,19 +89,19 @@ export interface IDispatcherEvent {
      *                 uses this signal instead of the dispatcher event's own signal.
      *                 Used by per-handler timeout to provide a handler-scoped signal.
      */
-    build(signal?: AbortSignal): IRoutupEvent;
+    build(signal?: AbortSignal): IAppEvent;
 
     /**
      * Resolve the effective router options at the current point in the
      * dispatch chain — framework defaults merged with each router's
-     * options walked from `routerPath` (innermost wins).
+     * options walked from `appPath` (innermost wins).
      *
-     * Exposed so `Handler.dispatch` can read `routerOptions` directly to
+     * Exposed so `Handler.dispatch` can read `appOptions` directly to
      * decide on per-handler timeout without first wrapping into a
-     * `RoutupEvent` via `build()`. Each call recomputes; callers that
+     * `AppEvent` via `build()`. Each call recomputes; callers that
      * read repeatedly should cache the result locally.
      */
-    resolveOptions(): RouterOptions;
+    resolveOptions(): AppOptions;
 }
 
 export interface IDispatcher {

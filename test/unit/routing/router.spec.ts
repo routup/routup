@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
-    Router,
+    App,
     defineCoreHandler,
 } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
 describe('src/module', () => {
     it('should send hello world', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.use(defineCoreHandler(() => 'Hello, World!'));
 
@@ -18,7 +18,7 @@ describe('src/module', () => {
     });
 
     it('should process async & sync handler', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.get(
             '/async',
@@ -41,7 +41,7 @@ describe('src/module', () => {
     });
 
     it('should process dynamic path', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.get('/param/:id', defineCoreHandler(async (event) => event.params.id));
 
@@ -52,7 +52,7 @@ describe('src/module', () => {
     });
 
     it('should process with no matching route', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.get(
             '/param/:id',
@@ -65,7 +65,7 @@ describe('src/module', () => {
     });
 
     it('should process with error thrown', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.get('/', defineCoreHandler(() => {
             throw new Error('foo');
@@ -77,7 +77,7 @@ describe('src/module', () => {
     });
 
     it('should process with async error thrown', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.get('/', defineCoreHandler(async () => {
             await new Promise((_resolve, reject) => {

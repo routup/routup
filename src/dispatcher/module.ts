@@ -1,21 +1,21 @@
 import { FastURL } from 'srvx';
-import type { RoutupError } from '../error/module.ts';
-import { RoutupEvent } from '../event/module.ts';
+import type { AppError } from '../error/module.ts';
+import { AppEvent } from '../event/module.ts';
 import type {
-    IRoutupEvent,
+    AppRequest,
+    AppResponse,
+    IAppEvent,
     NextFn,
-    RoutupRequest,
-    RoutupResponse,
 } from '../event/types.ts';
 import { toResponse } from '../response/index.ts';
-import type { RouterOptions, RouterPathNode } from '../router/types.ts';
+import type { AppOptions, AppPathNode } from '../app/types.ts';
 import { buildEtagFn } from '../utils/index.ts';
 import type { IDispatcherEvent } from './types.ts';
 
 // Framework defaults applied beneath any router-level overrides. Hoisted
 // to module scope so resolveOptions() doesn't allocate a fresh defaults
 // object — including a new `etag` closure via buildEtagFn() — per request.
-const DEFAULT_ROUTER_OPTIONS: RouterOptions = {
+const DEFAULT_ROUTER_OPTIONS: AppOptions = {
     trustProxy: () => false,
     subdomainOffset: 2,
     etag: buildEtagFn(),
@@ -23,7 +23,7 @@ const DEFAULT_ROUTER_OPTIONS: RouterOptions = {
 };
 
 export class DispatcherEvent implements IDispatcherEvent {
-    readonly request: RoutupRequest;
+    readonly request: AppRequest;
 
     params: Record<string, any>;
 
@@ -38,13 +38,13 @@ export class DispatcherEvent implements IDispatcherEvent {
 
     mountPath: string;
 
-    error?: RoutupError;
+    error?: AppError;
 
-    routerPath: RouterPathNode[];
+    appPath: AppPathNode[];
 
     protected _dispatched: boolean;
 
-    protected _response?: RoutupResponse;
+    protected _response?: AppResponse;
 
     protected _store?: Record<string | symbol, unknown>;
 
@@ -56,7 +56,7 @@ export class DispatcherEvent implements IDispatcherEvent {
     /**
      * Continuation function for middleware onion model.
      */
-    protected _next?: (event: IRoutupEvent, error?: Error) => Promise<Response | undefined>;
+    protected _next?: (event: IAppEvent, error?: Error) => Promise<Response | undefined>;
 
     protected _signal?: AbortSignal;
 
@@ -74,14 +74,14 @@ export class DispatcherEvent implements IDispatcherEvent {
 
     // ------------------------------------------------------------------------
 
-    constructor(request: RoutupRequest) {
+    constructor(request: AppRequest) {
         this.request = request;
         this._url = new FastURL(request.url);
         this.method = request.method;
         this.path = this._url.pathname;
         this.mountPath = '/';
         this.params = {};
-        this.routerPath = [];
+        this.appPath = [];
         this.methodsAllowed = new Set();
         this._dispatched = false;
         this._nextCalled = false;
@@ -89,7 +89,7 @@ export class DispatcherEvent implements IDispatcherEvent {
 
     // ------------------------------------------------------------------------
 
-    get response(): RoutupResponse {
+    get response(): AppResponse {
         if (!this._response) {
             this._response = { status: 200, headers: new Headers() };
         }
@@ -154,7 +154,7 @@ export class DispatcherEvent implements IDispatcherEvent {
 
     // ------------------------------------------------------------------------
 
-    protected async next(event: IRoutupEvent, error?: Error): Promise<Response | undefined> {
+    protected async next(event: IAppEvent, error?: Error): Promise<Response | undefined> {
         if (this._nextCalled) {
             return this._nextResult;
         }
@@ -183,8 +183,8 @@ export class DispatcherEvent implements IDispatcherEvent {
 
     // ------------------------------------------------------------------------
 
-    build(signal?: AbortSignal): RoutupEvent {
-        return new RoutupEvent({
+    build(signal?: AbortSignal): AppEvent {
+        return new AppEvent({
             request: this.request,
             params: this.params,
             path: this.path,
@@ -195,8 +195,8 @@ export class DispatcherEvent implements IDispatcherEvent {
             response: this.response,
             store: this.store,
             signal: signal ?? this.signal,
-            routerOptions: () => this.resolveOptions(),
-            next: (event: IRoutupEvent, error?: Error) => this.next(event, error),
+            appOptions: () => this.resolveOptions(),
+            next: (event: IAppEvent, error?: Error) => this.next(event, error),
         });
     }
 
@@ -210,11 +210,11 @@ export class DispatcherEvent implements IDispatcherEvent {
         return this._store!;
     }
 
-    resolveOptions(): RouterOptions {
-        const resolved: RouterOptions = { ...DEFAULT_ROUTER_OPTIONS };
+    resolveOptions(): AppOptions {
+        const resolved: AppOptions = { ...DEFAULT_ROUTER_OPTIONS };
 
-        for (let i = 0; i < this.routerPath.length; i++) {
-            const { options } = this.routerPath[i]!;
+        for (let i = 0; i < this.appPath.length; i++) {
+            const { options } = this.appPath[i]!;
             for (const key in options) {
                 const value = (options as Record<string, unknown>)[key];
                 if (typeof value !== 'undefined') {

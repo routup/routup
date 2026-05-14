@@ -120,7 +120,7 @@ describe('src/response/to-response', () => {
         expect(result!.headers.get('x-custom')).toBe('value');
     });
 
-    it('should throw RoutupError when JSON.stringify fails', async () => {
+    it('should throw AppError when JSON.stringify fails', async () => {
         const event = createTestEvent('/');
         const circular: Record<string, unknown> = {};
         circular.self = circular;

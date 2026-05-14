@@ -67,7 +67,7 @@ export default defineConfig({
                 {
                     text: 'Essentials',
                     items: [
-                        { text: 'Router', link: '/guide/router' },
+                        { text: 'App', link: '/guide/app' },
                         { text: 'Handlers', link: '/guide/handlers' },
                         { text: 'Request', link: '/guide/request' },
                         { text: 'Response', link: '/guide/response' },
@@ -96,6 +96,7 @@ export default defineConfig({
                     items: [
                         { text: 'Express Compatibility', link: '/guide/express-compatibility' },
                         { text: 'Migrating to v5', link: '/guide/migration-v5' },
+                        { text: 'Migrating to v6', link: '/guide/migration-v6' },
                     ],
                 },
             ],

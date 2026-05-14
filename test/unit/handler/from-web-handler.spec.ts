@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-    Router,
+    App,
     defineCoreHandler,
     fromWebHandler,
 } from '../../../src';
@@ -8,7 +8,7 @@ import { createTestRequest } from '../../helpers';
 
 describe('src/handler/adapters/web', () => {
     it('should mount a plain fetch function', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.use('/api', fromWebHandler((req: Request) => new Response(new URL(req.url).pathname)));
 
@@ -25,7 +25,7 @@ describe('src/handler/adapters/web', () => {
             },
         };
 
-        const router = new Router();
+        const router = new App();
         router.use('/app', fromWebHandler(app));
 
         const response = await router.fetch(createTestRequest('/app/hello'));
@@ -35,7 +35,7 @@ describe('src/handler/adapters/web', () => {
     });
 
     it('should pass original request URL', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.use('/api/v1', fromWebHandler((req: Request) => new Response(req.url)));
 
@@ -46,7 +46,7 @@ describe('src/handler/adapters/web', () => {
     });
 
     it('should preserve request method', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.use('/api', fromWebHandler((req: Request) => new Response(req.method)));
 
@@ -57,7 +57,7 @@ describe('src/handler/adapters/web', () => {
     });
 
     it('should preserve request headers', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.use('/api', fromWebHandler((req: Request) => new Response(req.headers.get('x-custom') || '')));
 
@@ -68,7 +68,7 @@ describe('src/handler/adapters/web', () => {
     });
 
     it('should preserve request body', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.use('/api', fromWebHandler(async (req: Request) => {
             const body = await req.text();
@@ -85,7 +85,7 @@ describe('src/handler/adapters/web', () => {
     });
 
     it('should work without mount path', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.use(fromWebHandler((req: Request) => new Response(new URL(req.url).pathname)));
 
@@ -96,7 +96,7 @@ describe('src/handler/adapters/web', () => {
     });
 
     it('should work alongside regular handlers', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.get('/native', defineCoreHandler(() => 'native'));
         router.use('/external', fromWebHandler(() => new Response('external')));
@@ -111,7 +111,7 @@ describe('src/handler/adapters/web', () => {
     });
 
     it('should preserve query string', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.use('/api', fromWebHandler((req: Request) => {
             const url = new URL(req.url);

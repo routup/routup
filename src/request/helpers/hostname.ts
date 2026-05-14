@@ -1,18 +1,18 @@
 import { HeaderName } from '../../constants.ts';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils/index.ts';
 import { buildTrustProxyFn } from '../../utils/index.ts';
-import type { IRoutupEvent } from '../../event/index.ts';
+import type { IAppEvent } from '../../event/index.ts';
 
 export type RequestHostNameOptions = {
     trustProxy?: TrustProxyInput,
 };
 
-export function getRequestHostName(event: IRoutupEvent, options: RequestHostNameOptions = {}) : string | undefined {
+export function getRequestHostName(event: IAppEvent, options: RequestHostNameOptions = {}) : string | undefined {
     let trustProxy : TrustProxyFn;
     if (typeof options.trustProxy !== 'undefined') {
         trustProxy = buildTrustProxyFn(options.trustProxy);
     } else {
-        trustProxy = event.routerOptions.trustProxy;
+        trustProxy = event.appOptions.trustProxy;
     }
 
     let hostname = event.headers.get(HeaderName.X_FORWARDED_HOST);

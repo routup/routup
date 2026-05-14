@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Router, defineCoreHandler } from '../../../src';
+import { App, defineCoreHandler } from '../../../src';
 import type { Plugin } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
@@ -18,7 +18,7 @@ function plugin(options: Options = {}) : Plugin {
 
 describe('src/plugin/**', () => {
     it('should install plugin', async () => {
-        const router = new Router();
+        const router = new App();
         router.use(plugin());
 
         const response = await router.fetch(createTestRequest('/'));
@@ -28,7 +28,7 @@ describe('src/plugin/**', () => {
     });
 
     it('should install plugin with same name', async () => {
-        const router = new Router();
+        const router = new App();
         router.use({
             name: 'plugin',
             install: () => {
@@ -49,7 +49,7 @@ describe('src/plugin/**', () => {
     });
 
     it('should install plugin with options', async () => {
-        const router = new Router();
+        const router = new App();
         router.use(plugin({ handlerPath: '/foo' }));
 
         let response = await router.fetch(createTestRequest('/'));
@@ -63,7 +63,7 @@ describe('src/plugin/**', () => {
     });
 
     it('should install plugin as child router', async () => {
-        const router = new Router();
+        const router = new App();
         router.use('/child', plugin());
 
         let response = await router.fetch(createTestRequest('/child'));
