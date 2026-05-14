@@ -34,7 +34,7 @@ import {
     joinPaths,
     withLeadingSlash,
 } from '../utils/index.ts';
-import { AppPipelineStep, AppStackEntryType, AppSymbol } from './constants.ts';
+import { AppPipelineStep, AppSymbol, RouteEntryType } from './constants.ts';
 import { LinearRouter } from '../router/linear/index.ts';
 import type { IRouter } from '../router/types.ts';
 import type {
@@ -42,6 +42,7 @@ import type {
     AppOptionsInput,
     AppPipelineContext,
     IApp,
+    RouteEntry,
 } from './types.ts';
 import { isAppInstance } from './check.ts';
 
@@ -88,7 +89,7 @@ export class App implements IApp {
      *
      * @protected
      */
-    protected router: IRouter;
+    protected router: IRouter<RouteEntry>;
 
     /**
      * Lifecycle hook registry.
@@ -117,7 +118,7 @@ export class App implements IApp {
         const {
             hooks = new Hooks(),
             plugins = new Map<string, string | undefined>(),
-            router = new LinearRouter(),
+            router = new LinearRouter<RouteEntry>(),
             ...options
         } = input;
 
@@ -261,10 +262,10 @@ export class App implements IApp {
             context.matchIndex < matches.length
         ) {
             const match = matches[context.matchIndex]!;
-            const { entry } = match;
+            const { route } = match;
 
-            if (entry.type === AppStackEntryType.HANDLER) {
-                const handler = entry.data;
+            if (route.data.type === RouteEntryType.HANDLER) {
+                const handler = route.data.data;
 
                 if (
                     (context.event.error && handler.type === HandlerType.CORE) ||
@@ -274,7 +275,7 @@ export class App implements IApp {
                     continue;
                 }
 
-                const method = entry.method ?? handler.method;
+                const { method } = route;
 
                 if (method) {
                     context.event.methodsAllowed.add(method);
@@ -356,7 +357,7 @@ export class App implements IApp {
             return;
         }
 
-        const { entry } = match;
+        const { route } = match;
         const { event } = context;
 
         // Snapshot routing state so we can restore it if the entry yields no
@@ -368,21 +369,21 @@ export class App implements IApp {
         const savedMountPath = event.mountPath;
         const savedParams = event.params;
 
-        if (entry.type === AppStackEntryType.APP && typeof match.matchedPath === 'string') {
+        if (route.data.type === RouteEntryType.APP && typeof match.path === 'string') {
             // App mount: strip the matched prefix off event.path so the
             // child router's pipeline sees a mount-relative path. The child
             // router's intrinsic pathMatcher (if any) is applied on top
             // inside its own dispatch.
-            event.mountPath = cleanDoubleSlashes(`${event.mountPath}/${match.matchedPath}`);
+            event.mountPath = cleanDoubleSlashes(`${event.mountPath}/${match.path}`);
 
-            if (event.path === match.matchedPath) {
+            if (event.path === match.path) {
                 event.path = '/';
             } else {
-                event.path = withLeadingSlash(event.path.substring(match.matchedPath.length));
+                event.path = withLeadingSlash(event.path.substring(match.path.length));
             }
 
             mergeMatchParams(event, match.params);
-        } else if (entry.type === AppStackEntryType.HANDLER && typeof match.matchedPath === 'string') {
+        } else if (route.data.type === RouteEntryType.HANDLER && typeof match.path === 'string') {
             // Handler mount: merge route params from the resolver match.
             // Handlers don't strip the path — they're leaves.
             mergeMatchParams(event, match.params);
@@ -422,7 +423,7 @@ export class App implements IApp {
                 return nextContext.response;
             });
 
-            const response = await entry.data.dispatch(event);
+            const response = await route.data.data.dispatch(event);
 
             if (response) {
                 context.response = response;
@@ -621,10 +622,12 @@ export class App implements IApp {
             }
 
             this.router.add({
-                type: AppStackEntryType.HANDLER,
-                data: handler,
-                method,
                 path: joinPaths(this._options.path, path, handler.path),
+                method,
+                data: {
+                    type: RouteEntryType.HANDLER,
+                    data: handler,
+                },
             });
         }
     }
@@ -653,9 +656,11 @@ export class App implements IApp {
 
             if (isAppInstance(item)) {
                 this.router.add({
-                    type: AppStackEntryType.APP,
-                    data: item,
                     path: joinPaths(this._options.path, path),
+                    data: {
+                        type: RouteEntryType.APP,
+                        data: item,
+                    },
                 });
                 continue;
             }
@@ -664,9 +669,12 @@ export class App implements IApp {
             // (structural) — see useForMethod for the same reasoning.
             if (isHandler(item)) {
                 this.router.add({
-                    type: AppStackEntryType.HANDLER,
-                    data: item,
                     path: joinPaths(this._options.path, path, item.path),
+                    method: item.method,
+                    data: {
+                        type: RouteEntryType.HANDLER,
+                        data: item,
+                    },
                 });
                 continue;
             }
@@ -675,9 +683,12 @@ export class App implements IApp {
                 const handler = new Handler({ ...item });
 
                 this.router.add({
-                    type: AppStackEntryType.HANDLER,
-                    data: handler,
                     path: joinPaths(this._options.path, path, handler.path),
+                    method: handler.method,
+                    data: {
+                        type: RouteEntryType.HANDLER,
+                        data: handler,
+                    },
                 });
                 continue;
             }
@@ -769,26 +780,30 @@ export class App implements IApp {
             router: this.router.clone(),
         });
 
-        // Re-register entries directly on the cloned resolver. The
-        // entries already carry the canonical combined `path` produced
+        // Re-register routes directly on the cloned resolver. The
+        // routes already carry the canonical combined `path` produced
         // by mount-time `joinPaths` — going back through the public
         // `use` / verb shortcuts would re-concat each handler's
         // intrinsic path on top of that and produce `/users/list/list`.
-        for (const entry of this.router.entries) {
-            if (entry.type === AppStackEntryType.APP) {
+        for (const route of this.router.routes) {
+            if (route.data.type === RouteEntryType.APP) {
                 next.router.add({
-                    type: AppStackEntryType.APP,
-                    data: entry.data.clone() as App,
-                    path: entry.path,
+                    path: route.path,
+                    data: {
+                        type: RouteEntryType.APP,
+                        data: route.data.data.clone(),
+                    },
                 });
                 continue;
             }
 
             next.router.add({
-                type: AppStackEntryType.HANDLER,
-                data: entry.data,
-                method: entry.method,
-                path: entry.path,
+                path: route.path,
+                method: route.method,
+                data: {
+                    type: RouteEntryType.HANDLER,
+                    data: route.data.data,
+                },
             });
         }
 

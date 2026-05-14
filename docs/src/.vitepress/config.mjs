@@ -82,6 +82,7 @@ export default defineConfig({
                         { text: 'Hooks', link: '/guide/hooks' },
                         { text: 'Serving', link: '/guide/dispatchers' },
                         { text: 'Runtime Environments', link: '/guide/runtime-environments' },
+                        { text: 'Custom Router', link: '/guide/custom-router' },
                     ],
                 },
                 {

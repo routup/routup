@@ -16,13 +16,14 @@ The runtime behaviour, hook lifecycle, and helper APIs are largely unchanged. Mo
 | `RoutupRequest` | `AppRequest` |
 | `LinearRouteResolver` / `TrieRouteResolver` / `MemoizedRouteResolver` | `LinearRouter` / `TrieRouter` / `MemoizedRouter` |
 | `IRouteResolver` (resolver interface) | `IRouter` |
-| `ResolverMatch` | `RouterMatch` |
+| `ResolverMatch` | `RouteMatch` |
 | `RouterOptionsInput.resolver` | `AppOptionsInput.router` |
 | `Handler.matchPath()` / `Router.matchPath()` | _removed_ — path matching now lives only in the resolver |
 | `RouterOptions.path` (runtime path-strip) | `AppOptions.path` (registration-time **prefix**) |
 | `event.routerPath` / `event.routerOptions` | `event.appPath` / `event.appOptions` |
-| `RouterPipelineStep` / `RouterPipelineContext` / `RouterStackEntryType` / `RouterPathNode` / `RouterSymbol` | `App*` equivalents |
-| `RouterStackEntryType.ROUTER` (enum value) | `AppStackEntryType.APP` |
+| `RouterPipelineStep` / `RouterPipelineContext` / `RouterStackEntryType` / `RouterPathNode` / `RouterSymbol` | `AppPipelineStep` / `AppPipelineContext` / `RouteEntryType` / `AppPathNode` / `AppSymbol` |
+| `RouterStackEntryType.ROUTER` (enum value) | `RouteEntryType.APP` |
+| `Router.StackEntry` | `RouteEntry` (`AppRouteEntry` \| `HandlerRouteEntry`) |
 | `isRouterInstance()` | `isAppInstance()` |
 
 ## Renames at a glance

@@ -9,8 +9,8 @@ import {
     LinearRouter,
     defineCoreHandler,
 } from '../../../src';
-import type { IRouter, RouterMatch } from '../../../src';
-import type { StackEntry } from '../../../src/app/types';
+import type { IRouter, Route, RouteMatch } from '../../../src';
+import type { RouteEntry } from '../../../src/app/types';
 import { HookName } from '../../../src/hook';
 import { createTestRequest } from '../../helpers';
 
@@ -20,26 +20,26 @@ import { createTestRequest } from '../../helpers';
  * `App.install()` route through the *active* router's `clone()`
  * rather than instantiating a fresh LinearRouter directly.
  */
-class BrandedRouter implements IRouter {
+class BrandedRouter implements IRouter<RouteEntry> {
     static readonly brand = Symbol('BrandedRouter');
 
     static clones = 0;
 
-    protected inner = new LinearRouter();
+    protected inner = new LinearRouter<RouteEntry>();
 
-    add(entry: StackEntry): void {
+    add(entry: Route<RouteEntry>): void {
         this.inner.add(entry);
     }
 
-    lookup(path: string): readonly RouterMatch[] {
+    lookup(path: string): readonly RouteMatch<RouteEntry>[] {
         return this.inner.lookup(path);
     }
 
-    get entries(): readonly StackEntry[] {
-        return this.inner.entries;
+    get routes(): readonly Route<RouteEntry>[] {
+        return this.inner.routes;
     }
 
-    clone(): IRouter {
+    clone(): IRouter<RouteEntry> {
         BrandedRouter.clones += 1;
         return new BrandedRouter();
     }

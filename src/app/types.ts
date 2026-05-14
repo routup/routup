@@ -1,4 +1,3 @@
-import type { MethodName } from '../constants.ts';
 import type { IDispatcher, IDispatcherEvent } from '../dispatcher/index.ts';
 import type { AppRequest } from '../event/index.ts';
 import type {
@@ -22,8 +21,9 @@ import type {
     TrustProxyFn,
     TrustProxyInput,
 } from '../utils/index.ts';
-import type { AppPipelineStep, AppStackEntryType  } from './constants.ts';
-import type { IRouter, RouterMatch } from '../router/types.ts';
+import type { AppPipelineStep, RouteEntryType  } from './constants.ts';
+import type { IRouter } from '../router/types.ts';
+import type { RouteMatch } from '../types.ts';
 
 // --------------------------------------------------
 // App Options
@@ -100,7 +100,7 @@ export type AppOptionsInput = Omit<Partial<AppOptions>, 'etag' | 'trustProxy'> &
      * walks registered entries linearly per request. Swap in an
      * alternative (e.g. `TrieRouter`) on apps with many routes.
      */
-    router?: IRouter,
+    router?: IRouter<RouteEntry>,
 };
 
 export type AppPathNode = {
@@ -109,39 +109,30 @@ export type AppPathNode = {
 };
 
 // --------------------------------------------------
-// Stack
+// Route entry
 // --------------------------------------------------
 
-export type StackAppEntry = {
-    type: typeof AppStackEntryType.APP,
+/**
+ * App-internal data that gets stored as `Route.data` in the active
+ * router. Tagged union — the discriminator `type` (HANDLER / APP)
+ * tells the dispatch loop which branch of the union to read.
+ *
+ * `path` and `method` are not part of this type — they live on
+ * `Route<RouteEntry>` itself (the router's routing-relevant fields),
+ * and App resolves the handler's intrinsic method into `Route.method`
+ * at registration time.
+ */
+export type AppRouteEntry = {
+    type: typeof RouteEntryType.APP,
     data: IApp,
-    /**
-     * Mount path the entry was registered with. Resolvers consume this
-     * raw value and build whatever matching structure they need
-     * (path-to-regexp, radix tree, aggregated regex, etc.).
-     */
-    path?: Path,
 };
 
-export type StackHandlerEntry = {
-    type: typeof AppStackEntryType.HANDLER,
+export type HandlerRouteEntry = {
+    type: typeof RouteEntryType.HANDLER,
     data: Handler,
-    /**
-     * Mount path the entry was registered with. Resolvers consume this
-     * raw value and build whatever matching structure they need.
-     */
-    path?: Path,
-    /**
-     * Mount-specific HTTP method.
-     *
-     * Set when the handler was registered via a method-bound shortcut
-     * (e.g. `router.get(handler)` sets this to `GET`). When undefined,
-     * dispatch falls back to the handler's own intrinsic method.
-     */
-    method?: MethodName,
 };
 
-export type StackEntry = StackAppEntry | StackHandlerEntry;
+export type RouteEntry = AppRouteEntry | HandlerRouteEntry;
 
 // --------------------------------------------------
 // Pipeline
@@ -163,7 +154,7 @@ export type AppPipelineContext = {
      * automatically when `event.path` changes (a hook mutating the
      * path between entries triggers a refresh).
      */
-    matches?: readonly RouterMatch[],
+    matches?: readonly RouteMatch<RouteEntry>[],
     /**
      * The `event.path` that was used to compute `matches`. Stored so
      * we can detect a mid-walk path mutation and refresh the cache.

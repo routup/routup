@@ -1,15 +1,15 @@
-import type { StackEntry } from '../../app/types.ts';
-import type { IRouter, RouterMatch } from '../types.ts';
+import type { ObjectLiteral, Route, RouteMatch } from '../../types.ts';
+import type { IRouter } from '../types.ts';
 
 /**
  * Wraps another `IRouter` and caches `lookup` results by path.
- * Repeated requests for the same path skip the underlying resolver
- * entirely; the cache is cleared whenever a new entry is registered
- * (a previously path-mismatching entry might match a cached path now).
+ * Repeated requests for the same path skip the underlying router
+ * entirely; the cache is cleared whenever a new route is registered
+ * (a previously path-mismatching route might match a cached path now).
  *
- * Useful when the underlying resolver's `lookup` is non-trivial (many
- * entries, expensive pattern matches) and an app sees the same paths
- * repeatedly. Compose around any other resolver:
+ * Useful when the underlying router's `lookup` is non-trivial (many
+ * routes, expensive pattern matches) and an app sees the same paths
+ * repeatedly. Compose around any other router:
  *
  * ```ts
  * new App({
@@ -17,23 +17,23 @@ import type { IRouter, RouterMatch } from '../types.ts';
  * });
  * ```
  */
-export class MemoizedRouter implements IRouter {
-    protected inner: IRouter;
+export class MemoizedRouter<T extends ObjectLiteral = ObjectLiteral> implements IRouter<T> {
+    protected inner: IRouter<T>;
 
-    protected cache: Map<string, readonly RouterMatch[]> = new Map();
+    protected cache: Map<string, readonly RouteMatch<T>[]> = new Map();
 
-    constructor(inner: IRouter) {
+    constructor(inner: IRouter<T>) {
         this.inner = inner;
     }
 
-    add(entry: StackEntry): void {
-        this.inner.add(entry);
-        // Any new entry can change the match set for any cached path,
+    add(route: Route<T>): void {
+        this.inner.add(route);
+        // Any new route can change the match set for any cached path,
         // so invalidate the whole cache.
         this.cache.clear();
     }
 
-    lookup(path: string): readonly RouterMatch[] {
+    lookup(path: string): readonly RouteMatch<T>[] {
         const cached = this.cache.get(path);
         if (typeof cached !== 'undefined') {
             return cached;
@@ -43,11 +43,11 @@ export class MemoizedRouter implements IRouter {
         return fresh;
     }
 
-    get entries(): readonly StackEntry[] {
-        return this.inner.entries;
+    get routes(): readonly Route<T>[] {
+        return this.inner.routes;
     }
 
-    clone(): IRouter {
-        return new MemoizedRouter(this.inner.clone());
+    clone(): IRouter<T> {
+        return new MemoizedRouter<T>(this.inner.clone());
     }
 }

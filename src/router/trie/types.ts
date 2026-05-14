@@ -1,8 +1,8 @@
 import type { IPathMatcher } from '../../path/index.ts';
-import type { StackEntry } from '../../app/types.ts';
+import type { ObjectLiteral, Route } from '../../types.ts';
 
-export type IndexedEntry = {
-    entry: StackEntry;
+export type IndexedRoute<T extends ObjectLiteral = ObjectLiteral> = {
+    route: Route<T>;
     index: number;
     matcher: IPathMatcher | undefined;
 };
@@ -11,33 +11,25 @@ export type Segment = { kind: 'static'; value: string } |
     { kind: 'param' } |
     { kind: 'splat' };
 
-export type TrieNode = {
-    staticChildren: Map<string, TrieNode>;
-    paramChild?: TrieNode;
+export type TrieNode<T extends ObjectLiteral = ObjectLiteral> = {
+    staticChildren: Map<string, TrieNode<T>>;
+    paramChild?: TrieNode<T>;
     /**
      * Entries whose path ends with a splat at this depth (`/files/*`,
      * `/foo/*name`, …). They match the current node and every deeper
      * request path.
      */
-    splatEntries: IndexedEntry[];
+    splatRoutes: IndexedRoute<T>[];
     /**
-     * Exact-match entries whose path ends at this node — only matched
+     * Exact-match routes whose path ends at this node — only matched
      * when the request path is fully consumed at this depth.
      */
-    exactEntries: IndexedEntry[];
+    exactRoutes: IndexedRoute<T>[];
     /**
-     * Prefix-match entries (middleware / nested routers) whose path
+     * Prefix-match routes (middleware / nested routers) whose path
      * ends at this node — matched whenever this node is reached,
      * regardless of remaining depth.
      */
-    prefixEntries: IndexedEntry[];
+    prefixRoutes: IndexedRoute<T>[];
 };
 
-export function createTrieNode(): TrieNode {
-    return {
-        staticChildren: new Map(),
-        splatEntries: [],
-        exactEntries: [],
-        prefixEntries: [],
-    };
-}

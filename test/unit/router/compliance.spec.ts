@@ -7,15 +7,16 @@ import {
     defineCoreHandler,
 } from '../../../src';
 import type { IRouter } from '../../../src';
+import type { RouteEntry } from '../../../src/app/types';
 import { createTestRequest } from '../../helpers';
 
-type ResolverFactory = () => IRouter;
+type ResolverFactory = () => IRouter<RouteEntry>;
 
 const resolvers: Record<string, ResolverFactory> = {
-    linear: () => new LinearRouter(),
-    trie: () => new TrieRouter(),
-    'memoized(linear)': () => new MemoizedRouter(new LinearRouter()),
-    'memoized(trie)': () => new MemoizedRouter(new TrieRouter()),
+    linear: () => new LinearRouter<RouteEntry>(),
+    trie: () => new TrieRouter<RouteEntry>(),
+    'memoized(linear)': () => new MemoizedRouter<RouteEntry>(new LinearRouter<RouteEntry>()),
+    'memoized(trie)': () => new MemoizedRouter<RouteEntry>(new TrieRouter<RouteEntry>()),
 };
 
 describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, factory) => {
@@ -170,11 +171,11 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
         // App.install() / App.clone() can use it to preserve the router
         // family without inheriting the parent's entries.
         const router = factory();
-        const beforeLen = router.entries.length;
+        const beforeLen = router.routes.length;
         const cloned = router.clone();
-        expect(cloned.entries.length).toBe(0);
+        expect(cloned.routes.length).toBe(0);
         // Original is unchanged.
-        expect(router.entries.length).toBe(beforeLen);
+        expect(router.routes.length).toBe(beforeLen);
         // The clone is a distinct instance.
         expect(cloned).not.toBe(router);
     });

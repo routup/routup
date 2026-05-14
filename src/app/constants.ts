@@ -11,10 +11,10 @@ export const AppPipelineStep = {
 
 export type AppPipelineStep = typeof AppPipelineStep[keyof typeof AppPipelineStep];
 
-export const AppStackEntryType = {
+export const RouteEntryType = {
     APP: 'app',
     HANDLER: 'handler',
 } as const;
 
 
-export type AppStackEntryType = typeof AppStackEntryType[keyof typeof AppStackEntryType];
+export type RouteEntryType = typeof RouteEntryType[keyof typeof RouteEntryType];

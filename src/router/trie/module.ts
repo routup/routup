@@ -1,12 +1,12 @@
-import { AppStackEntryType } from '../../app/constants.ts';
-import type { StackEntry } from '../../app/types.ts';
-import type { IRouter, RouterMatch } from '../types.ts';
-import { buildEntryPathMatcher } from '../utils.ts';
-import type { IndexedEntry, Segment, TrieNode } from './types.ts';
-import { createTrieNode } from './types.ts';
+import type { ObjectLiteral, Route, RouteMatch } from '../../types.ts';
+import type { IRouter } from '../types.ts';
+import { buildRoutePathMatcher } from '../utils.ts';
+import type { IndexedRoute, Segment, TrieNode } from './types.ts';
+
+import { createTrieNode } from './node.ts';
 
 /**
- * Radix-trie resolver — registers entries into a per-segment tree at
+ * Radix-trie resolver — registers routes into a per-segment tree at
  * `add()` time and walks the tree at `lookup()` to collect candidates
  * by structure rather than by linear scan.
  *
@@ -15,26 +15,26 @@ import { createTrieNode } from './types.ts';
  * registered paths that contain syntax outside this set (e.g. `{group}`,
  * regex bodies) safely fall through to a `universal` bucket walked
  * linearly on every request — so correctness is preserved at the cost
- * of the trie's per-request savings for those entries.
+ * of the trie's per-request savings for those routes.
  *
- * The trie identifies candidate entries by structural compatibility;
+ * The trie identifies candidate routes by structural compatibility;
  * each candidate's `IPathMatcher` is still run once to confirm and
- * extract `params` / `matchedPath` exactly as the linear resolver
+ * extract `params` / `path` exactly as the linear resolver
  * would. Trade-off: one extra `matcher.exec` per candidate, in
- * exchange for skipping most non-matching entries entirely. T3 in
+ * exchange for skipping most non-matching routes entirely. T3 in
  * the trie roadmap removes the `matcher.exec` step.
  *
  * Pure-static-spine fast path (`shortCircuit`): when the request
  * walks a static spine with no param/splat/prefix siblings on any
- * traversed node, the leaf's `exactEntries` is the full answer —
+ * traversed node, the leaf's `exactRoutes` is the full answer —
  * no need to walk the param branch or collect prefix candidates at
  * intermediate nodes. As soon as a branch is encountered, falls
  * through to the regular `walk`.
  */
-export class TrieRouter implements IRouter {
-    protected _entries: StackEntry[] = [];
+export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRouter<T> {
+    protected _routes: Route<T>[];
 
-    protected root: TrieNode = createTrieNode();
+    protected root: TrieNode<T>;
 
     /**
      * Entries that bypass the trie — registered with no path, with
@@ -42,24 +42,29 @@ export class TrieRouter implements IRouter {
      * parse. Walked linearly on every lookup, merged into the result
      * in registration order.
      */
-    protected universal: IndexedEntry[] = [];
+    protected universal: IndexedRoute<T>[] = [];
 
-    add(entry: StackEntry): void {
-        const index = this._entries.length;
-        this._entries.push(entry);
+    constructor() {
+        this._routes = [];
+        this.root = createTrieNode<T>();
+    }
 
-        const indexed: IndexedEntry = {
-            entry,
+    add(route: Route<T>): void {
+        const index = this._routes.length;
+        this._routes.push(route);
+
+        const indexed: IndexedRoute<T> = {
+            route,
             index,
-            matcher: buildEntryPathMatcher(entry),
+            matcher: buildRoutePathMatcher(route),
         };
 
-        if (typeof entry.path !== 'string' || entry.path === '' || entry.path === '/') {
+        if (typeof route.path !== 'string' || route.path === '' || route.path === '/') {
             this.universal.push(indexed);
             return;
         }
 
-        const segments = this.parseRoutePath(entry.path);
+        const segments = this.parseRoutePath(route.path);
         if (segments === null) {
             this.universal.push(indexed);
             return;
@@ -68,8 +73,8 @@ export class TrieRouter implements IRouter {
         this.insertIntoTrie(segments, indexed);
     }
 
-    lookup(path: string): readonly RouterMatch[] {
-        const candidates: IndexedEntry[] = [];
+    lookup(path: string): readonly RouteMatch<T>[] {
+        const candidates: IndexedRoute<T>[] = [];
 
         for (const u of this.universal) {
             candidates.push(u);
@@ -87,10 +92,10 @@ export class TrieRouter implements IRouter {
 
         candidates.sort((a, b) => a.index - b.index);
 
-        const matches: RouterMatch[] = [];
+        const matches: RouteMatch<T>[] = [];
         for (const candidate of candidates) {
             const {
-                entry,
+                route,
                 index,
                 matcher,
             } = candidate;
@@ -101,18 +106,18 @@ export class TrieRouter implements IRouter {
                     continue;
                 }
                 matches.push({
-                    entry,
+                    route,
                     index,
                     params: this.assignParams(output.params),
-                    matchedPath: output.path,
+                    path: output.path,
                 });
                 continue;
             }
 
-            // No matcher → entry has no mount path (middleware /
+            // No matcher → route has no mount path (middleware /
             // mount-less router). Matches every request.
             matches.push({
-                entry,
+                route,
                 index,
                 params: Object.create(null) as Record<string, unknown>,
             });
@@ -121,32 +126,32 @@ export class TrieRouter implements IRouter {
         return matches;
     }
 
-    get entries(): readonly StackEntry[] {
-        return this._entries;
+    get routes(): readonly Route<T>[] {
+        return this._routes;
     }
 
-    clone(): IRouter {
-        return new TrieRouter();
+    clone(): IRouter<T> {
+        return new TrieRouter<T>();
     }
 
     /**
      * T1: returns the pre-computed candidate list when the request's
-     * static spine has no param sibling, no prefix entries, and no
-     * splats along the way. The leaf node's `exactEntries` is then
+     * static spine has no param sibling, no prefix routes, and no
+     * splats along the way. The leaf node's `exactRoutes` is then
      * the complete answer — no need to walk the param branch or
      * collect prefix/splat candidates from intermediate nodes. When
      * any branch is encountered, returns `null` and the caller falls
      * through to the regular `walk`.
      */
-    protected shortCircuit(segments: string[]): IndexedEntry[] | null {
+    protected shortCircuit(segments: string[]): IndexedRoute<T>[] | null {
         let node = this.root;
 
         for (const segment of segments) {
             // Any branch at this node disqualifies the fast path: a
             // param-child might match the current segment, a splat
-            // would fire, and prefix entries would belong in the
+            // would fire, and prefix routes would belong in the
             // result. All of these need the full walk.
-            if (node.paramChild || node.splatEntries.length > 0 || node.prefixEntries.length > 0) {
+            if (node.paramChild || node.splatRoutes.length > 0 || node.prefixRoutes.length > 0) {
                 return null;
             }
 
@@ -157,13 +162,13 @@ export class TrieRouter implements IRouter {
             node = child;
         }
 
-        if (node.paramChild || node.splatEntries.length > 0 || node.prefixEntries.length > 0) {
+        if (node.paramChild || node.splatRoutes.length > 0 || node.prefixRoutes.length > 0) {
             return null;
         }
 
-        // Pure static spine reached the leaf — `exactEntries` is the
+        // Pure static spine reached the leaf — `exactRoutes` is the
         // complete answer for this request.
-        return node.exactEntries;
+        return node.exactRoutes;
     }
 
     /**
@@ -218,13 +223,13 @@ export class TrieRouter implements IRouter {
         return result;
     }
 
-    protected insertIntoTrie(segments: Segment[], indexed: IndexedEntry): void {
+    protected insertIntoTrie(segments: Segment[], indexed: IndexedRoute<T>): void {
         let node = this.root;
-        const exact = this.isExactMatchEntry(indexed.entry);
+        const exact = this.isExactMatchRoute(indexed.route);
 
         for (const seg of segments) {
             if (seg.kind === 'splat') {
-                node.splatEntries.push(indexed);
+                node.splatRoutes.push(indexed);
                 return;
             }
 
@@ -245,38 +250,38 @@ export class TrieRouter implements IRouter {
         }
 
         if (exact) {
-            node.exactEntries.push(indexed);
+            node.exactRoutes.push(indexed);
         } else {
-            node.prefixEntries.push(indexed);
+            node.prefixRoutes.push(indexed);
         }
     }
 
     protected walk(
-        node: TrieNode,
+        node: TrieNode<T>,
         segments: string[],
         depth: number,
-        collected: IndexedEntry[],
+        collected: IndexedRoute<T>[],
     ): void {
         // Splats at this depth match any request path that reaches here.
-        for (const s of node.splatEntries) {
+        for (const s of node.splatRoutes) {
             collected.push(s);
         }
 
         if (depth === segments.length) {
             // Request path is fully consumed at this node: collect
-            // both exact-match and prefix-match entries that ended here.
-            for (const e of node.exactEntries) {
+            // both exact-match and prefix-match routes that ended here.
+            for (const e of node.exactRoutes) {
                 collected.push(e);
             }
-            for (const p of node.prefixEntries) {
+            for (const p of node.prefixRoutes) {
                 collected.push(p);
             }
             return;
         }
 
-        // Going deeper — prefix entries at this node match any
+        // Going deeper — prefix routes at this node match any
         // continuation (middleware / nested routers).
-        for (const p of node.prefixEntries) {
+        for (const p of node.prefixRoutes) {
             collected.push(p);
         }
 
@@ -292,12 +297,8 @@ export class TrieRouter implements IRouter {
         }
     }
 
-    protected isExactMatchEntry(entry: StackEntry): boolean {
-        if (entry.type === AppStackEntryType.APP) {
-            return false;
-        }
-        return typeof entry.method !== 'undefined' ||
-            typeof entry.data.method !== 'undefined';
+    protected isExactMatchRoute(route: Route<T>): boolean {
+        return typeof route.method !== 'undefined';
     }
 
     /**
