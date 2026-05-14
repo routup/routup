@@ -87,7 +87,7 @@ describe('src/dispatcher/module (DispatcherEvent)', () => {
     });
 
     describe('build', () => {
-        it('should create a AppEvent with shared references', () => {
+        it('should create an AppEvent with shared references', () => {
             const dispatch = new DispatcherEvent(createTestRequest('http://localhost/test'));
             dispatch.response.status = 201;
 

@@ -46,4 +46,8 @@ export class MemoizedRouter implements IRouter {
     get entries(): readonly StackEntry[] {
         return this.inner.entries;
     }
+
+    clone(): IRouter {
+        return new MemoizedRouter(this.inner.clone());
+    }
 }

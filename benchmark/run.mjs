@@ -37,7 +37,12 @@ async function runOne() {
         server.kill('SIGINT');
         // give srvx the configured 5s grace... but cap at 1s for benchmarks
         await wait(800);
-        if (!server.killed) server.kill('SIGKILL');
+        // `server.killed` flips when the signal is sent, not when the
+        // process exits — check exit state directly so SIGKILL actually
+        // fires when SIGINT didn't take.
+        if (server.exitCode === null && server.signalCode === null) {
+            server.kill('SIGKILL');
+        }
     }
 }
 

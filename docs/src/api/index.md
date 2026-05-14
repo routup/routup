@@ -1,6 +1,6 @@
 # API Reference
 
-App provides tree-shakeable helper functions for working with requests and responses.
+Routup provides tree-shakeable helper functions for working with requests and responses.
 All helpers take an `IAppEvent` as their first argument.
 
 - [Request Helpers](./request-helpers) — Read headers, body, client info, content negotiation, and metadata

@@ -5,7 +5,7 @@ import {
 } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
-describe('src/router/timeout', () => {
+describe('src/app/timeout', () => {
     describe('global (timeout)', () => {
         it('should return normal response when handler completes before timeout', async () => {
             const router = new App({ timeout: 1000 });

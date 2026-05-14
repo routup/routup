@@ -36,7 +36,7 @@ export type RouterMatch = {
  * match this path?". The default `LinearRouter` walks the
  * stored entries linearly and runs each entry's `pathMatcher`.
  * Alternative implementations (radix tree, trie, regex aggregation)
- * can swap in via `AppOptionsInput.resolver` to skip the walk
+ * can swap in via `AppOptionsInput.router` to skip the walk
  * entirely on apps with many routes.
  *
  * Method matching is intentionally kept at the dispatch-loop call site,
@@ -64,4 +64,14 @@ export interface IRouter {
      * the public registration API.
      */
     readonly entries: readonly StackEntry[];
+
+    /**
+     * Return a fresh, **empty** router of the same shape — same class
+     * for the leaf implementations, same wrapping for composable ones
+     * (`MemoizedRouter` recursively clones its inner). Used by
+     * `App.install()` and `App.clone()` so plugin sub-apps and cloned
+     * apps preserve the active router family instead of silently
+     * downgrading to `LinearRouter`.
+     */
+    clone(): IRouter;
 }

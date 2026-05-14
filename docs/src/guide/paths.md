@@ -1,6 +1,6 @@
 # Paths
 
-Paths define the URL patterns that handlers and routers respond to. App uses [path-to-regexp](https://github.com/pillarjs/path-to-regexp) (v8) for pattern matching.
+Paths define the URL patterns that handlers and routers respond to. Routup uses [path-to-regexp](https://github.com/pillarjs/path-to-regexp) (v8) for pattern matching.
 
 ## Basic Paths
 

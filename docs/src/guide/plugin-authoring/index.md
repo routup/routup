@@ -51,7 +51,7 @@ export function requestId(): Plugin {
         name: 'request-id',
         version,
         install(router: App) {
-            app.use(defineCoreHandler((event) => {
+            router.use(defineCoreHandler((event) => {
                 const id = event.headers.get('x-request-id') ?? crypto.randomUUID();
                 event.store[STORE_KEY] = id;
                 event.response.headers.set('x-request-id', id);

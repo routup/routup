@@ -62,4 +62,8 @@ export class LinearRouter implements IRouter {
     get entries(): readonly StackEntry[] {
         return this._entries;
     }
+
+    clone(): IRouter {
+        return new LinearRouter();
+    }
 }

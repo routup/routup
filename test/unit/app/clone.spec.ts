@@ -11,7 +11,7 @@ import {
 import { HookName } from '../../../src/hook';
 import { createTestRequest } from '../../helpers';
 
-describe('src/router clone', () => {
+describe('src/app clone', () => {
     it('should produce a router that responds independently', async () => {
         const original = new App();
         original.get('/ping', defineCoreHandler(() => 'pong'));

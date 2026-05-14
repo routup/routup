@@ -1,6 +1,6 @@
 # Runtime Environments
 
-App runs on any JavaScript runtime that supports Web standard `Request` and `Response`. Import from `routup` — the correct runtime entry is selected automatically via conditional exports.
+Routup runs on any JavaScript runtime that supports Web standard `Request` and `Response`. Import from `routup` — the correct runtime entry is selected automatically via conditional exports.
 
 ```typescript
 import { App, defineCoreHandler, serve } from 'routup';

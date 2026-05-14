@@ -13,8 +13,8 @@ app.use(fromNodeHandler(compression()));
 // 2. Add a return-based handler alongside it.
 app.get('/health', defineCoreHandler(() => ({ ok: true })));
 
-// 3. Mount the whole router inside a plain Node http.Server.
-http.createServer(toNodeHandler(router)).listen(3000);`;
+// 3. Mount the whole app inside a plain Node http.Server.
+http.createServer(toNodeHandler(app)).listen(3000);`;
 </script>
 
 <template>

@@ -1,6 +1,6 @@
 # Plugins
 
-App is minimalistic by design. Plugins extend the framework with additional functionality that is not part of the core.
+Routup is minimalistic by design. Plugins extend the framework with additional functionality that is not part of the core.
 
 A plugin is an object with a `name` and an `install` method that receives the app instance.
 

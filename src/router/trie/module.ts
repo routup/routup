@@ -146,6 +146,10 @@ export class TrieRouter implements IRouter {
         return this._entries;
     }
 
+    clone(): IRouter {
+        return new TrieRouter();
+    }
+
     /**
      * T1: returns the pre-computed candidate list when the request's
      * static spine has no param sibling, no prefix entries, and no

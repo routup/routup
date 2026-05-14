@@ -211,7 +211,7 @@ serve(app, { port: 3000 });`);
                     <span class="rt-hero-title-grad">routup</span>
                 </h1>
                 <p class="rt-hero-tagline">
-                    A minimalistic, runtime-agnostic HTTP app.
+                    A minimalistic, runtime-agnostic HTTP framework.
                     Return-based handlers, Web&nbsp;Standards everywhere — Node, Bun, Deno, Cloudflare,
                     or any Fetch-ready runtime.
                 </p>

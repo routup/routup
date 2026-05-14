@@ -1,6 +1,6 @@
 # Serving
 
-App provides multiple ways to serve your application, all built on Web standard APIs for cross-runtime compatibility.
+Routup provides multiple ways to serve your application, all built on Web standard APIs for cross-runtime compatibility.
 
 ## serve()
 

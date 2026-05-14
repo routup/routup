@@ -1,6 +1,6 @@
 # Express Compatibility
 
-App provides `fromNodeHandler()` and `fromNodeMiddleware()` to wrap existing Express or Connect middleware for use in routup.
+Routup provides `fromNodeHandler()` and `fromNodeMiddleware()` to wrap existing Express or Connect middleware for use in routup.
 
 ## fromNodeMiddleware()
 

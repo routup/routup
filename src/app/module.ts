@@ -288,6 +288,16 @@ export class App implements IApp {
 
             if (this.hooks.hasListeners(HookName.CHILD_MATCH)) {
                 await this.hooks.trigger(HookName.CHILD_MATCH, context.event);
+
+                // If the hook rewrote `event.path`, the current `match`
+                // is stale; restart LOOKUP so the next dispatch sees a
+                // match that corresponds to the new path.
+                if (context.event.path !== context.matchesPath) {
+                    context.matches = undefined;
+                    context.matchIndex = 0;
+                    context.step = AppPipelineStep.LOOKUP;
+                    return;
+                }
             }
 
             if (context.event.dispatched) {
@@ -305,6 +315,16 @@ export class App implements IApp {
     protected async executePipelineStepChildBefore(context: AppPipelineContext): Promise<void> {
         if (this.hooks.hasListeners(HookName.CHILD_DISPATCH_BEFORE)) {
             await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, context.event);
+
+            // If the hook rewrote `event.path`, the cached `matches`
+            // may not include a route for the new path. Restart LOOKUP
+            // before dispatching anything.
+            if (context.event.path !== context.matchesPath) {
+                context.matches = undefined;
+                context.matchIndex = 0;
+                context.step = AppPipelineStep.LOOKUP;
+                return;
+            }
         }
 
         if (context.event.dispatched) {
@@ -694,7 +714,12 @@ export class App implements IApp {
             throw new PluginAlreadyInstalledError(plugin.name);
         }
 
-        const router = new App({ name: plugin.name });
+        // Carry the parent's router family forward so plugin sub-apps
+        // don't silently downgrade to LinearRouter.
+        const router = new App({
+            name: plugin.name,
+            router: this.router.clone(),
+        });
         plugin.install(router);
 
         if (context.path) {
@@ -731,6 +756,10 @@ export class App implements IApp {
             ...this._options,
             hooks: this.hooks.clone(),
             plugins: this.plugins,
+            // Preserve the active router family on the clone — a clone
+            // of an app configured with TrieRouter should still use
+            // TrieRouter, not silently downgrade to LinearRouter.
+            router: this.router.clone(),
         });
 
         // Re-register entries directly on the cloned resolver. The
