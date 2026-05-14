@@ -6,10 +6,44 @@ import {
 } from 'vitest';
 import {
     App,
+    LinearRouter,
     defineCoreHandler,
 } from '../../../src';
+import type { IRouter, RouterMatch } from '../../../src';
+import type { StackEntry } from '../../../src/app/types';
 import { HookName } from '../../../src/hook';
 import { createTestRequest } from '../../helpers';
+
+/**
+ * Branded test double — wraps a LinearRouter and tracks how many
+ * times `clone()` was called. Used to prove `App.clone()` and
+ * `App.install()` route through the *active* router's `clone()`
+ * rather than instantiating a fresh LinearRouter directly.
+ */
+class BrandedRouter implements IRouter {
+    static readonly brand = Symbol('BrandedRouter');
+
+    static clones = 0;
+
+    protected inner = new LinearRouter();
+
+    add(entry: StackEntry): void {
+        this.inner.add(entry);
+    }
+
+    lookup(path: string): readonly RouterMatch[] {
+        return this.inner.lookup(path);
+    }
+
+    get entries(): readonly StackEntry[] {
+        return this.inner.entries;
+    }
+
+    clone(): IRouter {
+        BrandedRouter.clones += 1;
+        return new BrandedRouter();
+    }
+}
 
 describe('src/app clone', () => {
     it('should produce a router that responds independently', async () => {
@@ -139,51 +173,47 @@ describe('src/app clone', () => {
         expect(clone.name).toEqual('foo');
     });
 
-    it('should preserve the router family on clone (no LinearRouter downgrade)', async () => {
-        // App.clone() must propagate the active IRouter implementation
-        // via `this.router.clone()` so apps configured with TrieRouter
-        // (or any custom router) don't silently downgrade to the
-        // LinearRouter default.
-        const { TrieRouter, MemoizedRouter } = await import('../../../src');
+    it('App.clone() routes through the active router\'s clone() (no LinearRouter downgrade)', async () => {
+        // A test double that counts clone() calls — proves the cloned
+        // App's router was constructed via the parent's `IRouter.clone()`
+        // and not freshly instantiated as a default LinearRouter.
+        BrandedRouter.clones = 0;
 
-        const trieApp = new App({ router: new TrieRouter() });
-        trieApp.get('/x', defineCoreHandler(() => 'x'));
-        const trieClone = trieApp.clone();
-        // We can't introspect `router` directly (it's protected), so
-        // exercise router-dependent behaviour: the clone must still
-        // match the registered route after re-registration.
-        const res1 = await trieClone.fetch(createTestRequest('/x'));
-        expect(await res1.text()).toEqual('x');
+        const app = new App({ router: new BrandedRouter() });
+        app.get('/x', defineCoreHandler(() => 'x'));
 
-        // Composition: MemoizedRouter wrapping TrieRouter should also
-        // round-trip through clone.
-        const memoApp = new App({ router: new MemoizedRouter(new TrieRouter()) });
-        memoApp.get('/y', defineCoreHandler(() => 'y'));
-        const memoClone = memoApp.clone();
-        const res2 = await memoClone.fetch(createTestRequest('/y'));
-        expect(await res2.text()).toEqual('y');
+        const clone = app.clone();
+
+        expect(BrandedRouter.clones).toBe(1);
+        // Sanity: clone still routes through the branded router.
+        const res = await clone.fetch(createTestRequest('/x'));
+        expect(await res.text()).toEqual('x');
     });
 
-    it('should preserve the router family across plugin install', async () => {
-        // App.install() also passes `router: this.router.clone()` to
-        // the plugin's child app. A plugin installed on a TrieRouter
-        // app must run on a TrieRouter, not the LinearRouter default.
-        const { TrieRouter } = await import('../../../src');
+    it('App.install() routes through the active router\'s clone() (no LinearRouter downgrade)', async () => {
+        // Same regression as above, but for the plugin install path —
+        // the plugin's child sub-app's router must come from the parent's
+        // `IRouter.clone()`, not from constructing a fresh LinearRouter.
+        BrandedRouter.clones = 0;
 
         const installed = vi.fn();
         const plugin = {
-            name: 'probe-router',
+            name: 'probe-branded',
             install: (childApp: App) => {
                 installed(childApp);
                 childApp.get('/probe', defineCoreHandler(() => 'probe-ok'));
             },
         };
 
-        const app = new App({ router: new TrieRouter() });
+        const app = new App({ router: new BrandedRouter() });
         app.use(plugin as any);
 
+        // install() consumes one clone for the plugin's child sub-app.
+        expect(BrandedRouter.clones).toBe(1);
+        expect(installed).toHaveBeenCalledOnce();
+
+        // Sanity: the registered route still resolves.
         const res = await app.fetch(createTestRequest('/probe'));
         expect(await res.text()).toEqual('probe-ok');
-        expect(installed).toHaveBeenCalledOnce();
     });
 });

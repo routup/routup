@@ -4,15 +4,15 @@ import type { IRouter, RouterMatch } from '../types.ts';
 import { buildEntryPathMatcher } from '../utils.ts';
 
 /**
- * Default resolver — walks registered entries linearly per request and
+ * Default router — walks registered entries linearly per request and
  * runs each entry's mount-level matcher (built via `buildEntryPathMatcher`,
- * path-to-regexp-backed). Entries without a mount path fall back to the
- * entry's intrinsic `matchPath()` (routers / handlers without a registered
- * mount path return `true` for any path).
+ * path-to-regexp-backed). Entries without a mount path (mount-less
+ * middleware / nested apps registered via `.use(handler)`) match every
+ * request directly — there is no per-entry `matchPath()` fallback.
  *
  * Behaviour-preserving wrapper around the previous in-line stack walk
  * in `executePipelineStepLookup`. The matcher allocations live here
- * (not on `StackEntry`), so resolvers using a different matching
+ * (not on the registered entry), so routers using a different matching
  * strategy (radix tree, aggregated regex, …) can ignore this file
  * entirely.
  */

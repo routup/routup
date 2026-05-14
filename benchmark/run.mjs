@@ -2,11 +2,21 @@ import { spawn } from 'node:child_process';
 import { setTimeout as wait } from 'node:timers/promises';
 import autocannon from 'autocannon';
 
-const TRIALS = Number(process.env.TRIALS ?? 3);
-const WARMUP = Number(process.env.WARMUP ?? 10);
-const DURATION = Number(process.env.DURATION ?? 10);
-const CONNECTIONS = Number(process.env.CONNECTIONS ?? 100);
-const PIPELINING = Number(process.env.PIPELINING ?? 10);
+function readPositiveNumber(name, fallback) {
+    const raw = process.env[name];
+    if (raw === undefined || raw === '') return fallback;
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value <= 0) {
+        throw new Error(`Invalid ${name}: "${raw}". Expected a positive number.`);
+    }
+    return value;
+}
+
+const TRIALS = readPositiveNumber('TRIALS', 3);
+const WARMUP = readPositiveNumber('WARMUP', 10);
+const DURATION = readPositiveNumber('DURATION', 10);
+const CONNECTIONS = readPositiveNumber('CONNECTIONS', 100);
+const PIPELINING = readPositiveNumber('PIPELINING', 10);
 const URL = process.env.URL ?? 'http://127.0.0.1:3000';
 const RUNTIME = process.env.RUNTIME ?? 'node';
 const RUNTIME_BIN = process.env.RUNTIME_BIN ?? RUNTIME;
