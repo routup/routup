@@ -68,14 +68,17 @@ new App({ router: new MemoizedRouter(new LinearRouter()) });
 Custom routers implement `IRouter`:
 
 ```typescript
-import type { IRouter, RouterMatch } from 'routup';
+import type { IRouter, Route, RouteMatch } from 'routup';
 
 class MyRouter implements IRouter {
-    add(entry) { /* ... */ }
-    lookup(path: string): readonly RouterMatch[] { /* ... */ }
-    get entries() { /* ... */ }
+    add(route: Route) { /* ... */ }
+    lookup(path: string): readonly RouteMatch[] { /* ... */ }
+    get routes(): readonly Route[] { /* ... */ }
+    clone(): IRouter { /* ... */ }
 }
 ```
+
+See the [Custom Router guide](./custom-router) for the full contract and a working example.
 
 ## `AppOptions.path` — semantic change
 

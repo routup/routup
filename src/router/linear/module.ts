@@ -17,9 +17,14 @@ import { buildRoutePathMatcher } from '../utils.ts';
  * entirely.
  */
 export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IRouter<T> {
-    protected _routes: Route<T>[] = [];
+    protected _routes: Route<T>[];
 
-    protected _matchers: (IPathMatcher | undefined)[] = [];
+    protected _matchers: (IPathMatcher | undefined)[];
+
+    constructor() {
+        this._routes = [];
+        this._matchers = [];
+    }
 
     add(route: Route<T>): void {
         this._routes.push(route);

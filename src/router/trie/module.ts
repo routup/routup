@@ -37,16 +37,17 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
     protected root: TrieNode<T>;
 
     /**
-     * Entries that bypass the trie — registered with no path, with
+     * Routes that bypass the trie — registered with no path, with
      * the root path `/`, or with a path containing syntax we don't
      * parse. Walked linearly on every lookup, merged into the result
      * in registration order.
      */
-    protected universal: IndexedRoute<T>[] = [];
+    protected universal: IndexedRoute<T>[];
 
     constructor() {
         this._routes = [];
         this.root = createTrieNode<T>();
+        this.universal = [];
     }
 
     add(route: Route<T>): void {

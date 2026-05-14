@@ -20,10 +20,11 @@ import type { IRouter } from '../types.ts';
 export class MemoizedRouter<T extends ObjectLiteral = ObjectLiteral> implements IRouter<T> {
     protected inner: IRouter<T>;
 
-    protected cache: Map<string, readonly RouteMatch<T>[]> = new Map();
+    protected cache: Map<string, readonly RouteMatch<T>[]>;
 
     constructor(inner: IRouter<T>) {
         this.inner = inner;
+        this.cache = new Map();
     }
 
     add(route: Route<T>): void {
