@@ -7,7 +7,7 @@ import {
     shallowRef, 
 } from 'vue';
 import { useData } from 'vitepress';
-import { type IRoutupEvent, Router, defineCoreHandler } from 'routup';
+import { App, type IAppEvent, defineCoreHandler } from 'routup';
 
 const { isDark } = useData();
 
@@ -15,7 +15,7 @@ interface RouteSpec {
     method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     pattern: string;
     label: string;
-    handle: (event: IRoutupEvent) => unknown | Promise<unknown>;
+    handle: (event: IAppEvent) => unknown | Promise<unknown>;
 }
 
 const specs: RouteSpec[] = [
@@ -56,10 +56,10 @@ const specs: RouteSpec[] = [
 
 const lastMatchedSpec = shallowRef<RouteSpec | null>(null);
 
-const router = new Router();
+const app = new App();
 for (const spec of specs) {
     const method = spec.method.toLowerCase() as 'get' | 'post' | 'put' | 'patch' | 'delete';
-    router[method](spec.pattern, defineCoreHandler((event) => {
+    app[method](spec.pattern, defineCoreHandler((event) => {
         lastMatchedSpec.value = spec;
         return spec.handle(event);
     }));
@@ -98,7 +98,7 @@ async function runDispatch() {
     try {
         const url = new URL(form.path, 'http://localhost');
         const request = new Request(url, { method: form.method });
-        const response = await router.fetch(request);
+        const response = await app.fetch(request);
         const matchedIndex = lastMatchedSpec.value ?
             specs.indexOf(lastMatchedSpec.value) :
             -1;
@@ -192,15 +192,15 @@ const methodColor = (method: string) => {
     }
 };
 
-const codePreview = ref(`import { Router, defineCoreHandler, serve } from 'routup';
+const codePreview = ref(`import { App, defineCoreHandler, serve } from 'routup';
 
-const router = new Router();
+const app = new App();
 
-router.get('/users/:id', defineCoreHandler(
+app.get('/users/:id', defineCoreHandler(
     (event) => ({ id: Number(event.params.id) })
 ));
 
-serve(router, { port: 3000 });`);
+serve(app, { port: 3000 });`);
 </script>
 
 <template>
@@ -211,7 +211,7 @@ serve(router, { port: 3000 });`);
                     <span class="rt-hero-title-grad">routup</span>
                 </h1>
                 <p class="rt-hero-tagline">
-                    A minimalistic, runtime-agnostic HTTP router.
+                    A minimalistic, runtime-agnostic HTTP framework.
                     Return-based handlers, Web&nbsp;Standards everywhere — Node, Bun, Deno, Cloudflare,
                     or any Fetch-ready runtime.
                 </p>
@@ -247,7 +247,7 @@ serve(router, { port: 3000 });`);
                         class="rt-hero-card-dot"
                         style="background: var(--rt-color-success-500)"
                     />
-                    <span class="rt-hero-card-title">router.fetch(request)</span>
+                    <span class="rt-hero-card-title">app.fetch(request)</span>
                     <button
                         class="rt-hero-card-toggle"
                         type="button"
@@ -366,19 +366,19 @@ serve(router, { port: 3000 });`);
                             v-else-if="ready"
                             class="rt-hero-output-empty"
                         >
-                            No route matched. Routup walks the stack and falls through to the default
+                            No route matched. App walks the stack and falls through to the default
                             <code>404</code>.
                         </p>
                         <p
                             v-else
                             class="rt-hero-output-empty"
                         >
-                            Booting <code>router.fetch()</code>…
+                            Booting <code>app.fetch()</code>…
                         </p>
                     </div>
 
                     <p class="rt-hero-card-hint">
-                        Each keystroke re-runs <code>router.fetch()</code> against a real
+                        Each keystroke re-runs <code>app.fetch()</code> against a real
                         <code>Request</code>. Same model that ships to Node, Bun, Deno, and
                         Cloudflare Workers.
                     </p>

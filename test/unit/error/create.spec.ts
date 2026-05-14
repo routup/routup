@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { InternalServerError, NotFoundError } from '@ebec/http';
-import { RoutupError, createError } from '../../../src';
+import { AppError, createError } from '../../../src';
 
 describe('src/error/create', () => {
     it('should not recreate error', () => {
-        const foo = new RoutupError('foo');
+        const foo = new AppError('foo');
         const error = createError(foo);
         expect(error).toEqual(foo);
     });

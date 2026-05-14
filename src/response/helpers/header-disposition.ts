@@ -1,5 +1,5 @@
 import { HeaderName } from '../../constants.ts';
-import type { IRoutupEvent } from '../../event/index.ts';
+import type { IAppEvent } from '../../event/index.ts';
 import { setResponseContentTypeByFileName } from './utils.ts';
 
 // eslint-disable-next-line no-control-regex
@@ -34,7 +34,7 @@ function formatFilename(value: string): string {
 }
 
 function setDisposition(
-    event: IRoutupEvent,
+    event: IAppEvent,
     type: 'attachment' | 'inline',
     filename?: string,
 ) {
@@ -60,10 +60,10 @@ function setDisposition(
     );
 }
 
-export function setResponseHeaderAttachment(event: IRoutupEvent, filename?: string) {
+export function setResponseHeaderAttachment(event: IAppEvent, filename?: string) {
     setDisposition(event, 'attachment', filename);
 }
 
-export function setResponseHeaderInline(event: IRoutupEvent, filename?: string) {
+export function setResponseHeaderInline(event: IAppEvent, filename?: string) {
     setDisposition(event, 'inline', filename);
 }

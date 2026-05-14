@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { Router, defineCoreHandler } from '../../../src';
+import { App, defineCoreHandler } from '../../../src';
 import { sendStream } from '../../../src/response/helpers/send-stream';
 import { createTestRequest } from '../../helpers';
 
 describe('src/response/helpers/send-stream', () => {
     it('should send a readable stream', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.get('/', defineCoreHandler((event) => {
             const stream = new ReadableStream({
@@ -24,7 +24,7 @@ describe('src/response/helpers/send-stream', () => {
     });
 
     it('should inherit event.response status and headers', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.get('/', defineCoreHandler((event) => {
             event.response.status = 206;

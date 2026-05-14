@@ -1,5 +1,5 @@
 import { createError } from '../error/create.ts';
-import type { IRoutupEvent } from '../event/index.ts';
+import type { IAppEvent } from '../event/index.ts';
 
 function stripWeakPrefix(etag: string): string {
     return etag.startsWith('W/') ? etag.slice(2) : etag;
@@ -13,12 +13,12 @@ function stripWeakPrefix(etag: string): string {
  */
 async function applyEtag(
     body: string,
-    event: IRoutupEvent,
+    event: IAppEvent,
     headers: Headers,
 ): Promise<Response | undefined> {
     // etag === false short-circuit is handled by the caller so this
     // function isn't even invoked on the hot path.
-    const etagFn = event.routerOptions.etag;
+    const etagFn = event.appOptions.etag;
     if (!etagFn) {
         return undefined;
     }
@@ -50,12 +50,12 @@ async function applyEtag(
  *
  * Callers that want the async return uniformly can `await` the result
  * — `await` on a non-Promise still works but pays a microtask hop.
- * The Router fast path branches on `instanceof Promise` to keep the
+ * The App fast path branches on `instanceof Promise` to keep the
  * sync return truly sync.
  */
 export function toResponse(
     value: unknown,
-    event: IRoutupEvent,
+    event: IAppEvent,
 ): Response | undefined | Promise<Response | undefined> {
     if (value === undefined) {
         return undefined;
@@ -82,7 +82,7 @@ export function toResponse(
             headers.set('content-type', 'text/plain; charset=utf-8');
         }
 
-        if (event.routerOptions.etag) {
+        if (event.appOptions.etag) {
             return applyEtag(value, event, headers).then((cached) => cached ?? new Response(value, {
                 status,
                 headers,
@@ -138,7 +138,7 @@ export function toResponse(
         });
     }
 
-    if (event.routerOptions.etag) {
+    if (event.appOptions.etag) {
         return applyEtag(json, event, headers).then((cached) => cached ?? new Response(json, {
             status,
             headers,

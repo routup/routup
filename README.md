@@ -59,37 +59,37 @@ Handlers receive an event and return a value. Routup converts the return value t
 **Shorthand**
 
 ```typescript
-import { Router, defineCoreHandler, defineErrorHandler, serve } from 'routup';
+import { App, defineCoreHandler, defineErrorHandler, serve } from 'routup';
 
-const router = new Router();
+const app = new App();
 
-router.get('/', defineCoreHandler(() => 'Hello, World!'));
-router.get('/greet/:name', defineCoreHandler((event) => `Hello, ${event.params.name}!`));
-router.use(defineErrorHandler((error) => ({ error: error.message })));
+app.get('/', defineCoreHandler(() => 'Hello, World!'));
+app.get('/greet/:name', defineCoreHandler((event) => `Hello, ${event.params.name}!`));
+app.use(defineErrorHandler((error) => ({ error: error.message })));
 
-serve(router, { port: 3000 });
+serve(app, { port: 3000 });
 ```
 
 **Verbose**
 
 ```typescript
-import { Router, defineCoreHandler, serve } from 'routup';
+import { App, defineCoreHandler, serve } from 'routup';
 
-const router = new Router();
+const app = new App();
 
-router.use(defineCoreHandler({
+app.use(defineCoreHandler({
     path: '/',
     method: 'GET',
     fn: () => 'Hello, World!',
 }));
 
-router.use(defineCoreHandler({
+app.use(defineCoreHandler({
     path: '/greet/:name',
     method: 'GET',
     fn: (event) => `Hello, ${event.params.name}!`,
 }));
 
-serve(router, { port: 3000 });
+serve(app, { port: 3000 });
 ```
 
 ### Return Values
@@ -108,10 +108,20 @@ serve(router, { port: 3000 });
 Middleware calls `event.next()` to continue the pipeline:
 
 ```typescript
-router.use(defineCoreHandler(async (event) => {
+app.use(defineCoreHandler(async (event) => {
     console.log(`${event.method} ${event.path}`);
     return event.next();
 }));
+```
+
+### Pluggable router
+
+The route table itself is pluggable via the `router` option. Default is `LinearRouter` (walks entries linearly per request, ideal for small route counts). Swap to `TrieRouter` for radix-trie matching on apps with many routes, or wrap either in `MemoizedRouter` for path-cached lookups.
+
+```typescript
+import { App, TrieRouter, defineCoreHandler } from 'routup';
+
+const app = new App({ router: new TrieRouter() });
 ```
 
 ### Runtimes
@@ -119,11 +129,11 @@ router.use(defineCoreHandler(async (event) => {
 Routup runs on Node.js, Bun, Deno, and Cloudflare Workers. In most cases, import from `routup`:
 
 ```typescript
-import { Router, defineCoreHandler, serve } from 'routup';
+import { App, defineCoreHandler, serve } from 'routup';
 
-const router = new Router();
-router.get('/', defineCoreHandler(() => 'Hello, World!'));
-serve(router, { port: 3000 });
+const app = new App();
+app.get('/', defineCoreHandler(() => 'Hello, World!'));
+serve(app, { port: 3000 });
 ```
 
 For runtime-specific APIs (e.g. `toNodeHandler`), use the corresponding entrypoint like `routup/node`.

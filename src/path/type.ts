@@ -8,3 +8,8 @@ export type PathMatcherExecResult = {
 };
 
 export type Path = string;
+
+export interface IPathMatcher {
+    test(path: string) : boolean;
+    exec(path: string) : PathMatcherExecResult | undefined;
+}

@@ -1,6 +1,6 @@
 import Negotiator from 'negotiator';
 
-import type { IRoutupEvent } from '../../event/index.ts';
+import type { IAppEvent } from '../../event/index.ts';
 
 const NEGOTIATOR_KEY = Symbol.for('routup:negotiator');
 
@@ -12,7 +12,7 @@ function headersToPlainObject(headers: Headers) : Record<string, string> {
     return result;
 }
 
-export function useRequestNegotiator(event: IRoutupEvent) : Negotiator {
+export function useRequestNegotiator(event: IAppEvent) : Negotiator {
     let value = event.store[NEGOTIATOR_KEY] as Negotiator | undefined;
     if (value) {
         return value;

@@ -12,6 +12,7 @@ reports
 .tmp
 .temp
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 .agents/plans
 docs/node_modules
 docs/.temp

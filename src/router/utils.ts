@@ -1,43 +1,39 @@
-import { hasInstanceof } from '@ebec/core';
-import type { Path } from '../path/index.ts';
 import { PathMatcher } from '../path/index.ts';
-import { withLeadingSlash, withoutTrailingSlash } from '../utils/index.ts';
-import { RouterSymbol } from './constants.ts';
-import type { Router } from './module.ts';
-
-export function isRouterInstance(input: unknown): input is Router {
-    return hasInstanceof(input, RouterSymbol);
-}
+import type { IPathMatcher } from '../path/index.ts';
+import type { ObjectLiteral, Route } from '../types.ts';
 
 /**
- * Build a non-terminal `PathMatcher` for a router mount path.
+ * Build a path-to-regexp-backed `PathMatcher` for the route's mount
+ * path, applying the exact-vs-prefix convention every router should
+ * agree on:
  *
- * Returns `undefined` when the path is the root (`/`) or omitted entirely —
- * a router mounted at the root has no intrinsic path filter.
+ * - `route.method !== undefined` → exact match (method-bound route)
+ * - `route.method === undefined` → prefix match (middleware / nested
+ *   app)
+ *
+ * Returns `undefined` when the route has no mount path — middleware
+ * registered without a path matches every request.
+ *
+ * Routers are free to ignore this helper and build their own match
+ * mechanism (radix tree, single aggregated regex, etc.) — it's
+ * provided as a convenience for routers that want path-to-regexp
+ * semantics with minimal boilerplate.
  */
-export function buildRouterPathMatcher(value?: Path): PathMatcher | undefined {
-    if (value === '/' || typeof value === 'undefined') {
+export function buildRoutePathMatcher<T extends ObjectLiteral = ObjectLiteral>(
+    route: Route<T>,
+): IPathMatcher | undefined {
+    if (typeof route.path === 'undefined') {
         return undefined;
     }
 
-    return new PathMatcher(
-        withLeadingSlash(withoutTrailingSlash(`${value}`)),
-        { end: false },
-    );
-}
+    const end = typeof route.method !== 'undefined';
 
-/**
- * Check if the request accepts JSON responses.
- * Matches application/json and +json suffixes (e.g. application/vnd.api+json).
- * Returns true if no Accept header is present (API-first default).
- */
-export function acceptsJson(request: Request): boolean {
-    const accept = request.headers.get('accept');
-    if (!accept) {
-        return true;
+    // For prefix matchers a lone '/' contributes nothing useful (it
+    // matches every URL), so skip building it. Exact matchers must
+    // honor '/' — `app.get('/', …)` matches the root only.
+    if (!end && route.path === '/') {
+        return undefined;
     }
 
-    return accept.includes('application/json') ||
-        accept.includes('+json') ||
-        accept.includes('*/*');
+    return new PathMatcher(route.path, { end });
 }

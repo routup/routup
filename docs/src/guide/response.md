@@ -49,7 +49,7 @@ defineCoreHandler((event) => {
 
 ## Response Helpers
 
-Routup provides helper functions for common response patterns:
+App provides helper functions for common response patterns:
 
 ### sendFile
 
@@ -61,7 +61,7 @@ import fs from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 
-router.get('/download', defineCoreHandler(async (event) => {
+app.get('/download', defineCoreHandler(async (event) => {
     return sendFile(event, {
         stats: () => fs.stat('/path/to/file.pdf'),
         content: (opts) => {
@@ -79,7 +79,7 @@ Redirect the client to another URL:
 ```typescript
 import { defineCoreHandler, sendRedirect } from 'routup';
 
-router.get('/old', defineCoreHandler((event) => {
+app.get('/old', defineCoreHandler((event) => {
     return sendRedirect(event, '/new');
 }));
 ```
@@ -91,7 +91,7 @@ Send a 201 Created response:
 ```typescript
 import { defineCoreHandler, sendCreated } from 'routup';
 
-router.post('/users', defineCoreHandler(async (event) => {
+app.post('/users', defineCoreHandler(async (event) => {
     return sendCreated(event, { id: 1 });
 }));
 ```
@@ -103,7 +103,7 @@ Send a 202 Accepted response:
 ```typescript
 import { defineCoreHandler, sendAccepted } from 'routup';
 
-router.post('/jobs', defineCoreHandler(async (event) => {
+app.post('/jobs', defineCoreHandler(async (event) => {
     return sendAccepted(event);
 }));
 ```
@@ -115,7 +115,7 @@ Stream data to the client:
 ```typescript
 import { defineCoreHandler, sendStream } from 'routup';
 
-router.get('/stream', defineCoreHandler((event) => {
+app.get('/stream', defineCoreHandler((event) => {
     return sendStream(event, readableStream);
 }));
 ```
@@ -127,7 +127,7 @@ Content-negotiate and send a response in the appropriate format:
 ```typescript
 import { defineCoreHandler, sendFormat } from 'routup';
 
-router.get('/data', defineCoreHandler((event) => {
+app.get('/data', defineCoreHandler((event) => {
     return sendFormat(event, {
         default: () => 'key=value',
         'application/json': () => ({ key: 'value' }),
@@ -143,7 +143,7 @@ Create a Server-Sent Events (SSE) stream:
 ```typescript
 import { defineCoreHandler, createEventStream } from 'routup';
 
-router.get('/events', defineCoreHandler((event) => {
+app.get('/events', defineCoreHandler((event) => {
     const stream = createEventStream(event);
 
     let count = 0;

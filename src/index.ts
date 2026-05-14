@@ -8,3 +8,5 @@ export * from './request/index.ts';
 export * from './path/index.ts';
 export * from './plugin/index.ts';
 export * from './router/index.ts';
+export * from './app/index.ts';
+export * from './types.ts';

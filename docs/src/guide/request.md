@@ -1,6 +1,6 @@
 # Request
 
-The incoming request is accessed through the event object (`IRoutupEvent`) passed to every handler.
+The incoming request is accessed through the event object (`IAppEvent`) passed to every handler.
 
 ## Event Properties
 
@@ -58,16 +58,16 @@ defineCoreHandler((event) => {
 To share data between handlers, use `event.store`:
 
 ```typescript
-import { defineCoreHandler, Router } from 'routup';
+import { defineCoreHandler, App } from 'routup';
 
-const router = new Router();
+const app = new App();
 
-router.use(defineCoreHandler((event) => {
+app.use(defineCoreHandler((event) => {
     event.store.userId = '42';
     return event.next();
 }));
 
-router.get('/', defineCoreHandler((event) => {
+app.get('/', defineCoreHandler((event) => {
     const userId = event.store.userId;
     return { userId };
 }));

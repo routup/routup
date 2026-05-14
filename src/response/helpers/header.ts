@@ -1,8 +1,8 @@
 import { sanitizeHeaderValue } from '../../utils/index.ts';
-import type { IRoutupEvent } from '../../event/index.ts';
+import type { IAppEvent } from '../../event/index.ts';
 
 export function appendResponseHeader(
-    event: IRoutupEvent,
+    event: IAppEvent,
     name: string,
     value: string | string[],
 ) {
@@ -18,7 +18,7 @@ export function appendResponseHeader(
 }
 
 export function appendResponseHeaderDirective(
-    event: IRoutupEvent,
+    event: IAppEvent,
     name: string,
     value: string | string[],
 ) {

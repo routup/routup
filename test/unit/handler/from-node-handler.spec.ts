@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Router, defineCoreHandler } from '../../../src';
+import { App, defineCoreHandler } from '../../../src';
 import { fromNodeHandler, fromNodeMiddleware } from '../../../src/handler/adapters/node';
 import { HandlerType } from '../../../src/handler/constants';
 import { createTestRequest } from '../../helpers';
@@ -41,7 +41,7 @@ describe('src/handler/helpers/from-node-handler', () => {
 
     // Regression: https://github.com/routup/routup/issues/881
     it('should advance the pipeline when node middleware calls next() without ending the response', async () => {
-        const router = new Router({ timeout: 1000 });
+        const router = new App({ timeout: 1000 });
 
         let middlewareCalled = false;
         router.use(fromNodeMiddleware((_req, _res, next) => {
@@ -58,7 +58,7 @@ describe('src/handler/helpers/from-node-handler', () => {
     });
 
     it('should propagate errors from node middleware next(err)', async () => {
-        const router = new Router({ timeout: 1000 });
+        const router = new App({ timeout: 1000 });
 
         router.use(fromNodeMiddleware((_req, _res, next) => {
             next(new Error('middleware boom'));

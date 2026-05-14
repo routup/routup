@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-    Router,
+    App,
     defineCoreHandler,
     defineErrorHandler,
 } from '../../../src';
@@ -8,7 +8,7 @@ import { createTestRequest } from '../../helpers';
 
 describe('routing/middleware', () => {
     it('should use middleware', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.use(defineCoreHandler((event) => {
             event.store.foo = 'bar';
@@ -25,7 +25,7 @@ describe('routing/middleware', () => {
     });
 
     it('should use error middleware', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.get(defineCoreHandler(() => {
             throw new Error('ero');
@@ -40,7 +40,7 @@ describe('routing/middleware', () => {
     });
 
     it('should use middleware on specific path', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.use('/foo', defineCoreHandler((event) => {
             event.store.foo = 'bar';

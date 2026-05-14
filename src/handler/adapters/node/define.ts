@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { IRoutupEvent } from '../../../event/index.ts';
-import { RoutupError } from '../../../error/module.ts';
+import type { IAppEvent } from '../../../event/index.ts';
+import { AppError } from '../../../error/module.ts';
 import { defineCoreHandler } from '../../core/index.ts';
 import type { Handler } from '../../module.ts';
 import type { CoreHandler } from '../../core/types.ts';
@@ -108,14 +108,14 @@ function callMiddleware(
 
 function createNodeBridge(handler: NodeHandler | NodeMiddleware, isMiddleware: boolean): Handler {
     if (typeof handler !== 'function') {
-        throw new RoutupError('fromNodeHandler/fromNodeMiddleware expects a function.');
+        throw new AppError('fromNodeHandler/fromNodeMiddleware expects a function.');
     }
 
     return defineCoreHandler({
-        fn: (async (event: IRoutupEvent) => {
+        fn: (async (event: IAppEvent) => {
             const node = event.request.runtime?.node;
             if (!node?.req || !node?.res) {
-                throw new RoutupError('fromNodeHandler/fromNodeMiddleware requires a Node.js runtime.');
+                throw new AppError('fromNodeHandler/fromNodeMiddleware requires a Node.js runtime.');
             }
 
             const req = node.req as unknown as IncomingMessage;

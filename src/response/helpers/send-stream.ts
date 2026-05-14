@@ -1,6 +1,6 @@
-import type { IRoutupEvent } from '../../event/index.ts';
+import type { IAppEvent } from '../../event/index.ts';
 
-export function sendStream(event: IRoutupEvent, stream: ReadableStream): Response {
+export function sendStream(event: IAppEvent, stream: ReadableStream): Response {
     const {
         status,
         headers,

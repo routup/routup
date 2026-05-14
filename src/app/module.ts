@@ -2,13 +2,12 @@ import { markInstanceof } from '@ebec/core';
 import { HeaderName, MethodName } from '../constants.ts';
 import { DispatcherEvent } from '../dispatcher/index.ts';
 import type { IDispatcherEvent } from '../dispatcher/index.ts';
-import type { RoutupRequest } from '../event/index.ts';
+import type { AppRequest } from '../event/index.ts';
 import { createError } from '../error/index.ts';
 import {
     Handler,
     type HandlerOptions,
     HandlerType,
-    buildHandlerPathMatcher,
     isHandler,
     isHandlerOptions,
     matchHandlerMethod,
@@ -21,59 +20,76 @@ import type {
     IHooks,
 } from '../hook/index.ts';
 import { HookName, Hooks } from '../hook/index.ts';
-import type { Path, PathMatcher } from '../path/index.ts';
+import type { Path } from '../path/index.ts';
 import { isPath } from '../path/index.ts';
 import type { Plugin, PluginInstallContext } from '../plugin/index.ts';
 import {
     PluginAlreadyInstalledError,
     isPlugin,
 } from '../plugin/index.ts';
-import { normalizeRouterOptions } from './options.ts';
+import { normalizeAppOptions } from './options.ts';
 import {
+    acceptsJson,
     cleanDoubleSlashes,
+    joinPaths,
     withLeadingSlash,
 } from '../utils/index.ts';
-import { RouterPipelineStep, RouterStackEntryType, RouterSymbol } from './constants.ts';
+import { AppPipelineStep, AppSymbol, RouteEntryType } from './constants.ts';
+import { LinearRouter } from '../router/linear/index.ts';
+import type { IRouter } from '../router/types.ts';
 import type {
-    IRouter,
-    RouterOptions,
-    RouterOptionsInput,
-    RouterPipelineContext,
-    StackEntry,
+    AppOptions,
+    AppOptionsInput,
+    AppPipelineContext,
+    IApp,
+    RouteEntry,
 } from './types.ts';
-import { acceptsJson, buildRouterPathMatcher, isRouterInstance } from './utils.ts';
+import { isAppInstance } from './check.ts';
 
-const METHOD_TO_REGISTER = {
-    [MethodName.GET]: 'get',
-    [MethodName.POST]: 'post',
-    [MethodName.PUT]: 'put',
-    [MethodName.PATCH]: 'patch',
-    [MethodName.DELETE]: 'delete',
-    [MethodName.HEAD]: 'head',
-    [MethodName.OPTIONS]: 'options',
-} as const satisfies Record<MethodName, keyof Router>;
+/**
+ * Merge resolver-supplied path params into `event.params` *only* when
+ * `match.params` actually has keys. Skipping the object spread on the
+ * empty-params path (every static route, every middleware match) saves
+ * an allocation per match — the hottest path in static-route apps.
+ */
+function mergeMatchParams(
+    event: IDispatcherEvent,
+    matchParams: Record<string, unknown>,
+): void {
+    // Cheap emptiness probe — short-circuits on the first own key.
+    // `for...in` is fine here: resolver params are always plain
+    // objects (or `Object.create(null)`), so prototype keys aren't a
+    // concern.
+    let hasKeys = false;
+    // eslint-disable-next-line no-unreachable-loop
+    for (const _k in matchParams) {
+        hasKeys = true;
+        break;
+    }
+    if (!hasKeys) {
+        return;
+    }
+    event.params = {
+        ...event.params,
+        ...matchParams,
+    };
+}
 
-export class Router implements IRouter {
+export class App implements IApp {
     /**
      * A label for the router instance.
      */
     readonly name?: string;
 
     /**
-     * Array of mounted layers, routes & routers, each tagged by kind so the
-     * dispatch loop can discriminate without `isRouterInstance`/`isHandler`
-     * runtime checks.
+     * Pluggable router (route table) — owns the "which entries match
+     * this path?" lookup. Defaults to `LinearRouter` (walks entries
+     * linearly per request); swap in via `AppOptionsInput.router`
+     * for a radix/trie implementation on apps with many routes.
      *
      * @protected
      */
-    protected stack: StackEntry[] = [];
-
-    /**
-     * Path matcher for the current mount path.
-     *
-     * @protected
-     */
-    protected pathMatcher: PathMatcher | undefined;
+    protected router: IRouter<RouteEntry>;
 
     /**
      * Lifecycle hook registry.
@@ -85,7 +101,7 @@ export class Router implements IRouter {
     /**
      * Normalized options for this router instance.
      */
-    protected _options: Partial<RouterOptions>;
+    protected _options: Partial<AppOptions>;
 
     /**
      * Registry of installed plugins (name → version) on this router.
@@ -96,32 +112,23 @@ export class Router implements IRouter {
 
     // --------------------------------------------------
 
-    constructor(input: RouterOptionsInput = {}) {
+    constructor(input: AppOptionsInput = {}) {
         this.name = input.name;
 
         const {
             hooks = new Hooks(),
             plugins = new Map<string, string | undefined>(),
+            router = new LinearRouter<RouteEntry>(),
             ...options
         } = input;
 
         this.hooks = hooks;
         this.plugins = new Map<string, string | undefined>(plugins);
+        this.router = router;
 
-        this._options = normalizeRouterOptions(options);
-        this.pathMatcher = buildRouterPathMatcher(options.path);
+        this._options = normalizeAppOptions(options);
 
-        markInstanceof(this, RouterSymbol);
-    }
-
-    // --------------------------------------------------
-
-    matchPath(path: string): boolean {
-        if (this.pathMatcher) {
-            return this.pathMatcher.test(path);
-        }
-
-        return true;
+        markInstanceof(this, AppSymbol);
     }
 
     // --------------------------------------------------
@@ -130,7 +137,7 @@ export class Router implements IRouter {
      * Public entry point — creates a DispatcherEvent from the request,
      * runs the pipeline, and returns a Response (with 404/500 fallbacks).
      */
-    async fetch(request: RoutupRequest): Promise<Response> {
+    async fetch(request: AppRequest): Promise<Response> {
         const event = new DispatcherEvent(request);
 
         let response: Response | undefined;
@@ -183,7 +190,7 @@ export class Router implements IRouter {
         return this.buildFallbackResponse(request, event, 404, 'Not Found');
     }
 
-    protected buildFallbackResponse(request: RoutupRequest, event: IDispatcherEvent, status: number, message: string): Response {
+    protected buildFallbackResponse(request: AppRequest, event: IDispatcherEvent, status: number, message: string): Response {
         const headers = new Headers(event.response.headers);
 
         if (acceptsJson(request)) {
@@ -204,143 +211,153 @@ export class Router implements IRouter {
     // --------------------------------------------------
 
 
-    protected async executePipelineStep(context: RouterPipelineContext): Promise<void> {
-        while (context.step !== RouterPipelineStep.FINISH) {
+    protected async executePipelineStep(context: AppPipelineContext): Promise<void> {
+        while (context.step !== AppPipelineStep.FINISH) {
             switch (context.step) {
-                case RouterPipelineStep.START:
+                case AppPipelineStep.START:
                     await this.executePipelineStepStart(context); break;
-                case RouterPipelineStep.LOOKUP:
+                case AppPipelineStep.LOOKUP:
                     await this.executePipelineStepLookup(context); break;
-                case RouterPipelineStep.CHILD_BEFORE:
+                case AppPipelineStep.CHILD_BEFORE:
                     await this.executePipelineStepChildBefore(context); break;
-                case RouterPipelineStep.CHILD_DISPATCH:
+                case AppPipelineStep.CHILD_DISPATCH:
                     await this.executePipelineStepChildDispatch(context); break;
-                case RouterPipelineStep.CHILD_AFTER:
+                case AppPipelineStep.CHILD_AFTER:
                     await this.executePipelineStepChildAfter(context); break;
                 default:
-                    context.step = RouterPipelineStep.FINISH; break;
+                    context.step = AppPipelineStep.FINISH; break;
             }
         }
 
         await this.executePipelineStepFinish(context);
     }
 
-    protected async executePipelineStepStart(context: RouterPipelineContext): Promise<void> {
+    protected async executePipelineStepStart(context: AppPipelineContext): Promise<void> {
         if (this.hooks.hasListeners(HookName.START)) {
             await this.hooks.trigger(HookName.START, context.event);
         }
 
         if (context.event.dispatched) {
-            context.step = RouterPipelineStep.FINISH;
+            context.step = AppPipelineStep.FINISH;
         } else {
-            context.step = RouterPipelineStep.LOOKUP;
+            context.step = AppPipelineStep.LOOKUP;
         }
     }
 
-    protected async executePipelineStepLookup(context: RouterPipelineContext): Promise<void> {
+    protected async executePipelineStepLookup(context: AppPipelineContext): Promise<void> {
+        // Resolve matches on first entry, or refresh if a hook mutated
+        // `event.path` since the last LOOKUP (rare but supported).
+        if (
+            typeof context.matches === 'undefined' ||
+            context.matchesPath !== context.event.path
+        ) {
+            context.matches = this.router.lookup(context.event.path);
+            context.matchesPath = context.event.path;
+        }
+
+        const { matches } = context;
+
         while (
             !context.event.dispatched &&
-            context.stackIndex < this.stack.length
+            context.matchIndex < matches.length
         ) {
-            const entry = this.stack[context.stackIndex]!;
+            const match = matches[context.matchIndex]!;
+            const { route } = match;
 
-            if (entry.type === RouterStackEntryType.HANDLER) {
-                const handler = entry.data;
+            if (route.data.type === RouteEntryType.HANDLER) {
+                const handler = route.data.data;
 
                 if (
                     (context.event.error && handler.type === HandlerType.CORE) ||
                     (!context.event.error && handler.type === HandlerType.ERROR)
                 ) {
-                    context.stackIndex++;
+                    context.matchIndex++;
                     continue;
                 }
 
-                const match = entry.pathMatcher ?
-                    entry.pathMatcher.test(context.event.path) :
-                    handler.matchPath(context.event.path);
+                const { method } = route;
 
-                if (match) {
-                    const method = entry.method ?? handler.method;
-
-                    if (method) {
-                        context.event.methodsAllowed.add(method);
-                    }
-
-                    if (matchHandlerMethod(method, context.event.method as MethodName)) {
-                        if (this.hooks.hasListeners(HookName.CHILD_MATCH)) {
-                            await this.hooks.trigger(HookName.CHILD_MATCH, context.event);
-                        }
-
-                        if (context.event.dispatched) {
-                            context.step = RouterPipelineStep.FINISH;
-                        } else {
-                            context.step = RouterPipelineStep.CHILD_BEFORE;
-                        }
-
-                        return;
-                    }
+                if (method) {
+                    context.event.methodsAllowed.add(method);
                 }
 
-                context.stackIndex++;
-                continue;
+                if (!matchHandlerMethod(method, context.event.method as MethodName)) {
+                    context.matchIndex++;
+                    continue;
+                }
             }
 
-            const match = entry.pathMatcher ?
-                entry.pathMatcher.test(context.event.path) :
-                entry.data.matchPath(context.event.path);
+            if (this.hooks.hasListeners(HookName.CHILD_MATCH)) {
+                await this.hooks.trigger(HookName.CHILD_MATCH, context.event);
+            }
 
-            if (match) {
-                if (this.hooks.hasListeners(HookName.CHILD_MATCH)) {
-                    await this.hooks.trigger(HookName.CHILD_MATCH, context.event);
-                }
-
-                if (context.event.dispatched) {
-                    context.step = RouterPipelineStep.FINISH;
-                } else {
-                    context.step = RouterPipelineStep.CHILD_BEFORE;
-                }
-
+            // `dispatched` wins over a path rewrite — a hook that
+            // produced a response *and* rewrote the path is finished;
+            // restarting LOOKUP would discard the response.
+            if (context.event.dispatched) {
+                context.step = AppPipelineStep.FINISH;
                 return;
             }
 
-            context.stackIndex++;
+            // Otherwise, if the hook rewrote `event.path`, the current
+            // `match` is stale; restart LOOKUP so the next dispatch
+            // sees a match that corresponds to the new path.
+            if (context.event.path !== context.matchesPath) {
+                context.matches = undefined;
+                context.matchIndex = 0;
+                context.step = AppPipelineStep.LOOKUP;
+                return;
+            }
+
+            context.step = AppPipelineStep.CHILD_BEFORE;
+            return;
         }
 
-        context.step = RouterPipelineStep.FINISH;
+        context.step = AppPipelineStep.FINISH;
     }
 
-    protected async executePipelineStepChildBefore(context: RouterPipelineContext): Promise<void> {
+    protected async executePipelineStepChildBefore(context: AppPipelineContext): Promise<void> {
         if (this.hooks.hasListeners(HookName.CHILD_DISPATCH_BEFORE)) {
             await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, context.event);
         }
 
+        // `dispatched` wins over a path rewrite — see CHILD_MATCH.
         if (context.event.dispatched) {
-            context.step = RouterPipelineStep.FINISH;
-        } else {
-            context.step = RouterPipelineStep.CHILD_DISPATCH;
+            context.step = AppPipelineStep.FINISH;
+            return;
         }
+
+        if (context.event.path !== context.matchesPath) {
+            context.matches = undefined;
+            context.matchIndex = 0;
+            context.step = AppPipelineStep.LOOKUP;
+            return;
+        }
+
+        context.step = AppPipelineStep.CHILD_DISPATCH;
     }
 
-    protected async executePipelineStepChildAfter(context: RouterPipelineContext): Promise<void> {
+    protected async executePipelineStepChildAfter(context: AppPipelineContext): Promise<void> {
         if (this.hooks.hasListeners(HookName.CHILD_DISPATCH_AFTER)) {
             await this.hooks.trigger(HookName.CHILD_DISPATCH_AFTER, context.event);
         }
 
         if (context.event.dispatched) {
-            context.step = RouterPipelineStep.FINISH;
+            context.step = AppPipelineStep.FINISH;
         } else {
-            context.step = RouterPipelineStep.LOOKUP;
+            context.step = AppPipelineStep.LOOKUP;
         }
     }
 
-    protected async executePipelineStepChildDispatch(context: RouterPipelineContext): Promise<void> {
-        const entry = this.stack[context.stackIndex];
+    protected async executePipelineStepChildDispatch(context: AppPipelineContext): Promise<void> {
+        const match = context.matches?.[context.matchIndex];
 
-        if (context.event.dispatched || typeof entry === 'undefined') {
-            context.step = RouterPipelineStep.FINISH;
+        if (context.event.dispatched || typeof match === 'undefined') {
+            context.step = AppPipelineStep.FINISH;
             return;
         }
 
+        const { route } = match;
         const { event } = context;
 
         // Snapshot routing state so we can restore it if the entry yields no
@@ -352,51 +369,52 @@ export class Router implements IRouter {
         const savedMountPath = event.mountPath;
         const savedParams = event.params;
 
-        if (entry.type === RouterStackEntryType.ROUTER && entry.pathMatcher) {
-            // Router mount: strip the matched prefix off event.path so the
+        if (route.data.type === RouteEntryType.APP && typeof match.path === 'string') {
+            // App mount: strip the matched prefix off event.path so the
             // child router's pipeline sees a mount-relative path. The child
             // router's intrinsic pathMatcher (if any) is applied on top
             // inside its own dispatch.
-            const output = entry.pathMatcher.exec(event.path);
-            if (typeof output !== 'undefined') {
-                event.mountPath = cleanDoubleSlashes(`${event.mountPath}/${output.path}`);
+            event.mountPath = cleanDoubleSlashes(`${event.mountPath}/${match.path}`);
 
-                if (event.path === output.path) {
-                    event.path = '/';
-                } else {
-                    event.path = withLeadingSlash(event.path.substring(output.path.length));
-                }
-
-                event.params = {
-                    ...event.params,
-                    ...output.params,
-                };
+            if (event.path === match.path) {
+                event.path = '/';
+            } else {
+                event.path = withLeadingSlash(event.path.substring(match.path.length));
             }
-        } else if (entry.type === RouterStackEntryType.HANDLER && entry.pathMatcher) {
-            // Handler mount: extract route params from the mount matcher.
+
+            mergeMatchParams(event, match.params);
+        } else if (route.data.type === RouteEntryType.HANDLER && typeof match.path === 'string') {
+            // Handler mount: merge route params from the resolver match.
             // Handlers don't strip the path — they're leaves.
-            const output = entry.pathMatcher.exec(event.path);
-            if (typeof output !== 'undefined') {
-                event.params = {
-                    ...event.params,
-                    ...output.params,
-                };
-            }
+            mergeMatchParams(event, match.params);
         }
 
         try {
+            const parentMatches = context.matches;
+            const parentMatchesPath = context.matchesPath;
+            const nextMatchIndex = context.matchIndex + 1;
+
             event.setNext(async (error?: Error) => {
                 if (error) {
                     event.error = createError(error);
                 }
 
-                // Continue pipeline from the next stack item. RESPONSE is
-                // not fired here — `Router.dispatch` owns that firing, so
-                // nested re-entry naturally skips it.
-                const nextContext: RouterPipelineContext = {
-                    step: RouterPipelineStep.LOOKUP,
+                // Continue pipeline from the next matched entry. RESPONSE
+                // is not fired here — `App.dispatch` owns that firing,
+                // so nested re-entry naturally skips it.
+                //
+                // If `event.path` changed since this entry was matched
+                // (e.g. the handler mutated it before invoking next()),
+                // the captured `nextMatchIndex` is into a stale matches
+                // array. Reset to a fresh walk on the new path.
+                const pathChanged = event.path !== parentMatchesPath;
+
+                const nextContext: AppPipelineContext = {
+                    step: AppPipelineStep.LOOKUP,
                     event,
-                    stackIndex: context.stackIndex + 1,
+                    matchIndex: pathChanged ? 0 : nextMatchIndex,
+                    matches: pathChanged ? undefined : parentMatches,
+                    matchesPath: pathChanged ? undefined : parentMatchesPath,
                     response: undefined,
                 };
 
@@ -405,7 +423,7 @@ export class Router implements IRouter {
                 return nextContext.response;
             });
 
-            const response = await entry.data.dispatch(event);
+            const response = await route.data.data.dispatch(event);
 
             if (response) {
                 context.response = response;
@@ -425,15 +443,15 @@ export class Router implements IRouter {
             event.params = savedParams;
         }
 
-        context.stackIndex++;
-        context.step = RouterPipelineStep.CHILD_AFTER;
+        context.matchIndex++;
+        context.step = AppPipelineStep.CHILD_AFTER;
     }
 
-    protected async executePipelineStepFinish(context: RouterPipelineContext): Promise<void> {
+    protected async executePipelineStepFinish(context: AppPipelineContext): Promise<void> {
         if (
             !context.event.error &&
             !context.event.dispatched &&
-            context.event.routerPath.length === 1 &&
+            context.event.appPath.length === 1 &&
             context.event.method === MethodName.OPTIONS
         ) {
             if (context.event.methodsAllowed.has(MethodName.GET)) {
@@ -464,37 +482,19 @@ export class Router implements IRouter {
         const savedMountPath = event.mountPath;
         const savedParams = event.params;
 
-        if (this.pathMatcher) {
-            const output = this.pathMatcher.exec(event.path);
-            if (typeof output !== 'undefined') {
-                event.mountPath = cleanDoubleSlashes(`${event.mountPath}/${output.path}`);
-
-                if (event.path === output.path) {
-                    event.path = '/';
-                } else {
-                    event.path = withLeadingSlash(event.path.substring(output.path.length));
-                }
-
-                event.params = {
-                    ...event.params,
-                    ...output.params,
-                };
-            }
-        }
-
-        const context: RouterPipelineContext = {
-            step: RouterPipelineStep.START,
+        const context: AppPipelineContext = {
+            step: AppPipelineStep.START,
             event,
-            stackIndex: 0,
+            matchIndex: 0,
         };
 
-        event.routerPath.push({ name: this.name, options: this._options });
+        event.appPath.push({ name: this.name, options: this._options });
 
         try {
             await this.executePipelineStep(context);
 
             // Fire END here (not inside the pipeline) so it runs exactly
-            // once per `Router.dispatch` call. The setNext recursion only
+            // once per `App.dispatch` call. The setNext recursion only
             // re-enters `executePipelineStep`, never `dispatch`, so nested
             // middleware walks naturally skip this. Nested routers get
             // their own END firing via their own `dispatch()` invocation.
@@ -502,7 +502,7 @@ export class Router implements IRouter {
                 await this.hooks.trigger(HookName.END, event);
             }
         } finally {
-            event.routerPath.pop();
+            event.appPath.pop();
 
             // Restore routing state when this router did not produce a
             // response, so the caller's pipeline (a parent router) sees its
@@ -616,31 +616,31 @@ export class Router implements IRouter {
                 handler = new Handler({
                     ...element,
                     method,
-                    path: path ?? element.path,
                 });
             } else {
                 continue;
             }
 
-            this.stack.push({
-                type: RouterStackEntryType.HANDLER,
-                data: handler,
+            this.router.add({
+                path: joinPaths(this._options.path, path, handler.path),
                 method,
-                path,
-                pathMatcher: buildHandlerPathMatcher(path ?? handler.path, true),
+                data: {
+                    type: RouteEntryType.HANDLER,
+                    data: handler,
+                },
             });
         }
     }
 
     // --------------------------------------------------
 
-    use(router: IRouter): this;
+    use(router: IApp): this;
 
     use(handler: Handler | HandlerOptions): this;
 
     use(plugin: Plugin): this;
 
-    use(path: Path, router: IRouter): this;
+    use(path: Path, router: IApp): this;
 
     use(path: Path, handler: Handler | HandlerOptions): this;
 
@@ -654,12 +654,13 @@ export class Router implements IRouter {
                 continue;
             }
 
-            if (isRouterInstance(item)) {
-                this.stack.push({
-                    type: RouterStackEntryType.ROUTER,
-                    data: item,
-                    path,
-                    pathMatcher: buildRouterPathMatcher(path),
+            if (isAppInstance(item)) {
+                this.router.add({
+                    path: joinPaths(this._options.path, path),
+                    data: {
+                        type: RouteEntryType.APP,
+                        data: item,
+                    },
                 });
                 continue;
             }
@@ -667,25 +668,27 @@ export class Router implements IRouter {
             // Check isHandler (instanceof brand) BEFORE isHandlerOptions
             // (structural) — see useForMethod for the same reasoning.
             if (isHandler(item)) {
-                this.stack.push({
-                    type: RouterStackEntryType.HANDLER,
-                    data: item,
-                    path,
-                    pathMatcher: buildHandlerPathMatcher(path, !!item.method),
+                this.router.add({
+                    path: joinPaths(this._options.path, path, item.path),
+                    method: item.method,
+                    data: {
+                        type: RouteEntryType.HANDLER,
+                        data: item,
+                    },
                 });
                 continue;
             }
 
             if (isHandlerOptions(item)) {
-                const handler = new Handler({
-                    ...item,
-                    path: path ?? item.path,
-                });
+                const handler = new Handler({ ...item });
 
-                this.stack.push({
-                    type: RouterStackEntryType.HANDLER,
-                    data: handler,
-                    path,
+                this.router.add({
+                    path: joinPaths(this._options.path, path, handler.path),
+                    method: handler.method,
+                    data: {
+                        type: RouteEntryType.HANDLER,
+                        data: handler,
+                    },
                 });
                 continue;
             }
@@ -729,7 +732,12 @@ export class Router implements IRouter {
             throw new PluginAlreadyInstalledError(plugin.name);
         }
 
-        const router = new Router({ name: plugin.name });
+        // Carry the parent's router family forward so plugin sub-apps
+        // don't silently downgrade to LinearRouter.
+        const router = new App({
+            name: plugin.name,
+            router: this.router.clone(),
+        });
         plugin.install(router);
 
         if (context.path) {
@@ -746,7 +754,7 @@ export class Router implements IRouter {
     //---------------------------------------------------------------------------------
 
     /**
-     * Return a new `Router` that mirrors this one but owns independent
+     * Return a new `App` that mirrors this one but owns independent
      * mountable state.
      *
      * The new router has:
@@ -761,39 +769,42 @@ export class Router implements IRouter {
      * multiple paths — each mount can receive its own clone so subsequent
      * mutations on one mount do not bleed into the others.
      */
-    clone(): IRouter {
-        const next = new Router({
+    clone(): IApp {
+        const next = new App({
             ...this._options,
             hooks: this.hooks.clone(),
             plugins: this.plugins,
+            // Preserve the active router family on the clone — a clone
+            // of an app configured with TrieRouter should still use
+            // TrieRouter, not silently downgrade to LinearRouter.
+            router: this.router.clone(),
         });
 
-        for (const entry of this.stack) {
-            if (entry.type === RouterStackEntryType.ROUTER) {
-                const data = entry.data.clone();
-                if (entry.path) {
-                    next.use(entry.path, data);
-                } else {
-                    next.use(data);
-                }
+        // Re-register routes directly on the cloned resolver. The
+        // routes already carry the canonical combined `path` produced
+        // by mount-time `joinPaths` — going back through the public
+        // `use` / verb shortcuts would re-concat each handler's
+        // intrinsic path on top of that and produce `/users/list/list`.
+        for (const route of this.router.routes) {
+            if (route.data.type === RouteEntryType.APP) {
+                next.router.add({
+                    path: route.path,
+                    data: {
+                        type: RouteEntryType.APP,
+                        data: route.data.data.clone(),
+                    },
+                });
                 continue;
             }
 
-            if (entry.method) {
-                const register = METHOD_TO_REGISTER[entry.method];
-                if (entry.path) {
-                    next[register](entry.path, entry.data);
-                } else {
-                    next[register](entry.data);
-                }
-                continue;
-            }
-
-            if (entry.path) {
-                next.use(entry.path, entry.data);
-            } else {
-                next.use(entry.data);
-            }
+            next.router.add({
+                path: route.path,
+                method: route.method,
+                data: {
+                    type: RouteEntryType.HANDLER,
+                    data: route.data.data,
+                },
+            });
         }
 
         return next;

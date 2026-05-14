@@ -32,11 +32,12 @@ npm run lint:fix       # ESLint with auto-fix
 
 | Export | Description |
 |--------|-------------|
-| `Router` | Core routing engine — register handlers, nest routers, define hooks; exposes `fetch()` entry point |
+| `App` | Core dispatch engine — register handlers, nest apps, define hooks; exposes `fetch()` entry point |
+| `IRouter` / `LinearRouter` / `TrieRouter` / `MemoizedRouter` | Pluggable route-table family — swap via `new App({ router })` |
 | `defineCoreHandler()` | Factory for request handlers `(event) => Response \| any` |
 | `defineErrorHandler()` | Factory for error handlers `(error, event) => Response \| any` |
-| `serve(router)` | Start an HTTP server for the current runtime (from entry files) |
-| `toNodeHandler(router)` | Convert router to Node.js `(req, res) => void` handler (Node entry) |
+| `serve(app)` | Start an HTTP server for the current runtime (from entry files) |
+| `toNodeHandler(app)` | Convert app to Node.js `(req, res) => void` handler (Node entry) |
 | `useRequest*` / `setResponse*` | Tree-shakeable request/response helper functions |
 
 ## Detailed Guides

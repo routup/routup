@@ -5,7 +5,7 @@ import {
     vi,
 } from 'vitest';
 import {
-    Router,
+    App,
     defineCoreHandler,
     defineErrorHandler,
 } from '../../../src';
@@ -15,7 +15,7 @@ import { createTestRequest } from '../../helpers';
 
 describe('src/router/hooks', () => {
     it('should trigger non error hooks', async () => {
-        const router = new Router();
+        const router = new App();
         router.use(defineCoreHandler(() => 'Hello, World!'));
 
         const request = vi.fn();
@@ -46,7 +46,7 @@ describe('src/router/hooks', () => {
     });
 
     it('should trigger error hook', async () => {
-        const router = new Router();
+        const router = new App();
         router.use(defineCoreHandler(() => {
             throw new Error('Hello, World!');
         }));
@@ -69,7 +69,7 @@ describe('src/router/hooks', () => {
     });
 
     it('should remove multiple hooks', async () => {
-        const router = new Router();
+        const router = new App();
         router.use(defineCoreHandler(() => 'Hello, World!'));
 
         const fn = vi.fn();
@@ -91,7 +91,7 @@ describe('src/router/hooks', () => {
     });
 
     it('should remove error hook and fall through to default error handling', async () => {
-        const router = new Router();
+        const router = new App();
         router.use(defineCoreHandler(() => {
             throw new Error('fail');
         }));
@@ -107,7 +107,7 @@ describe('src/router/hooks', () => {
     });
 
     it('should remove single hook', async () => {
-        const router = new Router();
+        const router = new App();
         router.use(defineCoreHandler(() => 'Hello, World!'));
 
         const fnJest = vi.fn();
@@ -127,7 +127,7 @@ describe('src/router/hooks', () => {
     });
 
     it('should handle error with error handler', async () => {
-        const router = new Router();
+        const router = new App();
 
         router.use(defineCoreHandler(() => {
             throw new Error('handler failed!');
@@ -142,7 +142,7 @@ describe('src/router/hooks', () => {
     });
 
     it('should remove single hook by unsubscribe', async () => {
-        const router = new Router();
+        const router = new App();
         router.use(defineCoreHandler(() => 'Hello, World!'));
 
         const fnJest = vi.fn();
@@ -162,7 +162,7 @@ describe('src/router/hooks', () => {
     });
 
     it('should trigger handler error hook', async () => {
-        const router = new Router();
+        const router = new App();
 
         const onErrorFn = vi.fn();
 
@@ -185,7 +185,7 @@ describe('src/router/hooks', () => {
     });
 
     it('should execute hooks in priority order (higher first)', async () => {
-        const router = new Router();
+        const router = new App();
         router.use(defineCoreHandler(() => 'ok'));
 
         const order: number[] = [];
@@ -200,7 +200,7 @@ describe('src/router/hooks', () => {
     });
 
     it('should execute hooks with same priority in registration order', async () => {
-        const router = new Router();
+        const router = new App();
         router.use(defineCoreHandler(() => 'ok'));
 
         const order: string[] = [];
@@ -215,7 +215,7 @@ describe('src/router/hooks', () => {
     });
 
     it('should support negative priority', async () => {
-        const router = new Router();
+        const router = new App();
         router.use(defineCoreHandler(() => 'ok'));
 
         const order: string[] = [];
@@ -230,7 +230,7 @@ describe('src/router/hooks', () => {
     });
 
     it('should trigger handler hooks', async () => {
-        const router = new Router();
+        const router = new App();
 
         const onBefore = vi.fn();
         const onAfter = vi.fn();
@@ -255,7 +255,7 @@ describe('src/router/hooks', () => {
     });
 
     it('should fire REQUEST and RESPONSE exactly once when middleware calls event.next()', async () => {
-        const router = new Router();
+        const router = new App();
         router.use(defineCoreHandler(async (event) => event.next()));
         router.use(defineCoreHandler(() => 'ok'));
 
@@ -271,5 +271,38 @@ describe('src/router/hooks', () => {
         expect(await res.text()).toEqual('ok');
         expect(request).toHaveBeenCalledTimes(1);
         expect(response).toHaveBeenCalledTimes(1);
+    });
+
+    it('should re-LOOKUP when CHILD_MATCH rewrites event.path', async () => {
+        // A CHILD_MATCH listener that mutates `event.path` must force
+        // the pipeline to refresh its match cache; the dispatched
+        // handler is the one registered at the *new* path.
+        const router = new App();
+        router.get('/original', defineCoreHandler(() => 'wrong'));
+        router.get('/rewritten', defineCoreHandler(() => 'right'));
+
+        router.on(HookName.CHILD_MATCH, (event) => {
+            if (event.path === '/original') {
+                event.path = '/rewritten';
+            }
+        });
+
+        const res = await router.fetch(createTestRequest('/original'));
+        expect(await res.text()).toEqual('right');
+    });
+
+    it('should re-LOOKUP when CHILD_DISPATCH_BEFORE rewrites event.path', async () => {
+        const router = new App();
+        router.get('/a', defineCoreHandler(() => 'wrong'));
+        router.get('/b', defineCoreHandler(() => 'right'));
+
+        router.on(HookName.CHILD_DISPATCH_BEFORE, (event) => {
+            if (event.path === '/a') {
+                event.path = '/b';
+            }
+        });
+
+        const res = await router.fetch(createTestRequest('/a'));
+        expect(await res.text()).toEqual('right');
     });
 });

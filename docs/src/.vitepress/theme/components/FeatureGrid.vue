@@ -46,7 +46,7 @@ const features: Feature[] = [
                 Six pieces. One small core.
             </h2>
             <p class="rt-features-sub">
-                Routup keeps the surface narrow — Router, Handler, Event — and lets the runtime, the
+                Routup keeps the surface narrow — App, Handler, Event — and lets the runtime, the
                 Web platform, and tree-shaking do the rest.
             </p>
             <div class="rt-features-grid">

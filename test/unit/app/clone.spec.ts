@@ -5,15 +5,49 @@ import {
     vi,
 } from 'vitest';
 import {
-    Router,
+    App,
+    LinearRouter,
     defineCoreHandler,
 } from '../../../src';
+import type { IRouter, Route, RouteMatch } from '../../../src';
+import type { RouteEntry } from '../../../src/app/types';
 import { HookName } from '../../../src/hook';
 import { createTestRequest } from '../../helpers';
 
-describe('src/router clone', () => {
+/**
+ * Branded test double — wraps a LinearRouter and tracks how many
+ * times `clone()` was called. Used to prove `App.clone()` and
+ * `App.install()` route through the *active* router's `clone()`
+ * rather than instantiating a fresh LinearRouter directly.
+ */
+class BrandedRouter implements IRouter<RouteEntry> {
+    static readonly brand = Symbol('BrandedRouter');
+
+    static clones = 0;
+
+    protected inner = new LinearRouter<RouteEntry>();
+
+    add(entry: Route<RouteEntry>): void {
+        this.inner.add(entry);
+    }
+
+    lookup(path: string): readonly RouteMatch<RouteEntry>[] {
+        return this.inner.lookup(path);
+    }
+
+    get routes(): readonly Route<RouteEntry>[] {
+        return this.inner.routes;
+    }
+
+    clone(): IRouter<RouteEntry> {
+        BrandedRouter.clones += 1;
+        return new BrandedRouter();
+    }
+}
+
+describe('src/app clone', () => {
     it('should produce a router that responds independently', async () => {
-        const original = new Router();
+        const original = new App();
         original.get('/ping', defineCoreHandler(() => 'pong'));
 
         const clone = original.clone();
@@ -26,10 +60,10 @@ describe('src/router clone', () => {
     });
 
     it('should allow mounting clones under multiple paths', async () => {
-        const child = new Router();
+        const child = new App();
         child.get('/ping', defineCoreHandler(() => 'pong'));
 
-        const parent = new Router();
+        const parent = new App();
         for (const path of ['/users', '/members']) {
             parent.use(path, child.clone());
         }
@@ -42,7 +76,7 @@ describe('src/router clone', () => {
     });
 
     it('should not share stack mutations between original and clone', async () => {
-        const original = new Router();
+        const original = new App();
         original.get('/a', defineCoreHandler(() => 'A'));
 
         const clone = original.clone();
@@ -59,7 +93,7 @@ describe('src/router clone', () => {
     });
 
     it('should not share hook listener mutations between original and clone', async () => {
-        const original = new Router();
+        const original = new App();
         original.get('/', defineCoreHandler(() => 'ok'));
 
         const sharedListener = vi.fn();
@@ -83,7 +117,7 @@ describe('src/router clone', () => {
     });
 
     it('should not share plugin registration between original and clone', async () => {
-        const original = new Router();
+        const original = new App();
         original.use({
             name: 'plug',
             version: '1.0.0',
@@ -109,7 +143,7 @@ describe('src/router clone', () => {
 
     it('should share child handler references — clone is shallow', async () => {
         const handler = defineCoreHandler(() => 'shared');
-        const original = new Router();
+        const original = new App();
         original.get('/x', handler);
 
         const clone = original.clone();
@@ -120,22 +154,66 @@ describe('src/router clone', () => {
         expect(await fromOriginal.text()).toEqual('shared');
     });
 
-    it('should preserve the intrinsic mount path on the clone', async () => {
-        const original = new Router({ path: '/api' });
+    it('should preserve combined mount paths through clone()', async () => {
+        const original = new App();
         original.get('/ping', defineCoreHandler(() => 'pong'));
 
         const clone = original.clone();
 
-        const parent = new Router();
-        parent.use(clone);
+        const parent = new App();
+        parent.use('/api', clone);
 
         const response = await parent.fetch(createTestRequest('/api/ping'));
         expect(await response.text()).toEqual('pong');
     });
 
     it('should preserve the router name on the clone', () => {
-        const original = new Router({ name: 'foo' });
+        const original = new App({ name: 'foo' });
         const clone = original.clone();
         expect(clone.name).toEqual('foo');
+    });
+
+    it('App.clone() routes through the active router\'s clone() (no LinearRouter downgrade)', async () => {
+        // A test double that counts clone() calls — proves the cloned
+        // App's router was constructed via the parent's `IRouter.clone()`
+        // and not freshly instantiated as a default LinearRouter.
+        BrandedRouter.clones = 0;
+
+        const app = new App({ router: new BrandedRouter() });
+        app.get('/x', defineCoreHandler(() => 'x'));
+
+        const clone = app.clone();
+
+        expect(BrandedRouter.clones).toBe(1);
+        // Sanity: clone still routes through the branded router.
+        const res = await clone.fetch(createTestRequest('/x'));
+        expect(await res.text()).toEqual('x');
+    });
+
+    it('App.install() routes through the active router\'s clone() (no LinearRouter downgrade)', async () => {
+        // Same regression as above, but for the plugin install path —
+        // the plugin's child sub-app's router must come from the parent's
+        // `IRouter.clone()`, not from constructing a fresh LinearRouter.
+        BrandedRouter.clones = 0;
+
+        const installed = vi.fn();
+        const plugin = {
+            name: 'probe-branded',
+            install: (childApp: App) => {
+                installed(childApp);
+                childApp.get('/probe', defineCoreHandler(() => 'probe-ok'));
+            },
+        };
+
+        const app = new App({ router: new BrandedRouter() });
+        app.use(plugin as any);
+
+        // install() consumes one clone for the plugin's child sub-app.
+        expect(BrandedRouter.clones).toBe(1);
+        expect(installed).toHaveBeenCalledOnce();
+
+        // Sanity: the registered route still resolves.
+        const res = await app.fetch(createTestRequest('/probe'));
+        expect(await res.text()).toEqual('probe-ok');
     });
 });

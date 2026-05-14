@@ -1,39 +1,39 @@
-# Router
+# App
 
-The `Router` is the central building block. It manages a stack of handlers and dispatches requests through them.
+The `App` is the central building block. It manages a stack of handlers and dispatches requests through them.
 
 ```typescript
-import { Router, defineCoreHandler, serve } from 'routup';
+import { App, defineCoreHandler, serve } from 'routup';
 
-const router = new Router();
+const app = new App();
 
-router.get('/', defineCoreHandler((event) => {
+app.get('/', defineCoreHandler((event) => {
     return 'Hello, World!';
 }));
 
-serve(router, { port: 3000 });
+serve(app, { port: 3000 });
 ```
 
 ## HTTP Methods
 
-The router provides shorthand methods for all common HTTP verbs:
+The app provides shorthand methods for all common HTTP verbs:
 
 ```typescript
-router.get('/users', defineCoreHandler((event) => { /* ... */ }));
-router.post('/users', defineCoreHandler((event) => { /* ... */ }));
-router.put('/users/:id', defineCoreHandler((event) => { /* ... */ }));
-router.patch('/users/:id', defineCoreHandler((event) => { /* ... */ }));
-router.delete('/users/:id', defineCoreHandler((event) => { /* ... */ }));
+app.get('/users', defineCoreHandler((event) => { /* ... */ }));
+app.post('/users', defineCoreHandler((event) => { /* ... */ }));
+app.put('/users/:id', defineCoreHandler((event) => { /* ... */ }));
+app.patch('/users/:id', defineCoreHandler((event) => { /* ... */ }));
+app.delete('/users/:id', defineCoreHandler((event) => { /* ... */ }));
 ```
 
 ## Mounting
 
 ### Global
 
-Mount a handler or router without a path prefix:
+Mount a handler or app without a path prefix:
 
 ```typescript
-router.use(defineCoreHandler((event) => {
+app.use(defineCoreHandler((event) => {
     // runs for all requests
     return event.next();
 }));
@@ -44,22 +44,22 @@ router.use(defineCoreHandler((event) => {
 Mount on a specific path prefix:
 
 ```typescript
-router.use('/api', apiRouter);
+app.use('/api', apiApp);
 ```
 
-Or set the path in the router options:
+Or set the path in the app options:
 
 ```typescript
-const apiRouter = new Router({ path: '/api' });
-router.use(apiRouter);
+const apiApp = new App({ path: '/api' });
+app.use(apiApp);
 ```
 
 ## Nesting
 
-Routers can be nested for modular route organization:
+Apps can be nested for modular route organization:
 
 ```typescript
-const users = new Router();
+const users = new App();
 users.get('/', defineCoreHandler((event) => {
     return [{ id: 1, name: 'Alice' }];
 }));
@@ -67,24 +67,24 @@ users.get('/:id', defineCoreHandler((event) => {
     return { id: event.params.id };
 }));
 
-const api = new Router();
+const api = new App();
 api.use('/users', users);
 
-const app = new Router();
+const app = new App();
 app.use('/api', api);
 // GET /api/users, GET /api/users/:id
 ```
 
-## router.mount() <Badge type="warning" text="experimental" />
+## app.mount() <Badge type="warning" text="experimental" />
 
 Mount an external fetch handler at a given path. The handler receives requests with the mount prefix stripped from the URL.
 
 ```typescript
 // Mount an object with a fetch method
-router.mount('/api', externalApp);
+app.mount('/api', externalApp);
 
 // Mount a plain fetch function
-router.mount('/proxy', (request) => {
+app.mount('/proxy', (request) => {
     return fetch(request);
 });
 ```
@@ -98,7 +98,7 @@ This is useful for integrating other frameworks or services that expose a Fetch-
 Set a global request timeout that applies to the entire dispatch pipeline. When exceeded, a `408 Request Timeout` response is returned and `event.signal` is aborted:
 
 ```typescript
-const router = new Router({ timeout: 5000 }); // 5 seconds
+const app = new App({ timeout: 5000 }); // 5 seconds
 ```
 
 ### Per-Handler Timeout
@@ -106,7 +106,7 @@ const router = new Router({ timeout: 5000 }); // 5 seconds
 Set a default timeout for individual handler execution. Each handler's `fn()` is independently timed. When the timeout fires, `event.signal` inside the handler is aborted for cooperative cancellation:
 
 ```typescript
-const router = new Router({
+const app = new App({
     handlerTimeout: 2000,              // 2s default per handler
     handlerTimeoutOverridable: false,  // handlers can only narrow, not extend (default)
 });
@@ -115,7 +115,7 @@ const router = new Router({
 Handlers can override the default via the verbose syntax:
 
 ```typescript
-router.get('/slow', defineCoreHandler({
+app.get('/slow', defineCoreHandler({
     timeout: 10000, // 10s for this handler only
     fn: async (event) => fetchSlowData(),
 }));
@@ -134,15 +134,15 @@ defineCoreHandler(async (event) => {
 });
 ```
 
-## router.fetch()
+## app.fetch()
 
-You can call `router.fetch()` directly with a `Request` object to get a `Response`. This is the Web Fetch API compatible entry point that runtime adapters call internally:
+You can call `app.fetch()` directly with a `Request` object to get a `Response`. This is the Web Fetch API compatible entry point that runtime adapters call internally:
 
 ```typescript
-const router = new Router();
-router.get('/', defineCoreHandler(() => 'Hello'));
+const app = new App();
+app.get('/', defineCoreHandler(() => 'Hello'));
 
-const response = await router.fetch(
+const response = await app.fetch(
     new Request('http://localhost/')
 );
 console.log(await response.text()); // "Hello"

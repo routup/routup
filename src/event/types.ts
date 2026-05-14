@@ -1,20 +1,20 @@
 import type { ServerRequest } from 'srvx';
-import type { RouterOptions } from '../router/types.ts';
+import type { AppOptions } from '../app/types.ts';
 
-export type RoutupResponse = {
+export type AppResponse = {
     status: number;
     headers: Headers;
 };
 
-export type RoutupRequest = ServerRequest;
+export type AppRequest = ServerRequest;
 
 export type NextFn = (error?: Error) => unknown | Promise<unknown>;
 
-export interface IRoutupEvent {
+export interface IAppEvent {
     /**
      * The srvx ServerRequest (extends Web Standard Request).
      */
-    readonly request: RoutupRequest;
+    readonly request: AppRequest;
 
     /**
      * Route parameters extracted from the URL path pattern.
@@ -55,7 +55,7 @@ export interface IRoutupEvent {
      * ignored. They only apply when returning plain values (string, object, etc.)
      * that go through `toResponse()`.
      */
-    readonly response: RoutupResponse;
+    readonly response: AppResponse;
 
     /**
      * Per-request store for caching and plugin state.
@@ -70,7 +70,7 @@ export interface IRoutupEvent {
      *
      * Contains merged options from the router path stack with defaults applied.
      */
-    readonly routerOptions: RouterOptions;
+    readonly appOptions: AppOptions;
 
     /**
      * Abort signal tied to the request lifecycle.

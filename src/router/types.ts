@@ -1,251 +1,55 @@
-import type { MethodName } from '../constants.ts';
-import type { IDispatcher, IDispatcherEvent } from '../dispatcher/index.ts';
-import type { RoutupRequest } from '../event/index.ts';
-import type {
-    Handler,
-    HandlerOptions,
-} from '../handler/index.ts';
-import {
-    type HookDefaultListener,
-    type HookErrorListener,
-    type HookListener,
-    type HookName,
-    type HookUnsubscribeFn,
-    type IHooks,
-} from '../hook/index.ts';
+import type { ObjectLiteral, Route, RouteMatch } from '../types.ts';
 
-import type { Path, PathMatcher } from '../path/index.ts';
-import type { Plugin } from '../plugin/index.ts';
-import type {
-    EtagFn,
-    EtagInput,
-    TrustProxyFn,
-    TrustProxyInput,
-} from '../utils/index.ts';
-import type { RouterPipelineStep, RouterStackEntryType  } from './constants.ts';
-
-// --------------------------------------------------
-// Router Options
-// --------------------------------------------------
-
-export type RouterOptions = {
-    path?: Path,
-    name?: string,
+/**
+ * Pluggable strategy for storing routes and answering "which entries
+ * match this path?". The default `LinearRouter` walks the stored
+ * entries linearly. Alternative implementations (radix tree,
+ * aggregated regex, …) can swap in via `AppOptionsInput.router` to
+ * skip the walk entirely on apps with many routes.
+ *
+ * The router operates on `Route<T>` where `T` is opaque data; the
+ * router never inspects `entry.data`. Only `entry.path` and
+ * `entry.method` are routing-relevant.
+ *
+ * **Match-semantics convention** (custom implementations must honor):
+ * - `entry.method !== undefined` → match the path **exactly** (the
+ *   entry is method-bound, e.g. a verb-shortcut handler).
+ * - `entry.method === undefined` → match by **prefix** (middleware,
+ *   nested apps).
+ *
+ * Method matching against the request method is kept at the dispatch-
+ * loop call site, not here, because method semantics differ between
+ * handler and nested-app entries (only handler entries are
+ * method-bound).
+ */
+export interface IRouter<T extends ObjectLiteral = ObjectLiteral> {
+    /**
+     * Register a route. Entries are stored in registration order —
+     * the order they were passed to `App.use` / `.get` / `.post` /
+     * etc. — and lookup results preserve that order.
+     */
+    add(route: Route<T>): void;
 
     /**
-     * Global request timeout in milliseconds.
-     *
-     * Applies to the entire dispatch pipeline in `fetch()`. When exceeded,
-     * the request is aborted and a 408 response is returned. The AbortSignal
-     * on the event is also aborted for cooperative cancellation.
+     * Return every entry that matches the given path, in registration
+     * order. The dispatch loop iterates this list; nested `setNext`
+     * re-entries resume from a later index in the same list.
      */
-    timeout?: number,
+    lookup(path: string): readonly RouteMatch<T>[];
 
     /**
-     * Default per-handler timeout in milliseconds.
-     *
-     * Applies individually to each handler's `fn()` execution. Handlers can
-     * override this value via their own `timeout` option — see
-     * `handlerTimeoutOverridable` to control whether overrides can extend
-     * or only narrow this default.
+     * All registered entries in registration order. `App.clone()`
+     * iterates this to re-register entries on the cloned instance.
      */
-    handlerTimeout?: number,
+    readonly routes: readonly Route<T>[];
 
     /**
-     * Whether handlers can extend the `handlerTimeout` default.
-     *
-     * When `false` (default), a handler's `timeout` is clamped to
-     * `Math.min(handlerTimeout, handler.timeout)`. When `true`, the
-     * handler's `timeout` fully replaces the router default.
+     * Return a fresh, **empty** router of the same shape — same class
+     * for the leaf implementations, same wrapping for composable ones
+     * (`MemoizedRouter` recursively clones its inner). Used by
+     * `App.install()` and `App.clone()` so plugin sub-apps and cloned
+     * apps preserve the active router family instead of silently
+     * downgrading to `LinearRouter`.
      */
-    handlerTimeoutOverridable?: boolean,
-
-    subdomainOffset: number,
-    proxyIpMax: number,
-    /**
-     * ETag generator, or `null` to disable ETag/304 entirely.
-     *
-     * Kept as a literal `null` (rather than a no-op function) so the
-     * response pipeline can branch synchronously and skip the
-     * `await applyEtag(...)` microtask hop on the hot path.
-     */
-    etag: EtagFn | null,
-    trustProxy: TrustProxyFn,
-};
-
-export type RouterOptionsInput = Omit<Partial<RouterOptions>, 'etag' | 'trustProxy'> & {
-    etag?: EtagInput,
-    trustProxy?: TrustProxyInput,
-
-    hooks?: IHooks,
-    plugins?: Map<string, string | undefined>
-};
-
-export type RouterPathNode = {
-    readonly name?: string;
-    readonly options: Partial<RouterOptions>;
-};
-
-// --------------------------------------------------
-// Stack
-// --------------------------------------------------
-
-export type StackRouterEntry = {
-    type: typeof RouterStackEntryType.ROUTER,
-    data: IRouter,
-    /**
-     * Original mount path the entry was registered with, retained so
-     * `Router.clone()` can re-register the entry via the public API.
-     */
-    path?: Path,
-    /**
-     * Mount-specific path matcher.
-     *
-     * Set when the router was mounted under a path (e.g. `parent.use('/api', child)`).
-     * When undefined, the lookup falls back to the router's own intrinsic matcher.
-     */
-    pathMatcher?: PathMatcher,
-};
-
-export type StackHandlerEntry = {
-    type: typeof RouterStackEntryType.HANDLER,
-    data: Handler,
-    /**
-     * Original mount path the entry was registered with, retained so
-     * `Router.clone()` can re-register the entry via the public API.
-     */
-    path?: Path,
-    /**
-     * Mount-specific path matcher.
-     *
-     * Set when the handler was registered under a path (e.g.
-     * `parent.use('/api', handler)`). When undefined, the lookup falls back
-     * to the handler's own intrinsic matcher.
-     */
-    pathMatcher?: PathMatcher,
-    /**
-     * Mount-specific HTTP method.
-     *
-     * Set when the handler was registered via a method-bound shortcut
-     * (e.g. `router.get(handler)` sets this to `GET`). When undefined,
-     * dispatch falls back to the handler's own intrinsic method.
-     */
-    method?: MethodName,
-};
-
-export type StackEntry = StackRouterEntry | StackHandlerEntry;
-
-// --------------------------------------------------
-// Pipeline
-// --------------------------------------------------
-
-export type RouterPipelineContext = {
-    step: RouterPipelineStep,
-    event: IDispatcherEvent,
-    stackIndex: number,
-    response?: Response,
-};
-
-export interface IRouter extends IDispatcher {
-    /**
-     * Optional label for the router instance.
-     */
-    readonly name?: string;
-
-    /**
-     * Public entry point — processes a request through the pipeline
-     * and returns a Response (with 404/500 fallbacks).
-     */
-    fetch(request: RoutupRequest): Promise<Response>;
-
-    /**
-     * Test if a path matches this router's mount path.
-     */
-    matchPath(path: string): boolean;
-
-    /**
-     * Return a new router that mirrors this one but owns independent
-     * mountable state — fresh stack of shallow-copied entries (handlers and
-     * child routers shared by reference), fresh `Hooks` seeded with the
-     * current listeners, shallow copy of options, and a fresh plugins map.
-     *
-     * Intended for mounting the same logical router under multiple paths
-     * without sharing mutable state across mount points.
-     */
-    clone(): IRouter;
-
-    /**
-     * Check if a plugin with the given name is installed on this router.
-     */
-    hasPlugin(name: string): boolean;
-
-    /**
-     * Get the version of an installed plugin by name on this router,
-     * or `undefined` if the plugin is not installed here.
-     */
-    getPluginVersion(name: string): string | undefined;
-
-    /**
-     * Register a handler, router, or plugin.
-     * When a path is provided, the item is mounted at that path.
-     */
-    use(router: IRouter): this;
-    use(handler: Handler | HandlerOptions): this;
-    use(plugin: Plugin): this;
-    use(path: Path, router: IRouter): this;
-    use(path: Path, handler: Handler | HandlerOptions): this;
-    use(path: Path, plugin: Plugin): this;
-
-    /** Register GET handler(s). */
-    get(...handlers: (Handler | HandlerOptions)[]): this;
-    get(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
-
-    /** Register POST handler(s). */
-    post(...handlers: (Handler | HandlerOptions)[]): this;
-    post(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
-
-    /** Register PUT handler(s). */
-    put(...handlers: (Handler | HandlerOptions)[]): this;
-    put(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
-
-    /** Register PATCH handler(s). */
-    patch(...handlers: (Handler | HandlerOptions)[]): this;
-    patch(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
-
-    /** Register DELETE handler(s). */
-    delete(...handlers: (Handler | HandlerOptions)[]): this;
-    delete(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
-
-    /** Register HEAD handler(s). */
-    head(...handlers: (Handler | HandlerOptions)[]): this;
-    head(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
-
-    /** Register OPTIONS handler(s). */
-    options(...handlers: (Handler | HandlerOptions)[]): this;
-    options(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
-
-    /**
-     * Add a hook listener.
-     */
-    on(
-        name: typeof HookName.START |
-            typeof HookName.END |
-            typeof HookName.CHILD_DISPATCH_BEFORE |
-            typeof HookName.CHILD_DISPATCH_AFTER,
-        fn: HookDefaultListener,
-    ): HookUnsubscribeFn;
-    on(
-        name: typeof HookName.CHILD_MATCH,
-        fn: HookDefaultListener,
-    ): HookUnsubscribeFn;
-    on(
-        name: typeof HookName.ERROR,
-        fn: HookErrorListener,
-    ): HookUnsubscribeFn;
-
-    /**
-     * Remove a specific or all hook listeners for the given hook name.
-     */
-    off(name: HookName): this;
-    off(name: HookName, fn: HookListener): this;
+    clone(): IRouter<T>;
 }

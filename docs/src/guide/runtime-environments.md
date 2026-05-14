@@ -3,12 +3,12 @@
 Routup runs on any JavaScript runtime that supports Web standard `Request` and `Response`. Import from `routup` — the correct runtime entry is selected automatically via conditional exports.
 
 ```typescript
-import { Router, defineCoreHandler, serve } from 'routup';
+import { App, defineCoreHandler, serve } from 'routup';
 
-const router = new Router();
-router.get('/', defineCoreHandler(() => 'Hello'));
+const app = new App();
+app.get('/', defineCoreHandler(() => 'Hello'));
 
-serve(router, { port: 3000 });
+serve(app, { port: 3000 });
 ```
 
 This works on Node.js, Bun, Deno, and any runtime that supports conditional exports.

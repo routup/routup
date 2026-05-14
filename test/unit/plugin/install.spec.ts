@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+    App,
     PluginAlreadyInstalledError,
-    Router,
     defineCoreHandler,
 } from '../../../src';
 import type { Plugin } from '../../../src';
@@ -19,7 +19,7 @@ function cookiePlugin(version?: string): Plugin {
 
 describe('src/plugin install', () => {
     it('should run a plugin\'s install function and serve its handlers', async () => {
-        const router = new Router();
+        const router = new App();
         router.use(cookiePlugin());
 
         const response = await router.fetch(createTestRequest('/'));
@@ -28,7 +28,7 @@ describe('src/plugin install', () => {
     });
 
     it('should track an installed plugin via hasPlugin', () => {
-        const router = new Router();
+        const router = new App();
 
         expect(router.hasPlugin('@routup/cookie')).toBe(false);
 
@@ -38,31 +38,31 @@ describe('src/plugin install', () => {
     });
 
     it('should track plugin version via getPluginVersion', () => {
-        const router = new Router();
+        const router = new App();
         router.use(cookiePlugin('3.2.1'));
 
         expect(router.getPluginVersion('@routup/cookie')).toBe('3.2.1');
     });
 
     it('should throw when installing the same plugin twice on the same router', () => {
-        const router = new Router();
+        const router = new App();
         router.use(cookiePlugin());
 
         expect(() => router.use(cookiePlugin())).toThrowError(PluginAlreadyInstalledError);
     });
 
     it('should allow installing the same plugin on a child router when the parent already has it', () => {
-        const parent = new Router();
+        const parent = new App();
         parent.use(cookiePlugin('1.0.0'));
 
-        const child = new Router();
+        const child = new App();
         parent.use(child);
 
         expect(() => child.use(cookiePlugin('1.0.0'))).not.toThrow();
     });
 
     it('should mount a plugin at a path when one is provided', async () => {
-        const router = new Router();
+        const router = new App();
         router.use('/api', cookiePlugin());
 
         const matched = await router.fetch(createTestRequest('/api/'));
