@@ -128,7 +128,11 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
     }
 
     get routes(): readonly Route<T>[] {
-        return this._routes;
+        // Defensive copy — `readonly` is compile-time only. Returning
+        // the live array would let JS callers mutate it, drifting away
+        // from what is actually indexed in `root` / `universal` and
+        // breaking `add()`'s `index = this._routes.length` invariant.
+        return this._routes.slice();
     }
 
     clone(): IRouter<T> {

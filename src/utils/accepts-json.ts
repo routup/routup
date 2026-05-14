@@ -20,8 +20,12 @@ export function acceptsJson(request: Request): boolean {
         .some((entry) => {
             const parts = entry.split(';').map((part) => part.trim());
             const mediaRange = parts[0]!;
-            const qParam = parts.slice(1).find((param) => param.startsWith('q='));
-            const q = qParam ? Number.parseFloat(qParam.slice(2)) : 1;
+            // Split each parameter on `=` and trim both halves so
+            // `q=0`, `q = 0`, and `q =0` are all recognized as q=0.
+            const qParam = parts.slice(1)
+                .map((param) => param.split('=').map((s) => s.trim()))
+                .find(([key]) => key === 'q');
+            const q = qParam ? Number.parseFloat(qParam[1] ?? '') : 1;
             if (!Number.isFinite(q) || q <= 0) {
                 return false;
             }

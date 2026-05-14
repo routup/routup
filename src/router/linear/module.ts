@@ -68,7 +68,11 @@ export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IR
     }
 
     get routes(): readonly Route<T>[] {
-        return this._routes;
+        // Defensive copy — `readonly` is compile-time only. Returning
+        // the live array would let JS callers `push`/`splice` it,
+        // desynchronizing `_routes` from `_matchers` so subsequent
+        // `lookup()` would read past the matcher list.
+        return this._routes.slice();
     }
 
     clone(): IRouter<T> {

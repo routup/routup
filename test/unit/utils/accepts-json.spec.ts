@@ -38,6 +38,12 @@ describe('acceptsJson', () => {
         expect(acceptsJson(make('text/html;q=1, application/json;q=0'))).toBe(false);
     });
 
+    it('tolerates whitespace around the q parameter', () => {
+        expect(acceptsJson(make('application/json; q=0'))).toBe(false);
+        expect(acceptsJson(make('application/json; q =0'))).toBe(false);
+        expect(acceptsJson(make('application/json; q = 0'))).toBe(false);
+    });
+
     it('accepts when at least one JSON media range has q > 0', () => {
         expect(acceptsJson(make('text/html, application/json;q=0.5'))).toBe(true);
     });
