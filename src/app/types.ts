@@ -75,21 +75,25 @@ export type AppOptions = {
      */
     handlerTimeoutOverridable?: boolean,
 
-    subdomainOffset: number,
+    subdomainOffset?: number,
 
-    proxyIpMax: number,
+    proxyIpMax?: number,
+
     /**
      * ETag generator, or `null` to disable ETag/304 entirely.
      *
-     * Kept as a literal `null` (rather than a no-op function) so the
-     * response pipeline can branch synchronously and skip the
-     * `await applyEtag(...)` microtask hop on the hot path.
+     * - `undefined` (the default): consumers fall back to a
+     *   framework-provided `EtagFn`.
+     * - `null`: explicit opt-out — the response pipeline branches
+     *   synchronously and skips the `await applyEtag(...)` microtask hop.
+     * - `EtagFn`: the user's own generator.
      */
-    etag: EtagFn | null,
-    trustProxy: TrustProxyFn,
+    etag?: EtagFn | null,
+
+    trustProxy?: TrustProxyFn,
 };
 
-export type AppOptionsInput = Omit<Partial<AppOptions>, 'etag' | 'trustProxy'> & {
+export type AppOptionsInput = Omit<AppOptions, 'etag' | 'trustProxy'> & {
     etag?: EtagInput,
     trustProxy?: TrustProxyInput,
 
@@ -105,7 +109,7 @@ export type AppOptionsInput = Omit<Partial<AppOptions>, 'etag' | 'trustProxy'> &
 
 export type AppPathNode = {
     readonly name?: string;
-    readonly options: Partial<AppOptions>;
+    readonly options: AppOptions;
 };
 
 // --------------------------------------------------

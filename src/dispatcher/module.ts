@@ -11,12 +11,6 @@ import { toResponse } from '../response/index.ts';
 import type { AppOptions } from '../app/types.ts';
 import type { IDispatcherEvent } from './types.ts';
 
-/**
- * Frozen sentinel assigned to `event.appOptions` at construction so
- * `App.dispatch` can detect "no App has dispatched yet" via
- * reference equality and mark itself as the root dispatch.
- */
-export const EMPTY_APP_OPTIONS: AppOptions = Object.freeze({} as AppOptions);
 
 export class DispatcherEvent implements IDispatcherEvent {
     readonly request: AppRequest;
@@ -39,10 +33,18 @@ export class DispatcherEvent implements IDispatcherEvent {
     /**
      * Options of the App currently dispatching this event. Set on
      * entry to `App.dispatch` and restored on exit (so nested apps
-     * temporarily override). Defaults to a frozen empty object so
-     * consumers reading before dispatch get a stable shape.
+     * temporarily override). Initialized to `{}` so consumers
+     * reading before any dispatch get a valid (empty) shape.
      */
     appOptions: AppOptions;
+
+    /**
+     * `true` while at least one `App.dispatch` is on the call stack
+     * for this event. `App.dispatch` reads this on entry to derive
+     * `isRoot` and writes it on entry/exit so nested calls see it
+     * already set.
+     */
+    isDispatching: boolean;
 
     protected _dispatched: boolean;
 
@@ -83,7 +85,8 @@ export class DispatcherEvent implements IDispatcherEvent {
         this.path = this._url.pathname;
         this.mountPath = '/';
         this.params = {};
-        this.appOptions = EMPTY_APP_OPTIONS;
+        this.appOptions = {};
+        this.isDispatching = false;
         this.methodsAllowed = new Set();
         this._dispatched = false;
         this._nextCalled = false;

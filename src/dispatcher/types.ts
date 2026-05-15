@@ -56,6 +56,15 @@ export interface IDispatcherEvent {
     appOptions: AppOptions;
 
     /**
+     * `true` while at least one `App.dispatch` is on the call stack
+     * for this event. Used by `App.dispatch` to derive whether a
+     * given dispatch call is the root (the first one entered) or
+     * nested. Saved/restored across the call so nested dispatches
+     * leave the flag in the state their caller expects.
+     */
+    isDispatching: boolean;
+
+    /**
      * Abort signal for cooperative cancellation.
      *
      * When a `timeout` router option is set, this signal aborts after the

@@ -34,7 +34,6 @@ import {
     joinPaths,
     withLeadingSlash,
 } from '../utils/index.ts';
-import { EMPTY_APP_OPTIONS } from '../dispatcher/module.ts';
 import { AppPipelineStep, AppSymbol, RouteEntryType } from './constants.ts';
 import { LinearRouter } from '../router/linear/index.ts';
 import type { IRouter } from '../router/types.ts';
@@ -76,6 +75,30 @@ function mergeMatchParams(
     };
 }
 
+/**
+ * Copy `source[key]` into `target[key]` when the target's value is
+ * undefined; return whether a write happened.
+ *
+ * Bound to a single key `K` per call, so TypeScript can prove the
+ * read and write hit the same property's value type — no `as` cast
+ * needed. This is the standard escape hatch for the variance trap
+ * you'd otherwise hit by writing `target[key] = source[key]` inside
+ * a loop where `key: keyof AppOptions` is a *union* (read returns
+ * the union of value types, write requires the intersection, which
+ * collapses to `never`).
+ */
+function copyOptionIfUnset<K extends keyof AppOptions>(
+    target: AppOptions,
+    source: AppOptions,
+    key: K,
+): boolean {
+    if (typeof target[key] !== 'undefined') {
+        return false;
+    }
+    target[key] = source[key];
+    return true;
+}
+
 export class App implements IApp {
     /**
      * A label for the router instance.
@@ -102,7 +125,7 @@ export class App implements IApp {
     /**
      * Normalized options for this router instance.
      */
-    protected _options: Partial<AppOptions>;
+    protected _options: AppOptions;
 
     /**
      * Registry of installed plugins (name → version) on this router.
@@ -212,10 +235,13 @@ export class App implements IApp {
     // --------------------------------------------------
 
     /**
-     * Mount-time option inheritance — copies any option the parent
-     * has set but this App hasn't into this App's own options. Called
-     * by `App.use(child)` (and indirectly by `install`) before the
-     * child is registered.
+     * Mount-time option inheritance — fill in any of this App's
+     * unset option keys from the supplied parent options. Called by
+     * `App.use(child)` after narrowing to `App` via `isAppInstance`.
+     *
+     * Public so callers don't need to reach into another App's
+     * protected fields: the parent passes its options by value and
+     * the child decides what to do with them.
      *
      * Shallow per-key merge. Hooks, plugins, router, and cache are
      * deliberately per-App and are not propagated.
@@ -230,23 +256,26 @@ export class App implements IApp {
      * propagate. `AppOptions` is configured at construction-and-mount;
      * later changes are not a supported workflow.
      */
-    protected adoptOptionsFrom(parent: App): void {
-        const parentOpts = parent._options as Record<string, unknown>;
-        const ownOpts = this._options as Record<string, unknown>;
+    extendOptions(incoming: AppOptions): void {
         let changed = false;
-        for (const key in parentOpts) {
-            if (typeof ownOpts[key] === 'undefined') {
-                ownOpts[key] = parentOpts[key];
+        const keys = Object.keys(incoming) as (keyof AppOptions)[];
+        for (const key of keys) {
+            if (copyOptionIfUnset(this._options, incoming, key)) {
                 changed = true;
             }
         }
         if (!changed) {
             return;
         }
-        // Cascade newly inherited keys to already-mounted children.
+        // Cascade newly inherited keys down to already-mounted
+        // children. Pass our own (just-extended) options view as
+        // the parent for the next level.
         for (const route of this.router.routes) {
-            if (route.data.type === RouteEntryType.APP) {
-                (route.data.data as App).adoptOptionsFrom(this);
+            if (
+                route.data.type === RouteEntryType.APP &&
+                isAppInstance(route.data.data)
+            ) {
+                route.data.data.extendOptions(this._options);
             }
         }
     }
@@ -526,11 +555,12 @@ export class App implements IApp {
         const savedMountPath = event.mountPath;
         const savedParams = event.params;
         const savedAppOptions = event.appOptions;
+        const wasDispatching = event.isDispatching;
 
         // First dispatch on this event is the root; any nested
-        // `App.dispatch` call sees `appOptions` already set to a
-        // parent's `_options` (not the EMPTY sentinel).
-        const isRoot = savedAppOptions === EMPTY_APP_OPTIONS;
+        // `App.dispatch` call sees `isDispatching` already set by an
+        // outer call still on the stack.
+        const isRoot = !wasDispatching;
 
         const context: AppPipelineContext = {
             step: AppPipelineStep.START,
@@ -543,7 +573,8 @@ export class App implements IApp {
         // resolved view, so dispatch just swaps it onto the event for
         // the duration of this App's run. Nested apps overwrite, then
         // we restore in `finally` so the caller's view stays intact.
-        event.appOptions = this._options as AppOptions;
+        event.appOptions = this._options;
+        event.isDispatching = true;
 
         try {
             await this.executePipelineStep(context);
@@ -558,6 +589,7 @@ export class App implements IApp {
             }
         } finally {
             event.appOptions = savedAppOptions;
+            event.isDispatching = wasDispatching;
 
             // Restore routing state when this router did not produce a
             // response, so the caller's pipeline (a parent router) sees its
@@ -714,7 +746,7 @@ export class App implements IApp {
                 // unset option keys from this parent. After mount the
                 // child's `_options` is its fully resolved view; no
                 // per-request walk needed.
-                (item as App).adoptOptionsFrom(this);
+                item.extendOptions(this._options);
                 this.router.add({
                     path: joinPaths(this._options.path, path),
                     data: {
