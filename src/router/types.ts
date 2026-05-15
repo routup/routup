@@ -71,20 +71,6 @@ export interface IRouter<T extends ObjectLiteral = ObjectLiteral> {
     lookup(path: string, method?: string): readonly RouteMatch<T>[];
 
     /**
-     * Optional: every registered entry in registration order.
-     *
-     * `App` keeps its own copy of every route it registers, so it
-     * never has to call back into the router for enumeration. This
-     * field is kept on the contract as a convenience for direct
-     * router consumers (and the built-in routers happen to maintain
-     * it for free since they hold the list anyway), but custom
-     * routers — including future aggregated/compiled implementations
-     * that may discard the original entries after building their
-     * lookup structure — are free to omit it.
-     */
-    readonly routes?: readonly Route<T>[];
-
-    /**
      * Return a fresh, **empty** router of the same shape — same class
      * for leaf implementations; composable wrappers should recursively
      * clone their inner router. Used by `App.install()` and

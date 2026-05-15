@@ -35,24 +35,27 @@ describe('App.setRouter', () => {
         expect(await (await app.fetch(createTestRequest('/after'))).text()).toBe('after');
     });
 
-    it('IRouter.routes is optional — App does not depend on it', async () => {
-        // A minimal router that does NOT implement the optional `routes`
-        // field — proves App can live without it.
-        class NoEnumerationRouter implements Required<Pick<TrieRouter<RouteEntry>, 'add' | 'lookup' | 'clone'>> {
+    it('IRouter contract has no enumeration — App owns the canonical route list', async () => {
+        // A minimal router that implements only the contract
+        // (`add` / `lookup` / `clone`). Proves App's clone cascade
+        // and `extendOptions` propagation work without ever asking
+        // the router to enumerate its entries — App's own
+        // `_routes` is the single source of truth.
+        class MinimalRouter implements Pick<TrieRouter<RouteEntry>, 'add' | 'lookup' | 'clone'> {
             private inner = new LinearRouter<RouteEntry>();
             add(route: Route<RouteEntry>) { this.inner.add(route); }
             lookup(p: string) { return this.inner.lookup(p); }
-            clone() { return new NoEnumerationRouter(); }
+            clone() { return new MinimalRouter(); }
         }
 
-        const app = new App({ router: new NoEnumerationRouter() });
+        const app = new App({ router: new MinimalRouter() });
         app.get('/x', defineCoreHandler(() => 'ok'));
 
         const res = await app.fetch(createTestRequest('/x'));
         expect(await res.text()).toBe('ok');
 
-        // clone() and extendOptions cascade should both work without
-        // calling into the router's enumeration.
+        // clone() rebuilds entries on the cloned router from
+        // App._routes — no router-side enumeration.
         const cloned = app.clone();
         const res2 = await cloned.fetch(createTestRequest('/x'));
         expect(await res2.text()).toBe('ok');

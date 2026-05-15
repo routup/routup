@@ -106,9 +106,9 @@ describe.each(Object.entries(resolvers))('IRouter<MyData> generic — %s', (_nam
     });
 
     it('clone() returns an empty router of the same shape', () => {
-        // Asserted observationally via `lookup` — `IRouter.routes`
-        // is optional on the contract (not implemented by the
-        // built-in routers post Plan 019).
+        // Asserted observationally via `lookup` — the IRouter
+        // contract has no `routes` field, so behaviour is the
+        // only honest thing to assert against.
         const router = factory();
         router.add({
             path: '/x',

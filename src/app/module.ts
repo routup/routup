@@ -153,12 +153,11 @@ export class App implements IApp {
     /**
      * Every route registered on this App, in registration order.
      *
-     * Owning the list at the App level (rather than reading it back
-     * from `this.router.routes`) lets us narrow the `IRouter`
-     * contract — `routes` is now optional on the interface — and
-     * gives `setRouter` a single source of truth to replay onto a
-     * swap-in router. Routes are pushed alongside every
-     * `this.router.add()` via the `register` helper.
+     * App owns the canonical list — the `IRouter` contract has no
+     * `routes` field, so cascades / clones / `setRouter` replay
+     * read from here instead of asking the router. Routes are
+     * pushed alongside every `this.router.add()` via the `register`
+     * helper.
      *
      * @protected
      */
@@ -184,8 +183,8 @@ export class App implements IApp {
     /**
      * Register a route with the active router and record it on the
      * App so we can replay it onto a different router later (see
-     * `setRouter`) and so cascades / clones don't depend on
-     * `IRouter.routes`.
+     * `setRouter`) and so cascades / clones have a source of truth
+     * independent of the router instance.
      *
      * @protected
      */
