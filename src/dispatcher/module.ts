@@ -9,17 +9,18 @@ import type {
 } from '../event/types.ts';
 import { toResponse } from '../response/index.ts';
 import type { AppOptions } from '../app/types.ts';
+import type { MethodNameLike } from '../constants.ts';
 import type { IDispatcherEvent } from './types.ts';
 
 
 export class DispatcherEvent implements IDispatcherEvent {
     readonly request: AppRequest;
 
-    params: Record<string, any>;
+    params: Record<string, string | undefined>;
 
     path: string;
 
-    readonly method: string;
+    readonly method: MethodNameLike;
 
     /**
      * Collected allowed methods (for OPTIONS).

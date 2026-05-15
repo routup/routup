@@ -1,4 +1,5 @@
 import type { ICache } from '../../cache/index.ts';
+import type { MethodNameLike } from '../../constants.ts';
 import type { IPathMatcher } from '../../path/index.ts';
 import type { ObjectLiteral, Route, RouteMatch } from '../../types.ts';
 import type { BaseRouterOptions, IRouter } from '../types.ts';
@@ -43,7 +44,7 @@ export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IR
         this.cache?.clear();
     }
 
-    lookup(path: string, _method?: string): readonly RouteMatch<T>[] {
+    lookup(path: string, _method?: MethodNameLike): readonly RouteMatch<T>[] {
         // LinearRouter ignores `method`: the dispatcher's own
         // `matchHandlerMethod` check runs on every returned candidate
         // anyway, so we simply emit every path-matching route and let
@@ -82,7 +83,7 @@ export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IR
                 // Prototype-less for symmetry with TrieRouter — avoids
                 // `__proto__` / `hasOwnProperty` shadowing if user
                 // code does `'foo' in match.params`.
-                params: Object.create(null) as Record<string, any>,
+                params: Object.create(null) as Record<string, string | undefined>,
             });
         }
 

@@ -6,6 +6,7 @@ import type {
     NextFn,
 } from '../event/types.ts';
 import type { AppOptions } from '../app/types.ts';
+import type { MethodNameLike } from '../constants.ts';
 
 export interface IDispatcherEvent {
     /**
@@ -14,9 +15,11 @@ export interface IDispatcherEvent {
     readonly request: AppRequest;
 
     /**
-     * Route parameters extracted from the URL path pattern.
+     * Route parameters extracted from the URL path pattern. Values
+     * are `string` (or `undefined` for an optional param that
+     * didn't match).
      */
-    params: Record<string, any>;
+    params: Record<string, string | undefined>;
 
     /**
      * Current request path, adjusted relative to the mount point during router nesting.
@@ -24,9 +27,10 @@ export interface IDispatcherEvent {
     path: string;
 
     /**
-     * HTTP method (GET, POST, PUT, etc.).
+     * HTTP method (GET, POST, PUT, etc.). See `IAppEvent.method`
+     * for the open-enum typing rationale.
      */
-    readonly method: string;
+    readonly method: MethodNameLike;
 
     /**
      * Accumulated mount path from nested routers.

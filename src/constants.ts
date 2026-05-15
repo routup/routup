@@ -10,6 +10,15 @@ export const MethodName = {
 
 export type MethodName = typeof MethodName[keyof typeof MethodName];
 
+/**
+ * `MethodName` plus the open-enum escape hatch for non-standard
+ * methods (`PROPFIND`, `MKCOL`, custom verbs). The `(string & {})`
+ * intersection is structurally identical to `string` but TypeScript
+ * doesn't collapse the union — so callers still get autocomplete
+ * for the canonical methods while remaining free to pass anything.
+ */
+export type MethodNameLike = MethodName | (string & {});
+
 export const HeaderName = {
     ACCEPT: 'accept',
     ACCEPT_CHARSET: 'accept-charset',

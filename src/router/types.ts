@@ -1,4 +1,5 @@
 import type { ICache } from '../cache/index.ts';
+import type { MethodNameLike } from '../constants.ts';
 import type { ObjectLiteral, Route, RouteMatch } from '../types.ts';
 
 /**
@@ -68,7 +69,7 @@ export interface IRouter<T extends ObjectLiteral = ObjectLiteral> {
      * HEAD handling notes on `TrieRouter` for the canonical
      * implementation.
      */
-    lookup(path: string, method?: string): readonly RouteMatch<T>[];
+    lookup(path: string, method?: MethodNameLike): readonly RouteMatch<T>[];
 
     /**
      * Return a fresh, **empty** router of the same shape — same class
