@@ -4,6 +4,10 @@ Routup v6 renames the top-level class and the route-table abstraction to align w
 
 The runtime behaviour, hook lifecycle, and helper APIs are largely unchanged. Most app code only needs identifier renames.
 
+::: tip Skipping v6?
+If you're going straight to v7, this page still applies — start here, then read the [v6 → v7 guide](./migration-v7) for the cache-rewrite changes (`MemoizedRouter` is removed in v7).
+:::
+
 ## Quick summary
 
 | v5 | v6 |

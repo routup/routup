@@ -83,6 +83,7 @@ export default defineConfig({
                         { text: 'Serving', link: '/guide/dispatchers' },
                         { text: 'Runtime Environments', link: '/guide/runtime-environments' },
                         { text: 'Custom Router', link: '/guide/custom-router' },
+                        { text: 'Custom Cache', link: '/guide/custom-cache' },
                     ],
                 },
                 {
@@ -98,6 +99,7 @@ export default defineConfig({
                         { text: 'Express Compatibility', link: '/guide/express-compatibility' },
                         { text: 'Migrating to v5', link: '/guide/migration-v5' },
                         { text: 'Migrating to v6', link: '/guide/migration-v6' },
+                        { text: 'Migrating to v7', link: '/guide/migration-v7' },
                     ],
                 },
             ],

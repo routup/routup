@@ -1,6 +1,6 @@
 # Custom Router
 
-Routup ships three built-in routers (`LinearRouter`, `TrieRouter`, `MemoizedRouter`) but the router is fully pluggable. You can write your own — for example, to integrate a third-party route table, add request-shape-aware caching, or instrument lookups for tracing — and pass it to `App` via the `router` option.
+Routup ships two built-in routers (`LinearRouter`, `TrieRouter`) but the router is fully pluggable. You can write your own — for example, to integrate a third-party route table or instrument lookups for tracing — and pass it to `App` via the `router` option. Path-level caching is a separate concern handled by the `cache` option (see the [Custom Cache guide](./custom-cache)).
 
 The router contract is the `IRouter<T>` interface, generic over the per-route data you want to carry. `App` uses `IRouter<RouteEntry>` (where `RouteEntry` discriminates handler vs. nested-app), but `IRouter<T>` accepts any object-shaped `T` so the same router can be used standalone for routing problems that have nothing to do with `App`.
 
@@ -47,7 +47,7 @@ Lookup results must come back in registration order. The dispatch loop's `setNex
 
 `App.clone()` and `App.install()` call `IRouter.clone()` to preserve the router family. The returned router must be:
 
-- a fresh instance of the same shape (same class for leaf routers; same wrapping for composable routers — `MemoizedRouter.clone()` recursively clones its inner)
+- a fresh instance of the same shape (same class for leaf routers; composable wrappers should recursively clone their inner)
 - **empty** — `App` re-registers routes on it; if `clone()` carried routes forward, every route would land twice
 
 ## A minimal example

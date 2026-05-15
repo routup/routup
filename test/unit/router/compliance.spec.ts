@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
     App,
     LinearRouter,
-    MemoizedRouter,
     TrieRouter,
     defineCoreHandler,
 } from '../../../src';
@@ -15,8 +14,6 @@ type ResolverFactory = () => IRouter<RouteEntry>;
 const resolvers: Record<string, ResolverFactory> = {
     linear: () => new LinearRouter<RouteEntry>(),
     trie: () => new TrieRouter<RouteEntry>(),
-    'memoized(linear)': () => new MemoizedRouter<RouteEntry>(new LinearRouter<RouteEntry>()),
-    'memoized(trie)': () => new MemoizedRouter<RouteEntry>(new TrieRouter<RouteEntry>()),
 };
 
 describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, factory) => {
