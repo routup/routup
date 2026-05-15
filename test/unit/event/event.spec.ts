@@ -162,7 +162,7 @@ describe('src/dispatcher/module (DispatcherEvent)', () => {
             const dispatch = new DispatcherEvent(createTestRequest('/'));
             // App.dispatch sets `event.appOptions` to the App's
             // mount-time-resolved options. Simulate that here.
-            (dispatch as any).appOptions = { subdomainOffset: 5 };
+            dispatch.appOptions = { subdomainOffset: 5 };
 
             const routup = dispatch.build();
 

@@ -16,7 +16,7 @@ export type AppEventCreateContext = {
     response: AppResponse;
     store: Record<string | symbol, unknown>;
     signal: AbortSignal;
-    appOptions: AppOptions;
+    appOptions: Readonly<AppOptions>;
     next: (event: IAppEvent, error?: Error) => Promise<Response | undefined>;
 };
 
@@ -41,7 +41,7 @@ export class AppEvent implements IAppEvent {
 
     readonly signal: AbortSignal;
 
-    readonly appOptions: AppOptions;
+    readonly appOptions: Readonly<AppOptions>;
 
     protected _context: AppEventCreateContext;
 

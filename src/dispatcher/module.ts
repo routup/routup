@@ -36,7 +36,7 @@ export class DispatcherEvent implements IDispatcherEvent {
      * temporarily override). Initialized to `{}` so consumers
      * reading before any dispatch get a valid (empty) shape.
      */
-    appOptions: AppOptions;
+    appOptions: Readonly<AppOptions>;
 
     /**
      * `true` while at least one `App.dispatch` is on the call stack

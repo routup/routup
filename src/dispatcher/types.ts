@@ -53,7 +53,7 @@ export interface IDispatcherEvent {
      * entry to `App.dispatch` and restored on exit so nested apps
      * temporarily override the parent's view.
      */
-    appOptions: AppOptions;
+    appOptions: Readonly<AppOptions>;
 
     /**
      * `true` while at least one `App.dispatch` is on the call stack

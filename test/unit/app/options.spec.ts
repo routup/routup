@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     App,
+    type AppOptions,
     defineCoreHandler,
 } from '../../../src';
 import { createTestRequest } from '../../helpers';
@@ -81,24 +82,27 @@ describe('App option inheritance (mount-time)', () => {
         expect(await res.text()).toBe('undefined');
     });
 
-    it('late mutation of parent options does NOT propagate to child', async () => {
-        // Documented trade-off: options are configured at mount time;
-        // mutating the parent's option object after `use(child)` does
-        // not affect the child. Users who need late propagation must
-        // re-mount or re-construct.
+    it('parent _options is frozen — late mutation throws (and would not propagate)', async () => {
+        // Two guarantees in one test:
+        //   1. `_options` is `Object.freeze`d, so any attempt to mutate
+        //      a parent's resolved options after construction raises a
+        //      TypeError in strict mode (which spec files run in).
+        //   2. The child snapshot it propagated at mount time is its
+        //      own object, so even if a mutation *were* to land on the
+        //      parent, the child would not see it.
         const child = new App();
         child.get('/x', defineCoreHandler((event) => String(event.appOptions.subdomainOffset)));
 
         const parent = new App({ options: { subdomainOffset: 1 } });
         parent.use(child);
 
-        // Mutate the parent's options after mount — child's snapshot
-        // already has `subdomainOffset: 1` and won't see the change.
-        // (We can't easily mutate from outside since `_options` is
-        // protected; this test instead documents that re-using `parent`
-        // after a re-construct doesn't bleed into the original child.)
-        const parent2 = new App({ options: { subdomainOffset: 99 } });
-        parent2.use(child.clone());
+        // Reach past the type-level `Readonly<AppOptions>` guard to
+        // prove the runtime freeze is in place. Without the freeze
+        // this assignment would silently land on the live App-global
+        // object and bleed into every future request.
+        expect(() => {
+            (parent as unknown as { _options: AppOptions })._options.subdomainOffset = 99;
+        }).toThrow(TypeError);
 
         const res = await parent.fetch(createTestRequest('/x'));
         expect(await res.text()).toBe('1');

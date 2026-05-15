@@ -89,7 +89,7 @@ function mergeMatchParams(
  */
 function copyOptionIfUnset<K extends keyof AppOptions>(
     target: AppOptions,
-    source: AppOptions,
+    source: Readonly<AppOptions>,
     key: K,
 ): boolean {
     if (typeof target[key] !== 'undefined') {
@@ -131,9 +131,16 @@ export class App implements IApp {
     protected hooks: IHooks;
 
     /**
-     * Normalized options for this router instance.
+     * Normalized options for this App instance.
+     *
+     * Frozen on construction and on every `extendOptions` update —
+     * once published to `event.appOptions` it is shared across all
+     * requests, and a handler must not be able to mutate
+     * router-global state. `extendOptions` therefore uses a
+     * functional update (build a new object, freeze it, replace
+     * the slot) rather than mutating in place.
      */
-    protected _options: AppOptions;
+    protected _options: Readonly<AppOptions>;
 
     /**
      * Registry of installed plugins (name → version) on this router.
@@ -152,7 +159,7 @@ export class App implements IApp {
         this.plugins = new Map<string, string | undefined>(input.plugins);
         this.router = input.router ?? new LinearRouter<RouteEntry>();
 
-        this._options = normalizeAppOptions(input.options ?? {});
+        this._options = Object.freeze(normalizeAppOptions(input.options ?? {}));
 
         markInstanceof(this, AppSymbol);
     }
@@ -260,17 +267,28 @@ export class App implements IApp {
      * propagate. `AppOptions` is configured at construction-and-mount;
      * later changes are not a supported workflow.
      */
-    extendOptions(incoming: AppOptions): void {
-        let changed = false;
+    extendOptions(incoming: Readonly<AppOptions>): void {
+        // Functional update: build a new mutable working copy only
+        // when there is something to merge, freeze it, then swap it
+        // in. Keeps `_options` referentially stable when nothing
+        // changes (the cascade short-circuits on `!next`) and
+        // immutable when it does.
+        let next: AppOptions | undefined;
         const keys = Object.keys(incoming) as (keyof AppOptions)[];
         for (const key of keys) {
-            if (copyOptionIfUnset(this._options, incoming, key)) {
-                changed = true;
+            if (typeof this._options[key] !== 'undefined') {
+                continue;
             }
+            if (typeof incoming[key] === 'undefined') {
+                continue;
+            }
+            next ??= { ...this._options };
+            copyOptionIfUnset(next, incoming, key);
         }
-        if (!changed) {
+        if (!next) {
             return;
         }
+        this._options = Object.freeze(next);
         // Cascade newly inherited keys down to already-mounted
         // children. Pass our own (just-extended) options view as
         // the parent for the next level.

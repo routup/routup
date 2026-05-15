@@ -155,7 +155,10 @@ export function toResponse(
         });
     }
 
-    if (event.appOptions.etag) {
+    // Same null-vs-undefined contract as the string branch above:
+    // null is "explicitly disabled"; undefined falls back to the
+    // default fn (handled inside applyEtag → effectiveEtagFn).
+    if (event.appOptions.etag !== null) {
         return applyEtag(json, event, headers).then((cached) => cached ?? new Response(json, {
             status,
             headers,
