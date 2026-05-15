@@ -93,8 +93,12 @@ class MyRouter<T> implements IRouter<T> {
     }
 
     lookup(path: string): readonly RouteMatch<T>[] {
+        // Use `typeof !== 'undefined'` rather than truthiness — the
+        // `ICache<V>` contract reserves only `undefined` as the absent
+        // sentinel; other falsy values (`null`, `0`, `''`, `false`)
+        // are valid cached payloads for general `V`.
         const cached = this.cache?.get(path);
-        if (cached) return cached;
+        if (typeof cached !== 'undefined') return cached;
         const matches = /* ...resolve... */ [];
         this.cache?.set(path, matches);
         return matches;

@@ -18,10 +18,10 @@ const DEFAULT_MAX_SIZE = 1024;
  * stable API.
  *
  * For TTL, size-based eviction, or dispose hooks, write your own
- * `ICache` (e.g. wrapping `lru-cache`) and pass it via
- * `AppOptionsInput.cache`.
+ * `ICache` (e.g. wrapping `lru-cache`) and pass it via the router's
+ * `BaseRouterOptions.cache` slot.
  */
-export class LruCache<V extends {}> implements ICache<V> {
+export class LruCache<V> implements ICache<V> {
     protected options: LruCacheOptions;
 
     protected inner: QuickLRU<string, V>;

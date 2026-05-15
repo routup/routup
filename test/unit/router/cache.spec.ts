@@ -60,6 +60,23 @@ const routers: Record<string, (cache?: LookupCache | null) => IRouter<MyData>> =
 
 describe.each(Object.entries(routers))('router cache option — %s', (_name, build) => {
     it('default cache (omitted) memoizes lookup', () => {
+        // No cache passed — router constructs its own LruCache(1024).
+        // Memoization is observable via reference equality: two
+        // back-to-back lookups on the same path return the same array.
+        const router = build();
+        router.add({
+            path: '/x',
+            method: MethodName.GET,
+            data: { name: 'a' },
+        });
+
+        const first = router.lookup('/x');
+        const second = router.lookup('/x');
+
+        expect(second).toBe(first);
+    });
+
+    it('explicit ICache is consulted on every lookup', () => {
         const cache = new BrandedCache();
         const router = build(cache);
         router.add({
@@ -67,8 +84,6 @@ describe.each(Object.entries(routers))('router cache option — %s', (_name, bui
             method: MethodName.GET,
             data: { name: 'a' },
         });
-
-        // Adding a route clears the cache (initial state was already empty).
         const clearsAfterAdd = cache.clears;
 
         // Miss → set.
@@ -84,9 +99,6 @@ describe.each(Object.entries(routers))('router cache option — %s', (_name, bui
     });
 
     it('cache: null disables caching entirely', () => {
-        const probe = new BrandedCache();
-        // Build with `null` to disable; the probe is held aside to
-        // confirm it was never wired in (zero counters).
         const router = build(null);
         router.add({
             path: '/x',
@@ -94,14 +106,16 @@ describe.each(Object.entries(routers))('router cache option — %s', (_name, bui
             data: { name: 'a' },
         });
 
-        for (let i = 0; i < 3; i++) {
-            router.lookup('/x');
-        }
+        // No memoization: each lookup produces a fresh array. With a
+        // cache wired in, both calls would return the same reference;
+        // with null, we get a new allocation each time.
+        const first = router.lookup('/x');
+        const second = router.lookup('/x');
 
-        // Probe is untouched because it wasn't passed in.
-        expect(probe.gets).toBe(0);
-        expect(probe.sets).toBe(0);
-        expect(probe.clears).toBe(0);
+        expect(second).not.toBe(first);
+        // But the contents are equivalent.
+        expect(second).toHaveLength(first.length);
+        expect(second[0]!.route).toBe(first[0]!.route);
     });
 
     it('invalidates cache on add()', () => {
