@@ -3,14 +3,84 @@ import type { ICache } from '../../cache/index.ts';
 import type { ObjectLiteral, Route, RouteMatch } from '../../types.ts';
 import type { BaseRouterOptions, IRouter } from '../types.ts';
 import { buildRoutePathMatcher } from '../utils.ts';
-import type { 
-    IndexedRoute, 
-    MethodBuckets, 
-    Segment, 
-    TrieNode, 
+import type {
+    IndexedRoute,
+    MethodBuckets,
+    ParamCapture,
+    Segment,
+    TrieNode,
 } from './types.ts';
+import { parsePath } from './parser.ts';
 
 import { createTrieNode } from './node.ts';
+
+function decodeOrRaw(s: string): string {
+    try {
+        return decodeURIComponent(s);
+    } catch {
+        return s;
+    }
+}
+
+/**
+ * Build a `params` object from a request's pre-split segments using
+ * the variant's pre-computed `ParamCapture[]`. No regex execution —
+ * each capture is one indexed read from `segments` (and a join for
+ * splats). Replaces the `matcher.exec` confirm pass for trie-walked
+ * routes (T3).
+ */
+function extractTrieParams(
+    segments: string[],
+    indexMap: ParamCapture[],
+): Record<string, unknown> {
+    const out = Object.create(null) as Record<string, unknown>;
+    for (const cap of indexMap) {
+        if (cap.kind === 'segment') {
+            out[cap.name] = decodeOrRaw(segments[cap.depth]!);
+        } else {
+            // Splat: capture every remaining segment, joined with '/'.
+            const slice = segments.slice(cap.depth).join('/');
+            out[cap.name] = decodeOrRaw(slice);
+        }
+    }
+    return out;
+}
+
+function trieMatchedPath(segments: string[], matchDepth: number): string {
+    if (matchDepth === 0) {
+        return '/';
+    }
+    return `/${segments.slice(0, matchDepth).join('/')}`;
+}
+
+/**
+ * Pre-compute the `ParamCapture[]` for a variant's segments. Walk
+ * the segments in order; emit one entry per `param` segment and a
+ * terminal one for `splat` (always last). Static segments are
+ * structurally consumed by the trie walk; they don't appear here.
+ */
+function buildParamsIndexMap(segments: Segment[]): ParamCapture[] {
+    const out: ParamCapture[] = [];
+    for (const [i, seg] of segments.entries()) {
+        if (seg.kind === 'param') {
+            out.push({
+                kind: 'segment',
+                depth: i,
+                name: seg.name,
+            });
+        } else if (seg.kind === 'splat') {
+            out.push({
+                kind: 'splat',
+                depth: i,
+                name: seg.name,
+            });
+            // Splats are always last in a variant — the trie parser
+            // emits at most one per variant.
+            break;
+        }
+    }
+    return out;
+}
 
 /**
  * Decide which method buckets a given request method should pull
@@ -73,30 +143,42 @@ function pushIntoBucket<T extends ObjectLiteral>(
 }
 
 /**
- * Radix-trie resolver — registers routes into a per-segment tree at
- * `add()` time and walks the tree at `lookup()` to collect candidates
- * by structure rather than by linear scan.
+ * Radix-trie router — registers routes into a per-segment tree at
+ * `add()` time and walks the tree at `lookup()` to collect
+ * candidates by structure rather than by linear scan.
  *
- * Inspired by Hono's `TrieRouter` and rou3. The trie handles routup's
- * path vocabulary (static segments, `:param`, `*` and `*name` splats);
- * registered paths that contain syntax outside this set (e.g. `{group}`,
- * regex bodies) safely fall through to a `universal` bucket walked
- * linearly on every request — so correctness is preserved at the cost
- * of the trie's per-request savings for those routes.
+ * Inspired by Hono's `TrieRouter` and rou3. The trie handles
+ * routup's path vocabulary directly via its own parser
+ * (`./parser.ts`):
  *
- * The trie identifies candidate routes by structural compatibility;
- * each candidate's `IPathMatcher` is still run once to confirm and
- * extract `params` / `path` exactly as the linear resolver
- * would. Trade-off: one extra `matcher.exec` per candidate, in
- * exchange for skipping most non-matching routes entirely. T3 in
- * the trie roadmap removes the `matcher.exec` step.
+ *   - Static segments (`/users`)
+ *   - Named params (`:id`)
+ *   - Optional params (`:id?`) — expanded to two route variants at
+ *     registration (T2)
+ *   - Optional groups (`/users{/edit}`) — same expansion strategy
+ *   - Bare and named splats (`/files/*`, `/files/*rest`)
+ *
+ * Per-leaf storage is bucketed by HTTP method (T4) so lookup
+ * narrows to the request method's bucket(s) instead of emitting
+ * every entry at the leaf and letting the dispatcher's filter
+ * discard mismatches.
+ *
+ * Param extraction is `paramsIndexMap`-driven (T3): a pre-built
+ * `Array<{ depth, name }>` per variant lets `extractTrieParams`
+ * read params straight from the request's pre-split segments — no
+ * regex execution per match.
+ *
+ * Paths the trie parser doesn't handle (compound segments like
+ * `/files/:n.ext`, escape sequences `\:`, regex constraints) and
+ * empty/root paths fall through to the `universal` bucket. That
+ * bucket still uses `path-to-regexp` via `buildRoutePathMatcher`,
+ * so correctness is preserved.
  *
  * Pure-static-spine fast path (`shortCircuit`): when the request
  * walks a static spine with no param/splat/prefix siblings on any
- * traversed node, the leaf's `exactRoutes` is the full answer —
- * no need to walk the param branch or collect prefix candidates at
- * intermediate nodes. As soon as a branch is encountered, falls
- * through to the regular `walk`.
+ * traversed node, the leaf's `exactRoutes` (filtered to the request
+ * method's buckets) is the full answer — no need to walk the param
+ * branch or collect prefix candidates at intermediate nodes.
  */
 export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRouter<T> {
     protected _routes: Route<T>[];
@@ -124,26 +206,35 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         const index = this._routes.length;
         this._routes.push(route);
 
-        const indexed: IndexedRoute<T> = {
-            route,
-            index,
-            matcher: buildRoutePathMatcher(route),
-        };
-
+        // Empty/root paths bypass the trie entirely — they always
+        // match every request and don't need a path-to-regexp matcher
+        // either.
         if (typeof route.path !== 'string' || route.path === '' || route.path === '/') {
-            this.universal.push(indexed);
+            this.universal.push({ route, index });
             this.cache?.clear();
             return;
         }
 
-        const segments = this.parseRoutePath(route.path);
-        if (segments === null) {
-            this.universal.push(indexed);
+        const variants = parsePath(route.path);
+        if (variants === null) {
+            // Trie parser doesn't handle this syntax (regex
+            // constraints, compound segments like `/files/:n.ext`,
+            // escape sequences). Fall back to path-to-regexp.
+            this.universal.push({
+                route,
+                index,
+                matcher: buildRoutePathMatcher(route),
+            });
             this.cache?.clear();
             return;
         }
 
-        this.insertIntoTrie(segments, indexed);
+        // Each variant becomes an `IndexedRoute` sharing the same
+        // registration `index` so the candidate dedupe keeps them
+        // collapsed to one match per request.
+        for (const segments of variants) {
+            this.insertIntoTrie(segments, route, index);
+        }
         this.cache?.clear();
     }
 
@@ -176,14 +267,22 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         candidates.sort((a, b) => a.index - b.index);
 
         const matches: RouteMatch<T>[] = [];
+        let lastIndex = -1; // dedupe — multiple variants of one route share `index`
         for (const candidate of candidates) {
             const {
                 route,
                 index,
                 matcher,
+                paramsIndexMap,
+                matchDepth,
             } = candidate;
 
+            if (index === lastIndex) {
+                continue;
+            }
+
             if (matcher) {
+                // Universal-bucket route: still uses path-to-regexp.
                 const output = matcher.exec(path);
                 if (typeof output === 'undefined') {
                     continue;
@@ -194,16 +293,30 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
                     params: this.assignParams(output.params),
                     path: output.path,
                 });
+                lastIndex = index;
                 continue;
             }
 
-            // No matcher → route has no mount path (middleware /
-            // mount-less router). Matches every request.
+            if (paramsIndexMap && typeof matchDepth === 'number') {
+                // Trie-walked route: extract params from the request
+                // segments using the pre-built index map. No regex.
+                matches.push({
+                    route,
+                    index,
+                    params: extractTrieParams(segments, paramsIndexMap),
+                    path: trieMatchedPath(segments, matchDepth),
+                });
+                lastIndex = index;
+                continue;
+            }
+
+            // Universal-bucket route with no matcher (empty / root path).
             matches.push({
                 route,
                 index,
                 params: Object.create(null) as Record<string, unknown>,
             });
+            lastIndex = index;
         }
 
         this.cache?.set(cacheKey, matches);
@@ -260,43 +373,6 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         return out;
     }
 
-    /**
-     * Parse a registered path into a list of segments. Returns `null`
-     * when the path contains syntax this resolver doesn't handle
-     * (regex bodies, optional groups, etc.) — the caller then falls
-     * back to the universal bucket so correctness is preserved.
-     */
-    protected parseRoutePath(path: string): Segment[] | null {
-        const trimmed = path.charAt(0) === '/' ? path.slice(1) : path;
-        if (trimmed === '') {
-            return [];
-        }
-
-        const parts = trimmed.split('/');
-        const result: Segment[] = [];
-
-        for (const part of parts) {
-            if (part === '') {
-                continue;
-            }
-            if (part === '*' || (part.charAt(0) === '*' && /^\*[a-zA-Z_]\w*$/.test(part))) {
-                result.push({ kind: 'splat' });
-                continue;
-            }
-            if (part.charAt(0) === ':' && /^:[a-zA-Z_]\w*$/.test(part)) {
-                result.push({ kind: 'param' });
-                continue;
-            }
-            if (/^[a-zA-Z0-9_\-.~%]+$/.test(part)) {
-                result.push({ kind: 'static', value: part });
-                continue;
-            }
-            return null;
-        }
-
-        return result;
-    }
-
     protected parseRequestPath(path: string): string[] {
         const trimmed = path.charAt(0) === '/' ? path.slice(1) : path;
         if (trimmed === '') {
@@ -312,17 +388,28 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         return result;
     }
 
-    protected insertIntoTrie(segments: Segment[], indexed: IndexedRoute<T>): void {
+    protected insertIntoTrie(segments: Segment[], route: Route<T>, index: number): void {
         let node = this.root;
-        const exact = this.isExactMatchRoute(indexed.route);
-        // Empty-string key = method-agnostic. Mounted child apps and
-        // middleware (no method on the entry) end up here; verb-bound
-        // handlers use their concrete method.
-        const methodKey = indexed.route.method ?? '';
+        const exact = this.isExactMatchRoute(route);
+        const methodKey = route.method ?? '';
+        const paramsIndexMap = buildParamsIndexMap(segments);
 
-        for (const seg of segments) {
+        for (const [i, segment] of segments.entries()) {
+            const seg = segment!;
+
             if (seg.kind === 'splat') {
-                pushIntoBucket(node.splatRoutes, methodKey, indexed);
+                // Splat consumes the rest. `matchDepth` is the depth
+                // of *this* trie node (one less than the splat's
+                // index in `segments`, since the splat itself doesn't
+                // create a child node). The splat capture in
+                // `paramsIndexMap` already records that depth via
+                // `cap.depth` — we slice from there at lookup.
+                pushIntoBucket(node.splatRoutes, methodKey, {
+                    route,
+                    index,
+                    paramsIndexMap,
+                    matchDepth: i,
+                });
                 return;
             }
 
@@ -341,6 +428,13 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
             }
             node = child;
         }
+
+        const indexed: IndexedRoute<T> = {
+            route,
+            index,
+            paramsIndexMap,
+            matchDepth: segments.length,
+        };
 
         if (exact) {
             pushIntoBucket(node.exactRoutes, methodKey, indexed);

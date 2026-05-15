@@ -1,15 +1,71 @@
 import type { IPathMatcher } from '../../path/index.ts';
 import type { ObjectLiteral, Route } from '../../types.ts';
 
+/**
+ * Tagged param-extraction instruction. Built at registration time
+ * during `insertIntoTrie`; consumed at lookup time to build the
+ * params object directly from the request's pre-split segments —
+ * no regex execution per match.
+ *
+ * - `segment`: capture `segments[depth]` as `name`.
+ * - `splat`: capture `segments[depth..]` joined with `/` as `name`.
+ *   `name` is `'*'` for the unnamed bare splat (`/files/*`).
+ */
+export type ParamCapture = {
+    kind: 'segment';
+    depth: number;
+    name: string;
+} | {
+    kind: 'splat';
+    depth: number;
+    name: string;
+};
+
+/**
+ * Per-variant route record stored at a trie leaf.
+ *
+ * `paramsIndexMap` populated for trie-walked variants so lookup can
+ * extract params without running `matcher.exec`. `matcher` is only
+ * populated for universal-bucket routes (registered paths the trie
+ * parser couldn't handle — regex constraints, compound segments,
+ * escapes — that fall back to path-to-regexp).
+ *
+ * `index` is shared across every variant produced from a single
+ * `add()` call so the candidate list deduplicates naturally on
+ * registration order.
+ */
 export type IndexedRoute<T extends ObjectLiteral = ObjectLiteral> = {
     route: Route<T>;
     index: number;
-    matcher: IPathMatcher | undefined;
+    /**
+     * Universal-bucket-only — populated for paths the trie parser
+     * couldn't handle (regex constraints, compound segments, escapes).
+     * The lookup loop runs `matcher.exec(path)` to confirm the match
+     * and extract params, identical to `LinearRouter`.
+     */
+    matcher?: IPathMatcher;
+    /**
+     * Trie-walked-only — populated for variants that came out of
+     * `parsePath`. The lookup loop walks this list to build the
+     * `params` object directly from request segments, no regex.
+     */
+    paramsIndexMap?: ParamCapture[];
+    /**
+     * Trie-walked-only — how many request segments this variant
+     * consumes when matched. Used to compute `match.path` (the
+     * matched prefix) at lookup time without re-running a matcher.
+     *
+     * - Exact / prefix variants: `segments.length` (consume up to
+     *   the leaf).
+     * - Splat variants: depth of the splat segment (it then absorbs
+     *   the rest).
+     */
+    matchDepth?: number;
 };
 
 export type Segment = { kind: 'static'; value: string } |
-    { kind: 'param' } |
-    { kind: 'splat' };
+    { kind: 'param'; name: string } |
+    { kind: 'splat'; name: string };
 
 /**
  * Method-keyed bucket of indexed routes. The empty-string key
