@@ -299,7 +299,23 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
             this.walk(this.root, segments, 0, candidates, method);
         }
 
-        candidates.sort((a, b) => a.index - b.index);
+        // Sort primarily by registration `index` (preserves dispatch
+        // order across the candidate list). When multiple variants
+        // of one route match the same request — e.g. a prefix
+        // `use('/api/:version?', child)` whose `/api` and
+        // `/api/:version` variants both fire for `/api/v1/...` —
+        // we pick the *most specific* one (greatest `matchDepth`),
+        // so the more-derived variant's `params` and `match.path`
+        // win over the bare-prefix variant. Universal-bucket
+        // candidates have no `matchDepth`; treat as -1 so a trie
+        // variant of the same route wins (in practice they don't
+        // overlap — a route is in either bucket).
+        candidates.sort((a, b) => {
+            if (a.index !== b.index) return a.index - b.index;
+            const ad = a.matchDepth ?? -1;
+            const bd = b.matchDepth ?? -1;
+            return bd - ad;
+        });
 
         const matches: RouteMatch<T>[] = [];
         let lastIndex = -1; // dedupe — multiple variants of one route share `index`
@@ -429,12 +445,12 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
             const seg = segment!;
 
             if (seg.kind === 'splat') {
-                // Splat consumes the rest. `matchDepth` is the depth
-                // of *this* trie node (one less than the splat's
-                // index in `segments`, since the splat itself doesn't
-                // create a child node). The splat capture in
-                // `paramsIndexMap` already records that depth via
-                // `cap.depth` — we slice from there at lookup.
+                // Splat consumes the rest of the request path. The
+                // splat segment itself doesn't create a trie child
+                // node — it lives on the *current* node. So
+                // `matchDepth` is the number of segments matched
+                // before the splat (== current trie depth == `i`,
+                // the splat's index in the variant).
                 pushIntoBucket(node.splatRoutes, methodKey, {
                     route,
                     index,

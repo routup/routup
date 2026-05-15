@@ -135,6 +135,15 @@ function tokenizePath(path: string): Token[] | null {
             if (inner.charAt(0) !== '/') {
                 return null;
             }
+            // What follows the closing `}` must end the segment —
+            // either end-of-path, a `/` separator, or another `{`
+            // group. Anything else (e.g. `/a{/b}c`) is compound
+            // syntax the trie can't represent; fall back to the
+            // universal bucket so path-to-regexp can handle it.
+            const after = close + 1 < n ? trimmed.charAt(close + 1) : '';
+            if (after !== '' && after !== '/' && after !== '{') {
+                return null;
+            }
             tokens.push({ kind: 'groupOpen' });
             const innerTokens = tokenizePath(inner);
             if (innerTokens === null) {

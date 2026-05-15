@@ -112,6 +112,67 @@ describe('TrieRouter — Phase 2 syntax', () => {
         });
     });
 
+    describe('audit — review-round 2', () => {
+        it('expanded prefix variants prefer the most specific match (greatest matchDepth)', async () => {
+            // `use('/api/:version?', child)` expands to `/api` and
+            // `/api/:version`. For request `/api/v1`, both match
+            // structurally — the dedup must keep the *longer* one
+            // so `params.version === 'v1'` and `event.mountPath ===
+            // '/api/v1'`. Picking the shorter variant blindly would
+            // lose params.
+            const inner = new App({ router: new TrieRouter<RouteEntry>() });
+            inner.get('/', defineCoreHandler((event) => `version=${event.params.version ?? 'none'}`));
+
+            const outer = new App({ router: new TrieRouter<RouteEntry>() });
+            outer.use('/api/:version?', inner);
+
+            expect(await (await outer.fetch(createTestRequest('/api/v1'))).text())
+                .toBe('version=v1');
+            expect(await (await outer.fetch(createTestRequest('/api'))).text())
+                .toBe('version=none');
+        });
+
+        it('rejects literal text following a `}` group close (compound — universal bucket)', async () => {
+            // `/a{/b}c` is compound syntax (literal `c` adjacent to
+            // an optional group). The trie parser can't represent
+            // it cleanly; without the post-`}` validation it
+            // silently rewrote into `/a/c` + `/a/b/c`, which is
+            // wrong. Falling to the universal bucket lets path-to-
+            // regexp speak with authority.
+            const a = app();
+            a.get('/a{/b}c', defineCoreHandler(() => 'matched'));
+
+            // path-to-regexp v8 interprets `/a{/b}c` as `/a/c` or
+            // `/a/b/c` (the literal `c` is consumed by the group's
+            // tail). The trie should NOT promiscuously match
+            // anything else — `/a/x` must 404.
+            expect((await a.fetch(createTestRequest('/a/x'))).status).toBe(404);
+        });
+
+        it('falls back to universal bucket above MAX_VARIANTS', async () => {
+            // 5 optional groups → 32 variants, exceeds the parser's
+            // cap of 16. The route should still register and dispatch
+            // correctly via the universal-bucket fallback.
+            const a = app();
+            a.get('/a{/b}{/c}{/d}{/e}{/f}', defineCoreHandler(() => 'capped'));
+
+            expect((await a.fetch(createTestRequest('/a'))).status).toBe(200);
+            expect((await a.fetch(createTestRequest('/a/b/c/d/e/f'))).status).toBe(200);
+        });
+
+        it('falls back to the raw segment value on malformed URL encoding', async () => {
+            // `decodeURIComponent('%2')` throws `URIError`. The
+            // try/catch in `decodeOrRaw` returns the raw segment so
+            // the route still matches without crashing.
+            const a = app();
+            a.get('/users/:name', defineCoreHandler((event) => String(event.params.name)));
+
+            const res = await a.fetch(createTestRequest('/users/bad%2'));
+            expect(res.status).toBe(200);
+            expect(await res.text()).toBe('bad%2');
+        });
+    });
+
     describe('audit — regressions caught during review', () => {
         it('splat-not-last falls through to universal (does not silently drop trailing segments)', async () => {
             // `/files/*rest/extra` requires `/extra` after the splat-
@@ -163,14 +224,16 @@ describe('TrieRouter — Phase 2 syntax', () => {
     });
 
     describe('T6 — trie-native parser', () => {
-        it('treats trailing slash as significant (strict mode)', async () => {
+        it('collapses trailing slash (parseRequestPath drops empty trailing segments)', async () => {
             const a = app();
-            a.get('/users', defineCoreHandler(() => 'no-slash'));
+            a.get('/users', defineCoreHandler(() => 'matched'));
 
-            // The request `/users/` has an extra trailing segment
-            // (after splitting on `/`, the trailing empty string is
-            // dropped by `parseRequestPath` — so they collapse to
-            // the same lookup key. Document the actual behaviour.)
+            // `parseRequestPath` splits on `/` and drops empty
+            // segments, so `/users` and `/users/` collapse to the
+            // same `['users']` lookup. Trailing slashes are NOT
+            // significant — both match. (LinearRouter shows the
+            // same behaviour; documented divergence from path-to-
+            // regexp's strict mode.)
             expect((await a.fetch(createTestRequest('/users'))).status).toBe(200);
             expect((await a.fetch(createTestRequest('/users/'))).status).toBe(200);
         });
