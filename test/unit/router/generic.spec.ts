@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-    LinearRouter,
-    MemoizedRouter,
-    TrieRouter,
-} from '../../../src';
+import { LinearRouter, TrieRouter } from '../../../src';
 import type { IRouter } from '../../../src';
 import { MethodName } from '../../../src/constants';
 
@@ -30,7 +26,6 @@ type ResolverFactory = () => IRouter<MyData>;
 const resolvers: Record<string, ResolverFactory> = {
     linear: () => new LinearRouter<MyData>(),
     trie: () => new TrieRouter<MyData>(),
-    'memoized(trie)': () => new MemoizedRouter<MyData>(new TrieRouter<MyData>()),
 };
 
 describe.each(Object.entries(resolvers))('IRouter<MyData> generic — %s', (_name, factory) => {
@@ -129,6 +124,23 @@ describe.each(Object.entries(resolvers))('IRouter<MyData> generic — %s', (_nam
         expect(router.routes.length).toBe(1);
         // And lookup still finds the route.
         expect(router.lookup('/x')).toHaveLength(1);
+    });
+
+    it('memoizes lookup by default (repeated lookups hit the cache)', () => {
+        const router = factory();
+        router.add({
+            path: '/x',
+            method: MethodName.GET,
+            data: { name: 'a', tag: 1 },
+        });
+
+        const first = router.lookup('/x');
+        const second = router.lookup('/x');
+
+        // Same array reference — cache returned the cached value
+        // (no defensive copy on hit, by design — RouteMatch[] is
+        // treated as immutable).
+        expect(second).toBe(first);
     });
 
     it('clone() returns an empty router of the same shape', () => {

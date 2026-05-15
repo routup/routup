@@ -1,5 +1,7 @@
+import { LruCache } from '../../cache/index.ts';
+import type { ICache } from '../../cache/index.ts';
 import type { ObjectLiteral, Route, RouteMatch } from '../../types.ts';
-import type { IRouter } from '../types.ts';
+import type { BaseRouterOptions, IRouter } from '../types.ts';
 import { buildRoutePathMatcher } from '../utils.ts';
 import type { IndexedRoute, Segment, TrieNode } from './types.ts';
 
@@ -44,10 +46,19 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
      */
     protected universal: IndexedRoute<T>[];
 
-    constructor() {
+    protected cache: ICache<readonly RouteMatch<T>[]> | null;
+
+    constructor(options: BaseRouterOptions<T> = {}) {
         this._routes = [];
         this.root = createTrieNode<T>();
         this.universal = [];
+        if (options.cache === null) {
+            this.cache = null;
+        } else if (typeof options.cache !== 'undefined') {
+            this.cache = options.cache;
+        } else {
+            this.cache = new LruCache();
+        }
     }
 
     add(route: Route<T>): void {
@@ -62,19 +73,27 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
 
         if (typeof route.path !== 'string' || route.path === '' || route.path === '/') {
             this.universal.push(indexed);
+            this.cache?.clear();
             return;
         }
 
         const segments = this.parseRoutePath(route.path);
         if (segments === null) {
             this.universal.push(indexed);
+            this.cache?.clear();
             return;
         }
 
         this.insertIntoTrie(segments, indexed);
+        this.cache?.clear();
     }
 
     lookup(path: string): readonly RouteMatch<T>[] {
+        const cached = this.cache?.get(path);
+        if (typeof cached !== 'undefined') {
+            return cached;
+        }
+
         const candidates: IndexedRoute<T>[] = [];
 
         for (const u of this.universal) {
@@ -124,6 +143,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
             });
         }
 
+        this.cache?.set(path, matches);
         return matches;
     }
 
@@ -136,7 +156,9 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
     }
 
     clone(): IRouter<T> {
-        return new TrieRouter<T>();
+        // Carry the cache *shape* forward (not contents) — fresh
+        // cache, same configured class/size. `null` passes through.
+        return new TrieRouter<T>({ cache: this.cache === null ? null : this.cache.clone() });
     }
 
     /**

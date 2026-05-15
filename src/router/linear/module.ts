@@ -1,6 +1,8 @@
+import { LruCache } from '../../cache/index.ts';
+import type { ICache } from '../../cache/index.ts';
 import type { IPathMatcher } from '../../path/index.ts';
 import type { ObjectLiteral, Route, RouteMatch } from '../../types.ts';
-import type { IRouter } from '../types.ts';
+import type { BaseRouterOptions, IRouter } from '../types.ts';
 import { buildRoutePathMatcher } from '../utils.ts';
 
 /**
@@ -15,23 +17,48 @@ import { buildRoutePathMatcher } from '../utils.ts';
  * (not on the registered route), so routers using a different matching
  * strategy (radix tree, aggregated regex, …) can ignore this file
  * entirely.
+ *
+ * Carries a per-router lookup cache (default: bounded LRU) so repeated
+ * requests for the same path skip the linear walk. Pass `cache: null`
+ * via `BaseRouterOptions` to disable.
  */
 export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IRouter<T> {
     protected _routes: Route<T>[];
 
     protected _matchers: (IPathMatcher | undefined)[];
 
-    constructor() {
+    protected cache: ICache<readonly RouteMatch<T>[]> | null;
+
+    constructor(options: BaseRouterOptions<T> = {}) {
         this._routes = [];
         this._matchers = [];
+        // Distinguish three states: explicit `null` disables caching,
+        // explicit value passes through, omitted/`undefined` falls
+        // back to the default bounded LRU.
+        if (options.cache === null) {
+            this.cache = null;
+        } else if (typeof options.cache !== 'undefined') {
+            this.cache = options.cache;
+        } else {
+            this.cache = new LruCache();
+        }
     }
 
     add(route: Route<T>): void {
         this._routes.push(route);
         this._matchers.push(buildRoutePathMatcher(route));
+        // A new route can change the match set for any cached path —
+        // drop the whole cache. Conservative; per-path invalidation
+        // would require knowing which paths the new route can match.
+        this.cache?.clear();
     }
 
     lookup(path: string): readonly RouteMatch<T>[] {
+        const cached = this.cache?.get(path);
+        if (typeof cached !== 'undefined') {
+            return cached;
+        }
+
         const matches: RouteMatch<T>[] = [];
 
         for (let i = 0; i < this._routes.length; i++) {
@@ -64,6 +91,7 @@ export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IR
             });
         }
 
+        this.cache?.set(path, matches);
         return matches;
     }
 
@@ -76,6 +104,8 @@ export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IR
     }
 
     clone(): IRouter<T> {
-        return new LinearRouter<T>();
+        // Carry the cache *shape* forward (not contents) — fresh
+        // cache, same configured class/size. `null` passes through.
+        return new LinearRouter<T>({ cache: this.cache === null ? null : this.cache.clone() });
     }
 }
