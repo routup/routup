@@ -35,10 +35,6 @@ class BrandedRouter implements IRouter<RouteEntry> {
         return this.inner.lookup(path);
     }
 
-    get routes(): readonly Route<RouteEntry>[] {
-        return this.inner.routes;
-    }
-
     clone(): IRouter<RouteEntry> {
         BrandedRouter.clones += 1;
         return new BrandedRouter();

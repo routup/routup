@@ -164,21 +164,22 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
     });
 
     it('clone() returns a fresh empty router of the same shape', () => {
-        // IRouter.clone()'s contract: a fresh, **empty** router. Verifies
-        // App.install() / App.clone() can use it to preserve the router
-        // family without inheriting the parent's entries.
-        //
-        // Both built-in routers (LinearRouter / TrieRouter) implement
-        // the optional `routes` field; this test asserts on it via `!`
-        // because the field is optional on the IRouter contract (custom
-        // aggregated routers may discard the original entries).
+        // IRouter.clone()'s contract: a fresh, **empty** router.
+        // Verified observationally — register a route on the original,
+        // then ensure the clone returns no matches for it. Avoids
+        // depending on `IRouter.routes` (now optional on the
+        // contract; not implemented by the built-in routers anymore).
         const router = factory();
-        const beforeLen = router.routes!.length;
+        router.add({
+            path: '/users',
+            method: 'GET',
+            data: { type: 'handler', dummy: true } as never,
+        });
+        expect(router.lookup('/users', 'GET').length).toBeGreaterThan(0);
+
         const cloned = router.clone();
-        expect(cloned.routes!.length).toBe(0);
-        // Original is unchanged.
-        expect(router.routes!.length).toBe(beforeLen);
-        // The clone is a distinct instance.
+        expect(cloned.lookup('/users', 'GET').length).toBe(0);
+        // Distinct instance.
         expect(cloned).not.toBe(router);
     });
 });
