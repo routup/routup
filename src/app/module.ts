@@ -391,7 +391,7 @@ export class App implements IApp {
             typeof context.matches === 'undefined' ||
             context.matchesPath !== context.event.path
         ) {
-            context.matches = this.router.lookup(context.event.path);
+            context.matches = this.router.lookup(context.event.path, context.event.method);
             context.matchesPath = context.event.path;
         }
 

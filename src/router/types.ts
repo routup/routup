@@ -54,8 +54,21 @@ export interface IRouter<T extends ObjectLiteral = ObjectLiteral> {
      * Return every entry that matches the given path, in registration
      * order. The dispatch loop iterates this list; nested `setNext`
      * re-entries resume from a later index in the same list.
+     *
+     * `method`, when provided, is the request HTTP method. Routers
+     * MAY use it to filter at lookup time (e.g. method-bucketed
+     * tries) — but the App's dispatch loop still runs its own
+     * method check on every returned match, so a router that
+     * ignores `method` and emits more candidates than necessary
+     * stays correct, just not optimally fast.
+     *
+     * When the request method is `OPTIONS` (auto-Allow surface) or
+     * `HEAD` (falls through to GET), method-aware routers should
+     * widen their emission to cover those cases — see the OPTIONS /
+     * HEAD handling notes on `TrieRouter` for the canonical
+     * implementation.
      */
-    lookup(path: string): readonly RouteMatch<T>[];
+    lookup(path: string, method?: string): readonly RouteMatch<T>[];
 
     /**
      * Optional: every registered entry in registration order.

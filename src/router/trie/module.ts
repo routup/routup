@@ -1,10 +1,76 @@
+import { MethodName } from '../../constants.ts';
 import type { ICache } from '../../cache/index.ts';
 import type { ObjectLiteral, Route, RouteMatch } from '../../types.ts';
 import type { BaseRouterOptions, IRouter } from '../types.ts';
 import { buildRoutePathMatcher } from '../utils.ts';
-import type { IndexedRoute, Segment, TrieNode } from './types.ts';
+import type { 
+    IndexedRoute, 
+    MethodBuckets, 
+    Segment, 
+    TrieNode, 
+} from './types.ts';
 
 import { createTrieNode } from './node.ts';
+
+/**
+ * Decide which method buckets a given request method should pull
+ * from. Always includes `''` (method-agnostic). For HEAD also
+ * includes GET (per `matchHandlerMethod`). For OPTIONS or no-method
+ * lookups, returns `null` to signal "emit every bucket" — needed so
+ * `event.methodsAllowed` is populated for OPTIONS auto-Allow and so
+ * `IRouter.lookup(path)` (no method) keeps returning a complete
+ * candidate set.
+ */
+function methodBucketKeys(method: string | undefined): readonly string[] | null {
+    if (typeof method === 'undefined' || method === MethodName.OPTIONS) {
+        return null;
+    }
+    if (method === MethodName.HEAD) {
+        return ['', MethodName.HEAD, MethodName.GET];
+    }
+    return ['', method];
+}
+
+function emitBucket<T extends ObjectLiteral>(
+    buckets: MethodBuckets<T>,
+    method: string | undefined,
+    out: IndexedRoute<T>[],
+): void {
+    const keys = methodBucketKeys(method);
+    if (keys === null) {
+        for (const k in buckets) {
+            const list = buckets[k]!;
+            for (const r of list) out.push(r);
+        }
+        return;
+    }
+    for (const k of keys) {
+        const list = buckets[k];
+        if (!list) continue;
+        for (const r of list) out.push(r);
+    }
+}
+
+function hasAnyBucket<T extends ObjectLiteral>(buckets: MethodBuckets<T>): boolean {
+    // eslint-disable-next-line no-unreachable-loop
+    for (const _k in buckets) {
+        return true;
+    }
+    return false;
+}
+
+function pushIntoBucket<T extends ObjectLiteral>(
+    buckets: MethodBuckets<T>,
+    methodKey: string,
+    route: IndexedRoute<T>,
+): void {
+    const bucket = buckets[methodKey];
+    if (bucket) {
+        bucket.push(route);
+    } else {
+        buckets[methodKey] = [route];
+    }
+}
 
 /**
  * Radix-trie resolver — registers routes into a per-segment tree at
@@ -81,8 +147,12 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         this.cache?.clear();
     }
 
-    lookup(path: string): readonly RouteMatch<T>[] {
-        const cached = this.cache?.get(path);
+    lookup(path: string, method?: string): readonly RouteMatch<T>[] {
+        // Cache key includes the method bucket — different methods at
+        // the same path now resolve to different candidate sets, so
+        // sharing a cache entry across methods would leak matches.
+        const cacheKey = `${method ?? ''}\t${path}`;
+        const cached = this.cache?.get(cacheKey);
         if (typeof cached !== 'undefined') {
             return cached;
         }
@@ -94,13 +164,13 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         }
 
         const segments = this.parseRequestPath(path);
-        const shortCircuit = this.shortCircuit(segments);
+        const shortCircuit = this.shortCircuit(segments, method);
         if (shortCircuit !== null) {
             for (const c of shortCircuit) {
                 candidates.push(c);
             }
         } else {
-            this.walk(this.root, segments, 0, candidates);
+            this.walk(this.root, segments, 0, candidates, method);
         }
 
         candidates.sort((a, b) => a.index - b.index);
@@ -136,7 +206,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
             });
         }
 
-        this.cache?.set(path, matches);
+        this.cache?.set(cacheKey, matches);
         return matches;
     }
 
@@ -153,13 +223,14 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
     /**
      * T1: returns the pre-computed candidate list when the request's
      * static spine has no param sibling, no prefix routes, and no
-     * splats along the way. The leaf node's `exactRoutes` is then
-     * the complete answer — no need to walk the param branch or
-     * collect prefix/splat candidates from intermediate nodes. When
-     * any branch is encountered, returns `null` and the caller falls
-     * through to the regular `walk`.
+     * splats along the way. The leaf node's `exactRoutes` (filtered
+     * to the request method's buckets) is then the complete answer —
+     * no need to walk the param branch or collect prefix/splat
+     * candidates from intermediate nodes. When any branch is
+     * encountered, returns `null` and the caller falls through to
+     * the regular `walk`.
      */
-    protected shortCircuit(segments: string[]): IndexedRoute<T>[] | null {
+    protected shortCircuit(segments: string[], method: string | undefined): IndexedRoute<T>[] | null {
         let node = this.root;
 
         for (const segment of segments) {
@@ -167,7 +238,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
             // param-child might match the current segment, a splat
             // would fire, and prefix routes would belong in the
             // result. All of these need the full walk.
-            if (node.paramChild || node.splatRoutes.length > 0 || node.prefixRoutes.length > 0) {
+            if (node.paramChild || hasAnyBucket(node.splatRoutes) || node.prefixRoutes.length > 0) {
                 return null;
             }
 
@@ -178,13 +249,15 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
             node = child;
         }
 
-        if (node.paramChild || node.splatRoutes.length > 0 || node.prefixRoutes.length > 0) {
+        if (node.paramChild || hasAnyBucket(node.splatRoutes) || node.prefixRoutes.length > 0) {
             return null;
         }
 
-        // Pure static spine reached the leaf — `exactRoutes` is the
-        // complete answer for this request.
-        return node.exactRoutes;
+        // Pure static spine reached the leaf — `exactRoutes` (for the
+        // request method's relevant buckets) is the complete answer.
+        const out: IndexedRoute<T>[] = [];
+        emitBucket(node.exactRoutes, method, out);
+        return out;
     }
 
     /**
@@ -242,10 +315,14 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
     protected insertIntoTrie(segments: Segment[], indexed: IndexedRoute<T>): void {
         let node = this.root;
         const exact = this.isExactMatchRoute(indexed.route);
+        // Empty-string key = method-agnostic. Mounted child apps and
+        // middleware (no method on the entry) end up here; verb-bound
+        // handlers use their concrete method.
+        const methodKey = indexed.route.method ?? '';
 
         for (const seg of segments) {
             if (seg.kind === 'splat') {
-                node.splatRoutes.push(indexed);
+                pushIntoBucket(node.splatRoutes, methodKey, indexed);
                 return;
             }
 
@@ -266,8 +343,10 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         }
 
         if (exact) {
-            node.exactRoutes.push(indexed);
+            pushIntoBucket(node.exactRoutes, methodKey, indexed);
         } else {
+            // Prefix routes (middleware / mounted apps) stay flat —
+            // they're method-agnostic by design.
             node.prefixRoutes.push(indexed);
         }
     }
@@ -277,18 +356,15 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         segments: string[],
         depth: number,
         collected: IndexedRoute<T>[],
+        method: string | undefined,
     ): void {
         // Splats at this depth match any request path that reaches here.
-        for (const s of node.splatRoutes) {
-            collected.push(s);
-        }
+        emitBucket(node.splatRoutes, method, collected);
 
         if (depth === segments.length) {
             // Request path is fully consumed at this node: collect
             // both exact-match and prefix-match routes that ended here.
-            for (const e of node.exactRoutes) {
-                collected.push(e);
-            }
+            emitBucket(node.exactRoutes, method, collected);
             for (const p of node.prefixRoutes) {
                 collected.push(p);
             }
@@ -296,7 +372,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         }
 
         // Going deeper — prefix routes at this node match any
-        // continuation (middleware / nested routers).
+        // continuation (middleware / nested apps).
         for (const p of node.prefixRoutes) {
             collected.push(p);
         }
@@ -305,11 +381,11 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
 
         const staticChild = node.staticChildren.get(seg);
         if (staticChild) {
-            this.walk(staticChild, segments, depth + 1, collected);
+            this.walk(staticChild, segments, depth + 1, collected, method);
         }
 
         if (node.paramChild) {
-            this.walk(node.paramChild, segments, depth + 1, collected);
+            this.walk(node.paramChild, segments, depth + 1, collected, method);
         }
     }
 

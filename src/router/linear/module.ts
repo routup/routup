@@ -43,7 +43,12 @@ export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IR
         this.cache?.clear();
     }
 
-    lookup(path: string): readonly RouteMatch<T>[] {
+    lookup(path: string, _method?: string): readonly RouteMatch<T>[] {
+        // LinearRouter ignores `method`: the dispatcher's own
+        // `matchHandlerMethod` check runs on every returned candidate
+        // anyway, so we simply emit every path-matching route and let
+        // the call site discriminate. Method-aware routers (TrieRouter)
+        // narrow at lookup time for the per-request perf win.
         const cached = this.cache?.get(path);
         if (typeof cached !== 'undefined') {
             return cached;
