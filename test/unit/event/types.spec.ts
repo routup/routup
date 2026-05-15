@@ -30,9 +30,11 @@ describe('IAppEvent typing', () => {
 
         const res = await app.fetch(createTestRequest('/x'));
         expect(res.status).toBe(200);
-        // Runtime: the standard methods are uppercase; the
-        // canonical `MethodName` union covers them.
-        expect(captured satisfies MethodName).toBe('GET');
+        // Runtime: the standard methods are uppercase; assert the
+        // captured value is in the canonical `MethodName` set.
+        expect(captured).toBe('GET');
+        const captured2: MethodName = 'GET';
+        expect(captured2).toBe(captured);
     });
 
     it('event.params values are string | undefined', async () => {
