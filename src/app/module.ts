@@ -34,6 +34,7 @@ import {
     joinPaths,
     withLeadingSlash,
 } from '../utils/index.ts';
+import { EMPTY_APP_OPTIONS } from '../dispatcher/module.ts';
 import { AppPipelineStep, AppSymbol, RouteEntryType } from './constants.ts';
 import { LinearRouter } from '../router/linear/index.ts';
 import type { IRouter } from '../router/types.ts';
@@ -206,6 +207,48 @@ export class App implements IApp {
             status,
             headers,
         });
+    }
+
+    // --------------------------------------------------
+
+    /**
+     * Mount-time option inheritance — copies any option the parent
+     * has set but this App hasn't into this App's own options. Called
+     * by `App.use(child)` (and indirectly by `install`) before the
+     * child is registered.
+     *
+     * Shallow per-key merge. Hooks, plugins, router, and cache are
+     * deliberately per-App and are not propagated.
+     *
+     * Cascades to any Apps already mounted on this one — a deeper
+     * grandchild gets the new keys too. Without this, mounting
+     * grandchild → child → parent in that order would leave the
+     * grandchild without parent's options (it adopted from child
+     * before child had them).
+     *
+     * Late mutation of the parent's options after this call does NOT
+     * propagate. `AppOptions` is configured at construction-and-mount;
+     * later changes are not a supported workflow.
+     */
+    protected adoptOptionsFrom(parent: App): void {
+        const parentOpts = parent._options as Record<string, unknown>;
+        const ownOpts = this._options as Record<string, unknown>;
+        let changed = false;
+        for (const key in parentOpts) {
+            if (typeof ownOpts[key] === 'undefined') {
+                ownOpts[key] = parentOpts[key];
+                changed = true;
+            }
+        }
+        if (!changed) {
+            return;
+        }
+        // Cascade newly inherited keys to already-mounted children.
+        for (const route of this.router.routes) {
+            if (route.data.type === RouteEntryType.APP) {
+                (route.data.data as App).adoptOptionsFrom(this);
+            }
+        }
     }
 
     // --------------------------------------------------
@@ -412,6 +455,7 @@ export class App implements IApp {
                 const nextContext: AppPipelineContext = {
                     step: AppPipelineStep.LOOKUP,
                     event,
+                    isRoot: context.isRoot,
                     matchIndex: pathChanged ? 0 : nextMatchIndex,
                     matches: pathChanged ? undefined : parentMatches,
                     matchesPath: pathChanged ? undefined : parentMatchesPath,
@@ -451,7 +495,7 @@ export class App implements IApp {
         if (
             !context.event.error &&
             !context.event.dispatched &&
-            context.event.appPath.length === 1 &&
+            context.isRoot &&
             context.event.method === MethodName.OPTIONS
         ) {
             if (context.event.methodsAllowed.has(MethodName.GET)) {
@@ -481,14 +525,25 @@ export class App implements IApp {
         const savedPath = event.path;
         const savedMountPath = event.mountPath;
         const savedParams = event.params;
+        const savedAppOptions = event.appOptions;
+
+        // First dispatch on this event is the root; any nested
+        // `App.dispatch` call sees `appOptions` already set to a
+        // parent's `_options` (not the EMPTY sentinel).
+        const isRoot = savedAppOptions === EMPTY_APP_OPTIONS;
 
         const context: AppPipelineContext = {
             step: AppPipelineStep.START,
             event,
+            isRoot,
             matchIndex: 0,
         };
 
-        event.appPath.push({ name: this.name, options: this._options });
+        // Mount-time inheritance gives each App's `_options` the fully
+        // resolved view, so dispatch just swaps it onto the event for
+        // the duration of this App's run. Nested apps overwrite, then
+        // we restore in `finally` so the caller's view stays intact.
+        event.appOptions = this._options as AppOptions;
 
         try {
             await this.executePipelineStep(context);
@@ -502,7 +557,7 @@ export class App implements IApp {
                 await this.hooks.trigger(HookName.END, event);
             }
         } finally {
-            event.appPath.pop();
+            event.appOptions = savedAppOptions;
 
             // Restore routing state when this router did not produce a
             // response, so the caller's pipeline (a parent router) sees its
@@ -655,6 +710,11 @@ export class App implements IApp {
             }
 
             if (isAppInstance(item)) {
+                // Mount-time inheritance — fill in any of the child's
+                // unset option keys from this parent. After mount the
+                // child's `_options` is its fully resolved view; no
+                // per-request walk needed.
+                (item as App).adoptOptionsFrom(this);
                 this.router.add({
                     path: joinPaths(this._options.path, path),
                     data: {

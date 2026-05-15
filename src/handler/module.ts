@@ -61,8 +61,7 @@ export class Handler implements IDispatcher {
             // can decide on the per-handler timeout without first wrapping
             // into a AppEvent — saves a `build()` allocation on the
             // common no-timeout path.
-            const appOptions = event.resolveOptions();
-            const effectiveTimeout = this.resolveTimeout(appOptions);
+            const effectiveTimeout = this.resolveTimeout(event.appOptions);
 
             // When a per-handler timeout is active, create a child AbortController
             // linked to the parent signal so the handler's signal aborts on timeout

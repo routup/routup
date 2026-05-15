@@ -1,7 +1,7 @@
 import { HeaderName } from '../../constants.ts';
 import type { IAppEvent } from '../../event/index.ts';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils/index.ts';
-import { buildTrustProxyFn } from '../../utils/index.ts';
+import { DEFAULT_TRUST_PROXY, buildTrustProxyFn } from '../../utils/index.ts';
 
 export type RequestIpOptions = {
     trustProxy?: TrustProxyInput,
@@ -19,7 +19,7 @@ export function getRequestIP(event: IAppEvent, options: RequestIpOptions = {}) :
     if (typeof options.trustProxy !== 'undefined') {
         trustProxy = buildTrustProxyFn(options.trustProxy);
     } else {
-        trustProxy = event.appOptions.trustProxy;
+        trustProxy = event.appOptions.trustProxy ?? DEFAULT_TRUST_PROXY;
     }
 
     const socketAddr = event.request.ip;

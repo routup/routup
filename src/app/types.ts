@@ -142,6 +142,13 @@ export type AppPipelineContext = {
     step: AppPipelineStep,
     event: IDispatcherEvent,
     /**
+     * `true` when this dispatch is the outermost App on the call
+     * stack (the root). Captured in `App.dispatch` from the event's
+     * pre-overwrite `appOptions` and used to gate root-only
+     * behaviour like OPTIONS auto-Allow.
+     */
+    isRoot: boolean,
+    /**
      * Position within `matches`. Replaces the old "raw stack index" —
      * the dispatch loop now iterates the resolved-matches list rather
      * than the unfiltered registration order.

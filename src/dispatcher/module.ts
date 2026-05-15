@@ -8,19 +8,15 @@ import type {
     NextFn,
 } from '../event/types.ts';
 import { toResponse } from '../response/index.ts';
-import type { AppOptions, AppPathNode } from '../app/types.ts';
-import { buildEtagFn } from '../utils/index.ts';
+import type { AppOptions } from '../app/types.ts';
 import type { IDispatcherEvent } from './types.ts';
 
-// Framework defaults applied beneath any router-level overrides. Hoisted
-// to module scope so resolveOptions() doesn't allocate a fresh defaults
-// object — including a new `etag` closure via buildEtagFn() — per request.
-const DEFAULT_ROUTER_OPTIONS: AppOptions = {
-    trustProxy: () => false,
-    subdomainOffset: 2,
-    etag: buildEtagFn(),
-    proxyIpMax: 0,
-};
+/**
+ * Frozen sentinel assigned to `event.appOptions` at construction so
+ * `App.dispatch` can detect "no App has dispatched yet" via
+ * reference equality and mark itself as the root dispatch.
+ */
+export const EMPTY_APP_OPTIONS: AppOptions = Object.freeze({} as AppOptions);
 
 export class DispatcherEvent implements IDispatcherEvent {
     readonly request: AppRequest;
@@ -40,7 +36,13 @@ export class DispatcherEvent implements IDispatcherEvent {
 
     error?: AppError;
 
-    appPath: AppPathNode[];
+    /**
+     * Options of the App currently dispatching this event. Set on
+     * entry to `App.dispatch` and restored on exit (so nested apps
+     * temporarily override). Defaults to a frozen empty object so
+     * consumers reading before dispatch get a stable shape.
+     */
+    appOptions: AppOptions;
 
     protected _dispatched: boolean;
 
@@ -81,7 +83,7 @@ export class DispatcherEvent implements IDispatcherEvent {
         this.path = this._url.pathname;
         this.mountPath = '/';
         this.params = {};
-        this.appPath = [];
+        this.appOptions = EMPTY_APP_OPTIONS;
         this.methodsAllowed = new Set();
         this._dispatched = false;
         this._nextCalled = false;
@@ -195,7 +197,7 @@ export class DispatcherEvent implements IDispatcherEvent {
             response: this.response,
             store: this.store,
             signal: signal ?? this.signal,
-            appOptions: () => this.resolveOptions(),
+            appOptions: this.appOptions,
             next: (event: IAppEvent, error?: Error) => this.next(event, error),
         });
     }
@@ -208,21 +210,5 @@ export class DispatcherEvent implements IDispatcherEvent {
         }
 
         return this._store!;
-    }
-
-    resolveOptions(): AppOptions {
-        const resolved: AppOptions = { ...DEFAULT_ROUTER_OPTIONS };
-
-        for (let i = 0; i < this.appPath.length; i++) {
-            const { options } = this.appPath[i]!;
-            for (const key in options) {
-                const value = (options as Record<string, unknown>)[key];
-                if (typeof value !== 'undefined') {
-                    (resolved as Record<string, unknown>)[key] = value;
-                }
-            }
-        }
-
-        return resolved;
     }
 }

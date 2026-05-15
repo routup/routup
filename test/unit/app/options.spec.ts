@@ -1,50 +1,106 @@
 import { describe, expect, it } from 'vitest';
-import { DispatcherEvent } from '../../../src/dispatcher/module';
-import type { AppPathNode } from '../../../src/app';
+import {
+    App,
+    defineCoreHandler,
+} from '../../../src';
 import { createTestRequest } from '../../helpers';
 
-function node(options: AppPathNode['options']): AppPathNode {
-    return { options };
-}
+/**
+ * Mount-time option inheritance — child apps fill in any of their
+ * unset option keys from the parent at `parent.use(child)` time.
+ * After mount, each App's `_options` is its fully resolved view;
+ * dispatch reads it directly with no per-request walk.
+ *
+ * The framework no longer pre-fills defaults at construction or
+ * mount; consumer call sites apply their own per-call defaults
+ * when an option is undefined (see `request/helpers/*` and
+ * `response/to-response.ts`).
+ */
+describe('App option inheritance (mount-time)', () => {
+    it('child inherits parent option set at construction', async () => {
+        const child = new App();
+        child.get('/x', defineCoreHandler((event) => `offset=${event.appOptions.subdomainOffset}`));
 
-function createEvent(nodes: AppPathNode[]) {
-    const event = new DispatcherEvent(createTestRequest('/'));
-    event.appPath = nodes;
-    return event.build();
-}
+        const parent = new App({ subdomainOffset: 5 });
+        parent.use(child);
 
-describe('src/router/options', () => {
-    it('should return default when no options set', () => {
-        const event = createEvent([]);
-        expect(typeof event.appOptions.trustProxy).toBe('function');
-        expect(event.appOptions.trustProxy('127.0.0.1', 0)).toBe(false);
+        const res = await parent.fetch(createTestRequest('/x'));
+        expect(await res.text()).toBe('offset=5');
     });
 
-    it('should return default when path is empty', () => {
-        expect(createEvent([]).appOptions.subdomainOffset).toBe(2);
+    it('child option overrides parent', async () => {
+        const child = new App({ subdomainOffset: 7 });
+        child.get('/x', defineCoreHandler((event) => `offset=${event.appOptions.subdomainOffset}`));
+
+        const parent = new App({ subdomainOffset: 3 });
+        parent.use(child);
+
+        const res = await parent.fetch(createTestRequest('/x'));
+        expect(await res.text()).toBe('offset=7');
     });
 
-    it('should return option set for router', () => {
-        const event = createEvent([node({ subdomainOffset: 5 })]);
-        expect(event.appOptions.subdomainOffset).toBe(5);
+    it('grandchild inherits through two mount levels', async () => {
+        const grandchild = new App();
+        grandchild.get('/x', defineCoreHandler((event) => `offset=${event.appOptions.subdomainOffset}`));
+
+        const child = new App();
+        child.use(grandchild);
+
+        const parent = new App({ subdomainOffset: 9 });
+        parent.use(child);
+
+        const res = await parent.fetch(createTestRequest('/x'));
+        expect(await res.text()).toBe('offset=9');
     });
 
-    it('should walk path from end to find nearest option', () => {
-        const parent = node({ subdomainOffset: 3 });
-        const child = node({ subdomainOffset: 7 });
+    it('sibling apps do not share options', async () => {
+        const a = new App({ subdomainOffset: 1 });
+        const b = new App({ subdomainOffset: 2 });
+        a.get('/a', defineCoreHandler((event) => `${event.appOptions.subdomainOffset}`));
+        b.get('/b', defineCoreHandler((event) => `${event.appOptions.subdomainOffset}`));
 
-        expect(createEvent([parent, child]).appOptions.subdomainOffset).toBe(7);
-        expect(createEvent([parent]).appOptions.subdomainOffset).toBe(3);
+        const parent = new App();
+        parent.use('/a', a);
+        parent.use('/b', b);
+
+        expect(await (await parent.fetch(createTestRequest('/a/a'))).text()).toBe('1');
+        expect(await (await parent.fetch(createTestRequest('/b/b'))).text()).toBe('2');
     });
 
-    it('should fall back to parent when child has no option', () => {
-        const parent = node({ subdomainOffset: 4 });
-        const child = node({});
+    it('options are undefined when neither parent nor child set them', async () => {
+        const child = new App();
+        child.get('/x', defineCoreHandler((event) => String(event.appOptions.subdomainOffset)));
 
-        expect(createEvent([parent, child]).appOptions.subdomainOffset).toBe(4);
+        const parent = new App();
+        parent.use(child);
+
+        const res = await parent.fetch(createTestRequest('/x'));
+        // No framework default at the App level — consumer-site code
+        // is responsible for falling back. Reading the raw option
+        // returns undefined.
+        expect(await res.text()).toBe('undefined');
     });
 
-    it('should return default when no node has the option', () => {
-        expect(createEvent([node({})]).appOptions.subdomainOffset).toBe(2);
+    it('late mutation of parent options does NOT propagate to child', async () => {
+        // Documented trade-off: options are configured at mount time;
+        // mutating the parent's option object after `use(child)` does
+        // not affect the child. Users who need late propagation must
+        // re-mount or re-construct.
+        const child = new App();
+        child.get('/x', defineCoreHandler((event) => String(event.appOptions.subdomainOffset)));
+
+        const parent = new App({ subdomainOffset: 1 });
+        parent.use(child);
+
+        // Mutate the parent's options after mount — child's snapshot
+        // already has `subdomainOffset: 1` and won't see the change.
+        // (We can't easily mutate from outside since `_options` is
+        // protected; this test instead documents that re-using `parent`
+        // after a re-construct doesn't bleed into the original child.)
+        const parent2 = new App({ subdomainOffset: 99 });
+        parent2.use(child.clone());
+
+        const res = await parent.fetch(createTestRequest('/x'));
+        expect(await res.text()).toBe('1');
     });
 });

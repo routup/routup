@@ -16,7 +16,7 @@ export type AppEventCreateContext = {
     response: AppResponse;
     store: Record<string | symbol, unknown>;
     signal: AbortSignal;
-    appOptions: () => AppOptions;
+    appOptions: AppOptions;
     next: (event: IAppEvent, error?: Error) => Promise<Response | undefined>;
 };
 
@@ -41,9 +41,9 @@ export class AppEvent implements IAppEvent {
 
     readonly signal: AbortSignal;
 
-    protected _context: AppEventCreateContext;
+    readonly appOptions: AppOptions;
 
-    protected _appOptions?: AppOptions;
+    protected _context: AppEventCreateContext;
 
     protected _nextCalled = false;
 
@@ -66,14 +66,7 @@ export class AppEvent implements IAppEvent {
         this.response = context.response;
         this.store = context.store;
         this.signal = context.signal;
-    }
-
-    get appOptions(): AppOptions {
-        if (!this._appOptions) {
-            this._appOptions = this._context.appOptions();
-        }
-
-        return this._appOptions;
+        this.appOptions = context.appOptions;
     }
 
     get nextCalled(): boolean {

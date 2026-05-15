@@ -158,14 +158,15 @@ describe('src/dispatcher/module (DispatcherEvent)', () => {
             expect(routup2.store.shared).toBe('yes');
         });
 
-        it('should lazily resolve appOptions', () => {
+        it('should expose appOptions set on the dispatcher event', () => {
             const dispatch = new DispatcherEvent(createTestRequest('/'));
-            dispatch.appPath = [{ options: { subdomainOffset: 5 } }];
+            // App.dispatch sets `event.appOptions` to the App's
+            // mount-time-resolved options. Simulate that here.
+            (dispatch as any).appOptions = { subdomainOffset: 5 };
 
             const routup = dispatch.build();
 
             expect(routup.appOptions.subdomainOffset).toBe(5);
-            expect(typeof routup.appOptions.trustProxy).toBe('function');
         });
 
         it('should cache next() result on repeated calls', async () => {

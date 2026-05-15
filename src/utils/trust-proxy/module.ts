@@ -23,3 +23,13 @@ export function buildTrustProxyFn(
 
     return compile(input || []);
 }
+
+/**
+ * Default `TrustProxyFn` used by request helpers when neither the
+ * call's `options.trustProxy` nor `event.appOptions.trustProxy` is
+ * set. Trusts no addresses — the conservative default.
+ *
+ * Module-scoped so all helpers share the same reference and we don't
+ * allocate per-request.
+ */
+export const DEFAULT_TRUST_PROXY: TrustProxyFn = buildTrustProxyFn();

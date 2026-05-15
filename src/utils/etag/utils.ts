@@ -34,3 +34,14 @@ export function buildEtagFn(input?: boolean | EtagOptions | EtagFn) : EtagFn {
         return createEtag(body, options);
     };
 }
+
+/**
+ * Default `EtagFn` used by `toResponse()` when `appOptions.etag` is
+ * undefined. Module-scoped so we don't allocate per-request and so
+ * all consumers share the same closure.
+ *
+ * `appOptions.etag === null` (explicitly disabled by the user)
+ * remains distinct: consumers must check `=== undefined`, not
+ * `== null`, before falling back to this default.
+ */
+export const DEFAULT_ETAG_FN: EtagFn = buildEtagFn();

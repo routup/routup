@@ -1,6 +1,6 @@
 import { HeaderName } from '../../constants.ts';
 import type { TrustProxyFn, TrustProxyInput } from '../../utils/index.ts';
-import { buildTrustProxyFn } from '../../utils/index.ts';
+import { DEFAULT_TRUST_PROXY, buildTrustProxyFn } from '../../utils/index.ts';
 import type { IAppEvent } from '../../event/index.ts';
 
 export type RequestProtocolOptions = {
@@ -16,7 +16,7 @@ export function getRequestProtocol(
     if (typeof options.trustProxy !== 'undefined') {
         trustProxy = buildTrustProxyFn(options.trustProxy);
     } else {
-        trustProxy = event.appOptions.trustProxy;
+        trustProxy = event.appOptions.trustProxy ?? DEFAULT_TRUST_PROXY;
     }
 
     // Derive protocol from the request URL scheme

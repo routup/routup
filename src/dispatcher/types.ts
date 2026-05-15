@@ -5,7 +5,7 @@ import type {
     IAppEvent,
     NextFn,
 } from '../event/types.ts';
-import type { AppOptions, AppPathNode } from '../app/types.ts';
+import type { AppOptions } from '../app/types.ts';
 
 export interface IDispatcherEvent {
     /**
@@ -49,10 +49,11 @@ export interface IDispatcherEvent {
     error?: AppError;
 
     /**
-     * App stack for nesting tracking.
-     * Used internally by router options resolution.
+     * Options of the App currently dispatching this event. Set on
+     * entry to `App.dispatch` and restored on exit so nested apps
+     * temporarily override the parent's view.
      */
-    appPath: AppPathNode[];
+    appOptions: AppOptions;
 
     /**
      * Abort signal for cooperative cancellation.
@@ -83,25 +84,13 @@ export interface IDispatcherEvent {
      * Build a public AppEvent from the current dispatch state.
      *
      * Creates a lightweight snapshot with shared references (store, response, headers)
-     * and pre-resolved router options. This is the event passed to handler functions.
+     * and the current App's options. This is the event passed to handler functions.
      *
      * @param signal - Optional AbortSignal override. When provided, the built event
      *                 uses this signal instead of the dispatcher event's own signal.
      *                 Used by per-handler timeout to provide a handler-scoped signal.
      */
     build(signal?: AbortSignal): IAppEvent;
-
-    /**
-     * Resolve the effective router options at the current point in the
-     * dispatch chain — framework defaults merged with each router's
-     * options walked from `appPath` (innermost wins).
-     *
-     * Exposed so `Handler.dispatch` can read `appOptions` directly to
-     * decide on per-handler timeout without first wrapping into a
-     * `AppEvent` via `build()`. Each call recomputes; callers that
-     * read repeatedly should cache the result locally.
-     */
-    resolveOptions(): AppOptions;
 }
 
 export interface IDispatcher {
