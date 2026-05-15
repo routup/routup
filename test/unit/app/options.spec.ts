@@ -21,7 +21,7 @@ describe('App option inheritance (mount-time)', () => {
         const child = new App();
         child.get('/x', defineCoreHandler((event) => `offset=${event.appOptions.subdomainOffset}`));
 
-        const parent = new App({ subdomainOffset: 5 });
+        const parent = new App({ options: { subdomainOffset: 5 } });
         parent.use(child);
 
         const res = await parent.fetch(createTestRequest('/x'));
@@ -29,10 +29,10 @@ describe('App option inheritance (mount-time)', () => {
     });
 
     it('child option overrides parent', async () => {
-        const child = new App({ subdomainOffset: 7 });
+        const child = new App({ options: { subdomainOffset: 7 } });
         child.get('/x', defineCoreHandler((event) => `offset=${event.appOptions.subdomainOffset}`));
 
-        const parent = new App({ subdomainOffset: 3 });
+        const parent = new App({ options: { subdomainOffset: 3 } });
         parent.use(child);
 
         const res = await parent.fetch(createTestRequest('/x'));
@@ -46,7 +46,7 @@ describe('App option inheritance (mount-time)', () => {
         const child = new App();
         child.use(grandchild);
 
-        const parent = new App({ subdomainOffset: 9 });
+        const parent = new App({ options: { subdomainOffset: 9 } });
         parent.use(child);
 
         const res = await parent.fetch(createTestRequest('/x'));
@@ -54,8 +54,8 @@ describe('App option inheritance (mount-time)', () => {
     });
 
     it('sibling apps do not share options', async () => {
-        const a = new App({ subdomainOffset: 1 });
-        const b = new App({ subdomainOffset: 2 });
+        const a = new App({ options: { subdomainOffset: 1 } });
+        const b = new App({ options: { subdomainOffset: 2 } });
         a.get('/a', defineCoreHandler((event) => `${event.appOptions.subdomainOffset}`));
         b.get('/b', defineCoreHandler((event) => `${event.appOptions.subdomainOffset}`));
 
@@ -89,7 +89,7 @@ describe('App option inheritance (mount-time)', () => {
         const child = new App();
         child.get('/x', defineCoreHandler((event) => String(event.appOptions.subdomainOffset)));
 
-        const parent = new App({ subdomainOffset: 1 });
+        const parent = new App({ options: { subdomainOffset: 1 } });
         parent.use(child);
 
         // Mutate the parent's options after mount — child's snapshot
@@ -97,7 +97,7 @@ describe('App option inheritance (mount-time)', () => {
         // (We can't easily mutate from outside since `_options` is
         // protected; this test instead documents that re-using `parent`
         // after a re-construct doesn't bleed into the original child.)
-        const parent2 = new App({ subdomainOffset: 99 });
+        const parent2 = new App({ options: { subdomainOffset: 99 } });
         parent2.use(child.clone());
 
         const res = await parent.fetch(createTestRequest('/x'));

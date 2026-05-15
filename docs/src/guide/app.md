@@ -98,7 +98,7 @@ This is useful for integrating other frameworks or services that expose a Fetch-
 Set a global request timeout that applies to the entire dispatch pipeline. When exceeded, a `408 Request Timeout` response is returned and `event.signal` is aborted:
 
 ```typescript
-const app = new App({ timeout: 5000 }); // 5 seconds
+const app = new App({ options: { timeout: 5000 } }); // 5 seconds
 ```
 
 ### Per-Handler Timeout
@@ -107,8 +107,10 @@ Set a default timeout for individual handler execution. Each handler's `fn()` is
 
 ```typescript
 const app = new App({
-    handlerTimeout: 2000,              // 2s default per handler
-    handlerTimeoutOverridable: false,  // handlers can only narrow, not extend (default)
+    options: {
+        handlerTimeout: 2000,              // 2s default per handler
+        handlerTimeoutOverridable: false,  // handlers can only narrow, not extend (default)
+    },
 });
 ```
 

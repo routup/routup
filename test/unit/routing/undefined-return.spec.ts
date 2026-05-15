@@ -25,7 +25,7 @@ describe('routing/undefined-return', () => {
     });
 
     it('treats explicit null as an empty response (does not hang)', async () => {
-        const router = new App({ timeout: 100 });
+        const router = new App({ options: { timeout: 100 } });
 
         router.get(defineCoreHandler((event) => {
             event.response.status = 204;
@@ -39,7 +39,7 @@ describe('routing/undefined-return', () => {
     });
 
     it('hangs until global timeout when handler returns undefined and does not call next()', async () => {
-        const router = new App({ timeout: 50 });
+        const router = new App({ options: { timeout: 50 } });
 
         router.get(defineCoreHandler((event) => {
             event.response.headers.set('x-touched', '1');
@@ -52,7 +52,7 @@ describe('routing/undefined-return', () => {
     });
 
     it('hangs until per-handler timeout when handler returns undefined and does not call next()', async () => {
-        const router = new App({ handlerTimeout: 50 });
+        const router = new App({ options: { handlerTimeout: 50 } });
 
         router.get(defineCoreHandler(() => {
             // intentional: no return, no event.next()
@@ -64,7 +64,7 @@ describe('routing/undefined-return', () => {
     });
 
     it('resumes when event.next() is called asynchronously after handler returns undefined', async () => {
-        const router = new App({ timeout: 500 });
+        const router = new App({ options: { timeout: 500 } });
 
         router.use(defineCoreHandler((event) => {
             setTimeout(() => {
@@ -82,7 +82,7 @@ describe('routing/undefined-return', () => {
     });
 
     it('aborts event.signal when undefined-return hangs and timeout fires', async () => {
-        const router = new App({ timeout: 50 });
+        const router = new App({ options: { timeout: 50 } });
         let aborted = false;
 
         router.get(defineCoreHandler((event) => {

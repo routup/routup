@@ -38,8 +38,8 @@ import { AppPipelineStep, AppSymbol, RouteEntryType } from './constants.ts';
 import { LinearRouter } from '../router/linear/index.ts';
 import type { IRouter } from '../router/types.ts';
 import type {
+    AppContext,
     AppOptions,
-    AppOptionsInput,
     AppPipelineContext,
     IApp,
     RouteEntry,
@@ -106,9 +106,17 @@ export class App implements IApp {
     readonly name?: string;
 
     /**
+     * Registration-time path prefix for entries registered on this
+     * App. Local to this instance — never inherited from a parent.
+     *
+     * @protected
+     */
+    protected _path?: Path;
+
+    /**
      * Pluggable router (route table) — owns the "which entries match
      * this path?" lookup. Defaults to `LinearRouter` (walks entries
-     * linearly per request); swap in via `AppOptionsInput.router`
+     * linearly per request); swap in via `AppContext.router`
      * for a radix/trie implementation on apps with many routes.
      *
      * @protected
@@ -136,21 +144,15 @@ export class App implements IApp {
 
     // --------------------------------------------------
 
-    constructor(input: AppOptionsInput = {}) {
+    constructor(input: AppContext = {}) {
         this.name = input.name;
+        this._path = input.path;
 
-        const {
-            hooks = new Hooks(),
-            plugins = new Map<string, string | undefined>(),
-            router = new LinearRouter<RouteEntry>(),
-            ...options
-        } = input;
+        this.hooks = input.hooks ?? new Hooks();
+        this.plugins = new Map<string, string | undefined>(input.plugins);
+        this.router = input.router ?? new LinearRouter<RouteEntry>();
 
-        this.hooks = hooks;
-        this.plugins = new Map<string, string | undefined>(plugins);
-        this.router = router;
-
-        this._options = normalizeAppOptions(options);
+        this._options = normalizeAppOptions(input.options ?? {});
 
         markInstanceof(this, AppSymbol);
     }
@@ -243,8 +245,10 @@ export class App implements IApp {
      * protected fields: the parent passes its options by value and
      * the child decides what to do with them.
      *
-     * Shallow per-key merge. Hooks, plugins, router, and cache are
-     * deliberately per-App and are not propagated.
+     * Shallow per-key merge. App-local concerns — `name`, `path`,
+     * `hooks`, `plugins`, `router`, and the router's cache — are
+     * deliberately not propagated; they sit on `AppContext`, not
+     * inside `AppOptions`.
      *
      * Cascades to any Apps already mounted on this one — a deeper
      * grandchild gets the new keys too. Without this, mounting
@@ -709,7 +713,7 @@ export class App implements IApp {
             }
 
             this.router.add({
-                path: joinPaths(this._options.path, path, handler.path),
+                path: joinPaths(this._path, path, handler.path),
                 method,
                 data: {
                     type: RouteEntryType.HANDLER,
@@ -748,7 +752,7 @@ export class App implements IApp {
                 // per-request walk needed.
                 item.extendOptions(this._options);
                 this.router.add({
-                    path: joinPaths(this._options.path, path),
+                    path: joinPaths(this._path, path),
                     data: {
                         type: RouteEntryType.APP,
                         data: item,
@@ -761,7 +765,7 @@ export class App implements IApp {
             // (structural) — see useForMethod for the same reasoning.
             if (isHandler(item)) {
                 this.router.add({
-                    path: joinPaths(this._options.path, path, item.path),
+                    path: joinPaths(this._path, path, item.path),
                     method: item.method,
                     data: {
                         type: RouteEntryType.HANDLER,
@@ -775,7 +779,7 @@ export class App implements IApp {
                 const handler = new Handler({ ...item });
 
                 this.router.add({
-                    path: joinPaths(this._options.path, path, handler.path),
+                    path: joinPaths(this._path, path, handler.path),
                     method: handler.method,
                     data: {
                         type: RouteEntryType.HANDLER,
@@ -863,7 +867,9 @@ export class App implements IApp {
      */
     clone(): IApp {
         const next = new App({
-            ...this._options,
+            name: this.name,
+            path: this._path,
+            options: { ...this._options },
             hooks: this.hooks.clone(),
             plugins: this.plugins,
             // Preserve the active router family on the clone — a clone

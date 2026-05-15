@@ -7,7 +7,7 @@ import { createTestRequest } from '../../helpers';
 
 describe('src/router etag', () => {
     it('should not send etag when disabled', async () => {
-        const router = new App({ etag: false });
+        const router = new App({ options: { etag: false } });
 
         router.get('/', defineCoreHandler(() => 'Hello world!'));
 

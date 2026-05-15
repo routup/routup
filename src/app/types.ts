@@ -31,23 +31,6 @@ import type { RouteMatch } from '../types.ts';
 
 export type AppOptions = {
     /**
-     * Registration-time path prefix.
-     *
-     * When set, every entry registered on this router (via `use`,
-     * `get`, `post`, …) has this prefix prepended to its mount path.
-     * `new App({ path: '/api' })` followed by `router.get('/users',
-     * h)` is equivalent to `router.get('/api/users', h)` on a router
-     * without an `options.path`.
-     *
-     * Path matching itself still happens inside the active
-     * `IRouter` — this option only affects how entries are
-     * registered, not how lookup is performed.
-     */
-    path?: Path,
-
-    name?: string,
-
-    /**
      * Global request timeout in milliseconds.
      *
      * Applies to the entire dispatch pipeline in `fetch()`. When exceeded,
@@ -75,8 +58,19 @@ export type AppOptions = {
      */
     handlerTimeoutOverridable?: boolean,
 
+    /**
+     * Number of trailing labels in the request hostname that make up
+     * the registrable domain (e.g. `example.com` → 2). Subdomain
+     * helpers strip this many labels from the right before returning
+     * the subdomain portion.
+     */
     subdomainOffset?: number,
 
+    /**
+     * Maximum number of proxy IPs to walk when resolving the client
+     * IP from `X-Forwarded-For`. Caps how far back the chain is
+     * trusted, regardless of `trustProxy`.
+     */
     proxyIpMax?: number,
 
     /**
@@ -90,26 +84,98 @@ export type AppOptions = {
      */
     etag?: EtagFn | null,
 
+    /**
+     * Predicate that decides whether a given upstream address is a
+     * trusted proxy when resolving the client IP / protocol /
+     * hostname from forwarding headers.
+     */
     trustProxy?: TrustProxyFn,
 };
 
+/**
+ * User-facing input variant of `AppOptions`.
+ *
+ * Accepts looser shapes for `etag` and `trustProxy` (string,
+ * boolean, list-of-CIDRs, …) which `normalizeAppOptions` lowers to
+ * the resolved `EtagFn | null` / `TrustProxyFn` shape stored on the
+ * App.
+ */
 export type AppOptionsInput = Omit<AppOptions, 'etag' | 'trustProxy'> & {
+    /**
+     * ETag input — accepts an `EtagFn`, `false`/`null` to disable,
+     * or other shapes accepted by `buildEtagFn`. Normalized to
+     * `EtagFn | null` on the App.
+     */
     etag?: EtagInput,
-    trustProxy?: TrustProxyInput,
 
+    /**
+     * Trust-proxy input — accepts a predicate, a list of trusted
+     * CIDRs, `'loopback'`, etc., as accepted by `buildTrustProxyFn`.
+     * Normalized to `TrustProxyFn` on the App.
+     */
+    trustProxy?: TrustProxyInput,
+};
+
+/**
+ * Constructor input for `App`.
+ *
+ * Splits true runtime options (which propagate to mounted children
+ * via mount-time inheritance) from App-local identity (`name`,
+ * `path`) and constructor injectables (`hooks`, `plugins`,
+ * `router`). Keeping these separate prevents identity from leaking
+ * across the mount boundary — e.g. a parent's `path: '/api'` would
+ * otherwise propagate into a child whose own `path` is unset and
+ * silently double-prefix on registration.
+ */
+export type AppContext = {
+    /**
+     * Optional label for the App instance.
+     */
+    name?: string,
+
+    /**
+     * Registration-time path prefix for entries registered on this
+     * App.
+     *
+     * When set, every entry registered via `use`, `get`, `post`, …
+     * has this prefix prepended to its mount path.
+     * `new App({ path: '/api' })` followed by `app.get('/users', h)`
+     * is equivalent to `app.get('/api/users', h)` on an App without
+     * a `path`.
+     *
+     * Path matching itself still happens inside the active `IRouter`
+     * — this only affects how entries are registered, not how
+     * lookup is performed. Local to this App; not propagated to
+     * mounted children.
+     */
+    path?: Path,
+
+    /**
+     * Runtime options that propagate to mounted children via
+     * mount-time inheritance.
+     */
+    options?: AppOptionsInput,
+
+    /**
+     * Lifecycle hook registry. Defaults to a fresh `Hooks` instance.
+     * Pass an existing registry to share listeners across Apps (used
+     * by `clone()` to seed the copy with the original's listeners).
+     */
     hooks?: IHooks,
+
+    /**
+     * Map of installed plugin name → version. Defaults to an empty
+     * map. Used by `clone()` to carry the installed-plugin registry
+     * over so duplicate installs are still rejected on the copy.
+     */
     plugins?: Map<string, string | undefined>,
+
     /**
      * Pluggable router (route table). Defaults to `LinearRouter` —
      * walks registered entries linearly per request. Swap in an
      * alternative (e.g. `TrieRouter`) on apps with many routes.
      */
     router?: IRouter<RouteEntry>,
-};
-
-export type AppPathNode = {
-    readonly name?: string;
-    readonly options: AppOptions;
 };
 
 // --------------------------------------------------
@@ -127,15 +193,43 @@ export type AppPathNode = {
  * at registration time.
  */
 export type AppRouteEntry = {
+    /**
+     * Discriminator marking this entry as a mounted child App (vs a
+     * leaf handler). The dispatch loop branches on this to recurse
+     * via `IApp.dispatch` rather than invoking a handler `fn`.
+     */
     type: typeof RouteEntryType.APP,
+
+    /**
+     * The mounted child App. Path/method live on the wrapping
+     * `Route<RouteEntry>`, not here.
+     */
     data: IApp,
 };
 
+/**
+ * Leaf entry in the route table: a handler invoked directly by the
+ * dispatch loop.
+ */
 export type HandlerRouteEntry = {
+    /**
+     * Discriminator marking this entry as a leaf handler (vs a
+     * mounted child App).
+     */
     type: typeof RouteEntryType.HANDLER,
+
+    /**
+     * The handler invoked when this entry matches. Path/method live
+     * on the wrapping `Route<RouteEntry>`, not here.
+     */
     data: Handler,
 };
 
+/**
+ * Tagged union of route-table entries. The active `IRouter` stores
+ * one of these as `Route.data` per registered entry; the dispatch
+ * loop reads `type` to choose the right branch.
+ */
 export type RouteEntry = AppRouteEntry | HandlerRouteEntry;
 
 // --------------------------------------------------
@@ -143,8 +237,18 @@ export type RouteEntry = AppRouteEntry | HandlerRouteEntry;
 // --------------------------------------------------
 
 export type AppPipelineContext = {
+    /**
+     * Current pipeline phase — drives the state machine in
+     * `App.executePipelineStep`. Mutated as the loop advances.
+     */
     step: AppPipelineStep,
+
+    /**
+     * The dispatcher event being processed. Carries request, path,
+     * params, and the response accumulator across pipeline steps.
+     */
     event: IDispatcherEvent,
+
     /**
      * `true` when this dispatch is the outermost App on the call
      * stack (the root). Captured in `App.dispatch` from the event's
@@ -171,6 +275,12 @@ export type AppPipelineContext = {
      * we can detect a mid-walk path mutation and refresh the cache.
      */
     matchesPath?: string,
+
+    /**
+     * The Response produced by the pipeline. Set by handlers (via
+     * `toResponse`) or by terminal pipeline steps; returned from
+     * `App.dispatch` once `FINISH` is reached.
+     */
     response?: Response,
 };
 

@@ -10,18 +10,19 @@ The runtime behaviour, hook lifecycle, and helper APIs are largely unchanged. Mo
 |----|-----|
 | `new Router()` | `new App()` |
 | `IRouter` (top-level interface) | `IApp` |
-| `RouterOptions` / `RouterOptionsInput` | `AppOptions` / `AppOptionsInput` |
+| `RouterOptions` / `RouterOptionsInput` | `AppOptions` / `AppOptionsInput`; the `App` constructor takes `AppContext` (`{ name, path, options, hooks, plugins, router }`) |
 | `RoutupEvent` / `IRoutupEvent` | `AppEvent` / `IAppEvent` |
 | `RoutupError` | `AppError` |
 | `RoutupRequest` | `AppRequest` |
 | `LinearRouteResolver` / `TrieRouteResolver` | `LinearRouter` / `TrieRouter` (the resolver hierarchy collapses to two leaf routers; lookup caching is now an opt-in `cache` option on each — see [Custom Cache](./custom-cache)) |
 | `IRouteResolver` (resolver interface) | `IRouter` |
 | `ResolverMatch` | `RouteMatch` |
-| `RouterOptionsInput.resolver` | `AppOptionsInput.router` |
+| `RouterOptionsInput.resolver` | `AppContext.router` |
 | `Handler.matchPath()` / `Router.matchPath()` | _removed_ — path matching now lives only in the resolver |
-| `RouterOptions.path` (runtime path-strip) | `AppOptions.path` (registration-time **prefix**) |
-| `event.routerPath` / `event.routerOptions` | `event.appPath` / `event.appOptions` |
-| `RouterPipelineStep` / `RouterPipelineContext` / `RouterStackEntryType` / `RouterPathNode` / `RouterSymbol` | `AppPipelineStep` / `AppPipelineContext` / `RouteEntryType` / `AppPathNode` / `AppSymbol` |
+| `RouterOptions.path` (runtime path-strip) | `AppContext.path` (registration-time **prefix**) |
+| `event.routerPath` | _removed_ — option resolution moved to mount time; the per-request stack walk is gone |
+| `event.routerOptions` | `event.appOptions` |
+| `RouterPipelineStep` / `RouterPipelineContext` / `RouterStackEntryType` / `RouterSymbol` | `AppPipelineStep` / `AppPipelineContext` / `RouteEntryType` / `AppSymbol` |
 | `RouterStackEntryType.ROUTER` (enum value) | `RouteEntryType.APP` |
 | `Router.StackEntry` | `RouteEntry` (`AppRouteEntry` \| `HandlerRouteEntry`) |
 | `isRouterInstance()` | `isAppInstance()` |
@@ -81,9 +82,9 @@ class MyRouter implements IRouter {
 
 See the [Custom Router guide](./custom-router) for the full contract and a working example.
 
-## `AppOptions.path` — semantic change
+## `AppContext.path` — semantic change
 
-`Router.options.path` previously stripped its prefix from `event.path` at runtime inside `Router.dispatch`. In v6 it is a **registration-time prefix** — the value is prepended to every entry registered via `use`/`get`/etc. through `joinPaths`.
+`Router.options.path` previously stripped its prefix from `event.path` at runtime inside `Router.dispatch`. In v6 it is a **registration-time prefix** — the value is prepended to every entry registered via `use`/`get`/etc. through `joinPaths`. It now lives at the top level of the App constructor input (`new App({ path: '/api' })`), separated from runtime options that propagate to mounted children.
 
 ```typescript
 // v5 — runtime path-strip; handlers saw `event.path === '/users'` for
@@ -117,9 +118,11 @@ app.get('/users', defineCoreHandler({
 }));
 ```
 
-## `event.routerPath` / `event.routerOptions` renamed
+## `event.routerPath` removed; `event.routerOptions` renamed
 
-Internal event fields renamed to match the App-family naming:
+`routerPath` walked the chain of dispatching routers so consumers could resolve options outer→inner per request. v6 resolves options at mount time instead — every App's `_options` is its fully merged view, and dispatch just swaps that onto the event. The per-request walk (and the field) are gone.
+
+`routerOptions` was renamed to `appOptions` in line with the rest of the App-family rename.
 
 ```typescript
 // v5
@@ -127,8 +130,7 @@ event.routerPath;     // path of the dispatching router stack
 event.routerOptions;  // resolved router options
 
 // v6
-event.appPath;        // same data, new name
-event.appOptions;
+event.appOptions;     // pre-resolved view set by the dispatching App
 ```
 
 ## Hook names unchanged from v5.x
