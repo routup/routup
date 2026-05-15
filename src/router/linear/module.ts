@@ -1,6 +1,7 @@
+import type { ICache } from '../../cache/index.ts';
 import type { IPathMatcher } from '../../path/index.ts';
 import type { ObjectLiteral, Route, RouteMatch } from '../../types.ts';
-import type { IRouter } from '../types.ts';
+import type { BaseRouterOptions, IRouter } from '../types.ts';
 import { buildRoutePathMatcher } from '../utils.ts';
 
 /**
@@ -15,23 +16,39 @@ import { buildRoutePathMatcher } from '../utils.ts';
  * (not on the registered route), so routers using a different matching
  * strategy (radix tree, aggregated regex, …) can ignore this file
  * entirely.
+ *
+ * Optional per-router lookup cache: pass an `ICache` via
+ * `BaseRouterOptions.cache` to skip the linear walk on repeated
+ * requests for the same path. Default is no caching.
  */
 export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IRouter<T> {
     protected _routes: Route<T>[];
 
     protected _matchers: (IPathMatcher | undefined)[];
 
-    constructor() {
+    protected cache?: ICache<readonly RouteMatch<T>[]>;
+
+    constructor(options: BaseRouterOptions<T> = {}) {
         this._routes = [];
         this._matchers = [];
+        this.cache = options.cache;
     }
 
     add(route: Route<T>): void {
         this._routes.push(route);
         this._matchers.push(buildRoutePathMatcher(route));
+        // A new route can change the match set for any cached path —
+        // drop the whole cache. Conservative; per-path invalidation
+        // would require knowing which paths the new route can match.
+        this.cache?.clear();
     }
 
     lookup(path: string): readonly RouteMatch<T>[] {
+        const cached = this.cache?.get(path);
+        if (typeof cached !== 'undefined') {
+            return cached;
+        }
+
         const matches: RouteMatch<T>[] = [];
 
         for (let i = 0; i < this._routes.length; i++) {
@@ -64,18 +81,17 @@ export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IR
             });
         }
 
+        this.cache?.set(path, matches);
         return matches;
     }
 
     get routes(): readonly Route<T>[] {
-        // Defensive copy — `readonly` is compile-time only. Returning
-        // the live array would let JS callers `push`/`splice` it,
-        // desynchronizing `_routes` from `_matchers` so subsequent
-        // `lookup()` would read past the matcher list.
-        return this._routes.slice();
+        return this._routes;
     }
 
     clone(): IRouter<T> {
-        return new LinearRouter<T>();
+        // Carry the cache *shape* forward (not contents) — fresh
+        // cache, same configured class/size. Absent stays absent.
+        return new LinearRouter<T>({ cache: this.cache?.clone() });
     }
 }

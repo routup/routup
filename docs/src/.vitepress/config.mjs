@@ -83,6 +83,7 @@ export default defineConfig({
                         { text: 'Serving', link: '/guide/dispatchers' },
                         { text: 'Runtime Environments', link: '/guide/runtime-environments' },
                         { text: 'Custom Router', link: '/guide/custom-router' },
+                        { text: 'Custom Cache', link: '/guide/custom-cache' },
                     ],
                 },
                 {

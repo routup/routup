@@ -2,25 +2,29 @@ const runtime = typeof Bun !== 'undefined' ? 'bun' : 'node';
 const {
     App,
     LinearRouter,
-    MemoizedRouter,
+    LruCache,
     TrieRouter,
     defineCoreHandler,
     serve,
 } = await import(`../dist/${runtime}.mjs`);
 
 const RESOLVER = process.env.RESOLVER ?? 'linear';
+const CACHE = process.env.CACHE ?? 'none';
+
+const cache = CACHE === 'lru' ? new LruCache() : undefined;
 
 const buildRouter = () => {
     switch (RESOLVER) {
-        case 'trie': return new TrieRouter();
-        case 'memoized-linear': return new MemoizedRouter(new LinearRouter());
-        case 'memoized-trie': return new MemoizedRouter(new TrieRouter());
+        case 'trie': return new TrieRouter({ cache });
         case 'linear':
-        default: return new LinearRouter();
+        default: return new LinearRouter({ cache });
     }
 };
 
-const app = new App({ etag: false, router: buildRouter() });
+const app = new App({
+    etag: false,
+    router: buildRouter(),
+});
 
 const noise = [
     '/users',

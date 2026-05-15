@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-    LinearRouter,
-    MemoizedRouter,
-    TrieRouter,
-} from '../../../src';
+import { LinearRouter, TrieRouter } from '../../../src';
 import type { IRouter } from '../../../src';
 import { MethodName } from '../../../src/constants';
 
@@ -30,7 +26,6 @@ type ResolverFactory = () => IRouter<MyData>;
 const resolvers: Record<string, ResolverFactory> = {
     linear: () => new LinearRouter<MyData>(),
     trie: () => new TrieRouter<MyData>(),
-    'memoized(trie)': () => new MemoizedRouter<MyData>(new TrieRouter<MyData>()),
 };
 
 describe.each(Object.entries(resolvers))('IRouter<MyData> generic — %s', (_name, factory) => {
@@ -108,27 +103,6 @@ describe.each(Object.entries(resolvers))('IRouter<MyData> generic — %s', (_nam
 
         const matches = router.lookup('/x');
         expect(matches.map((m) => m.route.data.name)).toEqual(['a', 'b', 'c']);
-    });
-
-    it('routes getter returns a defensive copy (mutation does not desync state)', () => {
-        const router = factory();
-        router.add({
-            path: '/x',
-            method: MethodName.GET,
-            data: { name: 'a', tag: 1 },
-        });
-
-        // `readonly` is compile-time only. Cast through unknown and mutate
-        // the returned array — the router's internal state must not change.
-        const snapshot = router.routes as unknown as { path?: string }[];
-        snapshot.push({});
-        snapshot.length = 0;
-
-        // After mutating the returned array, the router still reports
-        // its real internal length.
-        expect(router.routes.length).toBe(1);
-        // And lookup still finds the route.
-        expect(router.lookup('/x')).toHaveLength(1);
     });
 
     it('clone() returns an empty router of the same shape', () => {

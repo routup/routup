@@ -1,4 +1,24 @@
+import type { ICache } from '../cache/index.ts';
 import type { ObjectLiteral, Route, RouteMatch } from '../types.ts';
+
+/**
+ * Options shared by every built-in router. Custom `IRouter`
+ * implementations are encouraged to extend this so users can swap
+ * routers without rewiring caching.
+ *
+ * - `cache` (omitted): no caching — every `lookup()` runs the
+ *   router's full match logic. This is the default.
+ * - `cache: <ICache>`: enable lookup memoization. Pass `LruCache`
+ *   for the built-in bounded LRU, or your own `ICache` (e.g.
+ *   wrapping `lru-cache` for TTL or size-based eviction).
+ *
+ * The router is responsible for invalidating its own cache whenever
+ * `add()` is called — registering a new route can change the match
+ * set for any cached path.
+ */
+export type BaseRouterOptions<T extends ObjectLiteral = ObjectLiteral> = {
+    cache?: ICache<readonly RouteMatch<T>[]>;
+};
 
 /**
  * Pluggable strategy for storing routes and answering "which entries
@@ -45,11 +65,11 @@ export interface IRouter<T extends ObjectLiteral = ObjectLiteral> {
 
     /**
      * Return a fresh, **empty** router of the same shape — same class
-     * for the leaf implementations, same wrapping for composable ones
-     * (`MemoizedRouter` recursively clones its inner). Used by
-     * `App.install()` and `App.clone()` so plugin sub-apps and cloned
-     * apps preserve the active router family instead of silently
-     * downgrading to `LinearRouter`.
+     * for leaf implementations; composable wrappers should recursively
+     * clone their inner router. Used by `App.install()` and
+     * `App.clone()` so plugin sub-apps and cloned apps preserve the
+     * active router family instead of silently downgrading to
+     * `LinearRouter`.
      */
     clone(): IRouter<T>;
 }

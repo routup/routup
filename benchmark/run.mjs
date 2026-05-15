@@ -58,7 +58,7 @@ async function runOne() {
     }
 }
 
-console.log(`runtime=${RUNTIME}  resolver=${process.env.RESOLVER ?? 'linear'}  url=${URL}  trials=${TRIALS} warmup=${WARMUP}s duration=${DURATION}s connections=${CONNECTIONS} pipelining=${PIPELINING}`);
+console.log(`runtime=${RUNTIME}  resolver=${process.env.RESOLVER ?? 'linear'}  cache=${process.env.CACHE ?? 'none'}  url=${URL}  trials=${TRIALS} warmup=${WARMUP}s duration=${DURATION}s connections=${CONNECTIONS} pipelining=${PIPELINING}`);
 
 const reqs = [];
 const lats = [];
