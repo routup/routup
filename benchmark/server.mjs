@@ -9,9 +9,9 @@ const {
 } = await import(`../dist/${runtime}.mjs`);
 
 const RESOLVER = process.env.RESOLVER ?? 'linear';
-const CACHE = process.env.CACHE ?? 'lru';
+const CACHE = process.env.CACHE ?? 'none';
 
-const cache = CACHE === 'none' ? null : new LruCache();
+const cache = CACHE === 'lru' ? new LruCache() : undefined;
 
 const buildRouter = () => {
     switch (RESOLVER) {

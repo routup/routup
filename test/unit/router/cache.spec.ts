@@ -12,8 +12,8 @@ type LookupCache = ICache<readonly RouteMatch<MyData>[]>;
 
 /**
  * Branded cache double — counts every get/set/clear/clone call so
- * tests can prove the router is consulting the cache and invalidating
- * it at the right moments. Wraps a real LruCache so behavior stays
+ * tests can prove the router consults the cache and invalidates it
+ * at the right moments. Wraps a real LruCache so behavior stays
  * realistic.
  */
 class BrandedCache implements LookupCache {
@@ -53,16 +53,15 @@ class BrandedCache implements LookupCache {
     }
 }
 
-const routers: Record<string, (cache?: LookupCache | null) => IRouter<MyData>> = {
+const routers: Record<string, (cache?: LookupCache) => IRouter<MyData>> = {
     linear: (cache) => new LinearRouter<MyData>(typeof cache === 'undefined' ? {} : { cache }),
     trie: (cache) => new TrieRouter<MyData>(typeof cache === 'undefined' ? {} : { cache }),
 };
 
 describe.each(Object.entries(routers))('router cache option — %s', (_name, build) => {
-    it('default cache (omitted) memoizes lookup', () => {
-        // No cache passed — router constructs its own LruCache(1024).
-        // Memoization is observable via reference equality: two
-        // back-to-back lookups on the same path return the same array.
+    it('default (cache omitted) does NOT memoize lookup', () => {
+        // Cache is opt-in. Without one, repeated lookups produce
+        // fresh arrays — a freshly allocated RouteMatch[] every time.
         const router = build();
         router.add({
             path: '/x',
@@ -73,7 +72,10 @@ describe.each(Object.entries(routers))('router cache option — %s', (_name, bui
         const first = router.lookup('/x');
         const second = router.lookup('/x');
 
-        expect(second).toBe(first);
+        expect(second).not.toBe(first);
+        // But the contents are equivalent.
+        expect(second).toHaveLength(first.length);
+        expect(second[0]!.route).toBe(first[0]!.route);
     });
 
     it('explicit ICache is consulted on every lookup', () => {
@@ -98,24 +100,18 @@ describe.each(Object.entries(routers))('router cache option — %s', (_name, bui
         expect(cache.clears).toBe(clearsAfterAdd);
     });
 
-    it('cache: null disables caching entirely', () => {
-        const router = build(null);
+    it('explicit cache memoizes by reference equality', () => {
+        const router = build(new LruCache());
         router.add({
             path: '/x',
             method: MethodName.GET,
             data: { name: 'a' },
         });
 
-        // No memoization: each lookup produces a fresh array. With a
-        // cache wired in, both calls would return the same reference;
-        // with null, we get a new allocation each time.
         const first = router.lookup('/x');
         const second = router.lookup('/x');
 
-        expect(second).not.toBe(first);
-        // But the contents are equivalent.
-        expect(second).toHaveLength(first.length);
-        expect(second[0]!.route).toBe(first[0]!.route);
+        expect(second).toBe(first);
     });
 
     it('invalidates cache on add()', () => {
@@ -159,8 +155,8 @@ describe.each(Object.entries(routers))('router cache option — %s', (_name, bui
         expect(cache.clones).toBe(clonesBefore + 1);
     });
 
-    it('cache: null is preserved across clone()', () => {
-        const router = build(null);
+    it('absent cache is preserved across clone()', () => {
+        const router = build();
         const cloned = router.clone();
         cloned.add({
             path: '/x',

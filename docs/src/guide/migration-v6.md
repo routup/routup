@@ -1,12 +1,8 @@
 # Migrating to v6
 
-Routup v6 renames the top-level class and the route-table abstraction to align with ecosystem conventions (rou3, Hono, Gin: "router" means the route table; the application class has its own name). It also consolidates path matching into a single place — the resolver (now called router) — and ships a pluggable router family.
+Routup v6 renames the top-level class and the route-table abstraction to align with ecosystem conventions (rou3, Hono, Gin: "router" means the route table; the application class has its own name). It also consolidates path matching into a single place — the resolver (now called router) — and ships a pluggable router family with an opt-in lookup cache.
 
 The runtime behaviour, hook lifecycle, and helper APIs are largely unchanged. Most app code only needs identifier renames.
-
-::: tip Skipping v6?
-If you're going straight to v7, this page still applies — start here, then read the [v6 → v7 guide](./migration-v7) for the cache-rewrite changes (`MemoizedRouter` is removed in v7).
-:::
 
 ## Quick summary
 
@@ -18,7 +14,7 @@ If you're going straight to v7, this page still applies — start here, then rea
 | `RoutupEvent` / `IRoutupEvent` | `AppEvent` / `IAppEvent` |
 | `RoutupError` | `AppError` |
 | `RoutupRequest` | `AppRequest` |
-| `LinearRouteResolver` / `TrieRouteResolver` / `MemoizedRouteResolver` | `LinearRouter` / `TrieRouter` / `MemoizedRouter` |
+| `LinearRouteResolver` / `TrieRouteResolver` | `LinearRouter` / `TrieRouter` (the resolver hierarchy collapses to two leaf routers; lookup caching is now an opt-in `cache` option on each — see [Custom Cache](./custom-cache)) |
 | `IRouteResolver` (resolver interface) | `IRouter` |
 | `ResolverMatch` | `RouteMatch` |
 | `RouterOptionsInput.resolver` | `AppOptionsInput.router` |
@@ -55,7 +51,7 @@ serve(app);
 The route table is now a first-class abstraction with multiple implementations:
 
 ```typescript
-import { App, LinearRouter, TrieRouter, MemoizedRouter } from 'routup';
+import { App, LinearRouter, TrieRouter, LruCache } from 'routup';
 
 // Default — walks entries linearly per request. Best for small route counts.
 new App({ router: new LinearRouter() });
@@ -64,9 +60,10 @@ new App({ router: new LinearRouter() });
 // when route count grows past ~30.
 new App({ router: new TrieRouter() });
 
-// Wraps any router in a per-path lookup cache. Useful when the underlying
-// router's lookup is non-trivial and the workload sees repeated paths.
-new App({ router: new MemoizedRouter(new LinearRouter()) });
+// Either router accepts an opt-in lookup cache via `BaseRouterOptions.cache`.
+// Default is no cache; pass an `LruCache` (or your own `ICache`) to enable
+// per-path memoization. See the Custom Cache guide for details.
+new App({ router: new TrieRouter({ cache: new LruCache() }) });
 ```
 
 Custom routers implement `IRouter`:
@@ -145,7 +142,7 @@ The `Router` ↔ `IRouteResolver` split in v5 worked but used names that conflic
 v6 fixes this:
 - `App` (was `Router`) — the dispatch engine; matches Hono's `Hono` / h3's `App` convention.
 - `IRouter` (was `IRouteResolver`) — the route table; matches every other framework.
-- `LinearRouter` / `TrieRouter` / `MemoizedRouter` — the route-table implementations; recognizable on import.
+- `LinearRouter` / `TrieRouter` — the route-table implementations; recognizable on import. Either accepts an opt-in `cache` option.
 
 The `App*` brand on `AppError` / `AppEvent` / `AppRequest` preserves collision-safety against globals (`Error`, `Event`, `Request`) without the longer `Routup*` prefix.
 

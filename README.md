@@ -116,15 +116,13 @@ app.use(defineCoreHandler(async (event) => {
 
 ### Pluggable router and cache
 
-The route table is pluggable via the `router` option (default `LinearRouter`; swap to `TrieRouter` for radix-trie matching on apps with many routes). Each router carries its own `cache` (default `LruCache(1024)`; pass `null` to disable, or your own `ICache` implementation).
+The route table is pluggable via the `router` option (default `LinearRouter`; swap to `TrieRouter` for radix-trie matching on apps with many routes). Each router accepts an optional `cache` for memoizing lookups — opt-in via `LruCache` (or any `ICache` implementation).
 
 ```typescript
 import { App, TrieRouter, LruCache, defineCoreHandler } from 'routup';
 
 const app = new App({
-    router: new TrieRouter({
-        cache: new LruCache({ maxSize: 4096 }), // or `null` to disable
-    }),
+    router: new TrieRouter({ cache: new LruCache() }), // omit `cache` for no memoization
 });
 ```
 

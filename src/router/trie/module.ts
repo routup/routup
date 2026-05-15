@@ -1,4 +1,3 @@
-import { LruCache } from '../../cache/index.ts';
 import type { ICache } from '../../cache/index.ts';
 import type { ObjectLiteral, Route, RouteMatch } from '../../types.ts';
 import type { BaseRouterOptions, IRouter } from '../types.ts';
@@ -46,19 +45,13 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
      */
     protected universal: IndexedRoute<T>[];
 
-    protected cache: ICache<readonly RouteMatch<T>[]> | null;
+    protected cache?: ICache<readonly RouteMatch<T>[]>;
 
     constructor(options: BaseRouterOptions<T> = {}) {
         this._routes = [];
         this.root = createTrieNode<T>();
         this.universal = [];
-        if (options.cache === null) {
-            this.cache = null;
-        } else if (typeof options.cache !== 'undefined') {
-            this.cache = options.cache;
-        } else {
-            this.cache = new LruCache();
-        }
+        this.cache = options.cache;
     }
 
     add(route: Route<T>): void {
@@ -148,17 +141,13 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
     }
 
     get routes(): readonly Route<T>[] {
-        // Defensive copy — `readonly` is compile-time only. Returning
-        // the live array would let JS callers mutate it, drifting away
-        // from what is actually indexed in `root` / `universal` and
-        // breaking `add()`'s `index = this._routes.length` invariant.
-        return this._routes.slice();
+        return this._routes;
     }
 
     clone(): IRouter<T> {
         // Carry the cache *shape* forward (not contents) — fresh
-        // cache, same configured class/size. `null` passes through.
-        return new TrieRouter<T>({ cache: this.cache === null ? null : this.cache.clone() });
+        // cache, same configured class/size. Absent stays absent.
+        return new TrieRouter<T>({ cache: this.cache?.clone() });
     }
 
     /**

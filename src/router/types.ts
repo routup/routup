@@ -6,19 +6,18 @@ import type { ObjectLiteral, Route, RouteMatch } from '../types.ts';
  * implementations are encouraged to extend this so users can swap
  * routers without rewiring caching.
  *
- * - `cache` (omitted / `undefined`): default bounded LRU
- *   (`LruCache`, max=1024) — repeated lookups for the same path
- *   skip the underlying router walk.
- * - `cache: null`: disable caching.
- * - `cache: <ICache>`: bring your own (e.g. one wrapping `lru-cache`
- *   for TTL or size-based eviction).
+ * - `cache` (omitted): no caching — every `lookup()` runs the
+ *   router's full match logic. This is the default.
+ * - `cache: <ICache>`: enable lookup memoization. Pass `LruCache`
+ *   for the built-in bounded LRU, or your own `ICache` (e.g.
+ *   wrapping `lru-cache` for TTL or size-based eviction).
  *
  * The router is responsible for invalidating its own cache whenever
  * `add()` is called — registering a new route can change the match
  * set for any cached path.
  */
 export type BaseRouterOptions<T extends ObjectLiteral = ObjectLiteral> = {
-    cache?: ICache<readonly RouteMatch<T>[]> | null;
+    cache?: ICache<readonly RouteMatch<T>[]>;
 };
 
 /**

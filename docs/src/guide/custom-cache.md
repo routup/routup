@@ -1,32 +1,34 @@
 # Custom Cache
 
-Each `IRouter` carries its own pluggable `ICache` for memoizing `lookup(path)` results. The default is a bounded LRU built on [`quick-lru`](https://github.com/sindresorhus/quick-lru) (`max=1024`), but you can supply your own implementation — for example, to wrap [`lru-cache`](https://github.com/isaacs/node-lru-cache) for TTL or size-based eviction — or pass `null` to disable caching for that router.
+`IRouter` implementations can carry an optional `ICache` for memoizing `lookup(path)` results. Caching is **opt-in**: by default, every `lookup` runs the router's full match logic. To enable memoization, pass an `ICache` via `BaseRouterOptions.cache`.
 
-## Default behavior
+The shipped default implementation is `LruCache`, a bounded LRU built on [`quick-lru`](https://github.com/sindresorhus/quick-lru). For TTL or size-based eviction, write a small adapter around [`lru-cache`](https://github.com/isaacs/node-lru-cache) (or any other cache library) that satisfies the `ICache` contract.
+
+## Default behavior — no cache
 
 ```typescript
 import { App, TrieRouter, defineCoreHandler } from 'routup';
 
-// Implicitly: cache: new LruCache({ maxSize: 1024 })
+// No cache — every request runs the trie walk.
 const app = new App({ router: new TrieRouter() });
 app.get('/users/:id', defineCoreHandler((event) => `user-${event.params.id}`));
 ```
 
-Repeated requests to the same path skip the trie walk after the first hit. The cache is invalidated whenever `IRouter.add` is called (i.e. `app.use`/`.get`/`.post`/etc.) so newly added routes are always considered.
+For most workloads (small route counts, modest throughput, varied paths) this is the right default — there's no per-router LRU allocation, no extra dependency in your bundle, and no chance of surprise behavior in tests when routes mutate.
 
-The same applies to `LinearRouter` — both built-in routers ship with a default LRU.
-
-## Disabling the cache
+## Enabling the LRU cache
 
 ```typescript
-import { App, TrieRouter } from 'routup';
+import { App, TrieRouter, LruCache } from 'routup';
 
-const app = new App({ router: new TrieRouter({ cache: null }) });
+const app = new App({
+    router: new TrieRouter({ cache: new LruCache() }),  // max=1024 by default
+});
 ```
 
-Use this when you don't want any path memoization — for example, on apps with very few routes where the cache lookup itself outweighs the saved router walk, or when your workload has high path cardinality and you don't want to spend memory on caching.
+Repeated requests to the same path then skip the trie walk after the first hit. The cache is invalidated whenever `IRouter.add` is called (i.e. `app.use`/`.get`/`.post`/etc.) so newly added routes are always considered.
 
-## Using a custom `LruCache` size
+## Custom `LruCache` size
 
 ```typescript
 import { App, TrieRouter, LruCache } from 'routup';
@@ -52,11 +54,11 @@ export interface ICache<V> {
 }
 ```
 
-For router lookup caching, `V` is `readonly RouteMatch<T>[]` (the type returned by `IRouter.lookup`). The router's `BaseRouterOptions<T>` accepts `ICache<readonly RouteMatch<T>[]> | null` for its `cache` slot.
+For router lookup caching, `V` is `readonly RouteMatch<T>[]` (the type returned by `IRouter.lookup`).
 
 ### Contract notes
 
-- **`get(key)` returns `undefined` for absent keys.** Implementations cannot store `undefined` as a value; the absent-key sentinel and the no-cache-entry case are conflated, by design.
+- **`get(key)` returns `undefined` for absent keys.** Implementations cannot store `undefined` as a value; the absent-key sentinel and the no-cache-entry case are conflated, by design. Other falsy values (`null`, `0`, `''`, `false`) are valid cached payloads.
 - **`clear()` drops every entry.** Called by the router on every `add()`. Conservative — future plans may switch to per-path invalidation.
 - **`clone()` returns a fresh, empty cache of the same shape.** Used by `IRouter.clone()` so a cloned router preserves the configured cache family (size, eviction policy) without inheriting cached values. Mirrors `IRouter.clone()`.
 
@@ -82,11 +84,15 @@ const app = new App({ router: new TrieRouter({ cache: new TtlCache() }) });
 
 Same pattern works for any backend — wrap whatever cache library you already use into a thin `ICache` adapter.
 
-## Why per-router (not per-App)?
+## When to enable caching
 
-In v6 the cache lived inside a wrapping router (`MemoizedRouter` around a `LinearRouter`/`TrieRouter`). v7 moves it onto each router class as part of `BaseRouterOptions`. Two reasons:
+Enable when:
+- Lookup is non-trivial (large route count, parametric/regex paths) **and**
+- The same paths are requested repeatedly (e.g. an API where most traffic hits a handful of canonical routes)
 
-1. **Cohesion.** The cache memoizes `IRouter.lookup`. Putting it on the router that does the lookup keeps the concept and its invalidation point colocated — the router clears its own cache from inside `add()` instead of relying on an outer layer to know when routes changed.
-2. **Custom routers opt out trivially.** A custom `IRouter` that's already O(1) (e.g. a hash-map table) can ignore the `cache` option entirely without paying any per-lookup overhead.
+Skip caching when:
+- Route count is small and the linear/trie walk is already cheap
+- Path cardinality is high and unbounded (cache hits would be rare; bound is forced)
+- Determinism in tests matters more than per-lookup speed
 
-If you were using `MemoizedRouter` in v6, see the [v7 migration guide](./migration-v7) for the one-line equivalent.
+Benchmark before enabling — the default-off shape exists because the gain is workload-dependent and often within noise.
