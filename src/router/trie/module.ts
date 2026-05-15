@@ -46,11 +46,29 @@ function extractTrieParams(
     return out;
 }
 
-function trieMatchedPath(segments: string[], matchDepth: number): string {
-    if (matchDepth === 0) {
+/**
+ * Compute `match.path` (the matched-prefix string) from the request's
+ * segments and the variant's recorded depth.
+ *
+ * - Non-splat variants: prefix = `segments[0..matchDepth].join('/')` —
+ *   exactly what the variant consumed (request length = variant
+ *   length for exact, request length ≥ variant length for prefix).
+ * - Splat variants: the splat absorbed every remaining segment, so
+ *   the matched prefix is the entire request path. This mirrors what
+ *   `path-to-regexp`'s `output.path` would have returned pre-Phase-2
+ *   for `/files/*rest` matching `/files/a/b` (`/files/a/b`, not
+ *   `/files`).
+ */
+function trieMatchedPath(
+    segments: string[],
+    matchDepth: number,
+    splatTerminated: boolean,
+): string {
+    const upTo = splatTerminated ? segments.length : matchDepth;
+    if (upTo === 0) {
         return '/';
     }
-    return `/${segments.slice(0, matchDepth).join('/')}`;
+    return `/${segments.slice(0, upTo).join('/')}`;
 }
 
 /**
@@ -181,45 +199,62 @@ function pushIntoBucket<T extends ObjectLiteral>(
  * branch or collect prefix candidates at intermediate nodes.
  */
 export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRouter<T> {
-    protected _routes: Route<T>[];
+    /**
+     * Monotonic counter assigned as the registration `index` on each
+     * route — the dispatch loop uses it to preserve registration
+     * order across the candidate list. App owns the canonical
+     * `Route<T>[]` list (Plan 019); the trie no longer keeps a
+     * parallel copy.
+     */
+    protected _routeCount: number;
 
     protected root: TrieNode<T>;
 
     /**
      * Routes that bypass the trie — registered with no path, with
-     * the root path `/`, or with a path containing syntax we don't
-     * parse. Walked linearly on every lookup, merged into the result
-     * in registration order.
+     * the root path `/`, or with a path containing syntax the
+     * parser doesn't recognise. Walked linearly on every lookup,
+     * merged into the result in registration order.
      */
     protected universal: IndexedRoute<T>[];
 
     protected cache?: ICache<readonly RouteMatch<T>[]>;
 
     constructor(options: BaseRouterOptions<T> = {}) {
-        this._routes = [];
+        this._routeCount = 0;
         this.root = createTrieNode<T>();
         this.universal = [];
         this.cache = options.cache;
     }
 
     add(route: Route<T>): void {
-        const index = this._routes.length;
-        this._routes.push(route);
+        const index = this._routeCount++;
 
-        // Empty/root paths bypass the trie entirely — they always
-        // match every request and don't need a path-to-regexp matcher
-        // either.
+        // Empty/root paths bypass the trie. We still build a matcher
+        // — `buildRoutePathMatcher` returns one only for the cases
+        // that actually need confirmation:
+        //   - `app.get('/', h)` (exact match) → matcher rejects
+        //     non-`/` requests so the route doesn't promiscuously
+        //     match every path.
+        //   - `app.use('/', mw)` / `app.use(mw)` (prefix or no path)
+        //     → returns `undefined`; the lookup loop treats the
+        //     route as "matches every request" via the no-matcher
+        //     branch, which is exactly what middleware wants.
         if (typeof route.path !== 'string' || route.path === '' || route.path === '/') {
-            this.universal.push({ route, index });
+            this.universal.push({
+                route,
+                index,
+                matcher: buildRoutePathMatcher(route),
+            });
             this.cache?.clear();
             return;
         }
 
         const variants = parsePath(route.path);
         if (variants === null) {
-            // Trie parser doesn't handle this syntax (regex
-            // constraints, compound segments like `/files/:n.ext`,
-            // escape sequences). Fall back to path-to-regexp.
+            // Trie parser doesn't handle this syntax (compound
+            // segments like `/files/:n.ext`, escape sequences,
+            // splat-not-last, …). Fall back to path-to-regexp.
             this.universal.push({
                 route,
                 index,
@@ -304,7 +339,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
                     route,
                     index,
                     params: extractTrieParams(segments, paramsIndexMap),
-                    path: trieMatchedPath(segments, matchDepth),
+                    path: trieMatchedPath(segments, matchDepth, candidate.splatTerminated === true),
                 });
                 lastIndex = index;
                 continue;
@@ -321,10 +356,6 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
 
         this.cache?.set(cacheKey, matches);
         return matches;
-    }
-
-    get routes(): readonly Route<T>[] {
-        return this._routes;
     }
 
     clone(): IRouter<T> {
@@ -409,6 +440,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
                     index,
                     paramsIndexMap,
                     matchDepth: i,
+                    splatTerminated: true,
                 });
                 return;
             }

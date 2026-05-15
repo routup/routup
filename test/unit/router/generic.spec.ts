@@ -106,6 +106,9 @@ describe.each(Object.entries(resolvers))('IRouter<MyData> generic — %s', (_nam
     });
 
     it('clone() returns an empty router of the same shape', () => {
+        // Asserted observationally via `lookup` — `IRouter.routes`
+        // is optional on the contract (not implemented by the
+        // built-in routers post Plan 019).
         const router = factory();
         router.add({
             path: '/x',
@@ -114,15 +117,16 @@ describe.each(Object.entries(resolvers))('IRouter<MyData> generic — %s', (_nam
         });
 
         const cloned = router.clone();
-        expect(cloned.routes).toHaveLength(0);
+        expect(cloned.lookup('/x', MethodName.GET)).toHaveLength(0);
         // Original retained.
-        expect(router.routes).toHaveLength(1);
+        expect(router.lookup('/x', MethodName.GET)).toHaveLength(1);
         // Adding to clone does not bleed back.
         cloned.add({
             path: '/y',
             method: MethodName.GET,
             data: { name: 'b', tag: 2 },
         });
-        expect(router.routes).toHaveLength(1);
+        expect(router.lookup('/y', MethodName.GET)).toHaveLength(0);
+        expect(cloned.lookup('/y', MethodName.GET)).toHaveLength(1);
     });
 });

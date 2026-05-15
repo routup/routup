@@ -58,9 +58,16 @@ export type IndexedRoute<T extends ObjectLiteral = ObjectLiteral> = {
      * - Exact / prefix variants: `segments.length` (consume up to
      *   the leaf).
      * - Splat variants: depth of the splat segment (it then absorbs
-     *   the rest).
+     *   the rest — see `splatTerminated`).
      */
     matchDepth?: number;
+    /**
+     * Trie-walked-only — `true` when this variant ends in a splat.
+     * `match.path` is then computed from the *full* request length
+     * (the splat absorbed every remaining segment), not from
+     * `matchDepth` (which is only the depth of the splat node).
+     */
+    splatTerminated?: boolean;
 };
 
 export type Segment = { kind: 'static'; value: string } |

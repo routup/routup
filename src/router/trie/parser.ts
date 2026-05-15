@@ -19,9 +19,9 @@ import type { Segment } from './types.ts';
  * `index` so they dedupe naturally on the candidate list.
  *
  * Returns `null` when the path uses syntax outside this surface
- * (regex constraints `:name(\d+)`, compound segments `/files/:n.ext`,
- * escape sequences `\:`, …). The caller falls back to the universal
- * bucket so correctness is preserved via path-to-regexp.
+ * (compound segments `/files/:n.ext`, escape sequences `\:`, regex
+ * constraints, splat-not-last, …). The caller falls back to the
+ * universal bucket so correctness is preserved via path-to-regexp.
  *
  * Variant cap: nested optional groups expand combinatorially. The
  * parser caps the variant count at `MAX_VARIANTS` and falls back to
@@ -30,6 +30,8 @@ import type { Segment } from './types.ts';
  */
 
 const MAX_VARIANTS = 16;
+
+const PARAM_NAME = /^[a-zA-Z_]\w*$/;
 
 type ParamToken = {
     kind: 'param';
@@ -42,8 +44,6 @@ type Token = { kind: 'literal'; value: string } |
     { kind: 'splat'; name: string } |
     { kind: 'groupOpen' } |
     { kind: 'groupClose' };
-
-const PARAM_NAME = /^[a-zA-Z_]\w*/;
 
 /**
  * Tokenize a single path segment (the substring between two `/`).
@@ -58,21 +58,13 @@ function tokenizeSegment(segment: string): Token | null {
         return null;
     }
 
-    // Optional group: `{...}` — emit as group open/close markers
-    // around the expansion of the inner segment. Currently the
-    // inner is only tokenized as a single segment; nested slashes
-    // inside a group fall back to the universal bucket.
-    if (segment.charAt(0) === '{' && segment.charAt(segment.length - 1) === '}') {
-        return null; // groups are slash-spanning — handled at the path level
-    }
-
     if (segment === '*') {
         return { kind: 'splat', name: '*' };
     }
 
     if (segment.charAt(0) === '*') {
         const rest = segment.slice(1);
-        if (PARAM_NAME.test(rest) && PARAM_NAME.exec(rest)![0] === rest) {
+        if (PARAM_NAME.test(rest)) {
             return { kind: 'splat', name: rest };
         }
         return null;
@@ -81,7 +73,7 @@ function tokenizeSegment(segment: string): Token | null {
     if (segment.charAt(0) === ':') {
         const optional = segment.charAt(segment.length - 1) === '?';
         const nameRaw = optional ? segment.slice(1, -1) : segment.slice(1);
-        if (PARAM_NAME.test(nameRaw) && PARAM_NAME.exec(nameRaw)![0] === nameRaw) {
+        if (PARAM_NAME.test(nameRaw)) {
             return {
                 kind: 'param',
                 name: nameRaw,
@@ -183,7 +175,7 @@ function tokenizePath(path: string): Token[] | null {
 }
 
 /**
- * Expand the token stream into one or more concrete `Segment[]`
+ * Expand the token stream into one or more concrete `Token[]`
  * variants by:
  *   1. Splitting `groupOpen` … `groupClose` runs into a "with run"
  *      and a "without run" choice (one optional group → ×2 variants).
@@ -192,8 +184,13 @@ function tokenizePath(path: string): Token[] | null {
  *
  * Caps at `MAX_VARIANTS` — beyond that, returns `null` so the path
  * falls back to the universal bucket.
+ *
+ * Returns `Token[][]` (not `Segment[][]`) so the recursive
+ * group-expansion can splice inner variants back into the outer
+ * token stream without a lossy round-trip through `Segment`.
+ * `parsePath` does the final `Token → Segment` projection.
  */
-function expand(tokens: Token[]): Segment[][] | null {
+function expand(tokens: Token[]): Token[][] | null {
     let variants: Token[][] = [[]];
 
     for (let i = 0; i < tokens.length; i++) {
@@ -219,22 +216,24 @@ function expand(tokens: Token[]): Segment[][] | null {
                 return null;
             }
             const inner = tokens.slice(i + 1, close);
-            const expanded = expand(inner);
-            if (expanded === null) {
+            const expandedInner = expand(inner);
+            if (expandedInner === null) {
                 return null;
             }
-            // Two choices for this run: with each inner expansion, or without.
+            // Two choices for this run: keep without, or splice in
+            // each inner variant. Cap-check before each push so
+            // we never exceed `MAX_VARIANTS`.
             const next: Token[][] = [];
             for (const v of variants) {
-                // Without
-                next.push(v.slice());
-                // With each inner variant
-                for (const innerVariant of expanded) {
-                    const innerTokens: Token[] = innerVariant.map(toToken);
-                    next.push(v.concat(innerTokens));
-                }
-                if (next.length > MAX_VARIANTS) {
+                if (next.length >= MAX_VARIANTS) {
                     return null;
+                }
+                next.push(v.slice());
+                for (const innerVariant of expandedInner) {
+                    if (next.length >= MAX_VARIANTS) {
+                        return null;
+                    }
+                    next.push(v.concat(innerVariant));
                 }
             }
             variants = next;
@@ -244,17 +243,20 @@ function expand(tokens: Token[]): Segment[][] | null {
 
         if (token.kind === 'param' && token.optional) {
             const stripped: Token = {
-                kind: 'param', 
-                name: token.name, 
-                optional: false, 
+                kind: 'param',
+                name: token.name,
+                optional: false,
             };
             const next: Token[][] = [];
             for (const v of variants) {
-                next.push(v.slice());                  // without the optional param
-                next.push(v.concat([stripped]));       // with the param
-                if (next.length > MAX_VARIANTS) {
+                if (next.length >= MAX_VARIANTS) {
                     return null;
                 }
+                next.push(v.slice());
+                if (next.length >= MAX_VARIANTS) {
+                    return null;
+                }
+                next.push(v.concat([stripped]));
             }
             variants = next;
             continue;
@@ -265,41 +267,32 @@ function expand(tokens: Token[]): Segment[][] | null {
         }
     }
 
-    // Convert tokens → Segment[]. Group markers should all be
-    // consumed by now; if any leak through it's a parser bug.
-    const result: Segment[][] = [];
-    for (const v of variants) {
-        const segments: Segment[] = [];
-        for (const t of v) {
-            if (t.kind === 'groupOpen' || t.kind === 'groupClose') {
-                return null;
-            }
-            if (t.kind === 'literal') {
-                segments.push({ kind: 'static', value: t.value });
-            } else if (t.kind === 'param') {
-                segments.push({ kind: 'param', name: t.name });
-            } else {
-                segments.push({ kind: 'splat', name: t.name });
-            }
-        }
-        result.push(segments);
-    }
-    return result;
+    return variants;
+}
+
+function tokenToSegment(t: Token): Segment | null {
+    if (t.kind === 'literal') return { kind: 'static', value: t.value };
+    if (t.kind === 'param') return { kind: 'param', name: t.name };
+    if (t.kind === 'splat') return { kind: 'splat', name: t.name };
+    // groupOpen/groupClose should be consumed by `expand`; if any
+    // leak through, the path is malformed.
+    return null;
 }
 
 /**
- * Bridge between Segment (post-expansion) and Token (in-flight). Used
- * when an optional group is expanded recursively — the inner Segment[]
- * needs to slot back in as Token[] for the outer expansion pass.
+ * Stable, structural identity for a variant — used to drop duplicate
+ * expansions like `/users{/:id?}` (which produces the bare-`/users`
+ * variant twice: once from the "without group" branch and once from
+ * the "with group, without optional param" branch).
  */
-function toToken(seg: Segment): Token {
-    if (seg.kind === 'static') return { kind: 'literal', value: seg.value };
-    if (seg.kind === 'param') {return {
-        kind: 'param', 
-        name: seg.name, 
-        optional: false, 
-    };}
-    return { kind: 'splat', name: seg.name };
+function variantKey(segs: Segment[]): string {
+    let out = '';
+    for (const s of segs) {
+        if (s.kind === 'static') out += `/s:${s.value}`;
+        else if (s.kind === 'param') out += `/p:${s.name}`;
+        else out += `/*:${s.name}`;
+    }
+    return out;
 }
 
 export function parsePath(path: string): Segment[][] | null {
@@ -307,5 +300,42 @@ export function parsePath(path: string): Segment[][] | null {
     if (tokens === null) {
         return null;
     }
-    return expand(tokens);
+    const variants = expand(tokens);
+    if (variants === null) {
+        return null;
+    }
+
+    const result: Segment[][] = [];
+    const seen = new Set<string>();
+
+    for (const v of variants) {
+        const segs: Segment[] = [];
+        for (const t of v) {
+            const s = tokenToSegment(t);
+            if (s === null) {
+                return null;
+            }
+            segs.push(s);
+        }
+
+        // Splat must be the terminal segment in any variant —
+        // otherwise the trie's `insertIntoTrie` would silently drop
+        // every segment after the splat (T3 dropped the
+        // `matcher.exec` confirm pass that previously caught this).
+        // Fall back to the universal bucket so path-to-regexp can
+        // handle the route honestly.
+        for (let i = 0; i < segs.length - 1; i++) {
+            if (segs[i]!.kind === 'splat') {
+                return null;
+            }
+        }
+
+        const key = variantKey(segs);
+        if (seen.has(key)) {
+            continue;
+        }
+        seen.add(key);
+        result.push(segs);
+    }
+    return result;
 }

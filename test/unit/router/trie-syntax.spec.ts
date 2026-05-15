@@ -112,6 +112,56 @@ describe('TrieRouter — Phase 2 syntax', () => {
         });
     });
 
+    describe('audit — regressions caught during review', () => {
+        it('splat-not-last falls through to universal (does not silently drop trailing segments)', async () => {
+            // `/files/*rest/extra` requires `/extra` after the splat-
+            // captured segments. The trie's `insertIntoTrie` would
+            // happily push the route into `splatRoutes` at depth 1
+            // and silently drop `/extra`. After Phase 2 dropped the
+            // `matcher.exec` confirm pass, the only safety net is
+            // making the parser refuse such paths so they fall back
+            // to path-to-regexp via the universal bucket.
+            const a = app();
+            a.get('/files/*rest/extra', defineCoreHandler(() => 'matched'));
+
+            // Without `/extra` → 404 (path-to-regexp template
+            // requires the trailing literal).
+            expect((await a.fetch(createTestRequest('/files/abc'))).status).toBe(404);
+            // With `/extra` → matches.
+            expect((await a.fetch(createTestRequest('/files/abc/extra'))).status).toBe(200);
+        });
+
+        it('exact-match handler at "/" does not match every path', async () => {
+            // `app.get('/', h)` is exact — it must reject `/users`
+            // and friends. Bypassing the trie at registration and
+            // omitting the matcher would silently make this handler
+            // serve every request.
+            const a = app();
+            a.get('/', defineCoreHandler(() => 'root'));
+
+            expect((await a.fetch(createTestRequest('/'))).status).toBe(200);
+            expect((await a.fetch(createTestRequest('/users'))).status).toBe(404);
+            expect((await a.fetch(createTestRequest('/foo/bar'))).status).toBe(404);
+        });
+
+        it('splat-terminated mounted app sees full request via mountPath', async () => {
+            // `app.use('/files/*rest', child)` matches every path
+            // under `/files`. `match.path` (used by the dispatcher
+            // to strip mount prefix) must reflect the full matched
+            // request — pre-Phase-2 this was the path-to-regexp
+            // `output.path` (the entire matched portion); post-
+            // Phase-2 the trie should compute the same.
+            const inner = new App({ router: new TrieRouter<RouteEntry>() });
+            inner.get('/', defineCoreHandler((event) => event.mountPath));
+
+            const outer = new App({ router: new TrieRouter<RouteEntry>() });
+            outer.use('/files/*rest', inner);
+
+            const res = await outer.fetch(createTestRequest('/files/a/b/c'));
+            expect(await res.text()).toBe('/files/a/b/c');
+        });
+    });
+
     describe('T6 — trie-native parser', () => {
         it('treats trailing slash as significant (strict mode)', async () => {
             const a = app();
