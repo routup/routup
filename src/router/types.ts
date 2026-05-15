@@ -24,7 +24,7 @@ export type BaseRouterOptions<T extends ObjectLiteral = ObjectLiteral> = {
  * Pluggable strategy for storing routes and answering "which entries
  * match this path?". The default `LinearRouter` walks the stored
  * entries linearly. Alternative implementations (radix tree,
- * aggregated regex, …) can swap in via `AppOptionsInput.router` to
+ * aggregated regex, …) can swap in via `AppContext.router` to
  * skip the walk entirely on apps with many routes.
  *
  * The router operates on `Route<T>` where `T` is opaque data; the

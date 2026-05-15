@@ -70,7 +70,7 @@ export interface IAppEvent {
      *
      * Contains merged options from the router path stack with defaults applied.
      */
-    readonly appOptions: AppOptions;
+    readonly appOptions: Readonly<AppOptions>;
 
     /**
      * Abort signal tied to the request lifecycle.

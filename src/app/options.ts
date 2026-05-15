@@ -6,7 +6,7 @@ import {
 } from '../utils/index.ts';
 import type { AppOptions, AppOptionsInput } from './types.ts';
 
-export function normalizeAppOptions(input: AppOptionsInput): Partial<AppOptions> {
+export function normalizeAppOptions(input: AppOptionsInput): AppOptions {
     let etag : EtagFn | null | undefined;
     if (typeof input.etag !== 'undefined') {
         // Keep `false` (and `null` from already-normalized options being

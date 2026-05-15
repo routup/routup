@@ -38,8 +38,8 @@ import { AppPipelineStep, AppSymbol, RouteEntryType } from './constants.ts';
 import { LinearRouter } from '../router/linear/index.ts';
 import type { IRouter } from '../router/types.ts';
 import type {
+    AppContext,
     AppOptions,
-    AppOptionsInput,
     AppPipelineContext,
     IApp,
     RouteEntry,
@@ -75,6 +75,30 @@ function mergeMatchParams(
     };
 }
 
+/**
+ * Copy `source[key]` into `target[key]` when the target's value is
+ * undefined; return whether a write happened.
+ *
+ * Bound to a single key `K` per call, so TypeScript can prove the
+ * read and write hit the same property's value type — no `as` cast
+ * needed. This is the standard escape hatch for the variance trap
+ * you'd otherwise hit by writing `target[key] = source[key]` inside
+ * a loop where `key: keyof AppOptions` is a *union* (read returns
+ * the union of value types, write requires the intersection, which
+ * collapses to `never`).
+ */
+function copyOptionIfUnset<K extends keyof AppOptions>(
+    target: AppOptions,
+    source: Readonly<AppOptions>,
+    key: K,
+): boolean {
+    if (typeof target[key] !== 'undefined') {
+        return false;
+    }
+    target[key] = source[key];
+    return true;
+}
+
 export class App implements IApp {
     /**
      * A label for the router instance.
@@ -82,9 +106,17 @@ export class App implements IApp {
     readonly name?: string;
 
     /**
+     * Registration-time path prefix for entries registered on this
+     * App. Local to this instance — never inherited from a parent.
+     *
+     * @protected
+     */
+    protected _path?: Path;
+
+    /**
      * Pluggable router (route table) — owns the "which entries match
      * this path?" lookup. Defaults to `LinearRouter` (walks entries
-     * linearly per request); swap in via `AppOptionsInput.router`
+     * linearly per request); swap in via `AppContext.router`
      * for a radix/trie implementation on apps with many routes.
      *
      * @protected
@@ -99,9 +131,16 @@ export class App implements IApp {
     protected hooks: IHooks;
 
     /**
-     * Normalized options for this router instance.
+     * Normalized options for this App instance.
+     *
+     * Frozen on construction and on every `extendOptions` update —
+     * once published to `event.appOptions` it is shared across all
+     * requests, and a handler must not be able to mutate
+     * router-global state. `extendOptions` therefore uses a
+     * functional update (build a new object, freeze it, replace
+     * the slot) rather than mutating in place.
      */
-    protected _options: Partial<AppOptions>;
+    protected _options: Readonly<AppOptions>;
 
     /**
      * Registry of installed plugins (name → version) on this router.
@@ -112,21 +151,15 @@ export class App implements IApp {
 
     // --------------------------------------------------
 
-    constructor(input: AppOptionsInput = {}) {
+    constructor(input: AppContext = {}) {
         this.name = input.name;
+        this._path = input.path;
 
-        const {
-            hooks = new Hooks(),
-            plugins = new Map<string, string | undefined>(),
-            router = new LinearRouter<RouteEntry>(),
-            ...options
-        } = input;
+        this.hooks = input.hooks ?? new Hooks();
+        this.plugins = new Map<string, string | undefined>(input.plugins);
+        this.router = input.router ?? new LinearRouter<RouteEntry>();
 
-        this.hooks = hooks;
-        this.plugins = new Map<string, string | undefined>(plugins);
-        this.router = router;
-
-        this._options = normalizeAppOptions(options);
+        this._options = Object.freeze(normalizeAppOptions(input.options ?? {}));
 
         markInstanceof(this, AppSymbol);
     }
@@ -206,6 +239,67 @@ export class App implements IApp {
             status,
             headers,
         });
+    }
+
+    // --------------------------------------------------
+
+    /**
+     * Mount-time option inheritance — fill in any of this App's
+     * unset option keys from the supplied parent options. Called by
+     * `App.use(child)` after narrowing to `App` via `isAppInstance`.
+     *
+     * Public so callers don't need to reach into another App's
+     * protected fields: the parent passes its options by value and
+     * the child decides what to do with them.
+     *
+     * Shallow per-key merge. App-local concerns — `name`, `path`,
+     * `hooks`, `plugins`, `router`, and the router's cache — are
+     * deliberately not propagated; they sit on `AppContext`, not
+     * inside `AppOptions`.
+     *
+     * Cascades to any Apps already mounted on this one — a deeper
+     * grandchild gets the new keys too. Without this, mounting
+     * grandchild → child → parent in that order would leave the
+     * grandchild without parent's options (it adopted from child
+     * before child had them).
+     *
+     * Late mutation of the parent's options after this call does NOT
+     * propagate. `AppOptions` is configured at construction-and-mount;
+     * later changes are not a supported workflow.
+     */
+    extendOptions(incoming: Readonly<AppOptions>): void {
+        // Functional update: build a new mutable working copy only
+        // when there is something to merge, freeze it, then swap it
+        // in. Keeps `_options` referentially stable when nothing
+        // changes (the cascade short-circuits on `!next`) and
+        // immutable when it does.
+        let next: AppOptions | undefined;
+        const keys = Object.keys(incoming) as (keyof AppOptions)[];
+        for (const key of keys) {
+            if (typeof this._options[key] !== 'undefined') {
+                continue;
+            }
+            if (typeof incoming[key] === 'undefined') {
+                continue;
+            }
+            next ??= { ...this._options };
+            copyOptionIfUnset(next, incoming, key);
+        }
+        if (!next) {
+            return;
+        }
+        this._options = Object.freeze(next);
+        // Cascade newly inherited keys down to already-mounted
+        // children. Pass our own (just-extended) options view as
+        // the parent for the next level.
+        for (const route of this.router.routes) {
+            if (
+                route.data.type === RouteEntryType.APP &&
+                isAppInstance(route.data.data)
+            ) {
+                route.data.data.extendOptions(this._options);
+            }
+        }
     }
 
     // --------------------------------------------------
@@ -412,6 +506,7 @@ export class App implements IApp {
                 const nextContext: AppPipelineContext = {
                     step: AppPipelineStep.LOOKUP,
                     event,
+                    isRoot: context.isRoot,
                     matchIndex: pathChanged ? 0 : nextMatchIndex,
                     matches: pathChanged ? undefined : parentMatches,
                     matchesPath: pathChanged ? undefined : parentMatchesPath,
@@ -451,7 +546,7 @@ export class App implements IApp {
         if (
             !context.event.error &&
             !context.event.dispatched &&
-            context.event.appPath.length === 1 &&
+            context.isRoot &&
             context.event.method === MethodName.OPTIONS
         ) {
             if (context.event.methodsAllowed.has(MethodName.GET)) {
@@ -481,14 +576,27 @@ export class App implements IApp {
         const savedPath = event.path;
         const savedMountPath = event.mountPath;
         const savedParams = event.params;
+        const savedAppOptions = event.appOptions;
+        const wasDispatching = event.isDispatching;
+
+        // First dispatch on this event is the root; any nested
+        // `App.dispatch` call sees `isDispatching` already set by an
+        // outer call still on the stack.
+        const isRoot = !wasDispatching;
 
         const context: AppPipelineContext = {
             step: AppPipelineStep.START,
             event,
+            isRoot,
             matchIndex: 0,
         };
 
-        event.appPath.push({ name: this.name, options: this._options });
+        // Mount-time inheritance gives each App's `_options` the fully
+        // resolved view, so dispatch just swaps it onto the event for
+        // the duration of this App's run. Nested apps overwrite, then
+        // we restore in `finally` so the caller's view stays intact.
+        event.appOptions = this._options;
+        event.isDispatching = true;
 
         try {
             await this.executePipelineStep(context);
@@ -502,7 +610,8 @@ export class App implements IApp {
                 await this.hooks.trigger(HookName.END, event);
             }
         } finally {
-            event.appPath.pop();
+            event.appOptions = savedAppOptions;
+            event.isDispatching = wasDispatching;
 
             // Restore routing state when this router did not produce a
             // response, so the caller's pipeline (a parent router) sees its
@@ -622,7 +731,7 @@ export class App implements IApp {
             }
 
             this.router.add({
-                path: joinPaths(this._options.path, path, handler.path),
+                path: joinPaths(this._path, path, handler.path),
                 method,
                 data: {
                     type: RouteEntryType.HANDLER,
@@ -655,8 +764,13 @@ export class App implements IApp {
             }
 
             if (isAppInstance(item)) {
+                // Mount-time inheritance — fill in any of the child's
+                // unset option keys from this parent. After mount the
+                // child's `_options` is its fully resolved view; no
+                // per-request walk needed.
+                item.extendOptions(this._options);
                 this.router.add({
-                    path: joinPaths(this._options.path, path),
+                    path: joinPaths(this._path, path),
                     data: {
                         type: RouteEntryType.APP,
                         data: item,
@@ -669,7 +783,7 @@ export class App implements IApp {
             // (structural) — see useForMethod for the same reasoning.
             if (isHandler(item)) {
                 this.router.add({
-                    path: joinPaths(this._options.path, path, item.path),
+                    path: joinPaths(this._path, path, item.path),
                     method: item.method,
                     data: {
                         type: RouteEntryType.HANDLER,
@@ -683,7 +797,7 @@ export class App implements IApp {
                 const handler = new Handler({ ...item });
 
                 this.router.add({
-                    path: joinPaths(this._options.path, path, handler.path),
+                    path: joinPaths(this._path, path, handler.path),
                     method: handler.method,
                     data: {
                         type: RouteEntryType.HANDLER,
@@ -771,7 +885,9 @@ export class App implements IApp {
      */
     clone(): IApp {
         const next = new App({
-            ...this._options,
+            name: this.name,
+            path: this._path,
+            options: { ...this._options },
             hooks: this.hooks.clone(),
             plugins: this.plugins,
             // Preserve the active router family on the clone — a clone

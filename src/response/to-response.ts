@@ -1,8 +1,23 @@
 import { createError } from '../error/create.ts';
 import type { IAppEvent } from '../event/index.ts';
+import { DEFAULT_ETAG_FN } from '../utils/etag/utils.ts';
+import type { EtagFn } from '../utils/etag/types.ts';
 
 function stripWeakPrefix(etag: string): string {
     return etag.startsWith('W/') ? etag.slice(2) : etag;
+}
+
+/**
+ * Resolve the effective etag fn for this request. `null` means the
+ * user explicitly disabled ETag; `undefined` means the option was
+ * never set and we apply the framework default. Anything else is the
+ * user's own fn.
+ */
+function effectiveEtagFn(event: IAppEvent): EtagFn | null {
+    const opt = event.appOptions.etag;
+    if (opt === null) return null;
+    if (typeof opt === 'undefined') return DEFAULT_ETAG_FN;
+    return opt;
 }
 
 /**
@@ -16,9 +31,9 @@ async function applyEtag(
     event: IAppEvent,
     headers: Headers,
 ): Promise<Response | undefined> {
-    // etag === false short-circuit is handled by the caller so this
+    // The `null` short-circuit is handled by the caller so this
     // function isn't even invoked on the hot path.
-    const etagFn = event.appOptions.etag;
+    const etagFn = effectiveEtagFn(event);
     if (!etagFn) {
         return undefined;
     }
@@ -82,7 +97,9 @@ export function toResponse(
             headers.set('content-type', 'text/plain; charset=utf-8');
         }
 
-        if (event.appOptions.etag) {
+        // null is "explicitly disabled"; undefined falls back to the
+        // default fn. Either truthy fn or undefined → run applyEtag.
+        if (event.appOptions.etag !== null) {
             return applyEtag(value, event, headers).then((cached) => cached ?? new Response(value, {
                 status,
                 headers,
@@ -138,7 +155,10 @@ export function toResponse(
         });
     }
 
-    if (event.appOptions.etag) {
+    // Same null-vs-undefined contract as the string branch above:
+    // null is "explicitly disabled"; undefined falls back to the
+    // default fn (handled inside applyEtag → effectiveEtagFn).
+    if (event.appOptions.etag !== null) {
         return applyEtag(json, event, headers).then((cached) => cached ?? new Response(json, {
             status,
             headers,
