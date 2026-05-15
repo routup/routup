@@ -1,4 +1,5 @@
 import { MethodName } from '../../constants.ts';
+import type { MethodNameLike } from '../../constants.ts';
 import type { ICache } from '../../cache/index.ts';
 import type { ObjectLiteral, Route, RouteMatch } from '../../types.ts';
 import type { BaseRouterOptions, IRouter } from '../types.ts';
@@ -32,8 +33,8 @@ function decodeOrRaw(s: string): string {
 function extractTrieParams(
     segments: string[],
     indexMap: ParamCapture[],
-): Record<string, unknown> {
-    const out = Object.create(null) as Record<string, unknown>;
+): Record<string, string | undefined> {
+    const out = Object.create(null) as Record<string, string | undefined>;
     for (const cap of indexMap) {
         if (cap.kind === 'segment') {
             out[cap.name] = decodeOrRaw(segments[cap.depth]!);
@@ -109,7 +110,7 @@ function buildParamsIndexMap(segments: Segment[]): ParamCapture[] {
  * `IRouter.lookup(path)` (no method) keeps returning a complete
  * candidate set.
  */
-function methodBucketKeys(method: string | undefined): readonly string[] | null {
+function methodBucketKeys(method: MethodNameLike | undefined): readonly string[] | null {
     if (typeof method === 'undefined' || method === MethodName.OPTIONS) {
         return null;
     }
@@ -121,7 +122,7 @@ function methodBucketKeys(method: string | undefined): readonly string[] | null 
 
 function emitBucket<T extends ObjectLiteral>(
     buckets: MethodBuckets<T>,
-    method: string | undefined,
+    method: MethodNameLike | undefined,
     out: IndexedRoute<T>[],
 ): void {
     const keys = methodBucketKeys(method);
@@ -273,7 +274,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         this.cache?.clear();
     }
 
-    lookup(path: string, method?: string): readonly RouteMatch<T>[] {
+    lookup(path: string, method?: MethodNameLike): readonly RouteMatch<T>[] {
         // Cache key includes the method bucket — different methods at
         // the same path now resolve to different candidate sets, so
         // sharing a cache entry across methods would leak matches.
@@ -365,7 +366,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
             matches.push({
                 route,
                 index,
-                params: Object.create(null) as Record<string, unknown>,
+                params: Object.create(null) as Record<string, string | undefined>,
             });
             lastIndex = index;
         }
@@ -390,7 +391,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
      * encountered, returns `null` and the caller falls through to
      * the regular `walk`.
      */
-    protected shortCircuit(segments: string[], method: string | undefined): IndexedRoute<T>[] | null {
+    protected shortCircuit(segments: string[], method: MethodNameLike | undefined): IndexedRoute<T>[] | null {
         let node = this.root;
 
         for (const segment of segments) {
@@ -498,7 +499,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         segments: string[],
         depth: number,
         collected: IndexedRoute<T>[],
-        method: string | undefined,
+        method: MethodNameLike | undefined,
     ): void {
         // Splats at this depth match any request path that reaches here.
         emitBucket(node.splatRoutes, method, collected);
@@ -540,8 +541,10 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
      * lookups skip prototype-chain traversal and avoid `__proto__` /
      * `hasOwnProperty` shadowing from user-controlled segment values.
      */
-    protected assignParams(source: Record<string, unknown>): Record<string, unknown> {
-        const out = Object.create(null) as Record<string, unknown>;
+    protected assignParams(
+        source: Record<string, string | undefined>,
+    ): Record<string, string | undefined> {
+        const out = Object.create(null) as Record<string, string | undefined>;
         for (const k in source) {
             if (Object.prototype.hasOwnProperty.call(source, k)) {
                 out[k] = source[k];

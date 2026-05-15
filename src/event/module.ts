@@ -1,4 +1,5 @@
 import type { AppOptions } from '../app/types.ts';
+import type { MethodNameLike } from '../constants.ts';
 import type {
     AppRequest,
     AppResponse,
@@ -7,9 +8,9 @@ import type {
 
 export type AppEventCreateContext = {
     request: AppRequest;
-    params: Record<string, any>;
+    params: Record<string, string | undefined>;
     path: string;
-    method: string;
+    method: MethodNameLike;
     mountPath: string;
     headers: Headers;
     searchParams: URLSearchParams;
@@ -23,11 +24,11 @@ export type AppEventCreateContext = {
 export class AppEvent implements IAppEvent {
     readonly request: AppRequest;
 
-    readonly params: Record<string, any>;
+    readonly params: Record<string, string | undefined>;
 
     readonly path: string;
 
-    readonly method: string;
+    readonly method: MethodNameLike;
 
     readonly mountPath: string;
 

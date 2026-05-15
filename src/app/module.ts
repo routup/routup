@@ -55,7 +55,7 @@ import type { Route } from '../types.ts';
  */
 function mergeMatchParams(
     event: IDispatcherEvent,
-    matchParams: Record<string, unknown>,
+    matchParams: Record<string, string | undefined>,
 ): void {
     // Cheap emptiness probe — short-circuits on the first own key.
     // `for...in` is fine here: resolver params are always plain

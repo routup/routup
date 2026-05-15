@@ -62,10 +62,11 @@ export type RouteMatch<T extends ObjectLiteral = ObjectLiteral> = {
      */
     index: number;
     /**
-     * Path params extracted from the route's matcher. Empty object
-     * when the route has no path or no params.
+     * Path params extracted from the route's matcher. Values are
+     * `string` (or `undefined` for an optional param that didn't
+     * match). Empty object when the route has no path or no params.
      */
-    params: Record<string, any>;
+    params: Record<string, string | undefined>;
     /**
      * For routes with a matcher: the path substring the matcher
      * consumed. Used by `executePipelineStepChildDispatch` to strip

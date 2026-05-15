@@ -1,5 +1,6 @@
 import type { ServerRequest } from 'srvx';
 import type { AppOptions } from '../app/types.ts';
+import type { MethodNameLike } from '../constants.ts';
 
 export type AppResponse = {
     status: number;
@@ -17,9 +18,13 @@ export interface IAppEvent {
     readonly request: AppRequest;
 
     /**
-     * Route parameters extracted from the URL path pattern.
+     * Route parameters extracted from the URL path pattern. Values
+     * are `string` (or `undefined` for an optional param that
+     * didn't match) — both the trie router (`extractTrieParams`)
+     * and the linear router (path-to-regexp output) only ever
+     * produce string values.
      */
-    readonly params: Record<string, any>;
+    readonly params: Record<string, string | undefined>;
 
     /**
      * Current request path, adjusted relative to the mount point during router nesting.
@@ -27,9 +32,12 @@ export interface IAppEvent {
     readonly path: string;
 
     /**
-     * HTTP method (GET, POST, PUT, etc.).
+     * HTTP method (GET, POST, PUT, etc.). Typed as the canonical
+     * `MethodName` set with an open-enum escape hatch — non-
+     * standard methods (`PROPFIND`, custom verbs) still type-check
+     * while standard ones autocomplete.
      */
-    readonly method: string;
+    readonly method: MethodNameLike;
 
     /**
      * Accumulated mount path from nested routers.
