@@ -9,8 +9,7 @@ The router contract is the `IRouter<T>` interface, generic over the per-route da
 ```typescript
 interface IRouter<T extends ObjectLiteral = ObjectLiteral> {
     add(route: Route<T>): void;
-    lookup(path: string): readonly RouteMatch<T>[];
-    readonly routes: readonly Route<T>[];
+    lookup(path: string, method?: string): readonly RouteMatch<T>[];
     clone(): IRouter<T>;
 }
 
@@ -37,7 +36,11 @@ Custom implementations must honor a single rule:
 - `route.method !== undefined` → match the path **exactly** (the route is method-bound, e.g. `app.get('/users', …)`).
 - `route.method === undefined` → match by **prefix** (middleware, nested app).
 
-Method matching against the request's HTTP method stays at the dispatch-loop call site — your router only decides whether the *path* qualifies.
+Method matching against the request's HTTP method stays at the dispatch-loop call site — your router only decides whether the *path* qualifies. (Method-aware routers like `TrieRouter` may use the optional `method` argument to narrow at lookup time as a perf optimisation.)
+
+### No enumeration on the contract
+
+`IRouter<T>` deliberately has no `routes` accessor. `App` keeps its own list of registered routes and uses that for cloning, plugin sub-app mounting, and option cascading — your router never has to expose its internal storage. This frees future router implementations (aggregated regex, freeze-after-first-match) to discard the original entries once they've built their lookup structure.
 
 ### Registration order
 
@@ -69,10 +72,6 @@ class CountingRouter implements IRouter<RouteEntry> {
     lookup(path: string): readonly RouteMatch<RouteEntry>[] {
         this.lookups += 1;
         return this.inner.lookup(path);
-    }
-
-    get routes() {
-        return this.inner.routes;
     }
 
     clone(): IRouter<RouteEntry> {
