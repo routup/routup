@@ -22,7 +22,7 @@ const buildRouter = () => {
 };
 
 const app = new App({
-    etag: false,
+    options: { etag: false },
     router: buildRouter(),
 });
 
