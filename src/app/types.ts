@@ -308,6 +308,18 @@ export interface IApp extends IDispatcher {
     clone(): IApp;
 
     /**
+     * Swap the active `IRouter`. Every previously-registered route
+     * is replayed onto the new router so lookups stay correct. Any
+     * cache the previous router carried is dropped along with it.
+     *
+     * Useful when the right router family is only known after
+     * routes are registered (a SmartRouter-style decision), or for
+     * comparing implementations mid-flight without rebuilding the
+     * App.
+     */
+    setRouter(router: IRouter<RouteEntry>): void;
+
+    /**
      * Check if a plugin with the given name is installed on this router.
      */
     hasPlugin(name: string): boolean;

@@ -45,6 +45,7 @@ import type {
     RouteEntry,
 } from './types.ts';
 import { isAppInstance } from './check.ts';
+import type { Route } from '../types.ts';
 
 /**
  * Merge resolver-supplied path params into `event.params` *only* when
@@ -149,6 +150,20 @@ export class App implements IApp {
      */
     protected plugins: Map<string, string | undefined> = new Map();
 
+    /**
+     * Every route registered on this App, in registration order.
+     *
+     * Owning the list at the App level (rather than reading it back
+     * from `this.router.routes`) lets us narrow the `IRouter`
+     * contract — `routes` is now optional on the interface — and
+     * gives `setRouter` a single source of truth to replay onto a
+     * swap-in router. Routes are pushed alongside every
+     * `this.router.add()` via the `register` helper.
+     *
+     * @protected
+     */
+    protected _routes: Route<RouteEntry>[] = [];
+
     // --------------------------------------------------
 
     constructor(input: AppContext = {}) {
@@ -162,6 +177,37 @@ export class App implements IApp {
         this._options = Object.freeze(normalizeAppOptions(input.options ?? {}));
 
         markInstanceof(this, AppSymbol);
+    }
+
+    // --------------------------------------------------
+
+    /**
+     * Register a route with the active router and record it on the
+     * App so we can replay it onto a different router later (see
+     * `setRouter`) and so cascades / clones don't depend on
+     * `IRouter.routes`.
+     *
+     * @protected
+     */
+    protected register(route: Route<RouteEntry>): void {
+        this.router.add(route);
+        this._routes.push(route);
+    }
+
+    /**
+     * Swap the active router. Replays every previously-registered
+     * route onto the new router so lookups stay correct.
+     *
+     * Useful for picking a router after route shape is known (e.g.
+     * a SmartRouter-style decision), or for testing alternatives
+     * mid-flight without rebuilding the App. Any cache the previous
+     * router carried is dropped along with it.
+     */
+    setRouter(router: IRouter<RouteEntry>): void {
+        for (const route of this._routes) {
+            router.add(route);
+        }
+        this.router = router;
     }
 
     // --------------------------------------------------
@@ -292,7 +338,7 @@ export class App implements IApp {
         // Cascade newly inherited keys down to already-mounted
         // children. Pass our own (just-extended) options view as
         // the parent for the next level.
-        for (const route of this.router.routes) {
+        for (const route of this._routes) {
             if (
                 route.data.type === RouteEntryType.APP &&
                 isAppInstance(route.data.data)
@@ -730,7 +776,7 @@ export class App implements IApp {
                 continue;
             }
 
-            this.router.add({
+            this.register({
                 path: joinPaths(this._path, path, handler.path),
                 method,
                 data: {
@@ -769,7 +815,7 @@ export class App implements IApp {
                 // child's `_options` is its fully resolved view; no
                 // per-request walk needed.
                 item.extendOptions(this._options);
-                this.router.add({
+                this.register({
                     path: joinPaths(this._path, path),
                     data: {
                         type: RouteEntryType.APP,
@@ -782,7 +828,7 @@ export class App implements IApp {
             // Check isHandler (instanceof brand) BEFORE isHandlerOptions
             // (structural) — see useForMethod for the same reasoning.
             if (isHandler(item)) {
-                this.router.add({
+                this.register({
                     path: joinPaths(this._path, path, item.path),
                     method: item.method,
                     data: {
@@ -796,7 +842,7 @@ export class App implements IApp {
             if (isHandlerOptions(item)) {
                 const handler = new Handler({ ...item });
 
-                this.router.add({
+                this.register({
                     path: joinPaths(this._path, path, handler.path),
                     method: handler.method,
                     data: {
@@ -896,14 +942,16 @@ export class App implements IApp {
             router: this.router.clone(),
         });
 
-        // Re-register routes directly on the cloned resolver. The
-        // routes already carry the canonical combined `path` produced
-        // by mount-time `joinPaths` — going back through the public
-        // `use` / verb shortcuts would re-concat each handler's
-        // intrinsic path on top of that and produce `/users/list/list`.
-        for (const route of this.router.routes) {
+        // Re-register routes through `register` so the clone's own
+        // `_routes` mirror is populated alongside the router. The
+        // routes already carry the canonical combined `path`
+        // produced by mount-time `joinPaths` — going back through
+        // the public `use` / verb shortcuts would re-concat each
+        // handler's intrinsic path on top of that and produce
+        // `/users/list/list`.
+        for (const route of this._routes) {
             if (route.data.type === RouteEntryType.APP) {
-                next.router.add({
+                next.register({
                     path: route.path,
                     data: {
                         type: RouteEntryType.APP,
@@ -913,7 +961,7 @@ export class App implements IApp {
                 continue;
             }
 
-            next.router.add({
+            next.register({
                 path: route.path,
                 method: route.method,
                 data: {
