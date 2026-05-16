@@ -548,19 +548,36 @@ export class App implements IApp {
                 // array. Reset to a fresh walk on the new path.
                 const pathChanged = event.path !== parentMatchesPath;
 
-                const nextContext: AppPipelineContext = {
-                    step: AppPipelineStep.LOOKUP,
-                    event,
-                    isRoot: context.isRoot,
-                    matchIndex: pathChanged ? 0 : nextMatchIndex,
-                    matches: pathChanged ? undefined : parentMatches,
-                    matchesPath: pathChanged ? undefined : parentMatchesPath,
-                    response: undefined,
-                };
+                // Reuse `context` for the nested run instead of
+                // allocating a fresh `AppPipelineContext` per setNext
+                // recursion. Save the outer iteration's navigation
+                // fields (step / matchIndex / matches / matchesPath)
+                // and restore them after the nested `executePipelineStep`
+                // returns so the parent picks up exactly where it left
+                // off. `context.response` and `event.dispatched` are
+                // deliberately not restored — when the nested run
+                // produces a response, we want the parent to observe
+                // it on the shared context.
+                const savedStep = context.step;
+                const savedMatchIndex = context.matchIndex;
+                const savedMatches = context.matches;
+                const savedMatchesPath = context.matchesPath;
 
-                await this.executePipelineStep(nextContext);
+                context.step = AppPipelineStep.LOOKUP;
+                context.matchIndex = pathChanged ? 0 : nextMatchIndex;
+                context.matches = pathChanged ? undefined : parentMatches;
+                context.matchesPath = pathChanged ? undefined : parentMatchesPath;
 
-                return nextContext.response;
+                try {
+                    await this.executePipelineStep(context);
+                } finally {
+                    context.step = savedStep;
+                    context.matchIndex = savedMatchIndex;
+                    context.matches = savedMatches;
+                    context.matchesPath = savedMatchesPath;
+                }
+
+                return context.response;
             });
 
             const response = await route.data.data.dispatch(event);

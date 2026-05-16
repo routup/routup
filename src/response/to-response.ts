@@ -10,7 +10,7 @@ function stripWeakPrefix(etag: string): string {
 /**
  * Resolve the effective etag fn for this request. `null` means the
  * user explicitly disabled ETag; `undefined` means the option was
- * never set and we apply the framework default. Anything else is the
+ * never set, and we apply the framework default. Anything else is the
  * user's own fn.
  */
 function effectiveEtagFn(event: IAppEvent): EtagFn | null {
@@ -72,6 +72,7 @@ export function toResponse(
     value: unknown,
     event: IAppEvent,
 ): Response | undefined | Promise<Response | undefined> {
+    // Cheap nullish checks first.
     if (value === undefined) {
         return undefined;
     }
@@ -83,16 +84,14 @@ export function toResponse(
         });
     }
 
-    if (value instanceof Response) {
-        return value;
-    }
+    // typeof gate avoids running `instanceof` against every Web
+    // class for the common JSON-object case. Strings and primitives
+    // (number/boolean) take their dedicated branches; objects fall
+    // through to a single `instanceof Response` check + JSON.
+    const t = typeof value;
 
-    const {
-        status,
-        headers,
-    } = event.response;
-
-    if (typeof value === 'string') {
+    if (t === 'string') {
+        const { status, headers } = event.response;
         if (!headers.has('content-type')) {
             headers.set('content-type', 'text/plain; charset=utf-8');
         }
@@ -100,46 +99,65 @@ export function toResponse(
         // null is "explicitly disabled"; undefined falls back to the
         // default fn. Either truthy fn or undefined → run applyEtag.
         if (event.appOptions.etag !== null) {
-            return applyEtag(value, event, headers).then((cached) => cached ?? new Response(value, {
+            return applyEtag(value as string, event, headers)
+                .then((cached) => cached ?? new Response(value as string, {
+                    status,
+                    headers,
+                }));
+        }
+
+        return new Response(value as string, {
+            status,
+            headers,
+        });
+    }
+
+    if (
+        t === 'object' &&
+        !Array.isArray(value)
+    ) {
+        // The handler's return value is structurally an object.
+        // Order checks by frequency: Response > JSON object > rare
+        // binary types. The hot path (JSON object) takes exactly
+        // one `instanceof Response` check before reaching the JSON
+        // serializer.
+        if (value instanceof Response) {
+            return value;
+        }
+
+        const { status, headers } = event.response;
+
+        // Binary / streaming bodies. Each branch is a single
+        // instanceof + dedicated Response construction.
+        if (value instanceof ArrayBuffer || value instanceof Uint8Array) {
+            if (!headers.has('content-type')) {
+                headers.set('content-type', 'application/octet-stream');
+            }
+            return new Response(value as BodyInit, {
                 status,
                 headers,
-            }));
+            });
         }
 
-        return new Response(value, {
-            status,
-            headers,
-        });
-    }
-
-    if (value instanceof ArrayBuffer || value instanceof Uint8Array) {
-        if (!headers.has('content-type')) {
-            headers.set('content-type', 'application/octet-stream');
+        if (value instanceof ReadableStream) {
+            return new Response(value, {
+                status,
+                headers,
+            });
         }
-        return new Response(value as BodyInit, {
-            status,
-            headers,
-        });
-    }
 
-    if (value instanceof ReadableStream) {
-        return new Response(value, {
-            status,
-            headers,
-        });
-    }
-
-    if (value instanceof Blob) {
-        if (!headers.has('content-type')) {
-            headers.set('content-type', value.type || 'application/octet-stream');
+        if (value instanceof Blob) {
+            if (!headers.has('content-type')) {
+                headers.set('content-type', value.type || 'application/octet-stream');
+            }
+            return new Response(value, {
+                status,
+                headers,
+            });
         }
-        return new Response(value, {
-            status,
-            headers,
-        });
     }
 
-    // object/array/number/boolean — JSON serialize
+    const { status, headers } = event.response;
     if (!headers.has('content-type')) {
         headers.set('content-type', 'application/json; charset=utf-8');
     }
@@ -155,14 +173,12 @@ export function toResponse(
         });
     }
 
-    // Same null-vs-undefined contract as the string branch above:
-    // null is "explicitly disabled"; undefined falls back to the
-    // default fn (handled inside applyEtag → effectiveEtagFn).
     if (event.appOptions.etag !== null) {
-        return applyEtag(json, event, headers).then((cached) => cached ?? new Response(json, {
-            status,
-            headers,
-        }));
+        return applyEtag(json, event, headers)
+            .then((cached) => cached ?? new Response(json, {
+                status,
+                headers,
+            }));
     }
 
     return new Response(json, {

@@ -29,6 +29,14 @@ export interface IHooks {
      */
     hasListeners(name: HookName): boolean;
 
+    /**
+     * Returns true if at least one listener is registered across *any*
+     * hook name. Cheap (single boolean read). Useful as a coarse
+     * fast-path guard before any per-name `hasListeners(...)` lookup
+     * for apps that never register a hook — the common workload.
+     */
+    hasAny(): boolean;
+
     clone(): IHooks;
 
     trigger(
