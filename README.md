@@ -12,8 +12,8 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/routup/routup/badge.svg)](https://snyk.io/test/github/routup/routup)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
-**Routup** is a minimalistic, runtime-agnostic HTTP routing framework for Node.js, Bun, Deno, and Cloudflare Workers.
-Handlers return values directly — routup converts them to Web `Response` objects automatically.
+**Routup** is a minimalistic, runtime-agnostic HTTP routing framework for Node.js, Bun, Deno, Cloudflare Workers, and Service Workers.
+Handlers return values directly — routup converts them to Web `Response` objects automatically, with built-in support for ETags, content negotiation, per-handler timeouts, and cooperative cancellation via `AbortSignal`.
 
 **Table of Contents**
 
@@ -35,14 +35,21 @@ npm install routup --save
 
 ## Features
 
-- 🚀 **Runtime agnostic** — Node.js, Bun, Deno, Cloudflare Workers
+- 🚀 **Runtime agnostic** — Node.js, Bun, Deno, Cloudflare Workers, Service Workers
 - 🌐 **Web-standard APIs** — built on `Request` / `Response` for portability
-- 📝 **Return-based handlers** — return strings, objects, streams, or `Response` directly
+- 📝 **Return-based handlers** — return strings, objects, streams, `Blob`s, or `Response` directly
 - ✨ **Async middleware** — onion model with `event.next()`
 - 📌 **Lifecycle hooks** — `request`, `response`, `error` for cross-cutting concerns
+- 🧭 **Pluggable router & cache** — `LinearRouter` (default), `TrieRouter`, or `SmartRouter` (auto-selects); opt-in LRU lookup cache
+- ⏱️ **Per-handler timeouts** — bounded execution with `AbortSignal` cooperative cancellation
+- 🏷️ **Automatic ETag & 304** — strong/weak ETags out of the box, configurable per app or disabled entirely
+- 🤝 **Content negotiation** — accept, accept-language, accept-encoding, accept-charset helpers
+- 📡 **Streaming & SSE** — `ReadableStream` responses and `createEventStream()` for server-sent events
+- 📂 **Static file serving** — `sendFile()` with ETag, range, and MIME detection
 - 🔌 **Plugin system** — extend with reusable, installable plugins
+- 🌉 **Express middleware bridge** — wrap legacy `(req, res, next)` handlers via `fromNodeHandler()`
 - 🧰 **Tree-shakeable helpers** — import only what you use
-- 📁 **Nestable routers** — modular route composition
+- 📁 **Nestable apps** — modular route composition with mount paths
 - 👕 **TypeScript first** — fully typed API with generics
 - 🤏 **Minimal footprint** — small core, no bloat
 
@@ -116,7 +123,7 @@ app.use(defineCoreHandler(async (event) => {
 
 ### Pluggable router and cache
 
-The route table is pluggable via the `router` option (default `LinearRouter`; swap to `TrieRouter` for radix-trie matching on apps with many routes). Each router accepts an optional `cache` for memoizing lookups — opt-in via `LruCache` (or any `ICache` implementation).
+The route table is pluggable via the `router` option. The default `LinearRouter` is best for small apps; swap to `TrieRouter` for radix-trie matching on apps with many routes, or `SmartRouter` to auto-select between the two based on the registered route shape at first lookup. Each router accepts an optional `cache` for memoizing lookups — opt-in via `LruCache` (or any `ICache` implementation); pass `null` to disable.
 
 ```typescript
 import { App, TrieRouter, LruCache, defineCoreHandler } from 'routup';
@@ -124,6 +131,22 @@ import { App, TrieRouter, LruCache, defineCoreHandler } from 'routup';
 const app = new App({
     router: new TrieRouter({ cache: new LruCache() }), // omit `cache` for no memoization
 });
+```
+
+### Timeouts and cancellation
+
+Configure a global timeout for the whole pipeline, a default per-handler timeout, or both. When a deadline fires, `event.signal` is aborted so handlers can cooperatively cancel signal-aware work; if nothing recovers in time, routup returns `408 Request Timeout`.
+
+```typescript
+const app = new App({
+    timeout: 30_000,         // entire request
+    handlerTimeout: 5_000,   // default per handler; handlers can narrow further
+});
+
+app.get('/fetch', defineCoreHandler(async (event) => {
+    const res = await fetch('https://api.example.com', { signal: event.signal });
+    return res.json();
+}));
 ```
 
 ### Runtimes
@@ -178,18 +201,20 @@ Routup is minimalistic by design. [Plugins](https://github.com/routup/plugins) e
 
 How routup stacks up against other popular Node.js routing frameworks. This is a best-effort summary; check each project's docs for the full picture.
 
-|                                       | routup            | [Hono](https://hono.dev) | [Express](https://expressjs.com) | [Fastify](https://fastify.dev) |
-|---------------------------------------|-------------------|--------------------------|----------------------------------|--------------------------------|
-| **Runtimes**                          | Node, Bun, Deno, Cloudflare, Service Worker | Node, Bun, Deno, Cloudflare, Lambda, Vercel | Node | Node |
+|                                         | routup            | [Hono](https://hono.dev) | [Express](https://expressjs.com) | [Fastify](https://fastify.dev) |
+|-----------------------------------------|-------------------|--------------------------|----------------------------------|--------------------------------|
+| **Runtimes**                            | Node, Bun, Deno, Cloudflare, Service Worker | Node, Bun, Deno, Cloudflare, Lambda, Vercel | Node | Node |
 | **Web-standard `Request` / `Response`** | ✅ | ✅ | ❌ | ❌ |
-| **Return-based handlers**             | ✅ | ✅ | ❌ | ❌ |
-| **TypeScript-first**                  | ✅ | ✅ | community types | ✅ |
-| **Tree-shakeable helpers**            | ✅ | ✅ | ❌ | ❌ |
-| **Onion middleware (`next()`)**       | ✅ | ✅ | linear `next()` | lifecycle hooks |
-| **Class-based routes (decorators)**   | ✅ via plugin | ❌ | ❌ | ❌ |
-| **Express middleware bridge**         | ✅ `fromNodeHandler` | ❌ | n/a | limited |
+| **Return-based handlers**               | ✅ | ✅ | ❌ | ❌ |
+| **TypeScript-first**                    | ✅ | ✅ | community types | ✅ |
+| **Tree-shakeable helpers**              | ✅ | ✅ | ❌ | ❌ |
+| **Onion middleware (`next()`)**         | ✅ | ✅ | linear `next()` | lifecycle hooks |
+| **Pluggable router (linear / trie)**    | ✅ linear, trie, or auto-select | trie only | linear only | radix only |
+| **Built-in ETag + 304**                 | ✅ | ❌ | via plugin | via plugin |
 | **Per-handler timeout + `AbortSignal`** | ✅ | ❌ | ❌ | server-level |
-| **Schema validation built-in**        | ❌ | ❌ | ❌ | ✅ |
+| **Class-based routes (decorators)**     | ✅ via plugin | ❌ | ❌ | ❌ |
+| **Express middleware bridge**           | ✅ `fromNodeHandler` | ❌ | n/a | limited |
+| **Schema validation built-in**          | ❌ | ❌ | ❌ | ✅ |
 
 ## Contributing
 
