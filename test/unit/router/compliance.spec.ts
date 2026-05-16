@@ -5,8 +5,7 @@ import {
     TrieRouter,
     defineCoreHandler,
 } from '../../../src';
-import type { IRouter } from '../../../src';
-import type { Handler } from '../../../src';
+import type { Handler, IRouter  } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
 type ResolverFactory = () => IRouter<Handler>;

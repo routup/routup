@@ -254,5 +254,4 @@ export class Handler implements IDispatcher {
 
         return Math.min(routerDefault, handlerOverride);
     }
-
 }

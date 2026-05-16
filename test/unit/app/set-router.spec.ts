@@ -5,7 +5,7 @@ import {
     TrieRouter,
     defineCoreHandler,
 } from '../../../src';
-import type { Route, Handler } from '../../../src';
+import type { Handler, Route } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
 describe('App.setRouter', () => {

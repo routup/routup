@@ -9,8 +9,12 @@ import {
     LinearRouter,
     defineCoreHandler,
 } from '../../../src';
-import type { IRouter, Route, RouteMatch } from '../../../src';
-import type { Handler } from '../../../src';
+import type { 
+    Handler, 
+    IRouter, 
+    Route, 
+    RouteMatch,  
+} from '../../../src';
 import { createTestRequest } from '../../helpers';
 
 /**
@@ -87,7 +91,7 @@ describe('src/app clone', () => {
         expect(originalB.status).toEqual(404);
     });
 
-it('should not share plugin registration between original and clone', async () => {
+    it('should not share plugin registration between original and clone', async () => {
         const original = new App();
         original.use({
             name: 'plug',
