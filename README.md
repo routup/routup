@@ -191,22 +191,6 @@ How routup stacks up against other popular Node.js routing frameworks. This is a
 | **Per-handler timeout + `AbortSignal`** | ✅ | ❌ | ❌ | server-level |
 | **Schema validation built-in**        | ❌ | ❌ | ❌ | ✅ |
 
-## Benchmarks
-
-Recorded with routup v5.1 on Node.js 24, May 2026. `autocannon -c 100 -d 40 -p 10` (40s warm-up, 40s measure).
-
-| Package    | Requests/s | Latency (ms) | Throughput/MB |
-|:-----------|:----------:|-------------:|--------------:|
-| http       |   167021   |         5.47 |         29.79 |
-| fastify    |   152567   |         6.02 |         27.35 |
-| hono       |   137181   |         6.81 |         22.50 |
-| koa        |   136575   |         6.79 |         24.36 |
-| hapi       |   118206   |         7.99 |         21.08 |
-| express    |   104533   |         9.06 |         18.64 |
-| **routup** |    95979   |         9.93 |         18.67 |
-
-Routup currently trails on raw req/s for the trivial `GET /` case — the focus of v5 has been runtime portability and ergonomics rather than micro-optimization. Throughput is competitive with express. To re-run the suite yourself, see the [benchmarks](https://github.com/routup/benchmarks) repository.
-
 ## Contributing
 
 Before starting to work on a pull request, it is important to review the guidelines for
