@@ -6,6 +6,47 @@
 * **deps:** bump negotiator from 0.6.3 to 1.0.0 ([#700](https://github.com/routup/routup/issues/700)) ([84edd77](https://github.com/routup/routup/commit/84edd778b87d8baa9072319909385324f265e8a7))
 * **deps:** bump the minorandpatch group with 3 updates ([#758](https://github.com/routup/routup/issues/758)) ([c0117b3](https://github.com/routup/routup/commit/c0117b34c81f3be26f5c60a5ce71e7e81b6ed4ed))
 
+## [6.0.0](https://github.com/routup/routup/compare/v5.2.0...v6.0.0) (2026-05-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* **app:** app.on() / app.off() / HookName are removed. HandlerOptions.onBefore / onAfter / onError are removed. AppContext no longer accepts a `hooks` field. RouteEntry / AppRouteEntry / HandlerRouteEntry / RouteEntryType are removed (App now stores Route<Handler> directly). Sub-apps mounted with use() are snapshot into the parent at mount time; late additions on the child do not propagate.
+* tighten `event.method` and `event.params` typing ([#909](https://github.com/routup/routup/issues/909))
+* **router:** drop optional `routes` from the IRouter contract ([#907](https://github.com/routup/routup/issues/907))
+* **trie:** feature-complete trie — method bucketing + native parser, drop path-to-regexp from hot path ([#905](https://github.com/routup/routup/issues/905))
+* **app:** track routes on App, add setRouter, narrow IRouter contract
+* resolve App options at mount time, drop appPath ([#904](https://github.com/routup/routup/issues/904))
+* MemoizedRouter has been removed. Migrate by dropping the wrapper and (optionally) configuring the new cache option on your router:
+* 
+
+### Features
+
+* **app:** flatten sub-apps on use(), drop hooks ([#912](https://github.com/routup/routup/issues/912)) ([1d151cb](https://github.com/routup/routup/commit/1d151cba53557e679c80bc74a82a3e649adb640b))
+* **app:** track routes on App, add setRouter, narrow IRouter contract ([eeac090](https://github.com/routup/routup/commit/eeac090c6a96cfa11c7b7a31ae594609e54d082a))
+* per-router pluggable ICache (replaces MemoizedRouter) ([#902](https://github.com/routup/routup/issues/902)) ([79d4d8b](https://github.com/routup/routup/commit/79d4d8ba29298ed5ea60c30239cc0a9fd4bc454a))
+* resolve App options at mount time, drop appPath ([#904](https://github.com/routup/routup/issues/904)) ([8bd5189](https://github.com/routup/routup/commit/8bd51898184059b3be22b59ec52766648dc627fc))
+* **router:** add SmartRouter — auto-selects Linear vs Trie at first lookup ([#908](https://github.com/routup/routup/issues/908)) ([425e15b](https://github.com/routup/routup/commit/425e15b7319e0e3dadabd5ff67eae62992845ece))
+* **trie:** feature-complete trie — method bucketing + native parser, drop path-to-regexp from hot path ([#905](https://github.com/routup/routup/issues/905)) ([b001a85](https://github.com/routup/routup/commit/b001a85867934d7acc5a9036e1eb33d0966f7513))
+* v6 — App rename, pluggable router family, generic IRouter&lt;T&gt; ([#898](https://github.com/routup/routup/issues/898)) ([285aa70](https://github.com/routup/routup/commit/285aa70facc0b558d3a16ad58172d26817c2767c))
+
+
+### Bug Fixes
+
+* **bench:** update server.mjs to v6 App constructor shape ([#910](https://github.com/routup/routup/issues/910)) ([88c51d3](https://github.com/routup/routup/commit/88c51d3cc730ba94fc0da2bb440b08375edd0769))
+* **deps:** bump the minorandpatch group across 1 directory with 3 updates ([#906](https://github.com/routup/routup/issues/906)) ([b9d017b](https://github.com/routup/routup/commit/b9d017b4a39529151e61cc57407557a66bf1c373))
+
+
+### Performance Improvements
+
+* **dispatch:** reorder toResponse, reuse pipeline context, fast-skip… ([#911](https://github.com/routup/routup/issues/911)) ([1c6471c](https://github.com/routup/routup/commit/1c6471cc11ee97cb2fefef587944a62582a5f492))
+
+
+### Code Refactoring
+
+* **router:** drop optional `routes` from the IRouter contract ([#907](https://github.com/routup/routup/issues/907)) ([5e144ba](https://github.com/routup/routup/commit/5e144baeafa93ed97b19ef2dba788de168753627))
+* tighten `event.method` and `event.params` typing ([#909](https://github.com/routup/routup/issues/909)) ([c90d8a8](https://github.com/routup/routup/commit/c90d8a8f8d7bf8d3a66c0e07f13c3739d5292352))
+
 ## [5.2.0](https://github.com/routup/routup/compare/v5.1.1...v5.2.0) (2026-05-12)
 
 

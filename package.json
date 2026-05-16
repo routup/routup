@@ -1,6 +1,6 @@
 {
     "name": "routup",
-    "version": "5.2.0",
+    "version": "6.0.0",
     "type": "module",
     "description": "Routup is a minimalistic http based routing framework.",
     "exports": {
