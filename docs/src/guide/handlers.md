@@ -131,8 +131,8 @@ const handler = defineCoreHandler({
 Semantics:
 
 - `onBefore` fires before `fn`. Throwing here is treated like the handler throwing — `onError` (if set) fires next and the error propagates.
-- `onAfter` fires after the response is built (or the handler resolved without one). Receives `(event, response)`.
-- `onError` fires when `fn` (or `onBefore`) throws. Receives `(error, event)`. Re-throwing replaces `event.error` with the new error; returning normally lets the original propagate.
+- `onAfter` fires after the response is built (or the handler resolved without one). Receives `(event, response)`. Throwing here is also treated like the handler throwing — `onError` fires next and the already-built response is dropped in favour of the error path.
+- `onError` fires when `fn`, `onBefore`, or `onAfter` throws. Receives `(error, event)`. Re-throwing replaces `event.error` with the new error; returning normally lets the original propagate.
 
 All three are skipped when an `ErrorHandler` is invoked with no pending `event.error` (no `fn` runs, so there is nothing to bracket).
 

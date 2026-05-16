@@ -17,16 +17,17 @@ export type HandlerBeforeListener = (event: IAppEvent) => unknown | Promise<unkn
  * `toResponse` builds the final response. Receives the same
  * `AppEvent` `fn` saw plus the produced `Response` (`undefined` when
  * the handler did not produce a response). Throwing here is treated
- * like the handler throwing.
+ * like the handler throwing — `onError` (if set) fires next and the
+ * already-built response is dropped in favour of the error path.
  */
 export type HandlerAfterListener = (event: IAppEvent, response: Response | undefined) => unknown | Promise<unknown>;
 
 /**
- * Side-effect callback fired when the handler's `fn` (or `onBefore`)
- * throws. Receives the resolved `AppError` and the handler's event.
- * Throwing here replaces `event.error` with the new error before the
- * pipeline observes it; returning normally lets the original error
- * propagate.
+ * Side-effect callback fired when the handler's `fn`, `onBefore`, or
+ * `onAfter` throws. Receives the resolved `AppError` and the
+ * handler's event. Throwing here replaces `event.error` with the
+ * new error before the pipeline observes it; returning normally
+ * lets the original error propagate.
  */
 export type HandlerErrorListener = (error: AppError, event: IAppEvent) => unknown | Promise<unknown>;
 
