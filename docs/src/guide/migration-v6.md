@@ -12,7 +12,7 @@ Routup v6 also removes the lifecycle-hook surface (`app.on(...)`, `HookName`, pe
 | `IRouter` (top-level interface) | `IApp` |
 | `RouterOptions` / `RouterOptionsInput` | `AppOptions` / `AppOptionsInput`; the `App` constructor takes `AppContext` (`{ name, path, options, plugins, router }`) |
 | `app.on(...)` / `app.off(...)`, `HookName.*` | _removed_ — express lifecycle wrapping as middleware (see [Middleware Patterns](./middleware-patterns) and the "Hooks removed" section below) |
-| `HandlerOptions.onBefore` / `onAfter` / `onError` | _removed_ — wrap the handler in a middleware that calls `event.next()` |
+| `HandlerOptions.onBefore` / `onAfter` / `onError` | **kept** — but as plain optional callbacks on the handler config, no `Hooks` machinery, no priorities |
 | `RouteEntry` / `AppRouteEntry` / `HandlerRouteEntry` / `RouteEntryType` | _removed_ — `App` now stores routes as `Route<Handler>` directly; with sub-apps flattened at mount time there is no `APP` discriminator |
 | `RoutupEvent` / `IRoutupEvent` | `AppEvent` / `IAppEvent` |
 | `RoutupError` | `AppError` |
@@ -96,7 +96,7 @@ A few consequences worth knowing:
 
 ## Hooks removed — middleware is the single composition primitive
 
-`app.on(...)` / `app.off(...)` and the `HookName` constants (`START`, `END`, `ERROR`, `CHILD_MATCH`, `CHILD_DISPATCH_BEFORE`, `CHILD_DISPATCH_AFTER`) are gone. So are the per-handler `onBefore` / `onAfter` / `onError` options on `HandlerOptions`. Every v5 hook expressible as middleware (and they all are):
+`app.on(...)` / `app.off(...)` and the `HookName` constants (`START`, `END`, `ERROR`, `CHILD_MATCH`, `CHILD_DISPATCH_BEFORE`, `CHILD_DISPATCH_AFTER`) are gone. The per-handler `onBefore` / `onAfter` / `onError` options on `HandlerOptions` are **kept** as plain optional callbacks — they no longer go through the removed `Hooks` machinery, but the same fields and signatures still work for single-handler instrumentation. Every v5 app-level hook expressible as middleware (and they all are):
 
 ```typescript
 // v5

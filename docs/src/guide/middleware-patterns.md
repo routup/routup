@@ -7,7 +7,8 @@ Routup v6 has no `app.on(...)` / hook API. Middleware — built from `defineCore
 | `app.on('start', fn)` | `app.use(defineCoreHandler((event) => { fn(event); return event.next(); }))` registered first |
 | `app.on('end', fn)` | `defineCoreHandler(async (event) => { const r = await event.next(); fn(event, r); return r; })` registered first |
 | `app.on('error', fn)` | `defineErrorHandler((err, event) => { fn(err, event); throw err; })` (or shape a response and return it) |
-| Handler `onBefore` / `onAfter` / `onError` | wrap the handler in a middleware that calls `event.next()` |
+
+Handler-scoped instrumentation — `onBefore` / `onAfter` / `onError` on `HandlerOptions` — is still available as plain optional callbacks on the handler config and is the preferred shape for single-handler observability (see the [Handlers guide](./handlers)). Reach for middleware when the instrumentation should span more than one handler.
 
 The benefit: **one composition primitive** that can be path-scoped (`app.use('/api', mw)`), method-scoped (via a verb shortcut), and composed in either direction.
 

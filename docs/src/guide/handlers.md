@@ -115,6 +115,27 @@ const handler = defineCoreHandler({
 });
 ```
 
+### Instrumentation callbacks
+
+The verbose form also accepts `onBefore` / `onAfter` / `onError` — plain optional callbacks invoked around the handler's `fn`. They are intended for single-handler instrumentation (logging, metrics, per-handler auth checks); for instrumentation that should span multiple handlers, use middleware.
+
+```typescript
+const handler = defineCoreHandler({
+    fn: (event) => fetchUser(event.params.id!),
+    onBefore: (event) => log.debug('user.fetch.start', { path: event.path }),
+    onAfter:  (event, response) => log.debug('user.fetch.done', { status: response?.status }),
+    onError:  (error, event) => metrics.increment('user.fetch.error', { code: error.status }),
+});
+```
+
+Semantics:
+
+- `onBefore` fires before `fn`. Throwing here is treated like the handler throwing — `onError` (if set) fires next and the error propagates.
+- `onAfter` fires after the response is built (or the handler resolved without one). Receives `(event, response)`.
+- `onError` fires when `fn` (or `onBefore`) throws. Receives `(error, event)`. Re-throwing replaces `event.error` with the new error; returning normally lets the original propagate.
+
+All three are skipped when an `ErrorHandler` is invoked with no pending `event.error` (no `fn` runs, so there is nothing to bracket).
+
 ## Mounting
 
 ### Global

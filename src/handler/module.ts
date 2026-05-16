@@ -42,6 +42,10 @@ export class Handler implements IDispatcher {
 
     async dispatch(event: IDispatcherEvent): Promise<Response | undefined> {
         let response: Response | undefined;
+        // Hoisted so the outer catch can forward it to `onError`. We
+        // keep the no-throw common path allocation-free by lazily
+        // assigning inside the try.
+        let handlerEvent: IAppEvent | undefined;
 
         try {
             // Read router options directly from the dispatcher event so we
@@ -71,9 +75,18 @@ export class Handler implements IDispatcher {
             // Build the handler event exactly once — with the child signal
             // when a timeout is configured, otherwise inheriting the
             // dispatcher's own signal.
-            const handlerEvent = childController ?
+            handlerEvent = childController ?
                 event.build(childController.signal) :
                 event.build();
+
+            // ERROR handlers with no pending error are a no-op — and
+            // the onBefore/onAfter callbacks are too (no `fn` ran, so
+            // there's nothing to bracket).
+            const skipFn = this.config.type === HandlerType.ERROR && !event.error;
+
+            if (!skipFn && this.config.onBefore) {
+                await this.config.onBefore(handlerEvent);
+            }
 
             let result: unknown;
 
@@ -81,27 +94,23 @@ export class Handler implements IDispatcher {
                 // Invoke the handler fn inside the cleanup-protected
                 // try so a sync throw still releases the parent abort
                 // listener registered above.
-                let skipFn = false;
                 let invocation: unknown;
-                if (this.config.type === HandlerType.ERROR) {
-                    if (event.error) {
-                        const { fn } = this.config;
-                        invocation = fn(event.error, handlerEvent);
-                    } else {
-                        // ERROR handler with no pending error: no-op.
-                        skipFn = true;
-                    }
+                if (skipFn) {
+                    // result stays undefined; falls through to toResponse(undefined) → undefined.
+                } else if (this.config.type === HandlerType.ERROR) {
+                    const { fn } = this.config;
+                    invocation = fn(event.error!, handlerEvent);
                 } else {
                     const { fn } = this.config;
                     invocation = fn(handlerEvent);
                 }
 
                 if (skipFn) {
-                    // result stays undefined; falls through to toResponse(undefined) → undefined.
+                    // no-op
                 } else if (effectiveTimeout) {
                     // Race the (possibly-async) invocation against the timeout.
                     result = await this.executeWithTimeout(
-                        () => this.resolveHandlerResult(invocation, handlerEvent),
+                        () => this.resolveHandlerResult(invocation, handlerEvent!),
                         effectiveTimeout,
                         childController,
                     );
@@ -143,8 +152,25 @@ export class Handler implements IDispatcher {
                     event.error = undefined;
                 }
             }
+
+            if (!skipFn && this.config.onAfter) {
+                await this.config.onAfter(handlerEvent, response);
+            }
         } catch (e) {
             event.error = isError(e) ? e : createError(e);
+
+            // Fire `onError` even if the error came from `onBefore`
+            // or `onAfter` — it is the handler-scoped error hook.
+            // `event.build()` is the fallback when the throw landed
+            // before we built `handlerEvent`.
+            if (this.config.onError) {
+                try {
+                    await this.config.onError(event.error, handlerEvent ?? event.build());
+                } catch (innerErr) {
+                    event.error = isError(innerErr) ? innerErr : createError(innerErr);
+                }
+            }
+
             throw event.error;
         }
 
