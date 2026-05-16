@@ -10,7 +10,7 @@ function stripWeakPrefix(etag: string): string {
 /**
  * Resolve the effective etag fn for this request. `null` means the
  * user explicitly disabled ETag; `undefined` means the option was
- * never set and we apply the framework default. Anything else is the
+ * never set, and we apply the framework default. Anything else is the
  * user's own fn.
  */
 function effectiveEtagFn(event: IAppEvent): EtagFn | null {
@@ -95,21 +95,27 @@ export function toResponse(
         if (!headers.has('content-type')) {
             headers.set('content-type', 'text/plain; charset=utf-8');
         }
+
         // null is "explicitly disabled"; undefined falls back to the
         // default fn. Either truthy fn or undefined → run applyEtag.
         if (event.appOptions.etag !== null) {
-            return applyEtag(value as string, event, headers).then((cached) => cached ?? new Response(value as string, {
-                status,
-                headers,
-            }));
+            return applyEtag(value as string, event, headers)
+                .then((cached) => cached ?? new Response(value as string, {
+                    status,
+                    headers,
+                }));
         }
+
         return new Response(value as string, {
             status,
             headers,
         });
     }
 
-    if (t === 'object') {
+    if (
+        t === 'object' &&
+        !Array.isArray(value)
+    ) {
         // The handler's return value is structurally an object.
         // Order checks by frequency: Response > JSON object > rare
         // binary types. The hot path (JSON object) takes exactly
@@ -149,41 +155,13 @@ export function toResponse(
                 headers,
             });
         }
-
-        // Default object case — JSON-serialize.
-        if (!headers.has('content-type')) {
-            headers.set('content-type', 'application/json; charset=utf-8');
-        }
-
-        let json: string;
-        try {
-            json = JSON.stringify(value);
-        } catch (e) {
-            throw createError({
-                message: 'JSON serialization failed',
-                status: 500,
-                cause: e,
-            });
-        }
-
-        if (event.appOptions.etag !== null) {
-            return applyEtag(json, event, headers).then((cached) => cached ?? new Response(json, {
-                status,
-                headers,
-            }));
-        }
-
-        return new Response(json, {
-            status,
-            headers,
-        });
     }
 
-    // number / boolean / bigint / symbol — JSON-serialize.
     const { status, headers } = event.response;
     if (!headers.has('content-type')) {
         headers.set('content-type', 'application/json; charset=utf-8');
     }
+
     let json: string;
     try {
         json = JSON.stringify(value);
@@ -194,12 +172,15 @@ export function toResponse(
             cause: e,
         });
     }
+
     if (event.appOptions.etag !== null) {
-        return applyEtag(json, event, headers).then((cached) => cached ?? new Response(json, {
-            status,
-            headers,
-        }));
+        return applyEtag(json, event, headers)
+            .then((cached) => cached ?? new Response(json, {
+                status,
+                headers,
+            }));
     }
+
     return new Response(json, {
         status,
         headers,
