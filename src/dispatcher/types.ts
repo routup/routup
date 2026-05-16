@@ -33,7 +33,12 @@ export interface IDispatcherEvent {
     readonly method: MethodNameLike;
 
     /**
-     * Accumulated mount path from nested routers.
+     * Prefix the active route was matched on. Set per dispatched
+     * handler to the resolver's `match.path` (the substring of the
+     * request path the matcher consumed) and restored to the prior
+     * value when the handler returns. Static-asset / mount-aware
+     * helpers strip this off `event.path` to recover a mount-relative
+     * path.
      */
     mountPath: string;
 
@@ -54,17 +59,18 @@ export interface IDispatcherEvent {
 
     /**
      * Options of the App currently dispatching this event. Set on
-     * entry to `App.dispatch` and restored on exit so nested apps
-     * temporarily override the parent's view.
+     * entry to `App.dispatch`; restored on exit so that re-entering
+     * `App.dispatch` for the same event (programmatic use of the
+     * `IDispatcher` interface) leaves the caller's view intact.
      */
     appOptions: Readonly<AppOptions>;
 
     /**
-     * `true` while at least one `App.dispatch` is on the call stack
-     * for this event. Used by `App.dispatch` to derive whether a
-     * given dispatch call is the root (the first one entered) or
-     * nested. Saved/restored across the call so nested dispatches
-     * leave the flag in the state their caller expects.
+     * `true` while an `App.dispatch` call is on the stack for this
+     * event. Used by `App.dispatch` to derive whether the current
+     * call is the root (and so should drive root-only behaviour like
+     * OPTIONS auto-Allow synthesis). Saved/restored around the
+     * dispatch body so re-entrant calls behave correctly.
      */
     isDispatching: boolean;
 

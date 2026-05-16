@@ -4,7 +4,7 @@ import {
     TrieRouter,
     defineCoreHandler,
 } from '../../../src';
-import type { RouteEntry } from '../../../src/app/types';
+import type { Handler } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
 /**
@@ -21,7 +21,7 @@ import { createTestRequest } from '../../helpers';
  */
 describe('TrieRouter — Phase 2 syntax', () => {
     function app() {
-        return new App({ router: new TrieRouter<RouteEntry>() });
+        return new App({ router: new TrieRouter<Handler>() });
     }
 
     describe('T2 — optional params (`:name?`)', () => {
@@ -97,18 +97,21 @@ describe('TrieRouter — Phase 2 syntax', () => {
             expect(await res.text()).toBe('john doe');
         });
 
-        it('returns the matched prefix as `event.mountPath` for nested apps', async () => {
-            const inner = new App({ router: new TrieRouter<RouteEntry>() });
-            inner.get('/items', defineCoreHandler((event) => event.mountPath));
+        it('mount-time path concatenation surfaces the matched prefix via params', async () => {
+            // With flatten-on-use, `inner.get('/items', ...)` is
+            // registered on `outer` as `/api/:version/items`. The
+            // handler runs with `event.path` set to the full request
+            // path and `event.params.version` extracted by the trie.
+            // `event.mountPath` is no longer accumulated — there is
+            // no per-request descent into a child app to strip.
+            const inner = new App({ router: new TrieRouter<Handler>() });
+            inner.get('/items', defineCoreHandler((event) => `${event.path}|${event.params.version}`));
 
-            const outer = new App({ router: new TrieRouter<RouteEntry>() });
+            const outer = new App({ router: new TrieRouter<Handler>() });
             outer.use('/api/:version', inner);
 
-            // The trie computes `match.path` = `/api/v1` from the request
-            // segments and the variant's matchDepth (no matcher.exec).
-            // App's dispatch then strips that prefix when descending.
             const res = await outer.fetch(createTestRequest('/api/v1/items'));
-            expect(await res.text()).toBe('/api/v1');
+            expect(await res.text()).toBe('/api/v1/items|v1');
         });
     });
 
@@ -120,10 +123,10 @@ describe('TrieRouter — Phase 2 syntax', () => {
             // so `params.version === 'v1'` and `event.mountPath ===
             // '/api/v1'`. Picking the shorter variant blindly would
             // lose params.
-            const inner = new App({ router: new TrieRouter<RouteEntry>() });
+            const inner = new App({ router: new TrieRouter<Handler>() });
             inner.get('/', defineCoreHandler((event) => `version=${event.params.version ?? 'none'}`));
 
-            const outer = new App({ router: new TrieRouter<RouteEntry>() });
+            const outer = new App({ router: new TrieRouter<Handler>() });
             outer.use('/api/:version?', inner);
 
             expect(await (await outer.fetch(createTestRequest('/api/v1'))).text())
@@ -205,17 +208,15 @@ describe('TrieRouter — Phase 2 syntax', () => {
             expect((await a.fetch(createTestRequest('/foo/bar'))).status).toBe(404);
         });
 
-        it('splat-terminated mounted app sees full request via mountPath', async () => {
-            // `app.use('/files/*rest', child)` matches every path
-            // under `/files`. `match.path` (used by the dispatcher
-            // to strip mount prefix) must reflect the full matched
-            // request — pre-Phase-2 this was the path-to-regexp
-            // `output.path` (the entire matched portion); post-
-            // Phase-2 the trie should compute the same.
-            const inner = new App({ router: new TrieRouter<RouteEntry>() });
-            inner.get('/', defineCoreHandler((event) => event.mountPath));
+        it('splat-terminated mounted app sees full request via event.path', async () => {
+            // `outer.use('/files/*rest', inner)` flattens `inner`'s
+            // `/` handler onto `outer` as `/files/*rest/`. The
+            // handler reads the full request path from `event.path`;
+            // the splat capture surfaces via `event.params.rest`.
+            const inner = new App({ router: new TrieRouter<Handler>() });
+            inner.get('/', defineCoreHandler((event) => event.path));
 
-            const outer = new App({ router: new TrieRouter<RouteEntry>() });
+            const outer = new App({ router: new TrieRouter<Handler>() });
             outer.use('/files/*rest', inner);
 
             const res = await outer.fetch(createTestRequest('/files/a/b/c'));

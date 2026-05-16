@@ -8,47 +8,6 @@ import {
 import { createTestRequest } from '../../helpers';
 
 describe('error context preservation', () => {
-    it('should use createError instead of raw cast in hook trigger', async () => {
-        const router = new App();
-
-        router.on('start', () => {
-            throw new Error('plain error in hook');
-        });
-
-        const response = await router.fetch(createTestRequest('/'));
-
-        expect(response.status).toEqual(500);
-        expect(await response.text()).toContain('plain error in hook');
-    });
-
-    it('should preserve original error when error handler throws', async () => {
-        const router = new App();
-        const capturedErrors: AppError[] = [];
-
-        router.use(defineCoreHandler(() => {
-            throw new AppError({ status: 400, message: 'Bad Request' });
-        }));
-
-        router.on('error', () => {
-            throw new Error('error in error hook');
-        });
-
-        router.on('end', (event) => {
-            if (event.error) {
-                capturedErrors.push(event.error);
-            }
-        });
-
-        const response = await router.fetch(createTestRequest('/'));
-
-        expect(response.status).toEqual(400);
-
-        // The original error is preserved — not overwritten by the hook error
-        expect(capturedErrors.length).toBeGreaterThan(0);
-        expect(capturedErrors[0]!.status).toEqual(400);
-        expect(capturedErrors[0]!.message).toEqual('Bad Request');
-    });
-
     it('should allow error handler to transform the error', async () => {
         const router = new App();
 

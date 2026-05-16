@@ -9,9 +9,12 @@ import {
     LinearRouter,
     defineCoreHandler,
 } from '../../../src';
-import type { IRouter, Route, RouteMatch } from '../../../src';
-import type { RouteEntry } from '../../../src/app/types';
-import { HookName } from '../../../src/hook';
+import type { 
+    Handler, 
+    IRouter, 
+    Route, 
+    RouteMatch,  
+} from '../../../src';
 import { createTestRequest } from '../../helpers';
 
 /**
@@ -20,22 +23,22 @@ import { createTestRequest } from '../../helpers';
  * `App.install()` route through the *active* router's `clone()`
  * rather than instantiating a fresh LinearRouter directly.
  */
-class BrandedRouter implements IRouter<RouteEntry> {
+class BrandedRouter implements IRouter<Handler> {
     static readonly brand = Symbol('BrandedRouter');
 
     static clones = 0;
 
-    protected inner = new LinearRouter<RouteEntry>();
+    protected inner = new LinearRouter<Handler>();
 
-    add(entry: Route<RouteEntry>): void {
+    add(entry: Route<Handler>): void {
         this.inner.add(entry);
     }
 
-    lookup(path: string): readonly RouteMatch<RouteEntry>[] {
+    lookup(path: string): readonly RouteMatch<Handler>[] {
         return this.inner.lookup(path);
     }
 
-    clone(): IRouter<RouteEntry> {
+    clone(): IRouter<Handler> {
         BrandedRouter.clones += 1;
         return new BrandedRouter();
     }
@@ -86,30 +89,6 @@ describe('src/app clone', () => {
 
         const originalB = await original.fetch(createTestRequest('/b'));
         expect(originalB.status).toEqual(404);
-    });
-
-    it('should not share hook listener mutations between original and clone', async () => {
-        const original = new App();
-        original.get('/', defineCoreHandler(() => 'ok'));
-
-        const sharedListener = vi.fn();
-        original.on(HookName.START, sharedListener);
-
-        const clone = original.clone();
-
-        const cloneOnlyListener = vi.fn();
-        clone.on(HookName.START, cloneOnlyListener);
-
-        await clone.fetch(createTestRequest('/'));
-        expect(sharedListener).toHaveBeenCalledTimes(1);
-        expect(cloneOnlyListener).toHaveBeenCalledTimes(1);
-
-        sharedListener.mockClear();
-        cloneOnlyListener.mockClear();
-
-        await original.fetch(createTestRequest('/'));
-        expect(sharedListener).toHaveBeenCalledTimes(1);
-        expect(cloneOnlyListener).not.toHaveBeenCalled();
     });
 
     it('should not share plugin registration between original and clone', async () => {
@@ -186,10 +165,11 @@ describe('src/app clone', () => {
         expect(await res.text()).toEqual('x');
     });
 
-    it('App.install() routes through the active router\'s clone() (no LinearRouter downgrade)', async () => {
-        // Same regression as above, but for the plugin install path —
-        // the plugin's child sub-app's router must come from the parent's
-        // `IRouter.clone()`, not from constructing a fresh LinearRouter.
+    it('App.install() flattens the plugin\'s routes into the active router', async () => {
+        // With flatten-on-use, the plugin installs into a scratch
+        // App and its routes are then snapshotted onto the host
+        // App's router. No router clone is involved (the scratch
+        // App's router is discarded along with the scratch).
         BrandedRouter.clones = 0;
 
         const installed = vi.fn();
@@ -204,11 +184,13 @@ describe('src/app clone', () => {
         const app = new App({ router: new BrandedRouter() });
         app.use(plugin as any);
 
-        // install() consumes one clone for the plugin's child sub-app.
-        expect(BrandedRouter.clones).toBe(1);
+        // The host router is never cloned during install — the
+        // flatten path just calls `router.add()` for each entry.
+        expect(BrandedRouter.clones).toBe(0);
         expect(installed).toHaveBeenCalledOnce();
 
-        // Sanity: the registered route still resolves.
+        // Sanity: the registered route still resolves through the
+        // branded router.
         const res = await app.fetch(createTestRequest('/probe'));
         expect(await res.text()).toEqual('probe-ok');
     });

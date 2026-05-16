@@ -7,7 +7,7 @@ import {
     TrieRouter,
     defineCoreHandler,
 } from '../../../src';
-import type { RouteEntry } from '../../../src/app/types';
+import type { Handler } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
 /**
@@ -20,12 +20,12 @@ describe('SmartRouter', () => {
     // The chosen inner router is a `protected` field — cast through
     // `unknown` to read it. Production code shouldn't depend on the
     // choice, only tests do.
-    function inner(r: SmartRouter<RouteEntry>): unknown {
+    function inner(r: SmartRouter<Handler>): unknown {
         return (r as unknown as { inner?: unknown }).inner;
     }
 
     it('picks LinearRouter under the threshold', async () => {
-        const router = new SmartRouter<RouteEntry>({ threshold: 5 });
+        const router = new SmartRouter<Handler>({ threshold: 5 });
         const app = new App({ router });
         for (let i = 0; i < 3; i++) {
             app.get(`/r${i}`, defineCoreHandler(() => `r${i}`));
@@ -38,7 +38,7 @@ describe('SmartRouter', () => {
     });
 
     it('picks TrieRouter at or above the threshold', async () => {
-        const router = new SmartRouter<RouteEntry>({ threshold: 5 });
+        const router = new SmartRouter<Handler>({ threshold: 5 });
         const app = new App({ router });
         for (let i = 0; i < 5; i++) {
             app.get(`/r${i}`, defineCoreHandler(() => `r${i}`));
@@ -50,7 +50,7 @@ describe('SmartRouter', () => {
     });
 
     it('forwards routes registered after the first lookup to the chosen inner', async () => {
-        const router = new SmartRouter<RouteEntry>({ threshold: 5 });
+        const router = new SmartRouter<Handler>({ threshold: 5 });
         const app = new App({ router });
         app.get('/before', defineCoreHandler(() => 'before'));
 
@@ -71,7 +71,7 @@ describe('SmartRouter', () => {
         const originalSet = cache.set.bind(cache);
         cache.set = (k, v) => { setCalls++; originalSet(k, v); };
 
-        const router = new SmartRouter<RouteEntry>({ threshold: 3, cache });
+        const router = new SmartRouter<Handler>({ threshold: 3, cache });
         const app = new App({ router });
         for (let i = 0; i < 3; i++) {
             app.get(`/r${i}`, defineCoreHandler(() => `r${i}`));
@@ -82,7 +82,7 @@ describe('SmartRouter', () => {
     });
 
     it('clone() returns a fresh, uncommitted SmartRouter', () => {
-        const router = new SmartRouter<RouteEntry>({ threshold: 5 });
+        const router = new SmartRouter<Handler>({ threshold: 5 });
         router.add({
             path: '/x',
             method: 'GET',
@@ -92,7 +92,7 @@ describe('SmartRouter', () => {
         router.lookup('/x', 'GET');
         expect(inner(router)).toBeDefined();
 
-        const cloned = router.clone() as SmartRouter<RouteEntry>;
+        const cloned = router.clone() as SmartRouter<Handler>;
         // Clone hasn't decided yet — no inner until something
         // triggers a lookup, and routes from the original do NOT
         // carry over (matches LinearRouter / TrieRouter clone
@@ -102,7 +102,7 @@ describe('SmartRouter', () => {
     });
 
     it('default threshold defers to TrieRouter at 30+ entries', async () => {
-        const router = new SmartRouter<RouteEntry>();
+        const router = new SmartRouter<Handler>();
         const app = new App({ router });
         for (let i = 0; i < 30; i++) {
             app.get(`/r${i}`, defineCoreHandler(() => `r${i}`));
@@ -112,7 +112,7 @@ describe('SmartRouter', () => {
     });
 
     it('serves correctly when no routes are registered (empty pending)', async () => {
-        const router = new SmartRouter<RouteEntry>();
+        const router = new SmartRouter<Handler>();
         const app = new App({ router });
         const res = await app.fetch(createTestRequest('/anything'));
         expect(res.status).toBe(404);

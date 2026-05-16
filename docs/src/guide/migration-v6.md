@@ -2,7 +2,7 @@
 
 Routup v6 renames the top-level class and the route-table abstraction to align with ecosystem conventions (rou3, Hono, Gin: "router" means the route table; the application class has its own name). It also consolidates path matching into a single place — the resolver (now called router) — and ships a pluggable router family with an opt-in lookup cache.
 
-The runtime behaviour, hook lifecycle, and helper APIs are largely unchanged. Most app code only needs identifier renames.
+Routup v6 also removes the lifecycle-hook surface (`app.on(...)`, `HookName`, per-handler `onBefore`/`onAfter`/`onError`) and flattens mounted sub-apps into the parent's router at `use(...)` time. Most app code only needs identifier renames; the hook and sub-app changes are covered in dedicated sections below.
 
 ## Quick summary
 
@@ -10,7 +10,10 @@ The runtime behaviour, hook lifecycle, and helper APIs are largely unchanged. Mo
 |----|-----|
 | `new Router()` | `new App()` |
 | `IRouter` (top-level interface) | `IApp` |
-| `RouterOptions` / `RouterOptionsInput` | `AppOptions` / `AppOptionsInput`; the `App` constructor takes `AppContext` (`{ name, path, options, hooks, plugins, router }`) |
+| `RouterOptions` / `RouterOptionsInput` | `AppOptions` / `AppOptionsInput`; the `App` constructor takes `AppContext` (`{ name, path, options, plugins, router }`) |
+| `app.on(...)` / `app.off(...)`, `HookName.*` | _removed_ — express lifecycle wrapping as middleware (see [Middleware Patterns](./middleware-patterns) and the "Hooks removed" section below) |
+| `HandlerOptions.onBefore` / `onAfter` / `onError` | **kept** — but as plain optional callbacks on the handler config, no `Hooks` machinery, no priorities |
+| `RouteEntry` / `AppRouteEntry` / `HandlerRouteEntry` / `RouteEntryType` | _removed_ — `App` now stores routes as `Route<Handler>` directly; with sub-apps flattened at mount time there is no `APP` discriminator |
 | `RoutupEvent` / `IRoutupEvent` | `AppEvent` / `IAppEvent` |
 | `RoutupError` | `AppError` |
 | `RoutupRequest` | `AppRequest` |
@@ -46,6 +49,88 @@ app.get('/users', defineCoreHandler((event: IAppEvent) => 'ok'));
 
 serve(app);
 ```
+
+## Tighter typing on `event.method` and `event.params`
+
+Both fields became more specific in v6 without any runtime change. The point is to surface bugs at compile time that previously type-checked silently as `any` / `string`.
+
+- `event.method` was `string`, now `MethodNameLike` — the canonical `MethodName` union (`'GET' | 'POST' | …`) intersected with a `(string & {})` open-enum escape hatch. Standard verbs autocomplete; non-standard verbs (`PROPFIND`, custom) still type-check.
+- `event.params` was `Record<string, any>`, now `Record<string, string | undefined>`. Both routers only ever produce string values; the `undefined` accommodates optional params (`/users/:id?`) that did not match.
+
+```typescript
+// v5 — params.id was any, this compiled even if id was missing
+defineCoreHandler((event) => event.params.id.toUpperCase());
+
+// v6 — caught at compile time when the route allows optional params
+defineCoreHandler((event) => event.params.id!.toUpperCase()); // ! when route guarantees the param
+defineCoreHandler((event) => event.params.id?.toUpperCase()); // ? when it may be absent
+```
+
+The same narrowing applies to `IDispatcherEvent.method` / `params`, `AppEventCreateContext.method` / `params`, `RouteMatch.params`, and the trie helpers `extractTrieParams` / `assignParams`.
+
+## Sub-apps are flattened at mount time
+
+`parent.use(path, child)` no longer wires `child` in as a runtime sub-dispatcher. Instead it **snapshots `child.routes` at the call**, prepends `path` onto each route, and registers them on the parent's router. The child app is consumed; later mutations on it do not propagate.
+
+```typescript
+const child = new App();
+child.get('/early', defineCoreHandler(() => 'early'));
+
+const parent = new App();
+parent.use('/api', child);
+
+// AFTER the parent.use call — does NOT appear on the parent.
+child.get('/late', defineCoreHandler(() => 'late'));
+
+await parent.fetch(new Request('http://x/api/early')); // 200
+await parent.fetch(new Request('http://x/api/late'));  // 404
+```
+
+Mirrors Hono's `app.route(...)` semantics. The benefit is that the dispatcher walks one flat router at request time — no recursive descent into nested apps, no per-mount path-strip step.
+
+A few consequences worth knowing:
+
+- **Plugin registries merge into the parent.** After `parent.use(child)`, `parent.hasPlugin(name)` reflects everything installed on `child` (or any app mounted into `child` earlier). Duplicate plugin names across the merge throw `PluginAlreadyInstalledError`.
+- **Per-child app options are discarded.** Every flattened handler runs under the parent's `event.appOptions`. If you need a per-handler timeout, set it on the handler (`defineCoreHandler({ timeout: 1000, fn })`).
+- **`event.mountPath` is no longer accumulated across nested-app dispatch.** Instead the dispatcher sets it per matched handler to the prefix the active route consumed (`match.path`), and restores the previous value when the handler returns. Mount-aware helpers (e.g. `@routup/assets`, `@routup/swagger-ui`) keep working — they read the mount prefix off `event.mountPath` exactly as before, just without the per-request stack walk.
+
+## Hooks removed — middleware is the single composition primitive
+
+`app.on(...)` / `app.off(...)` and the `HookName` constants (`START`, `END`, `ERROR`, `CHILD_MATCH`, `CHILD_DISPATCH_BEFORE`, `CHILD_DISPATCH_AFTER`) are gone. The per-handler `onBefore` / `onAfter` / `onError` options on `HandlerOptions` are **kept** as plain optional callbacks — they no longer go through the removed `Hooks` machinery, but the same fields and signatures still work for single-handler instrumentation. Every v5 app-level hook expressible as middleware (and they all are):
+
+```typescript
+// v5
+app.on('start', (event) => console.log(event.method, event.path));
+app.on('error', (event) => Sentry.captureException(event.error));
+
+// v6
+app.use(defineCoreHandler((event) => {
+    console.log(event.method, event.path);
+    return event.next();
+}));
+app.use(defineErrorHandler((error) => {
+    Sentry.captureException(error);
+    throw error; // let downstream error handlers shape the response
+}));
+```
+
+See the [Middleware Patterns guide](./middleware-patterns) for the full set of equivalents (request logging, error observability, conditional short-circuit, path-scoped instrumentation).
+
+One behavioural difference to know: a v5 hook was a side-effect outside the onion — a buggy listener couldn't deadlock the request. Middleware is **in** the onion. A middleware that returns `undefined` *and* never calls `event.next()` (or produces a response) hangs the request until a timeout aborts it, by design — see the `undefined` contract in the [Architecture guide](./app#returning-undefined). Forgetting the leading `return` on `event.next()` is harmless: the captured downstream result is forwarded automatically when the handler returns `undefined`.
+
+## Note for plugin authors
+
+If a plugin previously accepted `IRouter` as its mount target (the v5 dispatcher interface), update the parameter type to `IApp`. The name `IRouter` is reused in v6 for the route-table abstraction — keeping the v5 annotation will silently change the contract.
+
+```typescript
+// v5
+export function mountController(router: IRouter, controller: ClassType) { /* … */ }
+
+// v6
+export function mountController(app: IApp, controller: ClassType) { /* … */ }
+```
+
+Helper functions that take an event (`(event: IRoutupEvent) => …`) just need the `IRoutupEvent` → `IAppEvent` rename.
 
 ## Pluggable router family
 
@@ -133,13 +218,9 @@ event.routerOptions;  // resolved router options
 event.appOptions;     // pre-resolved view set by the dispatching App
 ```
 
-## Hook names unchanged from v5.x
-
-`HookName.START` / `END` / `ERROR` / `CHILD_*` are unchanged — they were renamed in v5.1. v6 doesn't touch this surface.
-
 ## Why these renames?
 
-The `Router` ↔ `IRouteResolver` split in v5 worked but used names that conflicted with how the rest of the ecosystem (rou3, Hono, Gin, h3) uses "router." In every other framework, "router" means **the route table** — what routup called `IRouteResolver`. Routup's `Router` was actually a *dispatch engine* wrapping a router, hooks, plugins, and a pipeline.
+The `Router` ↔ `IRouteResolver` split in v5 worked but used names that conflicted with how the rest of the ecosystem (rou3, Hono, Gin, h3) uses "router." In every other framework, "router" means **the route table** — what routup called `IRouteResolver`. Routup's `Router` was actually a *dispatch engine* wrapping a router, plugins, and a pipeline.
 
 v6 fixes this:
 - `App` (was `Router`) — the dispatch engine; matches Hono's `Hono` / h3's `App` convention.

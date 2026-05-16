@@ -79,7 +79,7 @@ export default defineConfig({
                 {
                     text: 'Advanced',
                     items: [
-                        { text: 'Hooks', link: '/guide/hooks' },
+                        { text: 'Middleware Patterns', link: '/guide/middleware-patterns' },
                         { text: 'Serving', link: '/guide/dispatchers' },
                         { text: 'Runtime Environments', link: '/guide/runtime-environments' },
                         { text: 'Custom Router', link: '/guide/custom-router' },

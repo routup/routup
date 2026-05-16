@@ -33,17 +33,18 @@ export class DispatcherEvent implements IDispatcherEvent {
 
     /**
      * Options of the App currently dispatching this event. Set on
-     * entry to `App.dispatch` and restored on exit (so nested apps
-     * temporarily override). Initialized to `{}` so consumers
-     * reading before any dispatch get a valid (empty) shape.
+     * entry to `App.dispatch` and restored on exit so re-entrant
+     * dispatch calls leave the caller's view intact. Initialized to
+     * `{}` so consumers reading before any dispatch get a valid
+     * (empty) shape.
      */
     appOptions: Readonly<AppOptions>;
 
     /**
-     * `true` while at least one `App.dispatch` is on the call stack
-     * for this event. `App.dispatch` reads this on entry to derive
-     * `isRoot` and writes it on entry/exit so nested calls see it
-     * already set.
+     * `true` while an `App.dispatch` call is on the stack for this
+     * event. `App.dispatch` reads this on entry to derive `isRoot`
+     * and writes it on entry/exit so re-entrant calls behave
+     * correctly.
      */
     isDispatching: boolean;
 

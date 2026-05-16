@@ -5,7 +5,7 @@ import {
     TrieRouter,
     defineCoreHandler,
 } from '../../../src';
-import type { RouteEntry } from '../../../src/app/types';
+import type { Handler } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
 /**
@@ -22,7 +22,7 @@ import { createTestRequest } from '../../helpers';
  */
 describe('TrieRouter — method bucketing (T4)', () => {
     it('same path, different methods: each fires only its handler', async () => {
-        const app = new App({ router: new TrieRouter<RouteEntry>() });
+        const app = new App({ router: new TrieRouter<Handler>() });
         app.get('/users', defineCoreHandler(() => 'list'));
         app.post('/users', defineCoreHandler(() => 'created'));
 
@@ -34,7 +34,7 @@ describe('TrieRouter — method bucketing (T4)', () => {
     });
 
     it('middleware fires for both methods at the same path', async () => {
-        const app = new App({ router: new TrieRouter<RouteEntry>() });
+        const app = new App({ router: new TrieRouter<Handler>() });
         const fired: string[] = [];
 
         app.use('/users', defineCoreHandler(async (event) => {
@@ -51,7 +51,7 @@ describe('TrieRouter — method bucketing (T4)', () => {
     });
 
     it('OPTIONS sees every registered method (auto-Allow header)', async () => {
-        const app = new App({ router: new TrieRouter<RouteEntry>() });
+        const app = new App({ router: new TrieRouter<Handler>() });
         app.get('/items', defineCoreHandler(() => 'list'));
         app.post('/items', defineCoreHandler(() => 'created'));
         app.delete('/items', defineCoreHandler(() => 'deleted'));
@@ -66,7 +66,7 @@ describe('TrieRouter — method bucketing (T4)', () => {
     });
 
     it('HEAD falls through to a GET handler', async () => {
-        const app = new App({ router: new TrieRouter<RouteEntry>() });
+        const app = new App({ router: new TrieRouter<Handler>() });
         app.get('/users', defineCoreHandler(() => 'list'));
 
         const res = await app.fetch(createTestRequest('/users', { method: 'HEAD' }));
@@ -78,7 +78,7 @@ describe('TrieRouter — method bucketing (T4)', () => {
         // path-to-regexp v8, but the trie still buckets named splats
         // per method. This catches the per-bucket emission for
         // `splatRoutes`.
-        const app = new App({ router: new TrieRouter<RouteEntry>() });
+        const app = new App({ router: new TrieRouter<Handler>() });
         app.get('/files/*rest', defineCoreHandler(() => 'get-files'));
         app.post('/files/*rest', defineCoreHandler(() => 'post-files'));
 
@@ -91,7 +91,7 @@ describe('TrieRouter — method bucketing (T4)', () => {
         // With the cache enabled, GET /users and POST /users must
         // not share a cached candidate set — they would emit
         // different handler buckets after T4.
-        const app = new App({ router: new TrieRouter<RouteEntry>({ cache: new LruCache() }) });
+        const app = new App({ router: new TrieRouter<Handler>({ cache: new LruCache() }) });
         app.get('/users', defineCoreHandler(() => 'list'));
         app.post('/users', defineCoreHandler(() => 'created'));
 

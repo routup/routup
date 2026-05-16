@@ -29,7 +29,6 @@ serve(app, { port: 3000 });
 - Event-based handler signature: `(event) => value`
 - Runtime agnostic (Node.js, Bun, Deno, Cloudflare Workers)
 - Async/await support throughout
-- Robust hook system (`request`, `response`, `error`)
 - Powerful plugin system
 - Tree-shakeable request and response helpers
 - Nestable routers
