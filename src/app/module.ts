@@ -12,14 +12,6 @@ import {
     isHandlerOptions,
     matchHandlerMethod,
 } from '../handler/index.ts';
-import type {
-    HookDefaultListener,
-    HookErrorListener,
-    HookListener,
-    HookUnsubscribeFn,
-    IHooks,
-} from '../hook/index.ts';
-import { HookName, Hooks } from '../hook/index.ts';
 import type { Path } from '../path/index.ts';
 import { isPath } from '../path/index.ts';
 import type { Plugin, PluginInstallContext } from '../plugin/index.ts';
@@ -30,22 +22,19 @@ import {
 import { normalizeAppOptions } from './options.ts';
 import {
     acceptsJson,
-    cleanDoubleSlashes,
     joinPaths,
     withLeadingSlash,
 } from '../utils/index.ts';
-import { AppPipelineStep, AppSymbol, RouteEntryType } from './constants.ts';
+import { AppSymbol } from './constants.ts';
 import { LinearRouter } from '../router/linear/index.ts';
 import type { IRouter } from '../router/types.ts';
 import type {
     AppContext,
     AppOptions,
-    AppPipelineContext,
     IApp,
-    RouteEntry,
 } from './types.ts';
 import { isAppInstance } from './check.ts';
-import type { Route } from '../types.ts';
+import type { Route, RouteMatch } from '../types.ts';
 
 /**
  * Merge resolver-supplied path params into `event.params` *only* when
@@ -58,9 +47,6 @@ function mergeMatchParams(
     matchParams: Record<string, string | undefined>,
 ): void {
     // Cheap emptiness probe — short-circuits on the first own key.
-    // `for...in` is fine here: resolver params are always plain
-    // objects (or `Object.create(null)`), so prototype keys aren't a
-    // concern.
     let hasKeys = false;
     // eslint-disable-next-line no-unreachable-loop
     for (const _k in matchParams) {
@@ -76,33 +62,9 @@ function mergeMatchParams(
     };
 }
 
-/**
- * Copy `source[key]` into `target[key]` when the target's value is
- * undefined; return whether a write happened.
- *
- * Bound to a single key `K` per call, so TypeScript can prove the
- * read and write hit the same property's value type — no `as` cast
- * needed. This is the standard escape hatch for the variance trap
- * you'd otherwise hit by writing `target[key] = source[key]` inside
- * a loop where `key: keyof AppOptions` is a *union* (read returns
- * the union of value types, write requires the intersection, which
- * collapses to `never`).
- */
-function copyOptionIfUnset<K extends keyof AppOptions>(
-    target: AppOptions,
-    source: Readonly<AppOptions>,
-    key: K,
-): boolean {
-    if (typeof target[key] !== 'undefined') {
-        return false;
-    }
-    target[key] = source[key];
-    return true;
-}
-
 export class App implements IApp {
     /**
-     * A label for the router instance.
+     * A label for the App instance.
      */
     readonly name?: string;
 
@@ -122,46 +84,34 @@ export class App implements IApp {
      *
      * @protected
      */
-    protected router: IRouter<RouteEntry>;
-
-    /**
-     * Lifecycle hook registry.
-     *
-     * @protected
-     */
-    protected hooks: IHooks;
+    protected router: IRouter<Handler>;
 
     /**
      * Normalized options for this App instance.
      *
-     * Frozen on construction and on every `extendOptions` update —
-     * once published to `event.appOptions` it is shared across all
-     * requests, and a handler must not be able to mutate
-     * router-global state. `extendOptions` therefore uses a
-     * functional update (build a new object, freeze it, replace
-     * the slot) rather than mutating in place.
+     * Frozen on construction — once published to `event.appOptions`
+     * it is shared across all requests, and a handler must not be
+     * able to mutate router-global state.
      */
     protected _options: Readonly<AppOptions>;
 
     /**
-     * Registry of installed plugins (name → version) on this router.
+     * Registry of installed plugins (name → version) on this App.
      *
-     * @protected
+     * Read by `use(otherApp)` so plugin registries merge into the
+     * parent at flatten time — that way `parent.hasPlugin('foo')`
+     * reflects plugins installed on apps mounted into it.
      */
-    protected plugins: Map<string, string | undefined> = new Map();
+    plugins: Map<string, string | undefined>;
 
     /**
      * Every route registered on this App, in registration order.
      *
-     * App owns the canonical list — the `IRouter` contract has no
-     * `routes` field, so cascades / clones / `setRouter` replay
-     * read from here instead of asking the router. Routes are
-     * pushed alongside every `this.router.add()` via the `register`
-     * helper.
-     *
-     * @protected
+     * Read by `use(otherApp)` to snapshot routes at flatten time
+     * and by `clone()` to seed the copy. Late mutations to `_routes`
+     * after a flatten do not propagate.
      */
-    protected _routes: Route<RouteEntry>[] = [];
+    protected _routes: Route<Handler>[] = [];
 
     // --------------------------------------------------
 
@@ -169,9 +119,8 @@ export class App implements IApp {
         this.name = input.name;
         this._path = input.path;
 
-        this.hooks = input.hooks ?? new Hooks();
         this.plugins = new Map<string, string | undefined>(input.plugins);
-        this.router = input.router ?? new LinearRouter<RouteEntry>();
+        this.router = input.router ?? new LinearRouter<Handler>();
 
         this._options = Object.freeze(normalizeAppOptions(input.options ?? {}));
 
@@ -181,14 +130,22 @@ export class App implements IApp {
     // --------------------------------------------------
 
     /**
+     * Public read of the canonical route list. Used by `use(child)`
+     * to snapshot the child's routes at flatten time. Returned
+     * as `readonly` — callers must not mutate.
+     */
+    get routes(): readonly Route<Handler>[] {
+        return this._routes;
+    }
+
+    /**
      * Register a route with the active router and record it on the
-     * App so we can replay it onto a different router later (see
-     * `setRouter`) and so cascades / clones have a source of truth
-     * independent of the router instance.
+     * App so `clone` / `setRouter` / `use(child)` can read the
+     * canonical list back.
      *
      * @protected
      */
-    protected register(route: Route<RouteEntry>): void {
+    protected register(route: Route<Handler>): void {
         this.router.add(route);
         this._routes.push(route);
     }
@@ -202,7 +159,7 @@ export class App implements IApp {
      * mid-flight without rebuilding the App. Any cache the previous
      * router carried is dropped along with it.
      */
-    setRouter(router: IRouter<RouteEntry>): void {
+    setRouter(router: IRouter<Handler>): void {
         for (const route of this._routes) {
             router.add(route);
         }
@@ -288,350 +245,6 @@ export class App implements IApp {
 
     // --------------------------------------------------
 
-    /**
-     * Mount-time option inheritance — fill in any of this App's
-     * unset option keys from the supplied parent options. Called by
-     * `App.use(child)` after narrowing to `App` via `isAppInstance`.
-     *
-     * Public so callers don't need to reach into another App's
-     * protected fields: the parent passes its options by value and
-     * the child decides what to do with them.
-     *
-     * Shallow per-key merge. App-local concerns — `name`, `path`,
-     * `hooks`, `plugins`, `router`, and the router's cache — are
-     * deliberately not propagated; they sit on `AppContext`, not
-     * inside `AppOptions`.
-     *
-     * Cascades to any Apps already mounted on this one — a deeper
-     * grandchild gets the new keys too. Without this, mounting
-     * grandchild → child → parent in that order would leave the
-     * grandchild without parent's options (it adopted from child
-     * before child had them).
-     *
-     * Late mutation of the parent's options after this call does NOT
-     * propagate. `AppOptions` is configured at construction-and-mount;
-     * later changes are not a supported workflow.
-     */
-    extendOptions(incoming: Readonly<AppOptions>): void {
-        // Functional update: build a new mutable working copy only
-        // when there is something to merge, freeze it, then swap it
-        // in. Keeps `_options` referentially stable when nothing
-        // changes (the cascade short-circuits on `!next`) and
-        // immutable when it does.
-        let next: AppOptions | undefined;
-        const keys = Object.keys(incoming) as (keyof AppOptions)[];
-        for (const key of keys) {
-            if (typeof this._options[key] !== 'undefined') {
-                continue;
-            }
-            if (typeof incoming[key] === 'undefined') {
-                continue;
-            }
-            next ??= { ...this._options };
-            copyOptionIfUnset(next, incoming, key);
-        }
-        if (!next) {
-            return;
-        }
-        this._options = Object.freeze(next);
-        // Cascade newly inherited keys down to already-mounted
-        // children. Pass our own (just-extended) options view as
-        // the parent for the next level.
-        for (const route of this._routes) {
-            if (
-                route.data.type === RouteEntryType.APP &&
-                isAppInstance(route.data.data)
-            ) {
-                route.data.data.extendOptions(this._options);
-            }
-        }
-    }
-
-    // --------------------------------------------------
-
-
-    protected async executePipelineStep(context: AppPipelineContext): Promise<void> {
-        while (context.step !== AppPipelineStep.FINISH) {
-            switch (context.step) {
-                case AppPipelineStep.START:
-                    await this.executePipelineStepStart(context); break;
-                case AppPipelineStep.LOOKUP:
-                    await this.executePipelineStepLookup(context); break;
-                case AppPipelineStep.CHILD_BEFORE:
-                    await this.executePipelineStepChildBefore(context); break;
-                case AppPipelineStep.CHILD_DISPATCH:
-                    await this.executePipelineStepChildDispatch(context); break;
-                case AppPipelineStep.CHILD_AFTER:
-                    await this.executePipelineStepChildAfter(context); break;
-                default:
-                    context.step = AppPipelineStep.FINISH; break;
-            }
-        }
-
-        await this.executePipelineStepFinish(context);
-    }
-
-    protected async executePipelineStepStart(context: AppPipelineContext): Promise<void> {
-        if (this.hooks.hasListeners(HookName.START)) {
-            await this.hooks.trigger(HookName.START, context.event);
-        }
-
-        if (context.event.dispatched) {
-            context.step = AppPipelineStep.FINISH;
-        } else {
-            context.step = AppPipelineStep.LOOKUP;
-        }
-    }
-
-    protected async executePipelineStepLookup(context: AppPipelineContext): Promise<void> {
-        // Resolve matches on first entry, or refresh if a hook mutated
-        // `event.path` since the last LOOKUP (rare but supported).
-        if (
-            typeof context.matches === 'undefined' ||
-            context.matchesPath !== context.event.path
-        ) {
-            context.matches = this.router.lookup(context.event.path, context.event.method);
-            context.matchesPath = context.event.path;
-        }
-
-        const { matches } = context;
-
-        while (
-            !context.event.dispatched &&
-            context.matchIndex < matches.length
-        ) {
-            const match = matches[context.matchIndex]!;
-            const { route } = match;
-
-            if (route.data.type === RouteEntryType.HANDLER) {
-                const handler = route.data.data;
-
-                if (
-                    (context.event.error && handler.type === HandlerType.CORE) ||
-                    (!context.event.error && handler.type === HandlerType.ERROR)
-                ) {
-                    context.matchIndex++;
-                    continue;
-                }
-
-                const { method } = route;
-
-                if (method) {
-                    context.event.methodsAllowed.add(method);
-                }
-
-                if (!matchHandlerMethod(method, context.event.method as MethodName)) {
-                    context.matchIndex++;
-                    continue;
-                }
-            }
-
-            if (this.hooks.hasListeners(HookName.CHILD_MATCH)) {
-                await this.hooks.trigger(HookName.CHILD_MATCH, context.event);
-            }
-
-            // `dispatched` wins over a path rewrite — a hook that
-            // produced a response *and* rewrote the path is finished;
-            // restarting LOOKUP would discard the response.
-            if (context.event.dispatched) {
-                context.step = AppPipelineStep.FINISH;
-                return;
-            }
-
-            // Otherwise, if the hook rewrote `event.path`, the current
-            // `match` is stale; restart LOOKUP so the next dispatch
-            // sees a match that corresponds to the new path.
-            if (context.event.path !== context.matchesPath) {
-                context.matches = undefined;
-                context.matchIndex = 0;
-                context.step = AppPipelineStep.LOOKUP;
-                return;
-            }
-
-            context.step = AppPipelineStep.CHILD_BEFORE;
-            return;
-        }
-
-        context.step = AppPipelineStep.FINISH;
-    }
-
-    protected async executePipelineStepChildBefore(context: AppPipelineContext): Promise<void> {
-        if (this.hooks.hasListeners(HookName.CHILD_DISPATCH_BEFORE)) {
-            await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, context.event);
-        }
-
-        // `dispatched` wins over a path rewrite — see CHILD_MATCH.
-        if (context.event.dispatched) {
-            context.step = AppPipelineStep.FINISH;
-            return;
-        }
-
-        if (context.event.path !== context.matchesPath) {
-            context.matches = undefined;
-            context.matchIndex = 0;
-            context.step = AppPipelineStep.LOOKUP;
-            return;
-        }
-
-        context.step = AppPipelineStep.CHILD_DISPATCH;
-    }
-
-    protected async executePipelineStepChildAfter(context: AppPipelineContext): Promise<void> {
-        if (this.hooks.hasListeners(HookName.CHILD_DISPATCH_AFTER)) {
-            await this.hooks.trigger(HookName.CHILD_DISPATCH_AFTER, context.event);
-        }
-
-        if (context.event.dispatched) {
-            context.step = AppPipelineStep.FINISH;
-        } else {
-            context.step = AppPipelineStep.LOOKUP;
-        }
-    }
-
-    protected async executePipelineStepChildDispatch(context: AppPipelineContext): Promise<void> {
-        const match = context.matches?.[context.matchIndex];
-
-        if (context.event.dispatched || typeof match === 'undefined') {
-            context.step = AppPipelineStep.FINISH;
-            return;
-        }
-
-        const { route } = match;
-        const { event } = context;
-
-        // Snapshot routing state so we can restore it if the entry yields no
-        // response. Without this, a child router that walks past its last
-        // handler (e.g. its tail middleware calls next()) would leave the
-        // event's path stripped of this entry's mount prefix, and subsequent
-        // siblings in the parent's stack would fail to match.
-        const savedPath = event.path;
-        const savedMountPath = event.mountPath;
-        const savedParams = event.params;
-
-        if (route.data.type === RouteEntryType.APP && typeof match.path === 'string') {
-            // App mount: strip the matched prefix off event.path so the
-            // child router's pipeline sees a mount-relative path. The child
-            // router's intrinsic pathMatcher (if any) is applied on top
-            // inside its own dispatch.
-            event.mountPath = cleanDoubleSlashes(`${event.mountPath}/${match.path}`);
-
-            if (event.path === match.path) {
-                event.path = '/';
-            } else {
-                event.path = withLeadingSlash(event.path.substring(match.path.length));
-            }
-
-            mergeMatchParams(event, match.params);
-        } else if (route.data.type === RouteEntryType.HANDLER && typeof match.path === 'string') {
-            // Handler mount: merge route params from the resolver match.
-            // Handlers don't strip the path — they're leaves.
-            mergeMatchParams(event, match.params);
-        }
-
-        try {
-            const parentMatches = context.matches;
-            const parentMatchesPath = context.matchesPath;
-            const nextMatchIndex = context.matchIndex + 1;
-
-            event.setNext(async (error?: Error) => {
-                if (error) {
-                    event.error = createError(error);
-                }
-
-                // Continue pipeline from the next matched entry. RESPONSE
-                // is not fired here — `App.dispatch` owns that firing,
-                // so nested re-entry naturally skips it.
-                //
-                // If `event.path` changed since this entry was matched
-                // (e.g. the handler mutated it before invoking next()),
-                // the captured `nextMatchIndex` is into a stale matches
-                // array. Reset to a fresh walk on the new path.
-                const pathChanged = event.path !== parentMatchesPath;
-
-                // Reuse `context` for the nested run instead of
-                // allocating a fresh `AppPipelineContext` per setNext
-                // recursion. Save the outer iteration's navigation
-                // fields (step / matchIndex / matches / matchesPath)
-                // and restore them after the nested `executePipelineStep`
-                // returns so the parent picks up exactly where it left
-                // off. `context.response` and `event.dispatched` are
-                // deliberately not restored — when the nested run
-                // produces a response, we want the parent to observe
-                // it on the shared context.
-                const savedStep = context.step;
-                const savedMatchIndex = context.matchIndex;
-                const savedMatches = context.matches;
-                const savedMatchesPath = context.matchesPath;
-
-                context.step = AppPipelineStep.LOOKUP;
-                context.matchIndex = pathChanged ? 0 : nextMatchIndex;
-                context.matches = pathChanged ? undefined : parentMatches;
-                context.matchesPath = pathChanged ? undefined : parentMatchesPath;
-
-                try {
-                    await this.executePipelineStep(context);
-                } finally {
-                    context.step = savedStep;
-                    context.matchIndex = savedMatchIndex;
-                    context.matches = savedMatches;
-                    context.matchesPath = savedMatchesPath;
-                }
-
-                return context.response;
-            });
-
-            const response = await route.data.data.dispatch(event);
-
-            if (response) {
-                context.response = response;
-                event.dispatched = true;
-            }
-        } catch (e) {
-            event.error = createError(e);
-
-            if (this.hooks.hasListeners(HookName.ERROR)) {
-                await this.hooks.trigger(HookName.ERROR, event);
-            }
-        }
-
-        if (!event.dispatched) {
-            event.path = savedPath;
-            event.mountPath = savedMountPath;
-            event.params = savedParams;
-        }
-
-        context.matchIndex++;
-        context.step = AppPipelineStep.CHILD_AFTER;
-    }
-
-    protected async executePipelineStepFinish(context: AppPipelineContext): Promise<void> {
-        if (
-            !context.event.error &&
-            !context.event.dispatched &&
-            context.isRoot &&
-            context.event.method === MethodName.OPTIONS
-        ) {
-            if (context.event.methodsAllowed.has(MethodName.GET)) {
-                context.event.methodsAllowed.add(MethodName.HEAD);
-            }
-
-            const options = [...context.event.methodsAllowed]
-                .map((key) => key.toUpperCase())
-                .join(',');
-
-            const optionsHeaders = new Headers(context.event.response.headers);
-            optionsHeaders.set(HeaderName.ALLOW, options);
-            context.response = new Response(options, {
-                status: context.event.response.status || 200,
-                headers: optionsHeaders,
-            });
-
-            context.event.dispatched = true;
-        }
-    }
-
-    // --------------------------------------------------
-
     async dispatch(
         event: IDispatcherEvent,
     ): Promise<Response | undefined> {
@@ -641,43 +254,49 @@ export class App implements IApp {
         const savedAppOptions = event.appOptions;
         const wasDispatching = event.isDispatching;
 
-        // First dispatch on this event is the root; any nested
-        // `App.dispatch` call sees `isDispatching` already set by an
-        // outer call still on the stack.
         const isRoot = !wasDispatching;
 
-        const context: AppPipelineContext = {
-            step: AppPipelineStep.START,
-            event,
-            isRoot,
-            matchIndex: 0,
-        };
-
-        // Mount-time inheritance gives each App's `_options` the fully
-        // resolved view, so dispatch just swaps it onto the event for
-        // the duration of this App's run. Nested apps overwrite, then
-        // we restore in `finally` so the caller's view stays intact.
         event.appOptions = this._options;
         event.isDispatching = true;
 
-        try {
-            await this.executePipelineStep(context);
+        let response: Response | undefined;
 
-            // Fire END here (not inside the pipeline) so it runs exactly
-            // once per `App.dispatch` call. The setNext recursion only
-            // re-enters `executePipelineStep`, never `dispatch`, so nested
-            // middleware walks naturally skip this. Nested routers get
-            // their own END firing via their own `dispatch()` invocation.
-            if (this.hooks.hasListeners(HookName.END)) {
-                await this.hooks.trigger(HookName.END, event);
+        try {
+            const matches = this.router.lookup(event.path, event.method);
+            response = await this.runMatches(event, matches, event.path, 0);
+
+            // OPTIONS auto-Allow synthesis — runs only on the root and
+            // only when no handler produced a response or an error.
+            if (
+                !event.error &&
+                !event.dispatched &&
+                isRoot &&
+                event.method === MethodName.OPTIONS
+            ) {
+                if (event.methodsAllowed.has(MethodName.GET)) {
+                    event.methodsAllowed.add(MethodName.HEAD);
+                }
+
+                const options = [...event.methodsAllowed]
+                    .map((key) => key.toUpperCase())
+                    .join(',');
+
+                const optionsHeaders = new Headers(event.response.headers);
+                optionsHeaders.set(HeaderName.ALLOW, options);
+                response = new Response(options, {
+                    status: event.response.status || 200,
+                    headers: optionsHeaders,
+                });
+
+                event.dispatched = true;
             }
         } finally {
             event.appOptions = savedAppOptions;
             event.isDispatching = wasDispatching;
 
-            // Restore routing state when this router did not produce a
-            // response, so the caller's pipeline (a parent router) sees its
-            // own pre-dispatch path/mountPath/params for subsequent siblings.
+            // Restore routing state when this App did not produce a
+            // response, so the caller's pipeline sees its own
+            // pre-dispatch path/mountPath/params.
             if (!event.dispatched) {
                 event.path = savedPath;
                 event.mountPath = savedMountPath;
@@ -685,7 +304,101 @@ export class App implements IApp {
             }
         }
 
-        return context.response;
+        return response;
+    }
+
+    /**
+     * Walk the matched routes for the current event, dispatching each
+     * handler in order. Re-entered (recursively) from the `setNext`
+     * continuation so `event.next()` resumes from the next match.
+     */
+    protected async runMatches(
+        event: IDispatcherEvent,
+        matches: readonly RouteMatch<Handler>[],
+        matchesPath: string,
+        startIndex: number,
+    ): Promise<Response | undefined> {
+        let i = startIndex;
+        let response: Response | undefined;
+
+        while (!event.dispatched && i < matches.length) {
+            const match = matches[i]!;
+            const handler = match.route.data;
+
+            // Skip handlers that don't fit the current error state:
+            // CORE handlers only run when no error is pending;
+            // ERROR handlers only run when one is.
+            if (
+                (event.error && handler.type === HandlerType.CORE) ||
+                (!event.error && handler.type === HandlerType.ERROR)
+            ) {
+                i++;
+                continue;
+            }
+
+            const { method } = match.route;
+
+            if (method) {
+                event.methodsAllowed.add(method);
+            }
+
+            if (!matchHandlerMethod(method, event.method as MethodName)) {
+                i++;
+                continue;
+            }
+
+            mergeMatchParams(event, match.params);
+
+            // Surface the matched prefix as `event.mountPath` for the
+            // duration of this handler so static-asset / mount-aware
+            // helpers can strip it off `event.path`. Save and restore
+            // around the dispatch so siblings see their own prefixes.
+            const savedMountPath = event.mountPath;
+            if (typeof match.path === 'string') {
+                event.mountPath = match.path;
+            }
+
+            const capturedMatches = matches;
+            const capturedMatchesPath = matchesPath;
+            const nextIndex = i + 1;
+
+            event.setNext(async (error?: Error) => {
+                if (error) {
+                    event.error = createError(error);
+                }
+
+                // If the handler mutated `event.path` before calling
+                // next(), the captured matches are stale — refresh on
+                // the new path. Otherwise resume from the next match.
+                const pathChanged = event.path !== capturedMatchesPath;
+                const nextMatches = pathChanged ?
+                    this.router.lookup(event.path, event.method) :
+                    capturedMatches;
+                const nextMatchesPath = pathChanged ? event.path : capturedMatchesPath;
+                const nextStart = pathChanged ? 0 : nextIndex;
+
+                return this.runMatches(event, nextMatches, nextMatchesPath, nextStart);
+            });
+
+            try {
+                const dispatchResponse = await handler.dispatch(event);
+
+                if (dispatchResponse) {
+                    response = dispatchResponse;
+                    event.dispatched = true;
+                }
+            } catch (e) {
+                event.error = createError(e);
+                // Fall through to the next match — could be an error
+                // handler registered later in the chain.
+            } finally {
+                event.mountPath = savedMountPath;
+            }
+
+            i++;
+        }
+
+        return response;
     }
 
     // --------------------------------------------------
@@ -795,23 +508,20 @@ export class App implements IApp {
             this.register({
                 path: joinPaths(this._path, path, handler.path),
                 method,
-                data: {
-                    type: RouteEntryType.HANDLER,
-                    data: handler,
-                },
+                data: handler,
             });
         }
     }
 
     // --------------------------------------------------
 
-    use(router: IApp): this;
+    use(app: IApp): this;
 
     use(handler: Handler | HandlerOptions): this;
 
     use(plugin: Plugin): this;
 
-    use(path: Path, router: IApp): this;
+    use(path: Path, app: IApp): this;
 
     use(path: Path, handler: Handler | HandlerOptions): this;
 
@@ -826,18 +536,7 @@ export class App implements IApp {
             }
 
             if (isAppInstance(item)) {
-                // Mount-time inheritance — fill in any of the child's
-                // unset option keys from this parent. After mount the
-                // child's `_options` is its fully resolved view; no
-                // per-request walk needed.
-                item.extendOptions(this._options);
-                this.register({
-                    path: joinPaths(this._path, path),
-                    data: {
-                        type: RouteEntryType.APP,
-                        data: item,
-                    },
-                });
+                this.flatten(item, path);
                 continue;
             }
 
@@ -847,10 +546,7 @@ export class App implements IApp {
                 this.register({
                     path: joinPaths(this._path, path, item.path),
                     method: item.method,
-                    data: {
-                        type: RouteEntryType.HANDLER,
-                        data: item,
-                    },
+                    data: item,
                 });
                 continue;
             }
@@ -861,10 +557,7 @@ export class App implements IApp {
                 this.register({
                     path: joinPaths(this._path, path, handler.path),
                     method: handler.method,
-                    data: {
-                        type: RouteEntryType.HANDLER,
-                        data: handler,
-                    },
+                    data: handler,
                 });
                 continue;
             }
@@ -881,18 +574,49 @@ export class App implements IApp {
         return this;
     }
 
+    /**
+     * Snapshot a child App's routes and plugin registry into this
+     * one. Each route's path is prefixed with `this._path`, the
+     * supplied mount `path`, and the route's own path (in that
+     * order); the resulting entry is registered on this App's
+     * router. The child app is not retained — late mutations on it
+     * after this call do not propagate.
+     *
+     * @protected
+     */
+    protected flatten(child: App, path: Path | undefined): void {
+        // Merge plugin registries — `child.plugins` reflects everything
+        // installed on the child (and on apps mounted into it earlier).
+        for (const [name, version] of child.plugins) {
+            if (this.plugins.has(name)) {
+                throw new PluginAlreadyInstalledError(name);
+            }
+            this.plugins.set(name, version);
+        }
+
+        // Snapshot routes. The router's `add()` is responsible for
+        // any cache invalidation it carries.
+        for (const route of child._routes) {
+            this.register({
+                path: joinPaths(this._path, path, route.path),
+                method: route.method,
+                data: route.data,
+            });
+        }
+    }
+
     // --------------------------------------------------
 
     /**
-     * Check if a plugin with the given name is installed on this router.
+     * Check if a plugin with the given name is installed on this App.
      */
     hasPlugin(name: string): boolean {
         return this.plugins.has(name);
     }
 
     /**
-     * Get the version of an installed plugin by name on this router,
-     * or `undefined` if the plugin is not installed here.
+     * Get the version of an installed plugin by name, or `undefined`
+     * if the plugin is not installed.
      */
     getPluginVersion(name: string): string | undefined {
         return this.plugins.get(name);
@@ -908,18 +632,18 @@ export class App implements IApp {
             throw new PluginAlreadyInstalledError(plugin.name);
         }
 
-        // Carry the parent's router family forward so plugin sub-apps
-        // don't silently downgrade to LinearRouter.
-        const router = new App({
-            name: plugin.name,
-            router: this.router.clone(),
-        });
-        plugin.install(router);
+        // Give the plugin its own App to install into so it can
+        // freely call `app.use(...)` / `app.get(...)` etc. without
+        // having to know whether the caller passed a path. We then
+        // mount this scratch app, which flattens its routes onto
+        // `this` and discards it.
+        const scratch = new App({ name: plugin.name });
+        plugin.install(scratch);
 
         if (context.path) {
-            this.use(context.path, router);
+            this.use(context.path, scratch);
         } else {
-            this.use(router);
+            this.use(scratch);
         }
 
         this.plugins.set(plugin.name, plugin.version);
@@ -931,116 +655,30 @@ export class App implements IApp {
 
     /**
      * Return a new `App` that mirrors this one but owns independent
-     * mountable state.
-     *
-     * The new router has:
-     * - a fresh `stack` array of shallow-copied entries (handlers and child
-     *   routers are shared by reference; only the wrapping entries are new)
-     * - the same `pathMatcher` reference (it is stateless)
-     * - a fresh `Hooks` instance seeded with the current listeners
-     * - a shallow copy of `_options`
-     * - a fresh `plugins` map with the same entries
-     *
-     * Use this when the same logical router needs to be mounted under
-     * multiple paths — each mount can receive its own clone so subsequent
-     * mutations on one mount do not bleed into the others.
+     * mountable state — fresh router of the same family seeded with
+     * the current routes, shallow copy of options, and a fresh
+     * plugins map carrying the same entries.
      */
     clone(): IApp {
         const next = new App({
             name: this.name,
             path: this._path,
             options: { ...this._options },
-            hooks: this.hooks.clone(),
             plugins: this.plugins,
-            // Preserve the active router family on the clone — a clone
-            // of an app configured with TrieRouter should still use
-            // TrieRouter, not silently downgrade to LinearRouter.
+            // Preserve the active router family on the clone.
             router: this.router.clone(),
         });
 
         // Re-register routes through `register` so the clone's own
-        // `_routes` mirror is populated alongside the router. The
-        // routes already carry the canonical combined `path`
-        // produced by mount-time `joinPaths` — going back through
-        // the public `use` / verb shortcuts would re-concat each
-        // handler's intrinsic path on top of that and produce
-        // `/users/list/list`.
+        // `_routes` mirror is populated alongside the router.
         for (const route of this._routes) {
-            if (route.data.type === RouteEntryType.APP) {
-                next.register({
-                    path: route.path,
-                    data: {
-                        type: RouteEntryType.APP,
-                        data: route.data.data.clone(),
-                    },
-                });
-                continue;
-            }
-
             next.register({
                 path: route.path,
                 method: route.method,
-                data: {
-                    type: RouteEntryType.HANDLER,
-                    data: route.data.data,
-                },
+                data: route.data,
             });
         }
 
         return next;
-    }
-
-    //---------------------------------------------------------------------------------
-
-    /**
-     * Add a hook listener.
-     *
-     * @param name
-     * @param fn
-     * @param priority
-     */
-    on(
-        name: typeof HookName.START |
-            typeof HookName.END |
-            typeof HookName.CHILD_DISPATCH_BEFORE |
-            typeof HookName.CHILD_DISPATCH_AFTER,
-        fn: HookDefaultListener,
-        priority?: number,
-    ): HookUnsubscribeFn;
-
-    on(
-        name: typeof HookName.CHILD_MATCH,
-        fn: HookDefaultListener,
-        priority?: number,
-    ): HookUnsubscribeFn;
-
-    on(
-        name: typeof HookName.ERROR,
-        fn: HookErrorListener,
-        priority?: number,
-    ): HookUnsubscribeFn;
-
-    on(name: HookName, fn: HookListener, priority?: number): HookUnsubscribeFn {
-        return this.hooks.addListener(name, fn, priority);
-    }
-
-    /**
-     * Remove single or all hook listeners.
-     *
-     * @param name
-     */
-    off(name: HookName): this;
-
-    off(name: HookName, fn: HookListener): this;
-
-    off(name: HookName, fn?: HookListener): this {
-        if (typeof fn === 'undefined') {
-            this.hooks.removeListener(name);
-
-            return this;
-        }
-
-        this.hooks.removeListener(name, fn);
-        return this;
     }
 }

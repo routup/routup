@@ -115,23 +115,6 @@ const handler = defineCoreHandler({
 });
 ```
 
-It also supports handler-level hooks:
-
-```typescript
-const handler = defineCoreHandler({
-    fn: (event) => 'Hello, World!',
-    onBefore(event) {
-        // runs before the handler
-    },
-    onAfter(event) {
-        // runs after the handler
-    },
-    onError(event) {
-        // handle handler-specific errors
-    }
-});
-```
-
 ## Mounting
 
 ### Global

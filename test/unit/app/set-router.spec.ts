@@ -5,7 +5,7 @@ import {
     TrieRouter,
     defineCoreHandler,
 } from '../../../src';
-import type { Route, RouteEntry } from '../../../src';
+import type { Route, Handler } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
 describe('App.setRouter', () => {
@@ -15,7 +15,7 @@ describe('App.setRouter', () => {
         app.post('/users', defineCoreHandler(() => 'created'));
 
         // Swap from the default LinearRouter to a TrieRouter mid-flight.
-        app.setRouter(new TrieRouter<RouteEntry>());
+        app.setRouter(new TrieRouter<Handler>());
 
         const a = await app.fetch(createTestRequest('/users/42'));
         expect(await a.text()).toBe('id=42');
@@ -28,7 +28,7 @@ describe('App.setRouter', () => {
         const app = new App();
         app.get('/before', defineCoreHandler(() => 'before'));
 
-        app.setRouter(new TrieRouter<RouteEntry>());
+        app.setRouter(new TrieRouter<Handler>());
         app.get('/after', defineCoreHandler(() => 'after'));
 
         expect(await (await app.fetch(createTestRequest('/before'))).text()).toBe('before');
@@ -41,9 +41,9 @@ describe('App.setRouter', () => {
         // and `extendOptions` propagation work without ever asking
         // the router to enumerate its entries — App's own
         // `_routes` is the single source of truth.
-        class MinimalRouter implements Pick<TrieRouter<RouteEntry>, 'add' | 'lookup' | 'clone'> {
-            private inner = new LinearRouter<RouteEntry>();
-            add(route: Route<RouteEntry>) { this.inner.add(route); }
+        class MinimalRouter implements Pick<TrieRouter<Handler>, 'add' | 'lookup' | 'clone'> {
+            private inner = new LinearRouter<Handler>();
+            add(route: Route<Handler>) { this.inner.add(route); }
             lookup(p: string) { return this.inner.lookup(p); }
             clone() { return new MinimalRouter(); }
         }

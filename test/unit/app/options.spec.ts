@@ -29,7 +29,11 @@ describe('App option inheritance (mount-time)', () => {
         expect(await res.text()).toBe('offset=5');
     });
 
-    it('child option overrides parent', async () => {
+    it('child options are discarded at flatten time — handlers run under parent options', async () => {
+        // After flatten-on-use, the child app is consumed and its
+        // routes are registered on the parent's router. Per-child
+        // option scopes do not survive the flatten — every flattened
+        // handler dispatches with the parent's options view.
         const child = new App({ options: { subdomainOffset: 7 } });
         child.get('/x', defineCoreHandler((event) => `offset=${event.appOptions.subdomainOffset}`));
 
@@ -37,7 +41,7 @@ describe('App option inheritance (mount-time)', () => {
         parent.use(child);
 
         const res = await parent.fetch(createTestRequest('/x'));
-        expect(await res.text()).toBe('offset=7');
+        expect(await res.text()).toBe('offset=3');
     });
 
     it('grandchild inherits through two mount levels', async () => {
@@ -54,7 +58,10 @@ describe('App option inheritance (mount-time)', () => {
         expect(await res.text()).toBe('offset=9');
     });
 
-    it('sibling apps do not share options', async () => {
+    it('siblings flattened into the same parent share that parent\'s options', async () => {
+        // Both `a` and `b` declare their own options, but those are
+        // discarded at flatten time. The parent has no options of
+        // its own, so handlers from both children see `undefined`.
         const a = new App({ options: { subdomainOffset: 1 } });
         const b = new App({ options: { subdomainOffset: 2 } });
         a.get('/a', defineCoreHandler((event) => `${event.appOptions.subdomainOffset}`));
@@ -64,8 +71,8 @@ describe('App option inheritance (mount-time)', () => {
         parent.use('/a', a);
         parent.use('/b', b);
 
-        expect(await (await parent.fetch(createTestRequest('/a/a'))).text()).toBe('1');
-        expect(await (await parent.fetch(createTestRequest('/b/b'))).text()).toBe('2');
+        expect(await (await parent.fetch(createTestRequest('/a/a'))).text()).toBe('undefined');
+        expect(await (await parent.fetch(createTestRequest('/b/b'))).text()).toBe('undefined');
     });
 
     it('options are undefined when neither parent nor child set them', async () => {

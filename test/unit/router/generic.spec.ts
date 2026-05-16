@@ -5,7 +5,7 @@ import { MethodName } from '../../../src/constants';
 
 /**
  * Plan-014 compliance — `IRouter<T>` must work with arbitrary opaque
- * data, not just App's `RouteEntry`. Each test exercises a router with
+ * data, not just App's `Handler`. Each test exercises a router with
  * a custom `MyData` shape end-to-end:
  *
  * 1. Stored data flows through unchanged (router never mutates / never
@@ -13,7 +13,7 @@ import { MethodName } from '../../../src/constants';
  * 2. Exact-vs-prefix semantics are governed purely by `route.method`
  *    (set → exact match, unset → prefix match) per the convention
  *    documented on `IRouter<T>`.
- * 3. Params and `path` are populated as for the RouteEntry case.
+ * 3. Params and `path` are populated as for the Handler case.
  */
 
 type MyData = {

@@ -3,7 +3,6 @@ import type { MethodName } from '../constants.ts';
 import type { IDispatcher, IDispatcherEvent } from '../dispatcher/index.ts';
 import { createError, isError } from '../error/index.ts';
 import type { IAppEvent } from '../event/index.ts';
-import { HookName, Hooks, type IHooks } from '../hook/index.ts';
 import { toResponse } from '../response/index.ts';
 import type { AppOptions } from '../app/types.ts';
 import { isPromise, toMethodName, withLeadingSlash } from '../utils/index.ts';
@@ -13,17 +12,12 @@ import type { HandlerOptions } from './types.ts';
 export class Handler implements IDispatcher {
     protected config: HandlerOptions;
 
-    protected hooks: IHooks;
-
     readonly method: MethodName | undefined;
 
     // --------------------------------------------------
 
     constructor(handler: HandlerOptions) {
         this.config = handler;
-        this.hooks = new Hooks();
-
-        this.mountHooks();
 
         if (typeof handler.path === 'string') {
             this.config.path = withLeadingSlash(handler.path);
@@ -47,13 +41,6 @@ export class Handler implements IDispatcher {
     // --------------------------------------------------
 
     async dispatch(event: IDispatcherEvent): Promise<Response | undefined> {
-        if (this.hooks.hasListeners(HookName.CHILD_DISPATCH_BEFORE)) {
-            await this.hooks.trigger(HookName.CHILD_DISPATCH_BEFORE, event);
-            if (event.dispatched) {
-                return undefined;
-            }
-        }
-
         let response: Response | undefined;
 
         try {
@@ -151,29 +138,14 @@ export class Handler implements IDispatcher {
             if (response) {
                 event.dispatched = true;
                 // ERROR handler resolved the pending error — clear it
-                // so CHILD_DISPATCH_AFTER hooks and parent pipelines
-                // don't observe a stale error. Mirrors the clear in
-                // `Hooks.trigger` when a listener dispatches.
+                // so parent pipelines don't observe a stale error.
                 if (this.config.type === HandlerType.ERROR && event.error) {
                     event.error = undefined;
                 }
             }
         } catch (e) {
             event.error = isError(e) ? e : createError(e);
-
-            if (this.hooks.hasListeners(HookName.ERROR)) {
-                await this.hooks.trigger(HookName.ERROR, event);
-            }
-
-            if (event.dispatched) {
-                event.error = undefined;
-            } else {
-                throw event.error;
-            }
-        }
-
-        if (this.hooks.hasListeners(HookName.CHILD_DISPATCH_AFTER)) {
-            await this.hooks.trigger(HookName.CHILD_DISPATCH_AFTER, event);
+            throw event.error;
         }
 
         return response;
@@ -283,17 +255,4 @@ export class Handler implements IDispatcher {
         return Math.min(routerDefault, handlerOverride);
     }
 
-    protected mountHooks() {
-        if (this.config.onBefore) {
-            this.hooks.addListener(HookName.CHILD_DISPATCH_BEFORE, this.config.onBefore);
-        }
-
-        if (this.config.onAfter) {
-            this.hooks.addListener(HookName.CHILD_DISPATCH_AFTER, this.config.onAfter);
-        }
-
-        if (this.config.onError) {
-            this.hooks.addListener(HookName.ERROR, this.config.onError);
-        }
-    }
 }

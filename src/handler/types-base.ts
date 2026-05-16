@@ -1,5 +1,4 @@
 import type { MethodName } from '../constants.ts';
-import type { HookDefaultListener, HookErrorListener } from '../hook/index.ts';
 import type { Path } from '../path/index.ts';
 
 export type HandlerBaseOptions = {
@@ -14,7 +13,4 @@ export type HandlerBaseOptions = {
      * `handlerTimeoutOverridable` option.
      */
     timeout?: number,
-    onError?: HookErrorListener,
-    onBefore?: HookDefaultListener,
-    onAfter?: HookDefaultListener
 };

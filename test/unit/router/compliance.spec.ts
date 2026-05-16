@@ -6,14 +6,14 @@ import {
     defineCoreHandler,
 } from '../../../src';
 import type { IRouter } from '../../../src';
-import type { RouteEntry } from '../../../src/app/types';
+import type { Handler } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
-type ResolverFactory = () => IRouter<RouteEntry>;
+type ResolverFactory = () => IRouter<Handler>;
 
 const resolvers: Record<string, ResolverFactory> = {
-    linear: () => new LinearRouter<RouteEntry>(),
-    trie: () => new TrieRouter<RouteEntry>(),
+    linear: () => new LinearRouter<Handler>(),
+    trie: () => new TrieRouter<Handler>(),
 };
 
 describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, factory) => {

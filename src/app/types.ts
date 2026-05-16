@@ -4,14 +4,6 @@ import type {
     Handler,
     HandlerOptions,
 } from '../handler/index.ts';
-import {
-    type HookDefaultListener,
-    type HookErrorListener,
-    type HookListener,
-    type HookName,
-    type HookUnsubscribeFn,
-    type IHooks,
-} from '../hook/index.ts';
 
 import type { Path } from '../path/index.ts';
 import type { Plugin } from '../plugin/index.ts';
@@ -21,7 +13,6 @@ import type {
     TrustProxyFn,
     TrustProxyInput,
 } from '../utils/index.ts';
-import type { AppPipelineStep, RouteEntryType  } from './constants.ts';
 import type { IRouter } from '../router/types.ts';
 import type { RouteMatch } from '../types.ts';
 
@@ -121,11 +112,11 @@ export type AppOptionsInput = Omit<AppOptions, 'etag' | 'trustProxy'> & {
  *
  * Splits true runtime options (which propagate to mounted children
  * via mount-time inheritance) from App-local identity (`name`,
- * `path`) and constructor injectables (`hooks`, `plugins`,
- * `router`). Keeping these separate prevents identity from leaking
- * across the mount boundary — e.g. a parent's `path: '/api'` would
- * otherwise propagate into a child whose own `path` is unset and
- * silently double-prefix on registration.
+ * `path`) and constructor injectables (`plugins`, `router`). Keeping
+ * these separate prevents identity from leaking across the mount
+ * boundary — e.g. a parent's `path: '/api'` would otherwise propagate
+ * into a child whose own `path` is unset and silently double-prefix
+ * on registration.
  */
 export type AppContext = {
     /**
@@ -157,13 +148,6 @@ export type AppContext = {
     options?: AppOptionsInput,
 
     /**
-     * Lifecycle hook registry. Defaults to a fresh `Hooks` instance.
-     * Pass an existing registry to share listeners across Apps (used
-     * by `clone()` to seed the copy with the original's listeners).
-     */
-    hooks?: IHooks,
-
-    /**
      * Map of installed plugin name → version. Defaults to an empty
      * map. Used by `clone()` to carry the installed-plugin registry
      * over so duplicate installs are still rejected on the copy.
@@ -175,74 +159,19 @@ export type AppContext = {
      * walks registered entries linearly per request. Swap in an
      * alternative (e.g. `TrieRouter`) on apps with many routes.
      */
-    router?: IRouter<RouteEntry>,
+    router?: IRouter<Handler>,
 };
-
-// --------------------------------------------------
-// Route entry
-// --------------------------------------------------
-
-/**
- * App-internal data that gets stored as `Route.data` in the active
- * router. Tagged union — the discriminator `type` (HANDLER / APP)
- * tells the dispatch loop which branch of the union to read.
- *
- * `path` and `method` are not part of this type — they live on
- * `Route<RouteEntry>` itself (the router's routing-relevant fields),
- * and App resolves the handler's intrinsic method into `Route.method`
- * at registration time.
- */
-export type AppRouteEntry = {
-    /**
-     * Discriminator marking this entry as a mounted child App (vs a
-     * leaf handler). The dispatch loop branches on this to recurse
-     * via `IApp.dispatch` rather than invoking a handler `fn`.
-     */
-    type: typeof RouteEntryType.APP,
-
-    /**
-     * The mounted child App. Path/method live on the wrapping
-     * `Route<RouteEntry>`, not here.
-     */
-    data: IApp,
-};
-
-/**
- * Leaf entry in the route table: a handler invoked directly by the
- * dispatch loop.
- */
-export type HandlerRouteEntry = {
-    /**
-     * Discriminator marking this entry as a leaf handler (vs a
-     * mounted child App).
-     */
-    type: typeof RouteEntryType.HANDLER,
-
-    /**
-     * The handler invoked when this entry matches. Path/method live
-     * on the wrapping `Route<RouteEntry>`, not here.
-     */
-    data: Handler,
-};
-
-/**
- * Tagged union of route-table entries. The active `IRouter` stores
- * one of these as `Route.data` per registered entry; the dispatch
- * loop reads `type` to choose the right branch.
- */
-export type RouteEntry = AppRouteEntry | HandlerRouteEntry;
 
 // --------------------------------------------------
 // Pipeline
 // --------------------------------------------------
 
+/**
+ * Per-dispatch state threaded through the match loop. Used internally
+ * by `App.dispatch` and the `setNext` continuation; not part of the
+ * public surface.
+ */
 export type AppPipelineContext = {
-    /**
-     * Current pipeline phase — drives the state machine in
-     * `App.executePipelineStep`. Mutated as the loop advances.
-     */
-    step: AppPipelineStep,
-
     /**
      * The dispatcher event being processed. Carries request, path,
      * params, and the response accumulator across pipeline steps.
@@ -251,35 +180,36 @@ export type AppPipelineContext = {
 
     /**
      * `true` when this dispatch is the outermost App on the call
-     * stack (the root). Captured in `App.dispatch` from the event's
-     * pre-overwrite `appOptions` and used to gate root-only
-     * behaviour like OPTIONS auto-Allow.
+     * stack (the root). Used to gate root-only behaviour like
+     * OPTIONS auto-Allow.
      */
     isRoot: boolean,
+
     /**
-     * Position within `matches`. Replaces the old "raw stack index" —
-     * the dispatch loop now iterates the resolved-matches list rather
-     * than the unfiltered registration order.
+     * Resolved matches for the current `event.path`, populated on
+     * first lookup and threaded through `setNext` recursion so we
+     * don't re-run `IRouter.lookup` per cycle. Refreshed when
+     * `event.path` changes mid-walk.
      */
-    matchIndex: number,
-    /**
-     * Resolved matches for the current `event.path`, populated on the
-     * first LOOKUP entry and threaded through `setNext` recursion so
-     * we don't re-run `IRouter.lookup` per cycle. Invalidated
-     * automatically when `event.path` changes (a hook mutating the
-     * path between entries triggers a refresh).
-     */
-    matches?: readonly RouteMatch<RouteEntry>[],
+    matches: readonly RouteMatch<Handler>[],
+
     /**
      * The `event.path` that was used to compute `matches`. Stored so
      * we can detect a mid-walk path mutation and refresh the cache.
      */
-    matchesPath?: string,
+    matchesPath: string,
+
+    /**
+     * Position within `matches` for the *next* handler the walk
+     * should consider. The current handler's `setNext` continuation
+     * captures this and resumes the walk on `event.next()`.
+     */
+    matchIndex: number,
 
     /**
      * The Response produced by the pipeline. Set by handlers (via
-     * `toResponse`) or by terminal pipeline steps; returned from
-     * `App.dispatch` once `FINISH` is reached.
+     * `toResponse`) or by the OPTIONS auto-Allow path; returned from
+     * `App.dispatch`.
      */
     response?: Response,
 };
@@ -297,13 +227,13 @@ export interface IApp extends IDispatcher {
     fetch(request: AppRequest): Promise<Response>;
 
     /**
-     * Return a new router that mirrors this one but owns independent
-     * mountable state — fresh stack of shallow-copied entries (handlers and
-     * child routers shared by reference), fresh `Hooks` seeded with the
-     * current listeners, shallow copy of options, and a fresh plugins map.
+     * Return a new App that mirrors this one but owns independent
+     * mountable state — fresh `IRouter` of the same family seeded
+     * with this App's routes, shallow copy of options, and a fresh
+     * plugins map carrying the same entries.
      *
-     * Intended for mounting the same logical router under multiple paths
-     * without sharing mutable state across mount points.
+     * Intended for mounting the same logical App under multiple
+     * paths without sharing mutable state across mount points.
      */
     clone(): IApp;
 
@@ -317,27 +247,34 @@ export interface IApp extends IDispatcher {
      * comparing implementations mid-flight without rebuilding the
      * App.
      */
-    setRouter(router: IRouter<RouteEntry>): void;
+    setRouter(router: IRouter<Handler>): void;
 
     /**
-     * Check if a plugin with the given name is installed on this router.
+     * Check if a plugin with the given name is installed on this
+     * App. Plugins installed on a mounted child are merged into the
+     * parent at mount time, so this reflects the flattened view.
      */
     hasPlugin(name: string): boolean;
 
     /**
-     * Get the version of an installed plugin by name on this router,
-     * or `undefined` if the plugin is not installed here.
+     * Get the version of an installed plugin by name, or `undefined`
+     * if the plugin is not installed.
      */
     getPluginVersion(name: string): string | undefined;
 
     /**
-     * Register a handler, router, or plugin.
-     * When a path is provided, the item is mounted at that path.
+     * Register a handler, App, or plugin.
+     *
+     * When another App is passed, its routes are snapshotted, the
+     * mount path is prefixed onto each, and the entries are
+     * registered on this App's router. The child's plugin registry
+     * is merged into this one. The child is discarded post-mount —
+     * later mutations on it do **not** propagate.
      */
-    use(router: IApp): this;
+    use(app: IApp): this;
     use(handler: Handler | HandlerOptions): this;
     use(plugin: Plugin): this;
-    use(path: Path, router: IApp): this;
+    use(path: Path, app: IApp): this;
     use(path: Path, handler: Handler | HandlerOptions): this;
     use(path: Path, plugin: Plugin): this;
 
@@ -368,29 +305,4 @@ export interface IApp extends IDispatcher {
     /** Register OPTIONS handler(s). */
     options(...handlers: (Handler | HandlerOptions)[]): this;
     options(path: Path, ...handlers: (Handler | HandlerOptions)[]): this;
-
-    /**
-     * Add a hook listener.
-     */
-    on(
-        name: typeof HookName.START |
-            typeof HookName.END |
-            typeof HookName.CHILD_DISPATCH_BEFORE |
-            typeof HookName.CHILD_DISPATCH_AFTER,
-        fn: HookDefaultListener,
-    ): HookUnsubscribeFn;
-    on(
-        name: typeof HookName.CHILD_MATCH,
-        fn: HookDefaultListener,
-    ): HookUnsubscribeFn;
-    on(
-        name: typeof HookName.ERROR,
-        fn: HookErrorListener,
-    ): HookUnsubscribeFn;
-
-    /**
-     * Remove a specific or all hook listeners for the given hook name.
-     */
-    off(name: HookName): this;
-    off(name: HookName, fn: HookListener): this;
 }
