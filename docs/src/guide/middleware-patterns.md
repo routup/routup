@@ -11,7 +11,7 @@ Routup v6 has no `app.on(...)` / hook API. Middleware — built from `defineCore
 
 The benefit: **one composition primitive** that can be path-scoped (`app.use('/api', mw)`), method-scoped (via a verb shortcut), and composed in either direction.
 
-The cost worth knowing: middleware is **in** the onion. A buggy listener can't deadlock the request when it's a hook; a middleware that forgets `return event.next()` can.
+The cost worth knowing: middleware is **in** the onion. A v5 hook was a side-effect outside dispatch — a buggy listener couldn't hang the request. A middleware that returns `undefined` *and* never calls `event.next()` (or produces a response) hangs the request until a timeout aborts it — by design, so bugs become loud rather than silent. (Forgetting the leading `return` on `event.next()` is harmless: the captured downstream result is forwarded automatically when the handler returns `undefined`.)
 
 ## Request logging (was `'start'` + `'end'`)
 

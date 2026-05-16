@@ -92,7 +92,7 @@ A few consequences worth knowing:
 
 - **Plugin registries merge into the parent.** After `parent.use(child)`, `parent.hasPlugin(name)` reflects everything installed on `child` (or any app mounted into `child` earlier). Duplicate plugin names across the merge throw `PluginAlreadyInstalledError`.
 - **Per-child app options are discarded.** Every flattened handler runs under the parent's `event.appOptions`. If you need a per-handler timeout, set it on the handler (`defineCoreHandler({ timeout: 1000, fn })`).
-- **`event.mountPath` is no longer accumulated.** It stays at `'/'` for the lifetime of a request; the prefix the child was mounted at is baked into the handler's registered path. Read the prefix from `event.path` (or extract it via a named param like `app.use('/api/:version', child)`).
+- **`event.mountPath` is no longer accumulated across nested-app dispatch.** Instead the dispatcher sets it per matched handler to the prefix the active route consumed (`match.path`), and restores the previous value when the handler returns. Mount-aware helpers (e.g. `@routup/assets`, `@routup/swagger-ui`) keep working — they read the mount prefix off `event.mountPath` exactly as before, just without the per-request stack walk.
 
 ## Hooks removed — middleware is the single composition primitive
 
@@ -116,7 +116,7 @@ app.use(defineErrorHandler((error) => {
 
 See the [Middleware Patterns guide](./middleware-patterns) for the full set of equivalents (request logging, error observability, conditional short-circuit, path-scoped instrumentation).
 
-One behavioural difference to know: a v5 hook was a side-effect outside the onion — a buggy listener couldn't deadlock the request. Middleware is **in** the onion. Forgetting `return event.next()` in a middleware that should forward does deadlock the request (until a timeout aborts it, if one is configured).
+One behavioural difference to know: a v5 hook was a side-effect outside the onion — a buggy listener couldn't deadlock the request. Middleware is **in** the onion. A middleware that returns `undefined` *and* never calls `event.next()` (or produces a response) hangs the request until a timeout aborts it, by design — see the `undefined` contract in the [Architecture guide](./app#returning-undefined). Forgetting the leading `return` on `event.next()` is harmless: the captured downstream result is forwarded automatically when the handler returns `undefined`.
 
 ## Note for plugin authors
 
