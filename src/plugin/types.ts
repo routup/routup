@@ -20,7 +20,11 @@ export type Plugin = {
 
 export type PluginInstallContext = {
     /**
-     * By specifying a path, the plugin will be installed as a child router.
+     * Mount-path prefix to prepend onto every route the plugin
+     * registers. Equivalent to passing the same prefix to
+     * `app.use(path, plugin)`. The plugin installs into a scratch
+     * `App`; that scratch is then flattened into the host App with
+     * this prefix joined onto each route.
      */
     path?: Path,
 };

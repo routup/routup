@@ -40,7 +40,11 @@ export interface IAppEvent {
     readonly method: MethodNameLike;
 
     /**
-     * Accumulated mount path from nested routers.
+     * Prefix the active route was matched on (the substring of the
+     * request path the matcher consumed). Set per dispatched handler
+     * and restored when the handler returns; useful for static-asset
+     * / mount-aware helpers that need to strip this off `path` to
+     * recover a mount-relative path.
      */
     readonly mountPath: string;
 

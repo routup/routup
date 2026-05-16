@@ -308,8 +308,9 @@ export class App implements IApp {
             event.isDispatching = wasDispatching;
 
             // Restore routing state when this App did not produce a
-            // response, so the caller's pipeline sees its own
-            // pre-dispatch path/mountPath/params.
+            // response, so a re-entrant dispatch caller (anyone
+            // invoking another App's `dispatch` on the same event
+            // afterwards) sees its own pre-dispatch state.
             if (!event.dispatched) {
                 event.path = savedPath;
                 event.mountPath = savedMountPath;
