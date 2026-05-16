@@ -98,11 +98,14 @@ export class App implements IApp {
     /**
      * Registry of installed plugins (name → version) on this App.
      *
-     * Read by `use(otherApp)` so plugin registries merge into the
-     * parent at flatten time — that way `parent.hasPlugin('foo')`
-     * reflects plugins installed on apps mounted into it.
+     * Read by `use(otherApp)` (via the public `plugins` getter) so
+     * plugin registries merge into the parent at flatten time —
+     * `parent.hasPlugin('foo')` then reflects plugins installed on
+     * apps mounted into it.
+     *
+     * @protected
      */
-    plugins: Map<string, string | undefined>;
+    protected _plugins: Map<string, string | undefined>;
 
     /**
      * Every route registered on this App, in registration order.
@@ -119,7 +122,7 @@ export class App implements IApp {
         this.name = input.name;
         this._path = input.path;
 
-        this.plugins = new Map<string, string | undefined>(input.plugins);
+        this._plugins = new Map<string, string | undefined>(input.plugins);
         this.router = input.router ?? new LinearRouter<Handler>();
 
         this._options = Object.freeze(normalizeAppOptions(input.options ?? {}));
@@ -136,6 +139,16 @@ export class App implements IApp {
      */
     get routes(): readonly Route<Handler>[] {
         return this._routes;
+    }
+
+    /**
+     * Public read of the installed-plugin registry. Used by
+     * `use(child)` to merge child plugins into the parent at
+     * flatten time. Returned as `ReadonlyMap` — callers must not
+     * mutate; go through `use(plugin)` to install.
+     */
+    get plugins(): ReadonlyMap<string, string | undefined> {
+        return this._plugins;
     }
 
     /**
@@ -585,18 +598,22 @@ export class App implements IApp {
      * @protected
      */
     protected flatten(child: App, path: Path | undefined): void {
-        // Merge plugin registries — `child.plugins` reflects everything
-        // installed on the child (and on apps mounted into it earlier).
-        for (const [name, version] of child.plugins) {
-            if (this.plugins.has(name)) {
+        // Validate plugin conflicts up front so we never half-merge
+        // — first-conflict-wins would leave `this._plugins` with a
+        // partial view of the child's registry.
+        for (const name of child.plugins.keys()) {
+            if (this._plugins.has(name)) {
                 throw new PluginAlreadyInstalledError(name);
             }
-            this.plugins.set(name, version);
+        }
+
+        for (const [name, version] of child.plugins) {
+            this._plugins.set(name, version);
         }
 
         // Snapshot routes. The router's `add()` is responsible for
         // any cache invalidation it carries.
-        for (const route of child._routes) {
+        for (const route of child.routes) {
             this.register({
                 path: joinPaths(this._path, path, route.path),
                 method: route.method,
@@ -611,7 +628,7 @@ export class App implements IApp {
      * Check if a plugin with the given name is installed on this App.
      */
     hasPlugin(name: string): boolean {
-        return this.plugins.has(name);
+        return this._plugins.has(name);
     }
 
     /**
@@ -619,7 +636,7 @@ export class App implements IApp {
      * if the plugin is not installed.
      */
     getPluginVersion(name: string): string | undefined {
-        return this.plugins.get(name);
+        return this._plugins.get(name);
     }
 
     // --------------------------------------------------
@@ -628,7 +645,7 @@ export class App implements IApp {
         plugin: Plugin,
         context: PluginInstallContext = {},
     ): this {
-        if (this.plugins.has(plugin.name)) {
+        if (this._plugins.has(plugin.name)) {
             throw new PluginAlreadyInstalledError(plugin.name);
         }
 
@@ -646,7 +663,7 @@ export class App implements IApp {
             this.use(scratch);
         }
 
-        this.plugins.set(plugin.name, plugin.version);
+        this._plugins.set(plugin.name, plugin.version);
 
         return this;
     }
@@ -664,7 +681,7 @@ export class App implements IApp {
             name: this.name,
             path: this._path,
             options: { ...this._options },
-            plugins: this.plugins,
+            plugins: this._plugins,
             // Preserve the active router family on the clone.
             router: this.router.clone(),
         });
