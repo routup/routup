@@ -17,15 +17,33 @@ type HookEntry = {
 export class Hooks implements IHooks {
     protected items: Record<string, HookEntry[]>;
 
+    /**
+     * Derived bit: `true` iff at least one entry exists across all
+     * hook names. Maintained on every `addListener` / `removeListener`
+     * so the dispatch hot path can short-circuit on a single boolean
+     * read rather than per-name lookup. Apps that never register a
+     * hook (the common case) pay one boolean check per request
+     * instead of a property access per pipeline step.
+     */
+    protected _hasAny: boolean;
+
     // --------------------------------------------------
 
     constructor() {
         this.items = {};
+        this._hasAny = false;
     }
 
     // --------------------------------------------------
 
+    hasAny(): boolean {
+        return this._hasAny;
+    }
+
     hasListeners(name: HookName): boolean {
+        if (!this._hasAny) {
+            return false;
+        }
         return this.items[name] !== undefined;
     }
 
@@ -45,6 +63,8 @@ export class Hooks implements IHooks {
         }
         this.items[name].splice(i, 0, entry);
 
+        this._hasAny = true;
+
         return () => {
             this.removeListener(name, fn);
         };
@@ -61,6 +81,7 @@ export class Hooks implements IHooks {
 
         if (typeof fn === 'undefined') {
             delete this.items[name];
+            this.recomputeHasAny();
             return;
         }
 
@@ -74,6 +95,24 @@ export class Hooks implements IHooks {
         if (this.items[name].length === 0) {
             delete this.items[name];
         }
+
+        this.recomputeHasAny();
+    }
+
+    /**
+     * Recompute `_hasAny` from the current `items` map. O(k) where k
+     * is the number of distinct hook names ever registered (≤ ~6) —
+     * effectively O(1). Called from `removeListener` so the fast-path
+     * flag stays in sync with registration state.
+     */
+    protected recomputeHasAny(): void {
+        for (const name in this.items) {
+            if (this.items[name] && this.items[name].length > 0) {
+                this._hasAny = true;
+                return;
+            }
+        }
+        this._hasAny = false;
     }
 
     // --------------------------------------------------
