@@ -129,6 +129,31 @@ describe('handler lifecycle callbacks', () => {
         expect(order).toEqual([]);
     });
 
+    it('completes cleanly when onBefore throws under a per-handler timeout (cleanup path)', async () => {
+        // Regression: the per-handler timeout registers an abort
+        // listener on the parent signal and stores a cleanup closure.
+        // Before the dispatch restructure, `onBefore` throwing skipped
+        // the inner try/finally that owned cleanup, leaking the
+        // listener for the request lifetime. The outer `finally` now
+        // owns cleanup. This test exercises the path end-to-end —
+        // the assertion that matters is "no hang, error surfaces."
+        const app = new App();
+        app.get('/', defineCoreHandler({
+            timeout: 1_000,
+            onBefore: () => { throw new AppError({ status: 500, message: 'before-failed' }); },
+            fn: () => 'ok',
+        }));
+        app.use(defineErrorHandler((error, event) => {
+            event.response.status = error.status;
+            return { message: error.message };
+        }));
+
+        const res = await app.fetch(createTestRequest('/'));
+        expect(res.status).toBe(500);
+        const body = await res.json();
+        expect(body.message).toBe('before-failed');
+    });
+
     it('fires onBefore / onAfter for an ERROR handler that recovers', async () => {
         const order: string[] = [];
         const app = new App();

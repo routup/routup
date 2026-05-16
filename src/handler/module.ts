@@ -42,10 +42,13 @@ export class Handler implements IDispatcher {
 
     async dispatch(event: IDispatcherEvent): Promise<Response | undefined> {
         let response: Response | undefined;
-        // Hoisted so the outer catch can forward it to `onError`. We
-        // keep the no-throw common path allocation-free by lazily
-        // assigning inside the try.
+        // Hoisted so the outer catch can forward it to `onError` and
+        // so the outer finally can release the parent-signal abort
+        // listener even when `onBefore` / `event.build()` throws —
+        // the inner try/finally that used to own this cleanup was
+        // unreachable from those throw sites.
         let handlerEvent: IAppEvent | undefined;
+        let cleanupParentListener: (() => void) | undefined;
 
         try {
             // Read router options directly from the dispatcher event so we
@@ -57,7 +60,6 @@ export class Handler implements IDispatcher {
             // When a per-handler timeout is active, create a child AbortController
             // linked to the parent signal so the handler's signal aborts on timeout
             let childController: AbortController | undefined;
-            let cleanupParentListener: (() => void) | undefined;
 
             if (effectiveTimeout) {
                 const parentSignal = event.signal;
@@ -88,53 +90,43 @@ export class Handler implements IDispatcher {
                 await this.config.onBefore(handlerEvent);
             }
 
+            let invocation: unknown;
+            if (skipFn) {
+                // invocation stays undefined; falls through to toResponse(undefined) → undefined.
+            } else if (this.config.type === HandlerType.ERROR) {
+                const { fn } = this.config;
+                invocation = fn(event.error!, handlerEvent);
+            } else {
+                const { fn } = this.config;
+                invocation = fn(handlerEvent);
+            }
+
             let result: unknown;
+            if (skipFn) {
+                // no-op
+            } else if (effectiveTimeout) {
+                // Race the (possibly-async) invocation against the timeout.
+                result = await this.executeWithTimeout(
+                    () => this.resolveHandlerResult(invocation, handlerEvent!),
+                    effectiveTimeout,
+                    childController,
+                );
+            } else if (isPromise(invocation)) {
+                // Async handler return — await once. If it resolves
+                // to undefined, fall back to the async resolver
+                // (waits for `next()` or abort).
+                const awaited = await invocation;
 
-            try {
-                // Invoke the handler fn inside the cleanup-protected
-                // try so a sync throw still releases the parent abort
-                // listener registered above.
-                let invocation: unknown;
-                if (skipFn) {
-                    // result stays undefined; falls through to toResponse(undefined) → undefined.
-                } else if (this.config.type === HandlerType.ERROR) {
-                    const { fn } = this.config;
-                    invocation = fn(event.error!, handlerEvent);
-                } else {
-                    const { fn } = this.config;
-                    invocation = fn(handlerEvent);
-                }
-
-                if (skipFn) {
-                    // no-op
-                } else if (effectiveTimeout) {
-                    // Race the (possibly-async) invocation against the timeout.
-                    result = await this.executeWithTimeout(
-                        () => this.resolveHandlerResult(invocation, handlerEvent!),
-                        effectiveTimeout,
-                        childController,
-                    );
-                } else if (isPromise(invocation)) {
-                    // Async handler return — await once. If it resolves
-                    // to undefined, fall back to the async resolver
-                    // (waits for `next()` or abort).
-                    const awaited = await invocation;
-
-                    result = typeof awaited === 'undefined' ?
-                        await this.resolveHandlerResult(undefined, handlerEvent) :
-                        awaited;
-                } else if (typeof invocation === 'undefined') {
-                    // Sync undefined: defer to async resolver — handler
-                    // may invoke `next()` later from a callback.
-                    result = await this.resolveHandlerResult(undefined, handlerEvent);
-                } else {
-                    // Sync non-undefined: zero internal microtasks.
-                    result = invocation;
-                }
-            } finally {
-                if (cleanupParentListener) {
-                    cleanupParentListener();
-                }
+                result = typeof awaited === 'undefined' ?
+                    await this.resolveHandlerResult(undefined, handlerEvent) :
+                    awaited;
+            } else if (typeof invocation === 'undefined') {
+                // Sync undefined: defer to async resolver — handler
+                // may invoke `next()` later from a callback.
+                result = await this.resolveHandlerResult(undefined, handlerEvent);
+            } else {
+                // Sync non-undefined: zero internal microtasks.
+                result = invocation;
             }
 
             // `toResponse` returns sync when no ETag is configured —
@@ -172,6 +164,10 @@ export class Handler implements IDispatcher {
             }
 
             throw event.error;
+        } finally {
+            if (cleanupParentListener) {
+                cleanupParentListener();
+            }
         }
 
         return response;
