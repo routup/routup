@@ -187,4 +187,21 @@ describe('src/plugin install', () => {
 
         expect(() => parent.use('/api', child)).toThrowError(PluginAlreadyInstalledError);
     });
+
+    it('flatten rejects mounting a child whose plugin name was already singleton-claimed on the parent', () => {
+        // Parent claims a name as singleton up front; even a *non*-
+        // singleton child install of the same name must be rejected at
+        // mount time. Covers the other direction of the singleton-vs-
+        // multi-mount conflict from the test above.
+        const parent = new App();
+        parent.use(singletonPlugin());
+
+        const child = new App();
+        child.use('/inner', {
+            ...singletonPlugin(),
+            singleton: false,
+        });
+
+        expect(() => parent.use('/api', child)).toThrowError(PluginAlreadyInstalledError);
+    });
 });

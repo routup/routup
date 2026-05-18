@@ -90,7 +90,7 @@ Mirrors Hono's `app.route(...)` semantics. The benefit is that the dispatcher wa
 
 A few consequences worth knowing:
 
-- **Plugin registries merge into the parent.** After `parent.use(child)`, `parent.hasPlugin(name)` reflects everything installed on `child` (or any app mounted into `child` earlier). Duplicate plugin names across the merge throw `PluginAlreadyInstalledError`.
+- **Plugin registries merge into the parent.** After `parent.use(child)`, `parent.hasPlugin(name)` reflects everything installed on `child` (or any app mounted into `child` earlier). Conflict identity is `(plugin name, canonical mount path)` — the same plugin at distinct mount paths coexists by design, so an "assets" plugin can be mounted at `/v1` and `/v2` without forking. A plugin that opts in with `singleton: true` reverts to the old "one per app, regardless of path" behaviour, and the claim is sticky across `flatten()` so it survives any later child mount.
 - **Per-child app options are discarded.** Every flattened handler runs under the parent's `event.appOptions`. If you need a per-handler timeout, set it on the handler (`defineCoreHandler({ timeout: 1000, fn })`).
 - **`event.mountPath` is no longer accumulated across nested-app dispatch.** Instead the dispatcher sets it per matched handler to the prefix the active route consumed (`match.path`), and restores the previous value when the handler returns. Mount-aware helpers (e.g. `@routup/assets`, `@routup/swagger-ui`) keep working — they read the mount prefix off `event.mountPath` exactly as before, just without the per-request stack walk.
 

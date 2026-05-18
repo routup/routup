@@ -612,9 +612,9 @@ export class App implements IApp {
         // the child's path space; composing with `this._path` + the
         // mount `path` lifts it into this App's canonical space.
         type Pending = {
-            name: string; 
-            key: string; 
-            version: string | undefined 
+            name: string;
+            key: string;
+            version: string | undefined;
         };
         const pending: Pending[] = [];
 
@@ -641,17 +641,17 @@ export class App implements IApp {
                     throw new PluginAlreadyInstalledError(name);
                 }
                 pending.push({
-                    name, 
-                    key: composedKey, 
-                    version, 
+                    name,
+                    key: composedKey,
+                    version,
                 });
             }
         }
 
         for (const {
-            name, 
-            key, 
-            version, 
+            name,
+            key,
+            version,
         } of pending) {
             let entry = this._plugins.get(name);
             if (!entry) {
