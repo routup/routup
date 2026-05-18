@@ -10,10 +10,9 @@ Routup v6 also removes the lifecycle-hook surface (`app.on(...)`, `HookName`, pe
 |----|-----|
 | `new Router()` | `new App()` |
 | `IRouter` (top-level interface) | `IApp` |
-| `RouterOptions` / `RouterOptionsInput` | `AppOptions` / `AppOptionsInput`; the `App` constructor takes `AppContext` (`{ name, path, options, plugins, router }`) |
+| `RouterOptions` / `RouterOptionsInput` | `AppOptions` / `AppOptionsInput`; the `App` constructor takes `AppContext` (`{ name, path, options, router }`) |
 | `app.on(...)` / `app.off(...)`, `HookName.*` | _removed_ — express lifecycle wrapping as middleware (see [Middleware Patterns](./middleware-patterns) and the "Hooks removed" section below) |
 | `HandlerOptions.onBefore` / `onAfter` / `onError` | **kept** — but as plain optional callbacks on the handler config, no `Hooks` machinery, no priorities |
-| `RouteEntry` / `AppRouteEntry` / `HandlerRouteEntry` / `RouteEntryType` | _removed_ — `App` now stores routes as `Route<Handler>` directly; with sub-apps flattened at mount time there is no `APP` discriminator |
 | `RoutupEvent` / `IRoutupEvent` | `AppEvent` / `IAppEvent` |
 | `RoutupError` | `AppError` |
 | `RoutupRequest` | `AppRequest` |
@@ -25,10 +24,11 @@ Routup v6 also removes the lifecycle-hook surface (`app.on(...)`, `HookName`, pe
 | `RouterOptions.path` (runtime path-strip) | `AppContext.path` (registration-time **prefix**) |
 | `event.routerPath` | _removed_ — option resolution moved to mount time; the per-request stack walk is gone |
 | `event.routerOptions` | `event.appOptions` |
-| `RouterPipelineStep` / `RouterPipelineContext` / `RouterStackEntryType` / `RouterSymbol` | `AppPipelineStep` / `AppPipelineContext` / `RouteEntryType` / `AppSymbol` |
-| `RouterStackEntryType.ROUTER` (enum value) | `RouteEntryType.APP` |
-| `Router.StackEntry` | `RouteEntry` (`AppRouteEntry` \| `HandlerRouteEntry`) |
-| `isRouterInstance()` | `isAppInstance()` |
+| `Router.clone()` | _removed_ — sub-apps flatten on mount, so an App can be re-mounted under multiple paths without cloning (#914) |
+
+### Internal-only renames
+
+The v5 dispatch pipeline exposed `RouterPipelineStep`, `RouterPipelineContext`, `RouterStackEntryType`, `Router.StackEntry`, `RouterSymbol`, and `isRouterInstance` from internal module paths. v6 reorganized the dispatch entirely — the App now stores routes as `Route<Handler>` directly and there is no per-request stack, so the corresponding types are gone. The public re-exports (`Route`, `RouteMatch`, `App`, `IApp`) are stable; only code that imported from non-barrel paths is affected.
 
 ## Renames at a glance
 
