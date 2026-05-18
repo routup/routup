@@ -27,7 +27,7 @@ export type SmartRouterOptions<T extends ObjectLiteral = ObjectLiteral> = BaseRo
  * buffer; on the first `lookup()` call, picks `LinearRouter` or
  * `TrieRouter` based on the registered route count and replays the
  * pending list onto the chosen inner router. Every subsequent call
- * — `add`, `lookup`, `clone` — forwards to the inner.
+ * — `add`, `lookup` — forwards to the inner.
  *
  * Use this when you don't want to commit to a router family up-front
  * (e.g. a library that registers a variable number of routes
@@ -74,17 +74,6 @@ export class SmartRouter<T extends ObjectLiteral = ObjectLiteral> implements IRo
             this.pending = [];
         }
         return this.inner.lookup(path, method);
-    }
-
-    clone(): IRouter<T> {
-        // A fresh `SmartRouter` — uncommitted, ready to re-decide
-        // based on its own registrations. Cache *shape* is carried
-        // forward (not contents) the same way the leaf routers do
-        // it; the inner router will receive it on first lookup.
-        return new SmartRouter<T>({
-            threshold: this.threshold,
-            cache: this.cache?.clone(),
-        });
     }
 
     /**

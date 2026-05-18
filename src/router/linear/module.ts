@@ -90,10 +90,4 @@ export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IR
         this.cache?.set(path, matches);
         return matches;
     }
-
-    clone(): IRouter<T> {
-        // Carry the cache *shape* forward (not contents) — fresh
-        // cache, same configured class/size. Absent stays absent.
-        return new LinearRouter<T>({ cache: this.cache?.clone() });
-    }
 }

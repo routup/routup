@@ -9,11 +9,11 @@ import type { AppOptions, AppOptionsInput } from './types.ts';
 export function normalizeAppOptions(input: AppOptionsInput): AppOptions {
     let etag : EtagFn | null | undefined;
     if (typeof input.etag !== 'undefined') {
-        // Keep `false` (and `null` from already-normalized options being
-        // re-spread, e.g. via App.clone) as the literal `null`
-        // sentinel so toResponse() can synchronously skip the ETag path.
-        // A truthy no-op fn (the previous behavior) forced an
-        // `await applyEtag(...)` microtask hop on every request.
+        // Keep `false` (and `null` from already-normalized options
+        // being re-spread) as the literal `null` sentinel so
+        // toResponse() can synchronously skip the ETag path. A truthy
+        // no-op fn (the previous behavior) forced an `await
+        // applyEtag(...)` microtask hop on every request.
         if (input.etag === null || input.etag === false) {
             etag = null;
         } else {

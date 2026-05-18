@@ -14,7 +14,7 @@ import { createTestRequest } from '../../helpers';
  * `SmartRouter` accumulates registered routes in a pending buffer
  * until the first `lookup()`, then picks `LinearRouter` (tiny route
  * table) or `TrieRouter` (past threshold) and replays the pending
- * list onto it. Subsequent `add` / `lookup` / `clone` forward.
+ * list onto it. Subsequent `add` / `lookup` forward.
  */
 describe('SmartRouter', () => {
     // The chosen inner router is a `protected` field — cast through
@@ -79,26 +79,6 @@ describe('SmartRouter', () => {
 
         await app.fetch(createTestRequest('/r0'));
         expect(setCalls).toBeGreaterThan(0);
-    });
-
-    it('clone() returns a fresh, uncommitted SmartRouter', () => {
-        const router = new SmartRouter<Handler>({ threshold: 5 });
-        router.add({
-            path: '/x',
-            method: 'GET',
-            data: { type: 'handler', dummy: true } as never,
-        });
-        // Force the original to choose its inner.
-        router.lookup('/x', 'GET');
-        expect(inner(router)).toBeDefined();
-
-        const cloned = router.clone() as SmartRouter<Handler>;
-        // Clone hasn't decided yet — no inner until something
-        // triggers a lookup, and routes from the original do NOT
-        // carry over (matches LinearRouter / TrieRouter clone
-        // semantics).
-        expect(inner(cloned)).toBeUndefined();
-        expect(cloned.lookup('/x', 'GET').length).toBe(0);
     });
 
     it('default threshold defers to TrieRouter at 30+ entries', async () => {

@@ -36,13 +36,4 @@ export interface ICache<V> {
      * cached against an earlier route set.
      */
     clear(): void;
-
-    /**
-     * Return a fresh, **empty** cache of the same shape — same class
-     * for leaf implementations. Used by `IRouter.clone()` so the
-     * clone preserves the configured cache family (size, eviction
-     * policy, …) without inheriting the parent's cached values.
-     * Mirrors `IRouter.clone()`.
-     */
-    clone(): ICache<V>;
 }

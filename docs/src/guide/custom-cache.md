@@ -50,7 +50,6 @@ export interface ICache<V> {
     set(key: string, value: V): void;
     delete(key: string): void;
     clear(): void;
-    clone(): ICache<V>;
 }
 ```
 
@@ -60,7 +59,6 @@ For router lookup caching, `V` is `readonly RouteMatch<T>[]` (the type returned 
 
 - **`get(key)` returns `undefined` for absent keys.** Implementations cannot store `undefined` as a value; the absent-key sentinel and the no-cache-entry case are conflated, by design. Other falsy values (`null`, `0`, `''`, `false`) are valid cached payloads.
 - **`clear()` drops every entry.** Called by the router on every `add()`. Conservative — future plans may switch to per-path invalidation.
-- **`clone()` returns a fresh, empty cache of the same shape.** Used by `IRouter.clone()` so a cloned router preserves the configured cache family (size, eviction policy) without inheriting cached values. Mirrors `IRouter.clone()`.
 
 ## Wrapping `lru-cache` for TTL
 
@@ -76,7 +74,6 @@ class TtlCache<V extends {}> implements ICache<V> {
     set(key: string, v: V)  { this.inner.set(key, v); }
     delete(key: string)     { this.inner.delete(key); }
     clear()                 { this.inner.clear(); }
-    clone(): ICache<V>      { return new TtlCache<V>(); }
 }
 
 const app = new App({ router: new TrieRouter({ cache: new TtlCache() }) });

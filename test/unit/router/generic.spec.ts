@@ -104,29 +104,4 @@ describe.each(Object.entries(resolvers))('IRouter<MyData> generic — %s', (_nam
         const matches = router.lookup('/x');
         expect(matches.map((m) => m.route.data.name)).toEqual(['a', 'b', 'c']);
     });
-
-    it('clone() returns an empty router of the same shape', () => {
-        // Asserted observationally via `lookup` — the IRouter
-        // contract has no `routes` field, so behaviour is the
-        // only honest thing to assert against.
-        const router = factory();
-        router.add({
-            path: '/x',
-            method: MethodName.GET,
-            data: { name: 'a', tag: 1 },
-        });
-
-        const cloned = router.clone();
-        expect(cloned.lookup('/x', MethodName.GET)).toHaveLength(0);
-        // Original retained.
-        expect(router.lookup('/x', MethodName.GET)).toHaveLength(1);
-        // Adding to clone does not bleed back.
-        cloned.add({
-            path: '/y',
-            method: MethodName.GET,
-            data: { name: 'b', tag: 2 },
-        });
-        expect(router.lookup('/y', MethodName.GET)).toHaveLength(0);
-        expect(cloned.lookup('/y', MethodName.GET)).toHaveLength(1);
-    });
 });

@@ -11,16 +11,15 @@ type MyData = { name: string };
 type LookupCache = ICache<readonly RouteMatch<MyData>[]>;
 
 /**
- * Branded cache double — counts every get/set/clear/clone call so
- * tests can prove the router consults the cache and invalidates it
- * at the right moments. Wraps a real LruCache so behavior stays
+ * Branded cache double — counts every get/set/clear call so tests
+ * can prove the router consults the cache and invalidates it at
+ * the right moments. Wraps a real LruCache so behavior stays
  * realistic.
  */
 class BrandedCache implements LookupCache {
     public gets = 0;
     public sets = 0;
     public clears = 0;
-    public clones = 0;
 
     protected inner: LruCache<readonly RouteMatch<MyData>[]>;
 
@@ -45,11 +44,6 @@ class BrandedCache implements LookupCache {
     clear(): void {
         this.clears += 1;
         this.inner.clear();
-    }
-
-    clone(): LookupCache {
-        this.clones += 1;
-        return new BrandedCache();
     }
 }
 
@@ -139,35 +133,6 @@ describe.each(Object.entries(routers))('router cache option — %s', (_name, bui
         // Re-lookup '/x' — fresh miss because cache was cleared.
         router.lookup('/x');
         expect(cache.sets).toBe(setsAfterPrime + 1);
-    });
-
-    it('clone() routes through the cache.clone() (no LruCache downgrade)', () => {
-        const cache = new BrandedCache();
-        const router = build(cache);
-        router.add({
-            path: '/x',
-            method: MethodName.GET,
-            data: { name: 'a' },
-        });
-
-        const clonesBefore = cache.clones;
-        router.clone();
-        expect(cache.clones).toBe(clonesBefore + 1);
-    });
-
-    it('absent cache is preserved across clone()', () => {
-        const router = build();
-        const cloned = router.clone();
-        cloned.add({
-            path: '/x',
-            method: MethodName.GET,
-            data: { name: 'a' },
-        });
-
-        // No cache, but routing still works.
-        const matches = cloned.lookup('/x');
-        expect(matches).toHaveLength(1);
-        expect(matches[0]!.route.data.name).toBe('a');
     });
 
     it('explicit LruCache with custom maxSize works end-to-end', () => {

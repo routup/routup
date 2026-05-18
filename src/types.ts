@@ -57,8 +57,7 @@ export type RouteMatch<T extends ObjectLiteral = ObjectLiteral> = {
     route: Route<T>;
     /**
      * Registration index in the router. Used by the dispatch loop's
-     * `setNext` continuation ("resume from index + 1") and by
-     * `App.clone()` to re-register routes in their original order.
+     * `setNext` continuation ("resume from index + 1").
      */
     index: number;
     /**

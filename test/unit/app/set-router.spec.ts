@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
     App,
-    LinearRouter,
     TrieRouter,
     defineCoreHandler,
 } from '../../../src';
-import type { Handler, Route } from '../../../src';
+import type { Handler } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
 describe('App.setRouter', () => {
@@ -33,31 +32,5 @@ describe('App.setRouter', () => {
 
         expect(await (await app.fetch(createTestRequest('/before'))).text()).toBe('before');
         expect(await (await app.fetch(createTestRequest('/after'))).text()).toBe('after');
-    });
-
-    it('IRouter contract has no enumeration — App owns the canonical route list', async () => {
-        // A minimal router that implements only the contract
-        // (`add` / `lookup` / `clone`). Proves App's clone cascade
-        // and `extendOptions` propagation work without ever asking
-        // the router to enumerate its entries — App's own
-        // `_routes` is the single source of truth.
-        class MinimalRouter implements Pick<TrieRouter<Handler>, 'add' | 'lookup' | 'clone'> {
-            private inner = new LinearRouter<Handler>();
-            add(route: Route<Handler>) { this.inner.add(route); }
-            lookup(p: string) { return this.inner.lookup(p); }
-            clone() { return new MinimalRouter(); }
-        }
-
-        const app = new App({ router: new MinimalRouter() });
-        app.get('/x', defineCoreHandler(() => 'ok'));
-
-        const res = await app.fetch(createTestRequest('/x'));
-        expect(await res.text()).toBe('ok');
-
-        // clone() rebuilds entries on the cloned router from
-        // App._routes — no router-side enumeration.
-        const cloned = app.clone();
-        const res2 = await cloned.fetch(createTestRequest('/x'));
-        expect(await res2.text()).toBe('ok');
     });
 });

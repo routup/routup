@@ -10,7 +10,6 @@ The router contract is the `IRouter<T>` interface, generic over the per-route da
 interface IRouter<T extends ObjectLiteral = ObjectLiteral> {
     add(route: Route<T>): void;
     lookup(path: string, method?: string): readonly RouteMatch<T>[];
-    clone(): IRouter<T>;
 }
 
 type Route<T> = {
@@ -40,18 +39,11 @@ Method matching against the request's HTTP method stays at the dispatch-loop cal
 
 ### No enumeration on the contract
 
-`IRouter<T>` deliberately has no `routes` accessor. `App` keeps its own list of registered routes and uses that for cloning, plugin sub-app mounting, and option cascading — your router never has to expose its internal storage. This frees future router implementations (aggregated regex, freeze-after-first-match) to discard the original entries once they've built their lookup structure.
+`IRouter<T>` deliberately has no `routes` accessor. `App` keeps its own list of registered routes and uses that for plugin sub-app mounting and option cascading — your router never has to expose its internal storage. This frees future router implementations (aggregated regex, freeze-after-first-match) to discard the original entries once they've built their lookup structure.
 
 ### Registration order
 
 Lookup results must come back in registration order. The dispatch loop's `setNext` continuation relies on this: when a middleware calls `event.next()`, the pipeline resumes from `index + 1` in the same list.
-
-### `clone()` returns an empty router
-
-`App.clone()` and `App.install()` call `IRouter.clone()` to preserve the router family. The returned router must be:
-
-- a fresh instance of the same shape (same class for leaf routers; composable wrappers should recursively clone their inner)
-- **empty** — `App` re-registers routes on it; if `clone()` carried routes forward, every route would land twice
 
 ## A minimal example
 
@@ -72,10 +64,6 @@ class CountingRouter implements IRouter<RouteEntry> {
     lookup(path: string): readonly RouteMatch<RouteEntry>[] {
         this.lookups += 1;
         return this.inner.lookup(path);
-    }
-
-    clone(): IRouter<RouteEntry> {
-        return new CountingRouter();
     }
 }
 

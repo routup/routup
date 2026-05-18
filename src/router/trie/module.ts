@@ -375,12 +375,6 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         return matches;
     }
 
-    clone(): IRouter<T> {
-        // Carry the cache *shape* forward (not contents) — fresh
-        // cache, same configured class/size. Absent stays absent.
-        return new TrieRouter<T>({ cache: this.cache?.clone() });
-    }
-
     /**
      * T1: returns the pre-computed candidate list when the request's
      * static spine has no param sibling, no prefix routes, and no
