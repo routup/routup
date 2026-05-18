@@ -105,10 +105,9 @@ export class App implements IApp {
      * plugin) be installed multiple times at distinct mounts. Single-
      * mount conflicts still throw `PluginAlreadyInstalledError`.
      *
-     * Read by `use(otherApp)` (via the public `plugins` getter) so
-     * plugin registries merge into the parent at flatten time —
-     * `parent.hasPlugin('foo')` then reflects plugins installed on
-     * apps mounted into it.
+     * Read by `flatten()` when merging a child's registry into this
+     * one, so `parent.hasPlugin('foo')` reflects plugins installed on
+     * mounted children too.
      *
      * @protected
      */
@@ -157,28 +156,6 @@ export class App implements IApp {
      */
     get routes(): readonly Route<Handler>[] {
         return this._routes;
-    }
-
-    /**
-     * Public read of the installed-plugin registry. Used by
-     * `use(child)` to merge child plugins into the parent at
-     * flatten time. Returned as `ReadonlyMap` — callers must not
-     * mutate; go through `use(plugin)` to install.
-     *
-     * Outer key: plugin name. Inner key: canonical mount path (`'/'`
-     * for root installs) → installed version.
-     */
-    get plugins(): ReadonlyMap<string, ReadonlyMap<string, string | undefined>> {
-        return this._plugins;
-    }
-
-    /**
-     * Public read of the singleton-claim set. Used by `use(child)` to
-     * propagate sticky singleton claims from a child App at flatten
-     * time. Returned as `ReadonlySet` — callers must not mutate.
-     */
-    get pluginSingletons(): ReadonlySet<string> {
-        return this._pluginSingletons;
     }
 
     /**
@@ -732,7 +709,8 @@ export class App implements IApp {
      * when the plugin is not installed. When the plugin is mounted at
      * several paths, returns the version of an arbitrary mount —
      * typical usage installs the same plugin object at every mount, so
-     * the version is identical.
+     * the version is identical. Use `getPluginVersionAt` to read the
+     * version of a specific mount.
      */
     getPluginVersion(name: string): string | undefined {
         const entry = this._plugins.get(name);
@@ -741,6 +719,20 @@ export class App implements IApp {
         }
         const first = entry.values().next();
         return first.done ? undefined : first.value;
+    }
+
+    /**
+     * Get the version of a plugin installed at the given install-time
+     * `path`, or `undefined` when no install matches. `path` is
+     * interpreted relative to this App (same convention as
+     * `app.use(path, plugin)`); omit it to read the root install.
+     */
+    getPluginVersionAt(name: string, path?: Path): string | undefined {
+        const entry = this._plugins.get(name);
+        if (!entry) {
+            return undefined;
+        }
+        return entry.get(joinPaths(this._path, path) ?? '/');
     }
 
     /**

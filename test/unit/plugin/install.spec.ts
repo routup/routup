@@ -141,6 +141,17 @@ describe('src/plugin install', () => {
         expect(api.getPluginMountPaths('@routup/cookie')).toEqual(['/api']);
     });
 
+    it('getPluginVersionAt returns the version of a specific mount', () => {
+        const router = new App();
+        router.use('/v1', { ...assetsPlugin('v1'), version: '1.0.0' });
+        router.use('/v2', { ...assetsPlugin('v2'), version: '2.0.0' });
+
+        expect(router.getPluginVersionAt('@routup/assets', '/v1')).toBe('1.0.0');
+        expect(router.getPluginVersionAt('@routup/assets', '/v2')).toBe('2.0.0');
+        expect(router.getPluginVersionAt('@routup/assets', '/v3')).toBeUndefined();
+        expect(router.getPluginVersionAt('@routup/unknown', '/v1')).toBeUndefined();
+    });
+
     it('flatten composes child plugin mount paths through the parent prefix', () => {
         const child = new App();
         child.use('/inner', assetsPlugin('inner'));

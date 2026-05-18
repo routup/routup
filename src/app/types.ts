@@ -201,9 +201,18 @@ export interface IApp extends IDispatcher {
      * if the plugin is not installed. When the plugin is mounted at
      * several paths, returns the version of an arbitrary mount —
      * typical usage installs the same plugin object at every mount,
-     * so the version is identical.
+     * so the version is identical. Use `getPluginVersionAt` to read
+     * the version of a specific mount.
      */
     getPluginVersion(name: string): string | undefined;
+
+    /**
+     * Get the version of a plugin installed at the given install-time
+     * `path`, or `undefined` when no install matches. `path` is
+     * interpreted relative to this App; omit it to read the root
+     * install.
+     */
+    getPluginVersionAt(name: string, path?: Path): string | undefined;
 
     /**
      * List every canonical mount path the named plugin is installed
