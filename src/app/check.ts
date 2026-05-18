@@ -1,25 +1,33 @@
+import { hasInstanceof } from '@ebec/core';
+import { isObject } from '../utils/index.ts';
+import { AppSymbol } from './constants.ts';
 import type { IApp } from './types.ts';
 
 /**
- * Structural check for an `IApp` — true when `input` exposes the
- * surface `flatten()` reads at mount time (`fetch`, `routes`,
- * `plugins`, `pluginSingletons`). Used by `App.use()` to discriminate
- * a child-App argument from handlers and plugins.
+ * Discriminate an `IApp` argument from handlers, plugins, and other
+ * inputs `App.use()` accepts. Two-stage check:
  *
- * Structural rather than brand-based so any object implementing
- * `IApp` — not just instances of the bundled `App` class — can be
- * mounted via `app.use(child)`.
+ *   1. Fast path: brand check (`hasInstanceof` against `AppSymbol`).
+ *      Hits for every instance of the bundled `App` class and any
+ *      subclass that calls `markInstanceof(this, AppSymbol)` — that's
+ *      the common case, so we want it to be a single property lookup
+ *      with no key-by-key probing.
+ *
+ *   2. Fallback: structural check for the `IApp` surface `flatten()`
+ *      reads at mount time (`fetch`, `routes`, `plugins`,
+ *      `pluginSingletons`). Lets any object implementing the `IApp`
+ *      contract — not just instances of the bundled `App` class — be
+ *      mounted via `app.use(child)`.
  */
 export function isAppInstance(input: unknown): input is IApp {
-    if (typeof input !== 'object' || input === null) {
+    if (hasInstanceof(input, AppSymbol)) {
+        return true;
+    }
+    if (!isObject(input)) {
         return false;
     }
-    const candidate = input as Record<string, unknown>;
-    return typeof candidate.fetch === 'function' &&
-        typeof candidate.routes === 'object' &&
-        candidate.routes !== null &&
-        typeof candidate.plugins === 'object' &&
-        candidate.plugins !== null &&
-        typeof candidate.pluginSingletons === 'object' &&
-        candidate.pluginSingletons !== null;
+    return typeof input.fetch === 'function' &&
+        Array.isArray(input.routes) &&
+        isObject(input.plugins) &&
+        isObject(input.pluginSingletons);
 }

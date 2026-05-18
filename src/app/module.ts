@@ -1,3 +1,4 @@
+import { markInstanceof } from '@ebec/core';
 import { HeaderName, MethodName } from '../constants.ts';
 import { DispatcherEvent } from '../dispatcher/index.ts';
 import type { IDispatcherEvent } from '../dispatcher/index.ts';
@@ -21,6 +22,7 @@ import {
     joinPaths,
     withLeadingSlash,
 } from '../utils/index.ts';
+import { AppSymbol } from './constants.ts';
 import { LinearRouter } from '../router/linear/index.ts';
 import type { IRouter } from '../router/types.ts';
 import type {
@@ -140,6 +142,11 @@ export class App implements IApp {
         this.router = input.router ?? new LinearRouter<Handler>();
 
         this._options = Object.freeze(normalizeAppOptions(input.options ?? {}));
+
+        // Brand the instance so `isAppInstance` can fast-path on
+        // class-instance arguments before falling back to the
+        // structural shape check.
+        markInstanceof(this, AppSymbol);
     }
 
     // --------------------------------------------------
