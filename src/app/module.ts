@@ -158,6 +158,33 @@ export class App implements IApp {
     }
 
     /**
+     * Public read of the installed-plugin registry. Used by `flatten()`
+     * to merge a child's plugins into this App without reaching into
+     * the child's protected fields.
+     *
+     * Outer key: plugin name. Inner key: canonical mount path (`'/'`
+     * for root mounts). Inner value: installed version (or `undefined`).
+     *
+     * Returned as nested `ReadonlyMap` — callers must not mutate; go
+     * through `app.use(plugin)` to install.
+     */
+    get plugins(): ReadonlyMap<string, ReadonlyMap<string, string | undefined>> {
+        return this._plugins;
+    }
+
+    /**
+     * Public read of the sticky singleton-claim set. Once a plugin
+     * name is claimed singleton on an App, every subsequent install
+     * of that name is a silent no-op. Used by `flatten()` to
+     * propagate child claims forward at mount time.
+     *
+     * Returned as `ReadonlySet` — callers must not mutate.
+     */
+    get pluginSingletons(): ReadonlySet<string> {
+        return this._pluginSingletons;
+    }
+
+    /**
      * Register a route with the active router and record it on the
      * App so `setRouter` / `use(child)` can read the canonical list
      * back.
@@ -618,8 +645,12 @@ export class App implements IApp {
 
         // Merge the child's plugin registry. Each child key is in the
         // child's canonical path space; composing with `this._path` +
-        // the mount `path` lifts it into our canonical space.
-        for (const [name, childPaths] of child._plugins) {
+        // the mount `path` lifts it into our canonical space. The
+        // child's state is read through its public `plugins` /
+        // `pluginSingletons` getters — never the protected fields, so
+        // any future custom `IApp` only has to honor the public
+        // surface to be mountable.
+        for (const [name, childPaths] of child.plugins) {
             // Sticky claim on this side blocks the merge of child's
             // entries for that name. The claim is forward-looking; we
             // don't drop the child's routes (registered above) — only
@@ -647,7 +678,7 @@ export class App implements IApp {
         // Propagate sticky singleton claims so a child's contract
         // survives the mount. Forward-looking only — pre-existing
         // entries on this side stay; future installs are blocked.
-        for (const name of child._pluginSingletons) {
+        for (const name of child.pluginSingletons) {
             this._pluginSingletons.add(name);
         }
     }
