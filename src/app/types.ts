@@ -1,4 +1,4 @@
-import type { IDispatcher, IDispatcherEvent } from '../dispatcher/index.ts';
+import type { IDispatcher } from '../dispatcher/index.ts';
 import type { AppRequest } from '../event/index.ts';
 import type {
     Handler,
@@ -14,7 +14,6 @@ import type {
     TrustProxyInput,
 } from '../utils/index.ts';
 import type { IRouter } from '../router/types.ts';
-import type { RouteMatch } from '../types.ts';
 
 // --------------------------------------------------
 // App Options
@@ -156,56 +155,6 @@ export type AppContext = {
 };
 
 // --------------------------------------------------
-// Pipeline
-// --------------------------------------------------
-
-/**
- * Per-dispatch state threaded through the match loop. Used internally
- * by `App.dispatch` and the `setNext` continuation; not part of the
- * public surface.
- */
-export type AppPipelineContext = {
-    /**
-     * The dispatcher event being processed. Carries request, path,
-     * params, and the response accumulator across pipeline steps.
-     */
-    event: IDispatcherEvent,
-
-    /**
-     * `true` when this dispatch is the outermost App on the call
-     * stack (the root). Used to gate root-only behaviour like
-     * OPTIONS auto-Allow.
-     */
-    isRoot: boolean,
-
-    /**
-     * Resolved matches for the current `event.path`, populated on
-     * first lookup and threaded through `setNext` recursion so we
-     * don't re-run `IRouter.lookup` per cycle. Refreshed when
-     * `event.path` changes mid-walk.
-     */
-    matches: readonly RouteMatch<Handler>[],
-
-    /**
-     * The `event.path` that was used to compute `matches`. Stored so
-     * we can detect a mid-walk path mutation and refresh the cache.
-     */
-    matchesPath: string,
-
-    /**
-     * Position within `matches` for the *next* handler the walk
-     * should consider. The current handler's `setNext` continuation
-     * captures this and resumes the walk on `event.next()`.
-     */
-    matchIndex: number,
-
-    /**
-     * The Response produced by the pipeline. Set by handlers (via
-     * `toResponse`) or by the OPTIONS auto-Allow path; returned from
-     * `App.dispatch`.
-     */
-    response?: Response,
-};
 
 export interface IApp extends IDispatcher {
     /**
