@@ -181,17 +181,44 @@ export interface IApp extends IDispatcher {
     setRouter(router: IRouter<Handler>): void;
 
     /**
-     * Check if a plugin with the given name is installed on this
-     * App. Plugins installed on a mounted child are merged into the
-     * parent at mount time, so this reflects the flattened view.
+     * Check if a plugin with the given name is installed on this App
+     * at *any* mount path. Plugins installed on a mounted child are
+     * merged into the parent at mount time, so this reflects the
+     * flattened view.
      */
     hasPlugin(name: string): boolean;
 
     /**
+     * Check if a plugin with the given name is installed at the given
+     * install-time `path`. `path` is interpreted relative to this App
+     * — the same way `app.use(path, plugin)` takes it. Omit `path` to
+     * check the root install.
+     */
+    hasPluginAt(name: string, path?: Path): boolean;
+
+    /**
      * Get the version of an installed plugin by name, or `undefined`
-     * if the plugin is not installed.
+     * if the plugin is not installed. When the plugin is mounted at
+     * several paths, returns the version of an arbitrary mount —
+     * typical usage installs the same plugin object at every mount,
+     * so the version is identical. Use `getPluginVersionAt` to read
+     * the version of a specific mount.
      */
     getPluginVersion(name: string): string | undefined;
+
+    /**
+     * Get the version of a plugin installed at the given install-time
+     * `path`, or `undefined` when no install matches. `path` is
+     * interpreted relative to this App; omit it to read the root
+     * install.
+     */
+    getPluginVersionAt(name: string, path?: Path): string | undefined;
+
+    /**
+     * List every canonical mount path the named plugin is installed
+     * at. Returns an empty array when the plugin is not installed.
+     */
+    getPluginMountPaths(name: string): readonly string[];
 
     /**
      * Register a handler, App, or plugin.

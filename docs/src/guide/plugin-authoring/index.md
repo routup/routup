@@ -8,7 +8,7 @@ A routup **plugin** is a plain object with a `name` and an `install(router)` fun
 |---|---|
 | You need to register middleware on a router | You only export pure functions like `getRequestHeader(event, name)` |
 | You want a reusable name + version contract | The host app already mounts whatever middleware your helpers depend on |
-| You want install-time uniqueness (the same plugin can't be registered twice on the same router) | You're happy with `event.store` being whatever the host put there |
+| You want opt-in install-time uniqueness via `singleton` or `singletonByPath` so repeat installs become silent no-ops | You're happy with `event.store` being whatever the host put there |
 
 Most published plugins ship **both**: a plugin factory (`cookie()`, `body()`, `decorators()`) plus tree-shakeable helpers (`useRequestCookie`, `readRequestBody`). The factory installs the parser middleware once; the helpers read from the cached state.
 
@@ -20,6 +20,8 @@ import type { Plugin } from 'routup';
 export type Plugin = {
     name: string;
     version?: string;
+    singleton?: boolean;
+    singletonByPath?: boolean;
     install: (router: App) => any;
 };
 ```
@@ -28,7 +30,11 @@ export type Plugin = {
 |---|---|---|
 | `name` | yes | Used by `app.hasPlugin(name)` and error messages. Convention: a short bare name matching the plugin's purpose (`'cookie'`, `'body'`, `'decorators'`) — not the npm package name. |
 | `version` | recommended | A semver string surfaced via `app.getPluginVersion(name)`. Mirror the package's `version`. |
+| `singleton` | optional | When `true`, a second install of the same name (at any path) is **silently skipped**, and the first successful `singleton: true` install records a sticky claim — every later install of that name no-ops too. Use for cross-cutting concerns (CORS, body parser, auth) where multiple instances would be a bug. Default `false`. |
+| `singletonByPath` | optional | When `true`, a second install of the same name at the same canonical mount path is silently skipped; installs at other paths still proceed. Cheaper than full `singleton` when you only need per-mount idempotency. Default `false`. |
 | `install(router)` | yes | Receives a child router that's already named after the plugin. Mount middleware, register routes, attach hooks. Return value is ignored. |
+
+By default — neither `singleton` nor `singletonByPath` set — `app.use(plugin)` is permissive: the same plugin can be re-installed at any mount path (including the same path), and each install runs `install()` again. Most published plugins set `singleton: true` or `singletonByPath: true` so accidental double-installs don't double-register middleware.
 
 ## A minimal plugin
 
@@ -90,16 +96,30 @@ app.use('/admin', requireAuth());
 
 Inside `install()`, the plugin doesn't need to know — it operates on its child router as if it owned the world. The parent decides the namespace.
 
+A plugin can be installed at several mount paths on the same app — `@routup/assets` mounted at both `/v1` and `/v2`, for example. Each mount lives independently in the route table:
+
+```typescript
+app.use('/v1', assets({ dir: 'static-v1' }));
+app.use('/v2', assets({ dir: 'static-v2' })); // independent mount
+```
+
+If a plugin only wants to be idempotent at a specific path (a second install at the same path is a setup bug, but different paths are fine), set `singletonByPath: true` on the plugin object — subsequent installs at the same canonical path silently no-op. For "install at most once anywhere" semantics (CORS, body parser, auth), set `singleton: true` — every later install of the name is silently skipped, including ones via mounted children.
+
 ## Reading installed plugins
 
 Plugins (and the host app) can introspect what's already on a router:
 
 ```typescript
-app.hasPlugin('body');                      // boolean
-app.getPluginVersion('body');               // string | undefined
+app.hasPlugin('body');                                // boolean — any mount
+app.hasPluginAt('assets', '/v1');                     // boolean — specific mount
+app.getPluginVersion('body');                         // string | undefined — any mount
+app.getPluginVersionAt('assets', '/v1');              // string | undefined — specific mount
+app.getPluginMountPaths('assets');                    // readonly string[] — every mount path
 ```
 
-Lookup is local to the router — it does not walk into mounted sub-routers or up to ancestors.
+`hasPlugin` / `getPluginVersion` work at the "any-mount" granularity that most callers want; the `*At` variants and `getPluginMountPaths` are there when you need to ask about a specific mount. `path` arguments are interpreted the same way as `app.use(path, plugin)` — relative to the app, normalized with the app's own `path` prefix.
+
+Lookup is local to the router. Plugins installed on a mounted child are merged into the parent at mount time, so the parent's `hasPlugin` reflects them.
 
 This is what helpers like `readRequestBody(event)` use under the hood: they look up the body plugin's installed version via `event.appOptions` and throw `PluginNotInstalledError` if absent.
 
