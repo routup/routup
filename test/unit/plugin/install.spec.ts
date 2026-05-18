@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
     App,
-    PluginAlreadyInstalledError,
     defineCoreHandler,
 } from '../../../src';
 import type { Plugin } from '../../../src';
@@ -27,6 +26,16 @@ function singletonPlugin(): Plugin {
     };
 }
 
+function singletonByPathPlugin(): Plugin {
+    return {
+        name: '@routup/rate-limit',
+        singletonByPath: true,
+        install: (router) => {
+            router.get('/', defineCoreHandler(() => 'rate-limit'));
+        },
+    };
+}
+
 function assetsPlugin(label: string): Plugin {
     return {
         name: '@routup/assets',
@@ -34,6 +43,13 @@ function assetsPlugin(label: string): Plugin {
             router.get('/file', defineCoreHandler(() => label));
         },
     };
+}
+
+// Count how many distinct route entries this App carries — the silent-
+// skip path returns without registering, so the count is the cleanest
+// observational signal that a second install was actually dropped.
+function routeCount(app: App): number {
+    return (app as unknown as { _routes: unknown[] })._routes.length;
 }
 
 describe('src/plugin install', () => {
@@ -63,11 +79,19 @@ describe('src/plugin install', () => {
         expect(router.getPluginVersion('@routup/cookie')).toBe('3.2.1');
     });
 
-    it('should throw when installing the same plugin twice at the same path', () => {
+    it('install is permissive by default — same plugin at the same path appends', () => {
         const router = new App();
-        router.use(cookiePlugin());
+        router.use(cookiePlugin('1.0.0'));
+        const after1 = routeCount(router);
 
-        expect(() => router.use(cookiePlugin())).toThrowError(PluginAlreadyInstalledError);
+        router.use(cookiePlugin('1.0.1'));
+        const after2 = routeCount(router);
+
+        // No flag → both installs ran; the second registered its route again.
+        expect(after2).toBe(after1 * 2);
+        expect(router.hasPlugin('@routup/cookie')).toBe(true);
+        // Version reflects the latest write at this mount key.
+        expect(router.getPluginVersion('@routup/cookie')).toBe('1.0.1');
     });
 
     it('should allow installing the same plugin on a child router when the parent already has it', () => {
@@ -109,28 +133,51 @@ describe('src/plugin install', () => {
         expect(router.getPluginMountPaths('@routup/assets')).toEqual(['/v1', '/v2']);
     });
 
-    it('should still reject the same non-singleton plugin twice at the same path', () => {
+    it('singletonByPath silently skips a second install at the same path', () => {
         const router = new App();
-        router.use('/v1', assetsPlugin('v1'));
+        router.use('/api', singletonByPathPlugin());
+        const after1 = routeCount(router);
 
-        expect(() => router.use('/v1', assetsPlugin('v1-again'))).toThrowError(PluginAlreadyInstalledError);
+        router.use('/api', singletonByPathPlugin());
+        const after2 = routeCount(router);
+
+        // Second install no-ops — route count stays the same.
+        expect(after2).toBe(after1);
+        expect(router.hasPluginAt('@routup/rate-limit', '/api')).toBe(true);
     });
 
-    it('should reject any second install of a singleton plugin, even at a different path', () => {
+    it('singletonByPath still allows installs at distinct paths', () => {
+        const router = new App();
+        router.use('/api', singletonByPathPlugin());
+        router.use('/admin', singletonByPathPlugin());
+
+        expect(router.getPluginMountPaths('@routup/rate-limit')).toEqual(['/api', '/admin']);
+    });
+
+    it('singleton silently skips any second install, even at a different path', () => {
         const router = new App();
         router.use(singletonPlugin());
+        const after1 = routeCount(router);
 
-        expect(() => router.use('/elsewhere', singletonPlugin())).toThrowError(PluginAlreadyInstalledError);
+        router.use('/elsewhere', singletonPlugin());
+        const after2 = routeCount(router);
+
+        // Second install no-ops despite the different path.
+        expect(after2).toBe(after1);
+        expect(router.getPluginMountPaths('@routup/cors')).toEqual(['/']);
     });
 
-    it('should reject promoting an already-mounted plugin to singleton', () => {
+    it('singleton claim is not promoted retroactively — first install wins', () => {
+        // First install is non-flag, so no claim is recorded. A later
+        // `singleton: true` install silently no-ops, but the claim still
+        // isn't set — a third non-flag install at yet another path
+        // succeeds.
         const router = new App();
         router.use('/v1', assetsPlugin('v1'));
+        router.use('/v2', { ...assetsPlugin('v2'), singleton: true });
+        router.use('/v3', assetsPlugin('v3'));
 
-        expect(() => router.use('/v2', {
-            ...assetsPlugin('v2'),
-            singleton: true,
-        })).toThrowError(PluginAlreadyInstalledError);
+        expect(router.getPluginMountPaths('@routup/assets')).toEqual(['/v1', '/v3']);
     });
 
     it('hasPluginAt resolves paths relative to the App._path', () => {
@@ -172,27 +219,19 @@ describe('src/plugin install', () => {
         parent.use('/api', child);
 
         expect(parent.hasPlugin('@routup/cors')).toBe(true);
-        expect(() => parent.use(singletonPlugin())).toThrowError(PluginAlreadyInstalledError);
+
+        // A subsequent install of the same name on the parent is silently
+        // dropped because the claim survived the mount.
+        const before = routeCount(parent);
+        parent.use(singletonPlugin());
+        expect(routeCount(parent)).toBe(before);
     });
 
-    it('flatten rejects mounting a child whose singleton plugin name is already mounted on the parent', () => {
-        const child = new App();
-        child.use(singletonPlugin());
-
-        const parent = new App();
-        parent.use('/elsewhere', {
-            ...singletonPlugin(),
-            singleton: false,
-        });
-
-        expect(() => parent.use('/api', child)).toThrowError(PluginAlreadyInstalledError);
-    });
-
-    it('flatten rejects mounting a child whose plugin name was already singleton-claimed on the parent', () => {
-        // Parent claims a name as singleton up front; even a *non*-
-        // singleton child install of the same name must be rejected at
-        // mount time. Covers the other direction of the singleton-vs-
-        // multi-mount conflict from the test above.
+    it('flatten silently drops child entries when the parent already singleton-claimed the name', () => {
+        // Parent claims the name first. Mounting a child whose plugin
+        // shares the name no longer registers a new registry entry for
+        // it (sticky claim blocks the merge). Routes still propagate —
+        // sticky claim is forward-looking on the registry only.
         const parent = new App();
         parent.use(singletonPlugin());
 
@@ -202,6 +241,9 @@ describe('src/plugin install', () => {
             singleton: false,
         });
 
-        expect(() => parent.use('/api', child)).toThrowError(PluginAlreadyInstalledError);
+        const beforeMerge = parent.getPluginMountPaths('@routup/cors').slice();
+        parent.use('/api', child);
+
+        expect(parent.getPluginMountPaths('@routup/cors')).toEqual(beforeMerge);
     });
 });

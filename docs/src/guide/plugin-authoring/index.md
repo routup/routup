@@ -8,7 +8,7 @@ A routup **plugin** is a plain object with a `name` and an `install(router)` fun
 |---|---|
 | You need to register middleware on a router | You only export pure functions like `getRequestHeader(event, name)` |
 | You want a reusable name + version contract | The host app already mounts whatever middleware your helpers depend on |
-| You want install-time uniqueness — the same plugin can't be registered twice at the same path, or anywhere on the app if you opt in to `singleton: true` | You're happy with `event.store` being whatever the host put there |
+| You want opt-in install-time uniqueness via `singleton` or `singletonByPath` so repeat installs become silent no-ops | You're happy with `event.store` being whatever the host put there |
 
 Most published plugins ship **both**: a plugin factory (`cookie()`, `body()`, `decorators()`) plus tree-shakeable helpers (`useRequestCookie`, `readRequestBody`). The factory installs the parser middleware once; the helpers read from the cached state.
 
@@ -21,6 +21,7 @@ export type Plugin = {
     name: string;
     version?: string;
     singleton?: boolean;
+    singletonByPath?: boolean;
     install: (router: App) => any;
 };
 ```
@@ -29,8 +30,11 @@ export type Plugin = {
 |---|---|---|
 | `name` | yes | Used by `app.hasPlugin(name)` and error messages. Convention: a short bare name matching the plugin's purpose (`'cookie'`, `'body'`, `'decorators'`) — not the npm package name. |
 | `version` | recommended | A semver string surfaced via `app.getPluginVersion(name)`. Mirror the package's `version`. |
-| `singleton` | optional | When `true`, the plugin may only be installed once per app — any second install (even at a different mount path) throws `PluginAlreadyInstalledError`. Use for cross-cutting concerns (CORS, body parser, auth) where multiple instances would be a bug. Default `false`, which lets the same plugin be mounted at distinct paths. |
+| `singleton` | optional | When `true`, a second install of the same name (at any path) is **silently skipped**, and the first successful `singleton: true` install records a sticky claim — every later install of that name no-ops too. Use for cross-cutting concerns (CORS, body parser, auth) where multiple instances would be a bug. Default `false`. |
+| `singletonByPath` | optional | When `true`, a second install of the same name at the same canonical mount path is silently skipped; installs at other paths still proceed. Cheaper than full `singleton` when you only need per-mount idempotency. Default `false`. |
 | `install(router)` | yes | Receives a child router that's already named after the plugin. Mount middleware, register routes, attach hooks. Return value is ignored. |
+
+By default — neither `singleton` nor `singletonByPath` set — `app.use(plugin)` is permissive: the same plugin can be re-installed at any mount path (including the same path), and each install runs `install()` again. Most published plugins set `singleton: true` or `singletonByPath: true` so accidental double-installs don't double-register middleware.
 
 ## A minimal plugin
 
@@ -92,15 +96,14 @@ app.use('/admin', requireAuth());
 
 Inside `install()`, the plugin doesn't need to know — it operates on its child router as if it owned the world. The parent decides the namespace.
 
-A non-singleton plugin can be installed at several mount paths on the same app — `@routup/assets` mounted at both `/v1` and `/v2`, for example. Each mount lives independently in the route table; the install-time uniqueness check is `(plugin name, mount path)`, not just `plugin name`:
+A plugin can be installed at several mount paths on the same app — `@routup/assets` mounted at both `/v1` and `/v2`, for example. Each mount lives independently in the route table:
 
 ```typescript
 app.use('/v1', assets({ dir: 'static-v1' }));
-app.use('/v2', assets({ dir: 'static-v2' })); // OK — distinct mount path
-app.use('/v2', assets({ dir: 'other' }));     // throws PluginAlreadyInstalledError
+app.use('/v2', assets({ dir: 'static-v2' })); // independent mount
 ```
 
-Opt out by marking the plugin `singleton: true` if a second mount should always be a bug (CORS, body parser, auth).
+If a plugin only wants to be idempotent at a specific path (a second install at the same path is a setup bug, but different paths are fine), set `singletonByPath: true` on the plugin object — subsequent installs at the same canonical path silently no-op. For "install at most once anywhere" semantics (CORS, body parser, auth), set `singleton: true` — every later install of the name is silently skipped, including ones via mounted children.
 
 ## Reading installed plugins
 

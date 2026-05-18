@@ -15,10 +15,7 @@ import {
 import type { Path } from '../path/index.ts';
 import { isPath } from '../path/index.ts';
 import type { Plugin, PluginInstallContext } from '../plugin/index.ts';
-import {
-    PluginAlreadyInstalledError,
-    isPlugin,
-} from '../plugin/index.ts';
+import { isPlugin } from '../plugin/index.ts';
 import { normalizeAppOptions } from './options.ts';
 import {
     acceptsJson,
@@ -101,9 +98,11 @@ export class App implements IApp {
      * install-time `path`, falling back to `'/'` for a root install).
      * Inner-map value is the plugin version (or `undefined`).
      *
-     * Per-path keying lets a non-singleton plugin (e.g. an "assets"
-     * plugin) be installed multiple times at distinct mounts. Single-
-     * mount conflicts still throw `PluginAlreadyInstalledError`.
+     * Per-path keying lets `hasPluginAt` answer "is plugin X mounted at
+     * /api?" precisely. By default `install()` is permissive and
+     * appends — same `(name, key)` writes the latest version. Plugins
+     * opt into deduplication via `singleton` (any-path) or
+     * `singletonByPath` (same-path) flags.
      *
      * Read by `flatten()` when merging a child's registry into this
      * one, so `parent.hasPlugin('foo')` reflects plugins installed on
@@ -606,75 +605,50 @@ export class App implements IApp {
      * @protected
      */
     protected flatten(child: App, path: Path | undefined): void {
-        // Pre-compute the composed (name, key) additions and validate
-        // every conflict up front — we don't want a half-merge if any
-        // pair collides. Each child plugin entry's key is relative to
-        // the child's path space; composing with `this._path` + the
-        // mount `path` lifts it into this App's canonical space.
-        type Pending = {
-            name: string;
-            key: string;
-            version: string | undefined;
-        };
-        const pending: Pending[] = [];
-
-        for (const [name, childPaths] of child._plugins) {
-            // Sticky singleton wins regardless of which side claims it.
-            if (this._pluginSingletons.has(name)) {
-                throw new PluginAlreadyInstalledError(name);
-            }
-            const childClaimsSingleton = child._pluginSingletons.has(name);
-            const existing = this._plugins.get(name);
-            if (childClaimsSingleton && existing && existing.size > 0) {
-                throw new PluginAlreadyInstalledError(name);
-            }
-
-            for (const [childKey, version] of childPaths) {
-                const composedKey = joinPaths(this._path, path, childKey) ?? '/';
-                if (existing && existing.has(composedKey)) {
-                    throw new PluginAlreadyInstalledError(name);
-                }
-                // Two distinct child mounts can collapse to the same
-                // composed key under unusual `_path` / `path` values;
-                // catch that against the in-progress additions too.
-                if (pending.some((p) => p.name === name && p.key === composedKey)) {
-                    throw new PluginAlreadyInstalledError(name);
-                }
-                pending.push({
-                    name,
-                    key: composedKey,
-                    version,
-                });
-            }
-        }
-
-        for (const {
-            name,
-            key,
-            version,
-        } of pending) {
-            let entry = this._plugins.get(name);
-            if (!entry) {
-                entry = new Map();
-                this._plugins.set(name, entry);
-            }
-            entry.set(key, version);
-        }
-
-        // Propagate sticky singleton claims so a child's contract
-        // survives the mount.
-        for (const name of child._pluginSingletons) {
-            this._pluginSingletons.add(name);
-        }
-
-        // Snapshot routes. The router's `add()` is responsible for
-        // any cache invalidation it carries.
+        // Routes always propagate — the child's plugin-registry
+        // bookkeeping is independent of which routes physically land on
+        // this App's router.
         for (const route of child.routes) {
             this.register({
                 path: joinPaths(this._path, path, route.path),
                 method: route.method,
                 data: route.data,
             });
+        }
+
+        // Merge the child's plugin registry. Each child key is in the
+        // child's canonical path space; composing with `this._path` +
+        // the mount `path` lifts it into our canonical space.
+        for (const [name, childPaths] of child._plugins) {
+            // Sticky claim on this side blocks the merge of child's
+            // entries for that name. The claim is forward-looking; we
+            // don't drop the child's routes (registered above) — only
+            // the registry record so `hasPluginAt` reflects the locked
+            // namespace.
+            if (this._pluginSingletons.has(name)) {
+                continue;
+            }
+            let entry = this._plugins.get(name);
+            for (const [childKey, version] of childPaths) {
+                const composedKey = joinPaths(this._path, path, childKey) ?? '/';
+                // Silent dedup — first writer wins for the same
+                // composed key, mirroring `install()`'s silent skip.
+                if (entry && entry.has(composedKey)) {
+                    continue;
+                }
+                if (!entry) {
+                    entry = new Map();
+                    this._plugins.set(name, entry);
+                }
+                entry.set(composedKey, version);
+            }
+        }
+
+        // Propagate sticky singleton claims so a child's contract
+        // survives the mount. Forward-looking only — pre-existing
+        // entries on this side stay; future installs are blocked.
+        for (const name of child._pluginSingletons) {
+            this._pluginSingletons.add(name);
         }
     }
 
@@ -758,25 +732,26 @@ export class App implements IApp {
         const mountKey = joinPaths(this._path, context.path) ?? '/';
         const existing = this._plugins.get(plugin.name);
 
-        // Sticky singleton: once a plugin name was installed singleton,
-        // any further install of that name is rejected, even at a
-        // different path. Matches the "this is a cross-cutting concern,
-        // install once" contract a plugin author opted into.
+        // Sticky claim: a previous successful `singleton: true` install
+        // locked this name. Every further install is a silent no-op so
+        // an idempotent `app.use(plugin)` is safe to call from setup
+        // code that doesn't know whether the plugin is already mounted.
         if (this._pluginSingletons.has(plugin.name)) {
-            throw new PluginAlreadyInstalledError(plugin.name);
+            return this;
         }
 
-        // This install asks for singleton, but the name is already
-        // mounted (at any path). Can't promote a multi-mount plugin to
-        // singleton retroactively.
+        // This install opts into singleton but the name is already
+        // mounted at some path. Silent skip — we do *not* retroactively
+        // claim the name singleton, so a later non-flagged install of
+        // the same name can still succeed (first-install-wins).
         if (plugin.singleton && existing && existing.size > 0) {
-            throw new PluginAlreadyInstalledError(plugin.name);
+            return this;
         }
 
-        // Non-singleton: only the exact same (name, mountKey) pair is a
-        // conflict. Different mounts coexist by design.
-        if (existing && existing.has(mountKey)) {
-            throw new PluginAlreadyInstalledError(plugin.name);
+        // SingletonByPath: silently skip a second install at the same
+        // canonical mount path. Installs at other paths still proceed.
+        if (plugin.singletonByPath && existing && existing.has(mountKey)) {
+            return this;
         }
 
         // Give the plugin its own App to install into so it can

@@ -13,22 +13,36 @@ export type Plugin = {
      */
     version?: string,
     /**
-     * Whether the plugin may only be installed once per App, regardless
-     * of mount path.
+     * Opt in to "install at most once per App, regardless of mount
+     * path". Use for cross-cutting plugins (CORS, body parsers, auth)
+     * where multiple instances would be a bug.
      *
-     * - `false` / omitted: the plugin can be installed multiple times
-     *   at distinct mount paths (e.g. an assets plugin mounted at
-     *   `/v1` and `/v2`). Re-installing at the *same* mount path still
-     *   throws `PluginAlreadyInstalledError`.
-     * - `true`: any second install on the same App throws, even at a
-     *   different path. Use for cross-cutting plugins (CORS, body
-     *   parsers, auth) where multiple instances would be a bug.
+     * Default `false` — by default `app.use(plugin)` is permissive and
+     * appends; the same plugin may even be mounted at the same path
+     * more than once (each install runs `install()` again and stacks).
      *
-     * Once a plugin name has been installed with `singleton: true`, no
-     * further install of that name succeeds — the singleton claim is
-     * sticky for the lifetime of the App.
+     * When `true`:
+     *   - The install is a no-op if any prior mount of the same name
+     *     exists. Routes from this attempt are not registered, and no
+     *     error is thrown.
+     *   - The first successful install with `singleton: true` records
+     *     a sticky claim — every subsequent install of that name is
+     *     silently skipped for the lifetime of the App.
+     *   - The claim is *not* set retroactively. If the first install
+     *     of the name had no flag, a later `singleton: true` install
+     *     just no-ops without claiming.
      */
     singleton?: boolean,
+    /**
+     * Opt in to "install at most once per `(name, mount path)` pair".
+     * Useful for idempotent installs at a specific prefix without
+     * locking the name globally.
+     *
+     * Default `false`. When `true`, a second install of the same
+     * plugin at the same canonical mount path is silently skipped;
+     * installs at other paths proceed normally.
+     */
+    singletonByPath?: boolean,
     /**
      * The installation function called on registration.
      */
