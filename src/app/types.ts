@@ -14,6 +14,7 @@ import type {
     TrustProxyInput,
 } from '../utils/index.ts';
 import type { IRouter } from '../router/types.ts';
+import type { Route } from '../types.ts';
 
 // --------------------------------------------------
 // App Options
@@ -179,6 +180,39 @@ export interface IApp extends IDispatcher {
      * App.
      */
     setRouter(router: IRouter<Handler>): void;
+
+    /**
+     * Canonical route list registered on this App, in registration
+     * order. Read by `app.use(child)` at mount time so the parent can
+     * re-register each entry under the composed mount path.
+     *
+     * Returned as `readonly` — callers must not mutate; route
+     * registration goes through `use` / `get` / `post` / etc.
+     */
+    readonly routes: readonly Route<Handler>[];
+
+    /**
+     * Installed-plugin registry, keyed by plugin name → canonical
+     * mount path (`'/'` for root installs) → installed version.
+     *
+     * Read by `app.use(child)` at mount time so the parent can merge
+     * the child's per-path registry into its own under the composed
+     * mount path. Returned as nested `ReadonlyMap` — callers must not
+     * mutate; install through `app.use(plugin)`.
+     */
+    readonly plugins: ReadonlyMap<string, ReadonlyMap<string, string | undefined>>;
+
+    /**
+     * Names of plugins installed with `singleton: true`. Once a name
+     * appears here it stays for the lifetime of the App: every
+     * subsequent install of that name is a silent no-op. Read by
+     * `app.use(child)` at mount time so a child's sticky claim
+     * propagates to the parent (subject to `flatten()`'s
+     * first-install-wins guard).
+     *
+     * Returned as `ReadonlySet` — callers must not mutate.
+     */
+    readonly pluginSingletons: ReadonlySet<string>;
 
     /**
      * Check if a plugin with the given name is installed on this App
