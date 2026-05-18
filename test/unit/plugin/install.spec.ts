@@ -233,6 +233,32 @@ describe('src/plugin install', () => {
         expect(routeCount(parent)).toBe(before);
     });
 
+    it('flatten does not retroactively claim a name the parent already installed', () => {
+        // Parent installed a plugin name non-singleton first → claim
+        // is intentionally absent (first-install-wins per install()).
+        // Mounting a child whose plugin is the singleton variant of
+        // the same name must not silently promote the name to sticky
+        // — that would override the parent's looser stance just because
+        // a child was mounted later.
+        const parent = new App();
+        parent.use('/v1', { ...singletonPlugin(), singleton: false });
+
+        const child = new App();
+        child.use(singletonPlugin());
+        parent.use('/api', child);
+
+        // The child's entries still merge (silent-skip rules unchanged)…
+        expect(parent.hasPluginAt('@routup/cors', '/v1')).toBe(true);
+        expect(parent.hasPluginAt('@routup/cors', '/api')).toBe(true);
+
+        // …but the parent's claim set must stay empty so further
+        // non-singleton installs of the name continue to succeed.
+        const before = routeCount(parent);
+        parent.use('/v2', { ...singletonPlugin(), singleton: false });
+        expect(routeCount(parent)).toBeGreaterThan(before);
+        expect(parent.hasPluginAt('@routup/cors', '/v2')).toBe(true);
+    });
+
     it('flatten silently drops child entries when the parent already singleton-claimed the name', () => {
         // Parent claims the name first. Mounting a child whose plugin
         // shares the name no longer registers a new registry entry for

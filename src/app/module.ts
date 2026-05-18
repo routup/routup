@@ -643,6 +643,13 @@ export class App implements IApp {
             });
         }
 
+        // Snapshot which plugin names this App already had *before* the
+        // merge. The sticky-claim propagation below uses this to honor
+        // the same first-install-wins rule `install()` enforces — a
+        // child's `singleton: true` claim must not retroactively lock a
+        // name the parent already installed non-singleton.
+        const namesBeforeMerge = new Set(this._plugins.keys());
+
         // Merge the child's plugin registry. Each child key is in the
         // child's canonical path space; composing with `this._path` +
         // the mount `path` lifts it into our canonical space. The
@@ -676,10 +683,16 @@ export class App implements IApp {
         }
 
         // Propagate sticky singleton claims so a child's contract
-        // survives the mount. Forward-looking only — pre-existing
-        // entries on this side stay; future installs are blocked.
+        // survives the mount — but only for names this App did not
+        // already have. Mirrors `install()`'s rule that a
+        // `singleton: true` install on a previously-claimed name is a
+        // silent no-op without claiming; flatten would otherwise leak
+        // child claims into a parent that had its own non-singleton
+        // install of the same name.
         for (const name of child.pluginSingletons) {
-            this._pluginSingletons.add(name);
+            if (!namesBeforeMerge.has(name)) {
+                this._pluginSingletons.add(name);
+            }
         }
     }
 
