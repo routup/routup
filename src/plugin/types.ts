@@ -13,6 +13,23 @@ export type Plugin = {
      */
     version?: string,
     /**
+     * Whether the plugin may only be installed once per App, regardless
+     * of mount path.
+     *
+     * - `false` / omitted: the plugin can be installed multiple times
+     *   at distinct mount paths (e.g. an assets plugin mounted at
+     *   `/v1` and `/v2`). Re-installing at the *same* mount path still
+     *   throws `PluginAlreadyInstalledError`.
+     * - `true`: any second install on the same App throws, even at a
+     *   different path. Use for cross-cutting plugins (CORS, body
+     *   parsers, auth) where multiple instances would be a bug.
+     *
+     * Once a plugin name has been installed with `singleton: true`, no
+     * further install of that name succeeds — the singleton claim is
+     * sticky for the lifetime of the App.
+     */
+    singleton?: boolean,
+    /**
      * The installation function called on registration.
      */
     install: PluginInstallFn

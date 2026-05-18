@@ -96,7 +96,14 @@ export class App implements IApp {
     protected _options: Readonly<AppOptions>;
 
     /**
-     * Registry of installed plugins (name → version) on this App.
+     * Registry of installed plugins on this App, keyed by plugin name
+     * then by canonical mount key (the joined `this._path` +
+     * install-time `path`, falling back to `'/'` for a root install).
+     * Inner-map value is the plugin version (or `undefined`).
+     *
+     * Per-path keying lets a non-singleton plugin (e.g. an "assets"
+     * plugin) be installed multiple times at distinct mounts. Single-
+     * mount conflicts still throw `PluginAlreadyInstalledError`.
      *
      * Read by `use(otherApp)` (via the public `plugins` getter) so
      * plugin registries merge into the parent at flatten time —
@@ -105,7 +112,18 @@ export class App implements IApp {
      *
      * @protected
      */
-    protected _plugins: Map<string, string | undefined>;
+    protected _plugins: Map<string, Map<string, string | undefined>>;
+
+    /**
+     * Names of plugins installed with `singleton: true`. Re-installing
+     * any of these names — even at a different mount path — throws.
+     * The claim is sticky: once a name is in here, it stays for the
+     * lifetime of the App. Propagated through `flatten()` so a child's
+     * singleton claim survives the mount.
+     *
+     * @protected
+     */
+    protected _pluginSingletons: Set<string>;
 
     /**
      * Every route registered on this App, in registration order.
@@ -121,7 +139,8 @@ export class App implements IApp {
         this.name = input.name;
         this._path = input.path;
 
-        this._plugins = new Map<string, string | undefined>();
+        this._plugins = new Map();
+        this._pluginSingletons = new Set();
         this.router = input.router ?? new LinearRouter<Handler>();
 
         this._options = Object.freeze(normalizeAppOptions(input.options ?? {}));
@@ -145,9 +164,21 @@ export class App implements IApp {
      * `use(child)` to merge child plugins into the parent at
      * flatten time. Returned as `ReadonlyMap` — callers must not
      * mutate; go through `use(plugin)` to install.
+     *
+     * Outer key: plugin name. Inner key: canonical mount path (`'/'`
+     * for root installs) → installed version.
      */
-    get plugins(): ReadonlyMap<string, string | undefined> {
+    get plugins(): ReadonlyMap<string, ReadonlyMap<string, string | undefined>> {
         return this._plugins;
+    }
+
+    /**
+     * Public read of the singleton-claim set. Used by `use(child)` to
+     * propagate sticky singleton claims from a child App at flatten
+     * time. Returned as `ReadonlySet` — callers must not mutate.
+     */
+    get pluginSingletons(): ReadonlySet<string> {
+        return this._pluginSingletons;
     }
 
     /**
@@ -598,17 +629,65 @@ export class App implements IApp {
      * @protected
      */
     protected flatten(child: App, path: Path | undefined): void {
-        // Validate plugin conflicts up front so we never half-merge
-        // — first-conflict-wins would leave `this._plugins` with a
-        // partial view of the child's registry.
-        for (const name of child.plugins.keys()) {
-            if (this._plugins.has(name)) {
+        // Pre-compute the composed (name, key) additions and validate
+        // every conflict up front — we don't want a half-merge if any
+        // pair collides. Each child plugin entry's key is relative to
+        // the child's path space; composing with `this._path` + the
+        // mount `path` lifts it into this App's canonical space.
+        type Pending = {
+            name: string; 
+            key: string; 
+            version: string | undefined 
+        };
+        const pending: Pending[] = [];
+
+        for (const [name, childPaths] of child._plugins) {
+            // Sticky singleton wins regardless of which side claims it.
+            if (this._pluginSingletons.has(name)) {
                 throw new PluginAlreadyInstalledError(name);
+            }
+            const childClaimsSingleton = child._pluginSingletons.has(name);
+            const existing = this._plugins.get(name);
+            if (childClaimsSingleton && existing && existing.size > 0) {
+                throw new PluginAlreadyInstalledError(name);
+            }
+
+            for (const [childKey, version] of childPaths) {
+                const composedKey = joinPaths(this._path, path, childKey) ?? '/';
+                if (existing && existing.has(composedKey)) {
+                    throw new PluginAlreadyInstalledError(name);
+                }
+                // Two distinct child mounts can collapse to the same
+                // composed key under unusual `_path` / `path` values;
+                // catch that against the in-progress additions too.
+                if (pending.some((p) => p.name === name && p.key === composedKey)) {
+                    throw new PluginAlreadyInstalledError(name);
+                }
+                pending.push({
+                    name, 
+                    key: composedKey, 
+                    version, 
+                });
             }
         }
 
-        for (const [name, version] of child.plugins) {
-            this._plugins.set(name, version);
+        for (const {
+            name, 
+            key, 
+            version, 
+        } of pending) {
+            let entry = this._plugins.get(name);
+            if (!entry) {
+                entry = new Map();
+                this._plugins.set(name, entry);
+            }
+            entry.set(key, version);
+        }
+
+        // Propagate sticky singleton claims so a child's contract
+        // survives the mount.
+        for (const name of child._pluginSingletons) {
+            this._pluginSingletons.add(name);
         }
 
         // Snapshot routes. The router's `add()` is responsible for
@@ -625,18 +704,57 @@ export class App implements IApp {
     // --------------------------------------------------
 
     /**
-     * Check if a plugin with the given name is installed on this App.
+     * Check if a plugin with the given name is installed on this App at
+     * *any* mount path.
      */
     hasPlugin(name: string): boolean {
-        return this._plugins.has(name);
+        const entry = this._plugins.get(name);
+        return !!entry && entry.size > 0;
+    }
+
+    /**
+     * Check if a plugin with the given name is installed at the given
+     * install-time `path`. `path` is interpreted the same way as the
+     * argument to `app.use(path, plugin)` — relative to this App. Omit
+     * `path` to check the root install.
+     */
+    hasPluginAt(name: string, path?: Path): boolean {
+        const entry = this._plugins.get(name);
+        if (!entry) {
+            return false;
+        }
+        const key = joinPaths(this._path, path) ?? '/';
+        return entry.has(key);
     }
 
     /**
      * Get the version of an installed plugin by name, or `undefined`
-     * if the plugin is not installed.
+     * when the plugin is not installed. When the plugin is mounted at
+     * several paths, returns the version of an arbitrary mount —
+     * typical usage installs the same plugin object at every mount, so
+     * the version is identical.
      */
     getPluginVersion(name: string): string | undefined {
-        return this._plugins.get(name);
+        const entry = this._plugins.get(name);
+        if (!entry) {
+            return undefined;
+        }
+        const first = entry.values().next();
+        return first.done ? undefined : first.value;
+    }
+
+    /**
+     * List every canonical mount path the named plugin is installed
+     * at. Returns an empty array when the plugin is not installed.
+     * Each path is the joined `app._path` + install-time path,
+     * normalized to `'/'` for root mounts.
+     */
+    getPluginMountPaths(name: string): readonly string[] {
+        const entry = this._plugins.get(name);
+        if (!entry) {
+            return [];
+        }
+        return Array.from(entry.keys());
     }
 
     // --------------------------------------------------
@@ -645,7 +763,27 @@ export class App implements IApp {
         plugin: Plugin,
         context: PluginInstallContext = {},
     ): this {
-        if (this._plugins.has(plugin.name)) {
+        const mountKey = joinPaths(this._path, context.path) ?? '/';
+        const existing = this._plugins.get(plugin.name);
+
+        // Sticky singleton: once a plugin name was installed singleton,
+        // any further install of that name is rejected, even at a
+        // different path. Matches the "this is a cross-cutting concern,
+        // install once" contract a plugin author opted into.
+        if (this._pluginSingletons.has(plugin.name)) {
+            throw new PluginAlreadyInstalledError(plugin.name);
+        }
+
+        // This install asks for singleton, but the name is already
+        // mounted (at any path). Can't promote a multi-mount plugin to
+        // singleton retroactively.
+        if (plugin.singleton && existing && existing.size > 0) {
+            throw new PluginAlreadyInstalledError(plugin.name);
+        }
+
+        // Non-singleton: only the exact same (name, mountKey) pair is a
+        // conflict. Different mounts coexist by design.
+        if (existing && existing.has(mountKey)) {
             throw new PluginAlreadyInstalledError(plugin.name);
         }
 
@@ -663,7 +801,16 @@ export class App implements IApp {
             this.use(scratch);
         }
 
-        this._plugins.set(plugin.name, plugin.version);
+        let entry = this._plugins.get(plugin.name);
+        if (!entry) {
+            entry = new Map();
+            this._plugins.set(plugin.name, entry);
+        }
+        entry.set(mountKey, plugin.version);
+
+        if (plugin.singleton) {
+            this._pluginSingletons.add(plugin.name);
+        }
 
         return this;
     }
