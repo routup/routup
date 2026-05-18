@@ -112,11 +112,11 @@ export type AppOptionsInput = Omit<AppOptions, 'etag' | 'trustProxy'> & {
  *
  * Splits true runtime options (which propagate to mounted children
  * via mount-time inheritance) from App-local identity (`name`,
- * `path`) and constructor injectables (`plugins`, `router`). Keeping
- * these separate prevents identity from leaking across the mount
- * boundary — e.g. a parent's `path: '/api'` would otherwise propagate
- * into a child whose own `path` is unset and silently double-prefix
- * on registration.
+ * `path`) and the `router` injectable. Keeping these separate
+ * prevents identity from leaking across the mount boundary — e.g. a
+ * parent's `path: '/api'` would otherwise propagate into a child
+ * whose own `path` is unset and silently double-prefix on
+ * registration.
  */
 export type AppContext = {
     /**
