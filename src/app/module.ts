@@ -114,10 +114,10 @@ export class App implements IApp {
 
     /**
      * Names of plugins installed with `singleton: true`. Re-installing
-     * any of these names — even at a different mount path — throws.
-     * The claim is sticky: once a name is in here, it stays for the
-     * lifetime of the App. Propagated through `flatten()` so a child's
-     * singleton claim survives the mount.
+     * any of these names — even at a different mount path — is a
+     * silent no-op. The claim is sticky: once a name is in here, it
+     * stays for the lifetime of the App. Propagated through
+     * `flatten()` so a child's singleton claim survives the mount.
      *
      * @protected
      */

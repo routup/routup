@@ -81,6 +81,7 @@ describe('src/plugin install', () => {
 
     it('install is permissive by default — same plugin at the same path appends', () => {
         const router = new App();
+        const before = routeCount(router);
         router.use(cookiePlugin('1.0.0'));
         const after1 = routeCount(router);
 
@@ -88,7 +89,12 @@ describe('src/plugin install', () => {
         const after2 = routeCount(router);
 
         // No flag → both installs ran; the second registered its route again.
-        expect(after2).toBe(after1 * 2);
+        // Compare deltas so the assertion survives any future change that
+        // gives `new App()` a non-zero baseline (e.g. built-in middleware).
+        const firstDelta = after1 - before;
+        const secondDelta = after2 - after1;
+        expect(firstDelta).toBeGreaterThan(0);
+        expect(secondDelta).toBe(firstDelta);
         expect(router.hasPlugin('@routup/cookie')).toBe(true);
         // Version reflects the latest write at this mount key.
         expect(router.getPluginVersion('@routup/cookie')).toBe('1.0.1');
