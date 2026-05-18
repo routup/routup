@@ -143,6 +143,9 @@ export class App implements IApp {
 
         this._options = Object.freeze(normalizeAppOptions(input.options ?? {}));
 
+        // Brand the instance so `isAppInstance` can fast-path on
+        // class-instance arguments before falling back to the
+        // structural shape check.
         markInstanceof(this, AppSymbol);
     }
 
@@ -631,7 +634,7 @@ export class App implements IApp {
      *
      * @protected
      */
-    protected flatten(child: App, path: Path | undefined): void {
+    protected flatten(child: IApp, path: Path | undefined): void {
         // Routes always propagate — the child's plugin-registry
         // bookkeeping is independent of which routes physically land on
         // this App's router.
@@ -657,6 +660,15 @@ export class App implements IApp {
         // `pluginSingletons` getters — never the protected fields, so
         // any future custom `IApp` only has to honor the public
         // surface to be mountable.
+        //
+        // Note: this branch is intentionally asymmetric with
+        // `install()`. install() with `singleton: true` against an
+        // existing entry suppresses *both* the install and the claim.
+        // flatten() with a child-side sticky claim against an existing
+        // parent entry still merges the entry — child routes have
+        // already propagated unconditionally above, and suppressing
+        // the registry record too would leave `hasPluginAt` lying
+        // about routes that are demonstrably mounted.
         for (const [name, childPaths] of child.plugins) {
             // Sticky claim on this side blocks the merge of child's
             // entries for that name. The claim is forward-looking; we

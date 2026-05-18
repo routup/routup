@@ -98,6 +98,10 @@ describe('src/plugin install', () => {
         expect(router.hasPlugin('@routup/cookie')).toBe(true);
         // Version reflects the latest write at this mount key.
         expect(router.getPluginVersion('@routup/cookie')).toBe('1.0.1');
+        // Registry collapses both installs onto the single canonical
+        // mount key — the route table gets two entries, but the
+        // plugin registry honestly reports one mount path.
+        expect(router.getPluginMountPaths('@routup/cookie')).toEqual(['/']);
     });
 
     it('should allow installing the same plugin on a child router when the parent already has it', () => {
