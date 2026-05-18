@@ -161,24 +161,4 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
         const res = await router.fetch(createTestRequest('/users/42'));
         expect(await res.text()).toBe('user-42');
     });
-
-    it('clone() returns a fresh empty router of the same shape', () => {
-        // IRouter.clone()'s contract: a fresh, **empty** router.
-        // Verified observationally — register a route on the original,
-        // then ensure the clone returns no matches for it. Avoids
-        // depending on `IRouter.routes` (now optional on the
-        // contract; not implemented by the built-in routers anymore).
-        const router = factory();
-        router.add({
-            path: '/users',
-            method: 'GET',
-            data: { type: 'handler', dummy: true } as never,
-        });
-        expect(router.lookup('/users', 'GET').length).toBeGreaterThan(0);
-
-        const cloned = router.clone();
-        expect(cloned.lookup('/users', 'GET').length).toBe(0);
-        // Distinct instance.
-        expect(cloned).not.toBe(router);
-    });
 });

@@ -148,13 +148,6 @@ export type AppContext = {
     options?: AppOptionsInput,
 
     /**
-     * Map of installed plugin name → version. Defaults to an empty
-     * map. Used by `clone()` to carry the installed-plugin registry
-     * over so duplicate installs are still rejected on the copy.
-     */
-    plugins?: Map<string, string | undefined>,
-
-    /**
      * Pluggable router (route table). Defaults to `LinearRouter` —
      * walks registered entries linearly per request. Swap in an
      * alternative (e.g. `TrieRouter`) on apps with many routes.
@@ -225,17 +218,6 @@ export interface IApp extends IDispatcher {
      * and returns a Response (with 404/500 fallbacks).
      */
     fetch(request: AppRequest): Promise<Response>;
-
-    /**
-     * Return a new App that mirrors this one but owns independent
-     * mountable state — fresh `IRouter` of the same family seeded
-     * with this App's routes, shallow copy of options, and a fresh
-     * plugins map carrying the same entries.
-     *
-     * Intended for mounting the same logical App under multiple
-     * paths without sharing mutable state across mount points.
-     */
-    clone(): IApp;
 
     /**
      * Swap the active `IRouter`. Every previously-registered route

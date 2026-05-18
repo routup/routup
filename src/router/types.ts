@@ -70,14 +70,4 @@ export interface IRouter<T extends ObjectLiteral = ObjectLiteral> {
      * implementation.
      */
     lookup(path: string, method?: MethodNameLike): readonly RouteMatch<T>[];
-
-    /**
-     * Return a fresh, **empty** router of the same shape — same class
-     * for leaf implementations; composable wrappers should recursively
-     * clone their inner router. Used by `App.install()` and
-     * `App.clone()` so plugin sub-apps and cloned apps preserve the
-     * active router family instead of silently downgrading to
-     * `LinearRouter`.
-     */
-    clone(): IRouter<T>;
 }

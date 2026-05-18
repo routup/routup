@@ -160,8 +160,6 @@ import type { IRouter, Route, RouteMatch } from 'routup';
 class MyRouter implements IRouter {
     add(route: Route) { /* ... */ }
     lookup(path: string): readonly RouteMatch[] { /* ... */ }
-    get routes(): readonly Route[] { /* ... */ }
-    clone(): IRouter { /* ... */ }
 }
 ```
 

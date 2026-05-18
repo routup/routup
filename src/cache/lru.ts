@@ -22,12 +22,9 @@ const DEFAULT_MAX_SIZE = 1024;
  * `BaseRouterOptions.cache` slot.
  */
 export class LruCache<V> implements ICache<V> {
-    protected options: LruCacheOptions;
-
     protected inner: QuickLRU<string, V>;
 
     constructor(options: LruCacheOptions = {}) {
-        this.options = options;
         this.inner = new QuickLRU<string, V>({ maxSize: options.maxSize ?? DEFAULT_MAX_SIZE });
     }
 
@@ -45,11 +42,5 @@ export class LruCache<V> implements ICache<V> {
 
     clear(): void {
         this.inner.clear();
-    }
-
-    clone(): ICache<V> {
-        // Carry options forward so a clone preserves `maxSize` (and
-        // any future config). Empty per the IRouter/ICache convention.
-        return new LruCache<V>({ ...this.options });
     }
 }

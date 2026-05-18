@@ -110,9 +110,8 @@ export class App implements IApp {
     /**
      * Every route registered on this App, in registration order.
      *
-     * Read by `use(otherApp)` to snapshot routes at flatten time
-     * and by `clone()` to seed the copy. Late mutations to `_routes`
-     * after a flatten do not propagate.
+     * Read by `use(otherApp)` to snapshot routes at flatten time.
+     * Late mutations to `_routes` after a flatten do not propagate.
      */
     protected _routes: Route<Handler>[] = [];
 
@@ -122,7 +121,7 @@ export class App implements IApp {
         this.name = input.name;
         this._path = input.path;
 
-        this._plugins = new Map<string, string | undefined>(input.plugins);
+        this._plugins = new Map<string, string | undefined>();
         this.router = input.router ?? new LinearRouter<Handler>();
 
         this._options = Object.freeze(normalizeAppOptions(input.options ?? {}));
@@ -153,8 +152,8 @@ export class App implements IApp {
 
     /**
      * Register a route with the active router and record it on the
-     * App so `clone` / `setRouter` / `use(child)` can read the
-     * canonical list back.
+     * App so `setRouter` / `use(child)` can read the canonical list
+     * back.
      *
      * @protected
      */
@@ -667,36 +666,5 @@ export class App implements IApp {
         this._plugins.set(plugin.name, plugin.version);
 
         return this;
-    }
-
-    //---------------------------------------------------------------------------------
-
-    /**
-     * Return a new `App` that mirrors this one but owns independent
-     * mountable state — fresh router of the same family seeded with
-     * the current routes, shallow copy of options, and a fresh
-     * plugins map carrying the same entries.
-     */
-    clone(): IApp {
-        const next = new App({
-            name: this.name,
-            path: this._path,
-            options: { ...this._options },
-            plugins: this._plugins,
-            // Preserve the active router family on the clone.
-            router: this.router.clone(),
-        });
-
-        // Re-register routes through `register` so the clone's own
-        // `_routes` mirror is populated alongside the router.
-        for (const route of this._routes) {
-            next.register({
-                path: route.path,
-                method: route.method,
-                data: route.data,
-            });
-        }
-
-        return next;
     }
 }

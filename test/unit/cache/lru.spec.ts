@@ -67,34 +67,4 @@ describe('LruCache', () => {
         expect(cache.get('a')).toBeUndefined();
         expect(cache.get('e')).toBe('E');
     });
-
-    it('clone returns a fresh empty cache of the same shape', () => {
-        const cache = new LruCache<string>({ maxSize: 4 });
-        cache.set('a', 'A');
-
-        const cloned = cache.clone();
-
-        // Clone has no entries.
-        expect(cloned.get('a')).toBeUndefined();
-        // Original is unchanged.
-        expect(cache.get('a')).toBe('A');
-        // Distinct instance.
-        expect(cloned).not.toBe(cache);
-    });
-
-    it('clone preserves maxSize', () => {
-        const cache = new LruCache<string>({ maxSize: 2 });
-        const cloned = cache.clone();
-
-        cloned.set('a', 'A');
-        cloned.set('b', 'B');
-        cloned.set('c', 'C');
-        cloned.set('d', 'D');
-        cloned.set('e', 'E');
-
-        // Same eviction shape as the parent — well past maxSize,
-        // 'a' has been dropped while the most recent insert remains.
-        expect(cloned.get('a')).toBeUndefined();
-        expect(cloned.get('e')).toBe('E');
-    });
 });
