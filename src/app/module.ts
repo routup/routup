@@ -312,7 +312,7 @@ export class App implements IApp {
 
         try {
             const matches = this.router.lookup(event.path, event.method);
-            response = await this.runMatches(event, matches, event.path, 0);
+            response = await this.runMatches(event, matches, 0);
 
             // OPTIONS auto-Allow synthesis — runs only on the root and
             // only when no handler produced a response or an error.
@@ -361,11 +361,18 @@ export class App implements IApp {
      * Walk the matched routes for the current event, dispatching each
      * handler in order. Re-entered (recursively) from the `setNext`
      * continuation so `event.next()` resumes from the next match.
+     *
+     * The match list is captured once per dispatch — there is no
+     * mid-walk path-rewrite refresh. `IAppEvent.path` is a snapshot
+     * on the handler's facade event (see `event/module.ts`), so user
+     * middleware cannot mutate the dispatcher's path before calling
+     * `event.next()`. If a future API surface lets middleware rewrite
+     * paths end-to-end, this loop will need a per-call refresh + a
+     * `methodsAllowed` reset (see closed issue #913).
      */
     protected async runMatches(
         event: IDispatcherEvent,
         matches: readonly RouteMatch<Handler>[],
-        matchesPath: string,
         startIndex: number,
     ): Promise<Response | undefined> {
         let i = startIndex;
@@ -409,25 +416,13 @@ export class App implements IApp {
             }
 
             const capturedMatches = matches;
-            const capturedMatchesPath = matchesPath;
             const nextIndex = i + 1;
 
             event.setNext(async (error?: Error) => {
                 if (error) {
                     event.error = createError(error);
                 }
-
-                // If the handler mutated `event.path` before calling
-                // next(), the captured matches are stale — refresh on
-                // the new path. Otherwise resume from the next match.
-                const pathChanged = event.path !== capturedMatchesPath;
-                const nextMatches = pathChanged ?
-                    this.router.lookup(event.path, event.method) :
-                    capturedMatches;
-                const nextMatchesPath = pathChanged ? event.path : capturedMatchesPath;
-                const nextStart = pathChanged ? 0 : nextIndex;
-
-                return this.runMatches(event, nextMatches, nextMatchesPath, nextStart);
+                return this.runMatches(event, capturedMatches, nextIndex);
             });
 
             try {
