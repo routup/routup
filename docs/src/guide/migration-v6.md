@@ -25,6 +25,7 @@ Routup v6 also removes the lifecycle-hook surface (`app.on(...)`, `HookName`, pe
 | `event.routerPath` | _removed_ — option resolution moved to mount time; the per-request stack walk is gone |
 | `event.routerOptions` | `event.appOptions` |
 | `Router.clone()` | _removed_ — sub-apps flatten on mount, so an App can be re-mounted under multiple paths without cloning (#914) |
+| `sendCreated(event, data)` / `sendAccepted(event, data)` | _removed_ — inline the two lines (`event.response.status = 201` / `202`; `return data`) |
 
 ### Internal-only renames
 

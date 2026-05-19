@@ -84,30 +84,6 @@ app.get('/old', defineCoreHandler((event) => {
 }));
 ```
 
-### sendCreated
-
-Send a 201 Created response:
-
-```typescript
-import { defineCoreHandler, sendCreated } from 'routup';
-
-app.post('/users', defineCoreHandler(async (event) => {
-    return sendCreated(event, { id: 1 });
-}));
-```
-
-### sendAccepted
-
-Send a 202 Accepted response:
-
-```typescript
-import { defineCoreHandler, sendAccepted } from 'routup';
-
-app.post('/jobs', defineCoreHandler(async (event) => {
-    return sendAccepted(event);
-}));
-```
-
 ### sendStream
 
 Stream data to the client:

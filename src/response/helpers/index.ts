@@ -3,8 +3,6 @@ export * from './event-stream/index.ts';
 export * from './header.ts';
 export * from './header-disposition.ts';
 export * from './header-content-type.ts';
-export * from './send-accepted.ts';
-export * from './send-created.ts';
 export * from './send-file.ts';
 export * from './send-format.ts';
 export * from './send-redirect.ts';

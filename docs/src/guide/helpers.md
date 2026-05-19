@@ -21,8 +21,6 @@ Helpers are standalone, tree-shakeable functions for interacting with requests a
 |--------|-------------|
 | `sendFile(event, opts)` | Send a file with range request support |
 | `sendRedirect(event, url, statusCode?)` | Redirect the client |
-| `sendCreated(event, data?)` | Send a 201 Created response |
-| `sendAccepted(event, data?)` | Send a 202 Accepted response |
 | `sendStream(event, stream)` | Stream data to the client |
 | `sendFormat(event, formats)` | Content-negotiate and send |
 | `createEventStream(event, options?)` | Create a Server-Sent Events stream |

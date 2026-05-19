@@ -75,36 +75,6 @@ const stream = new ReadableStream({ /* ... */ });
 return sendStream(event, stream);
 ```
 
-### `sendCreated`
-
-Send a `201 Created` response with optional body data.
-
-```typescript
-declare function sendCreated(
-    event: IAppEvent,
-    data?: unknown,
-): Promise<Response>;
-```
-
-```typescript
-return sendCreated(event, { id: 1, name: 'New Item' });
-```
-
-### `sendAccepted`
-
-Send a `202 Accepted` response with optional body data.
-
-```typescript
-declare function sendAccepted(
-    event: IAppEvent,
-    data?: unknown,
-): Promise<Response>;
-```
-
-```typescript
-return sendAccepted(event, { status: 'processing' });
-```
-
 ### `sendFormat`
 
 Perform content negotiation and send the response in the format the client prefers. Falls back to the `default` handler if no format matches.
