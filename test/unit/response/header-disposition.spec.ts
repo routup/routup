@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+    AppError,
     HeaderName,
+    createContentDisposition,
+    parseContentDisposition,
     setResponseHeaderAttachment,
     setResponseHeaderInline,
 } from '../../../src';
@@ -112,6 +115,66 @@ describe('src/helpers/response/header-disposition (jshttp/content-disposition pa
         it('should handle Unicode', () => {
             expect(dispositionFor('€%20£.pdf'))
                 .toEqual('attachment; filename="?%20?.pdf"; filename*=UTF-8\'\'%E2%82%AC%2520%C2%A3.pdf');
+        });
+    });
+
+    describe('createContentDisposition', () => {
+        it('should default to attachment type', () => {
+            expect(createContentDisposition('plans.pdf'))
+                .toEqual('attachment; filename=plans.pdf');
+        });
+
+        it('should accept an inline type', () => {
+            expect(createContentDisposition('plans.pdf', { type: 'inline' }))
+                .toEqual('inline; filename=plans.pdf');
+        });
+
+        it('should build a header without filename', () => {
+            expect(createContentDisposition()).toEqual('attachment');
+        });
+    });
+
+    describe('parseContentDisposition', () => {
+        it('should parse a simple attachment header', () => {
+            expect(parseContentDisposition('attachment; filename="plans.pdf"'))
+                .toEqual({ type: 'attachment', parameters: { filename: 'plans.pdf' } });
+        });
+
+        it('should parse an RFC 5987 extended filename', () => {
+            const parsed = parseContentDisposition(
+                "attachment; filename=\"? rates.pdf\"; filename*=UTF-8''%E2%82%AC%20rates.pdf",
+            );
+            expect(parsed.type).toBe('attachment');
+            expect(parsed.parameters.filename).toBe('€ rates.pdf');
+        });
+
+        it('should honour extended: false', () => {
+            const parsed = parseContentDisposition(
+                "attachment; filename*=UTF-8''%E2%82%AC%20rates.pdf",
+                { extended: false },
+            );
+            expect(parsed.parameters['filename*']).toBe("UTF-8''%E2%82%AC%20rates.pdf");
+        });
+
+        it('should return null when header is null', () => {
+            expect(parseContentDisposition(null)).toBeNull();
+        });
+
+        it('should return null when header is undefined', () => {
+            expect(parseContentDisposition(undefined)).toBeNull();
+        });
+
+        it('should rethrow underlying parse errors as AppError 400', () => {
+            let caught: unknown;
+            try {
+                parseContentDisposition(123 as unknown as string);
+            } catch (error) {
+                caught = error;
+            }
+
+            expect(caught).toBeInstanceOf(AppError);
+            expect((caught as AppError).statusCode).toBe(400);
+            expect((caught as AppError).cause).toBeInstanceOf(TypeError);
         });
     });
 

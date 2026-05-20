@@ -29,6 +29,8 @@ Helpers are standalone, tree-shakeable functions for interacting with requests a
 | `setResponseHeaderInline(event, filename?)` | Set Content-Disposition inline |
 | `setResponseHeaderContentType(event, type)` | Set Content-Type header |
 | `appendResponseHeader(event, name, value)` | Append to a response header |
+| `createContentDisposition(filename?, options?)` | Build a Content-Disposition header value |
+| `parseContentDisposition(header, options?)` | Parse a Content-Disposition header value |
 
 ## Event Properties
 

@@ -131,6 +131,68 @@ setResponseHeaderInline(event, 'invoice.pdf');
 // Content-Disposition: inline; filename=invoice.pdf
 ```
 
+### `createContentDisposition`
+
+Build a `Content-Disposition` header value as a string, with RFC 6266 / RFC 5987 encoding for non-US-ASCII filenames. Pure function — does not touch the event. Use this when you need the raw header value (e.g. inside a multipart writer) rather than mutating `event.response.headers`.
+
+```typescript
+declare function createContentDisposition(
+    filename?: string,
+    options?: ContentDispositionCreateOptions,
+): string;
+
+type ContentDispositionCreateOptions = {
+    type?: 'attachment' | 'inline'; // default: 'attachment'
+    fallback?: string | boolean;    // default: true
+};
+```
+
+```typescript
+createContentDisposition('plans.pdf');
+// 'attachment; filename=plans.pdf'
+
+createContentDisposition('€ rates.pdf', { type: 'inline' });
+// "inline; filename=\"? rates.pdf\"; filename*=UTF-8''%E2%82%AC%20rates.pdf"
+```
+
+### `parseContentDisposition`
+
+Parse a `Content-Disposition` header value into its type and parameters, decoding RFC 5987 / RFC 8187 extended parameters by default. Accepts `null` / `undefined` (as returned by `Headers.get()` when the header is absent) and returns `null` in that case, so callers don't need a separate null-check.
+
+```typescript
+declare function parseContentDisposition(
+    header: string,
+    options?: ContentDispositionParseOptions,
+): ContentDisposition;
+declare function parseContentDisposition(
+    header: string | null | undefined,
+    options?: ContentDispositionParseOptions,
+): ContentDisposition | null;
+
+type ContentDisposition = {
+    type: string;
+    parameters: Record<string, string>;
+};
+
+type ContentDispositionParseOptions = {
+    extended?: boolean;  // decode filename*=; default: true
+    multipart?: boolean; // multipart/form-data grammar; default: false
+};
+```
+
+```typescript
+parseContentDisposition('attachment; filename="plans.pdf"');
+// { type: 'attachment', parameters: { filename: 'plans.pdf' } }
+
+parseContentDisposition("attachment; filename*=UTF-8''%E2%82%AC%20rates.pdf");
+// { type: 'attachment', parameters: { filename: '€ rates.pdf' } }
+
+parseContentDisposition(event.request.headers.get('content-disposition'));
+// null when the header is missing
+```
+
+If the underlying parser throws, the error is rethrown as an `AppError` with HTTP status `400` and the original error attached as `cause` — suitable for surfacing through routup's error handler when parsing untrusted request headers.
+
 ### `setResponseHeaderContentType`
 
 Set the `Content-Type` response header. Optionally skip if a content type is already set.

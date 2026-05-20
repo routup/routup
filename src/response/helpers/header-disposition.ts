@@ -1,69 +1,104 @@
+import { create, parse } from 'content-disposition';
 import { HeaderName } from '../../constants.ts';
+import { AppError } from '../../error/index.ts';
 import type { IAppEvent } from '../../event/index.ts';
 import { setResponseContentTypeByFileName } from './utils.ts';
 
-// eslint-disable-next-line no-control-regex
-const ENCODE_URL_ATTR_CHAR_REGEXP = /[\x00-\x20"'()*,/:;<=>?@[\\\]{}\x7f]/g;
-const NON_ASCII_REGEXP = /[^\x20-\x7e]/g;
-const QUOTE_REGEXP = /[\\"]/g;
-const HEX_ESCAPE_REGEXP = /%[0-9A-Fa-f]{2}/;
-const ASCII_TEXT_REGEXP = /^[\x20-\x7e]+$/;
-const TOKEN_REGEXP = /^[!#$%&'*+.0-9A-Z^_`a-z|~-]+$/;
+export type ContentDispositionType = 'attachment' | 'inline' | (string & {});
 
-function pencode(char: string): string {
-    return `%${char.charCodeAt(0).toString(16).toUpperCase()}`;
+export type ContentDisposition = {
+    type: string;
+    parameters: Record<string, string>;
+};
+
+export type ContentDispositionCreateOptions = {
+    /**
+     * The disposition type to emit. Defaults to `'attachment'`.
+     * Common HTTP response values are `'attachment'` and `'inline'`,
+     * but any token (e.g. `'form-data'` for multipart bodies) is accepted.
+     */
+    type?: ContentDispositionType;
+    /**
+     * Fallback filename for the legacy `filename` parameter when the input
+     * contains non-US-ASCII characters (an RFC 5987 `filename*` is always
+     * emitted alongside it).
+     *
+     * - `true` (default): auto-generate by replacing non-ASCII with `?`.
+     * - `false`: omit the legacy fallback (`filename*` only).
+     * - `string`: use the provided value verbatim.
+     */
+    fallback?: string | boolean;
+};
+
+export type ContentDispositionParseOptions = {
+    /**
+     * Decode RFC 5987 / RFC 8187 percent-encoded extended parameters
+     * (e.g. `filename*=UTF-8''...`). Defaults to `true`.
+     */
+    extended?: boolean;
+    /**
+     * Parse parameters using the relaxed grammar browsers send in
+     * `multipart/form-data` bodies. Defaults to `false`.
+     */
+    multipart?: boolean;
+};
+
+export function createContentDisposition(
+    filename?: string,
+    options?: ContentDispositionCreateOptions,
+): string {
+    return create(filename, options);
 }
 
-function quoteString(value: string): string {
-    return `"${value.replace(QUOTE_REGEXP, '\\$&')}"`;
-}
-
-function getAscii(value: string): string {
-    return value.replace(NON_ASCII_REGEXP, '?');
-}
-
-function encodeExtended(value: string): string {
-    return encodeURIComponent(value).replace(ENCODE_URL_ATTR_CHAR_REGEXP, pencode);
-}
-
-function formatFilename(value: string): string {
-    if (TOKEN_REGEXP.test(value)) {
-        return `filename=${value}`;
+export function parseContentDisposition(
+    header: string,
+    options?: ContentDispositionParseOptions,
+): ContentDisposition;
+export function parseContentDisposition(
+    header: string | null | undefined,
+    options?: ContentDispositionParseOptions,
+): ContentDisposition | null;
+export function parseContentDisposition(
+    header: string | null | undefined,
+    options?: ContentDispositionParseOptions,
+): ContentDisposition | null {
+    if (header === null || header === undefined) {
+        return null;
     }
-    return `filename=${quoteString(value)}`;
+
+    try {
+        return parse(header, options && {
+            extended: options.extended,
+            multipart: options.multipart,
+        });
+    } catch (cause) {
+        throw new AppError({
+            status: 400,
+            message: 'Invalid Content-Disposition header.',
+            cause,
+        });
+    }
 }
 
-function setDisposition(
+function setContentDisposition(
     event: IAppEvent,
-    type: 'attachment' | 'inline',
+    type: ContentDispositionType,
     filename?: string,
 ) {
-    let disposition: string = type;
-
     if (typeof filename === 'string') {
         setResponseContentTypeByFileName(event, filename);
-
-        const isAsciiSafe = ASCII_TEXT_REGEXP.test(filename) &&
-            !HEX_ESCAPE_REGEXP.test(filename);
-
-        if (isAsciiSafe) {
-            disposition += `; ${formatFilename(filename)}`;
-        } else {
-            disposition += `; ${formatFilename(getAscii(filename))}`;
-            disposition += `; filename*=UTF-8''${encodeExtended(filename)}`;
-        }
     }
 
     event.response.headers.set(
         HeaderName.CONTENT_DISPOSITION,
-        disposition,
+        createContentDisposition(filename, { type }),
     );
 }
 
 export function setResponseHeaderAttachment(event: IAppEvent, filename?: string) {
-    setDisposition(event, 'attachment', filename);
+    setContentDisposition(event, 'attachment', filename);
 }
 
 export function setResponseHeaderInline(event: IAppEvent, filename?: string) {
-    setDisposition(event, 'inline', filename);
+    setContentDisposition(event, 'inline', filename);
 }

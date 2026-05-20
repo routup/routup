@@ -102,6 +102,7 @@
     "dependencies": {
         "@ebec/core": "^1.1.0",
         "@ebec/http": "^4.1.0",
+        "content-disposition": "^2.0.0",
         "mime-explorer": "^1.1.0",
         "negotiator": "^1.0.0",
         "path-to-regexp": "^8.4.2",
