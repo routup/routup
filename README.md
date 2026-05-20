@@ -39,7 +39,6 @@ npm install routup --save
 - 🌐 **Web-standard APIs** — built on `Request` / `Response` for portability
 - 📝 **Return-based handlers** — return strings, objects, streams, `Blob`s, or `Response` directly
 - ✨ **Async middleware** — onion model with `event.next()`
-- 📌 **Lifecycle hooks** — `request`, `response`, `error` for cross-cutting concerns
 - 🧭 **Pluggable router & cache** — `LinearRouter` (default), `TrieRouter`, or `SmartRouter` (auto-selects); opt-in LRU lookup cache
 - ⏱️ **Per-handler timeouts** — bounded execution with `AbortSignal` cooperative cancellation
 - 🏷️ **Automatic ETag & 304** — strong/weak ETags out of the box, configurable per app or disabled entirely
@@ -55,7 +54,7 @@ npm install routup --save
 
 ## Documentation
 
-To read the docs, visit [https://routup.net](https://routup.net)
+To read the docs, visit [https://routup.dev](https://routup.dev)
 
 ## Usage
 
