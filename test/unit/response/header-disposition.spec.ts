@@ -156,10 +156,18 @@ describe('src/helpers/response/header-disposition (jshttp/content-disposition pa
             expect(parsed.parameters['filename*']).toBe("UTF-8''%E2%82%AC%20rates.pdf");
         });
 
+        it('should return null when header is null', () => {
+            expect(parseContentDisposition(null)).toBeNull();
+        });
+
+        it('should return null when header is undefined', () => {
+            expect(parseContentDisposition(undefined)).toBeNull();
+        });
+
         it('should rethrow underlying parse errors as AppError 400', () => {
             let caught: unknown;
             try {
-                parseContentDisposition(null as unknown as string);
+                parseContentDisposition(123 as unknown as string);
             } catch (error) {
                 caught = error;
             }

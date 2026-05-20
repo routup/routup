@@ -4,7 +4,7 @@ import { AppError } from '../../error/index.ts';
 import type { IAppEvent } from '../../event/index.ts';
 import { setResponseContentTypeByFileName } from './utils.ts';
 
-export type ContentDispositionType = 'attachment' | 'inline';
+export type ContentDispositionType = 'attachment' | 'inline' | (string & {});
 
 export type ContentDisposition = {
     type: string;
@@ -14,11 +14,13 @@ export type ContentDisposition = {
 export type ContentDispositionCreateOptions = {
     /**
      * The disposition type to emit. Defaults to `'attachment'`.
+     * Common HTTP response values are `'attachment'` and `'inline'`,
+     * but any token (e.g. `'form-data'` for multipart bodies) is accepted.
      */
     type?: ContentDispositionType;
     /**
      * Fallback filename for the legacy `filename` parameter when the input
-     * contains non-US-ASCII characters (a RFC 5987 `filename*` is always
+     * contains non-US-ASCII characters (an RFC 5987 `filename*` is always
      * emitted alongside it).
      *
      * - `true` (default): auto-generate by replacing non-ASCII with `?`.
@@ -51,7 +53,19 @@ export function createContentDisposition(
 export function parseContentDisposition(
     header: string,
     options?: ContentDispositionParseOptions,
-): ContentDisposition {
+): ContentDisposition;
+export function parseContentDisposition(
+    header: string | null | undefined,
+    options?: ContentDispositionParseOptions,
+): ContentDisposition | null;
+export function parseContentDisposition(
+    header: string | null | undefined,
+    options?: ContentDispositionParseOptions,
+): ContentDisposition | null {
+    if (header === null || header === undefined) {
+        return null;
+    }
+
     try {
         return parse(header, options && {
             extended: options.extended,

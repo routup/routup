@@ -157,13 +157,17 @@ createContentDisposition('€ rates.pdf', { type: 'inline' });
 
 ### `parseContentDisposition`
 
-Parse a `Content-Disposition` header value into its type and parameters, decoding RFC 5987 / RFC 8187 extended parameters by default.
+Parse a `Content-Disposition` header value into its type and parameters, decoding RFC 5987 / RFC 8187 extended parameters by default. Accepts `null` / `undefined` (as returned by `Headers.get()` when the header is absent) and returns `null` in that case, so callers don't need a separate null-check.
 
 ```typescript
 declare function parseContentDisposition(
     header: string,
     options?: ContentDispositionParseOptions,
 ): ContentDisposition;
+declare function parseContentDisposition(
+    header: string | null | undefined,
+    options?: ContentDispositionParseOptions,
+): ContentDisposition | null;
 
 type ContentDisposition = {
     type: string;
@@ -182,6 +186,9 @@ parseContentDisposition('attachment; filename="plans.pdf"');
 
 parseContentDisposition("attachment; filename*=UTF-8''%E2%82%AC%20rates.pdf");
 // { type: 'attachment', parameters: { filename: '€ rates.pdf' } }
+
+parseContentDisposition(event.request.headers.get('content-disposition'));
+// null when the header is missing
 ```
 
 If the underlying parser throws, the error is rethrown as an `AppError` with HTTP status `400` and the original error attached as `cause` — suitable for surfacing through routup's error handler when parsing untrusted request headers.
