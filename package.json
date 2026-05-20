@@ -116,7 +116,7 @@
         "@tada5hi/eslint-config": "^2.3.0",
         "@tada5hi/tsconfig": "^0.7.2",
         "@types/negotiator": "^0.6.4",
-        "@types/node": "^25.9.0",
+        "@types/node": "^25.9.1",
         "@types/proxy-addr": "^2.0.3",
         "@vitest/coverage-v8": "^4.1.6",
         "autocannon": "^8.0.0",
