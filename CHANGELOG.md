@@ -6,6 +6,18 @@
 * **deps:** bump negotiator from 0.6.3 to 1.0.0 ([#700](https://github.com/routup/routup/issues/700)) ([84edd77](https://github.com/routup/routup/commit/84edd778b87d8baa9072319909385324f265e8a7))
 * **deps:** bump the minorandpatch group with 3 updates ([#758](https://github.com/routup/routup/issues/758)) ([c0117b3](https://github.com/routup/routup/commit/c0117b34c81f3be26f5c60a5ce71e7e81b6ed4ed))
 
+## [6.1.0](https://github.com/routup/routup/compare/v6.0.0...v6.1.0) (2026-06-15)
+
+
+### Features
+
+* **response:** expose createContentDisposition / parseContentDisposition ([#922](https://github.com/routup/routup/issues/922)) ([82a154c](https://github.com/routup/routup/commit/82a154c4d253d90967db00a9e55a78d4030cf5b4))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 10 updates ([#929](https://github.com/routup/routup/issues/929)) ([f2babb6](https://github.com/routup/routup/commit/f2babb6194b875759ad7c9d01a3cfb07f07a72de))
+
 ## [6.0.0](https://github.com/routup/routup/compare/v5.2.0...v6.0.0) (2026-05-20)
 
 
