@@ -418,11 +418,34 @@ export class App implements IApp {
             const capturedMatches = matches;
             const nextIndex = i + 1;
 
+            // Consumption of THIS iteration's continuation is tracked in a
+            // closure: the dispatcher's `_nextCalled` guard is a single
+            // shared field that every deeper `setNext` resets, so after the
+            // dispatch returns it reflects the deepest walked level — not
+            // whether this handler called its `next()`. (The early-return on
+            // a set `nextResult` is defensive only: under the current
+            // dispatcher invariants a consumed continuation cannot be
+            // re-invoked — the facade guard dedupes same-handler double
+            // next() calls, and `setNext` replaces `_next` whenever it
+            // resets `_nextCalled`.)
+            let nextResult: Promise<Response | undefined> | undefined;
+
             event.setNext(async (error?: Error) => {
+                // Record the error BEFORE the cache short-circuit: even on
+                // the (defensively guarded, normally unreachable) replay of
+                // an already-consumed continuation, an error argument is a
+                // signal the walk must not silently discard — the loop's
+                // error-state skip logic picks it up either way.
                 if (error) {
                     event.error = createError(error);
                 }
-                return this.runMatches(event, capturedMatches, nextIndex);
+
+                if (nextResult) {
+                    return nextResult;
+                }
+
+                nextResult = this.runMatches(event, capturedMatches, nextIndex);
+                return nextResult;
             });
 
             try {
@@ -431,6 +454,21 @@ export class App implements IApp {
                 if (dispatchResponse) {
                     response = dispatchResponse;
                     event.dispatched = true;
+                } else if (nextResult) {
+                    // The handler consumed its continuation: matches
+                    // `nextIndex..end` were already walked (recursively)
+                    // and produced no response. Falling through to `i++`
+                    // would walk the same suffix AGAIN — exponentially so
+                    // for a chain of next()-calling middlewares on a
+                    // request nothing answers (#946). The walk is
+                    // complete; stop here. (A handler that THROWS after
+                    // calling next() still falls through via the catch —
+                    // an error handler later in the chain must see the
+                    // error. Error flow is FORWARD-ONLY: an ERROR handler
+                    // registered BEFORE the failure point is not revisited
+                    // — the pre-#946 re-walk reached it by accident, and
+                    // multiple times.)
+                    break;
                 }
             } catch (e) {
                 event.error = createError(e);
