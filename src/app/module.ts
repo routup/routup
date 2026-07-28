@@ -422,10 +422,12 @@ export class App implements IApp {
             // closure: the dispatcher's `_nextCalled` guard is a single
             // shared field that every deeper `setNext` resets, so after the
             // dispatch returns it reflects the deepest walked level — not
-            // whether this handler called its `next()`. The same closure
-            // also restores the double-invocation guard across the
-            // recursion (a second `next()` at this level replays the cached
-            // walk instead of re-running it).
+            // whether this handler called its `next()`. (The early-return on
+            // a set `nextResult` is defensive only: under the current
+            // dispatcher invariants a consumed continuation cannot be
+            // re-invoked — the facade guard dedupes same-handler double
+            // next() calls, and `setNext` replaces `_next` whenever it
+            // resets `_nextCalled`.)
             let nextResult: Promise<Response | undefined> | undefined;
 
             event.setNext(async (error?: Error) => {
@@ -457,7 +459,10 @@ export class App implements IApp {
                     // complete; stop here. (A handler that THROWS after
                     // calling next() still falls through via the catch —
                     // an error handler later in the chain must see the
-                    // error.)
+                    // error. Error flow is FORWARD-ONLY: an ERROR handler
+                    // registered BEFORE the failure point is not revisited
+                    // — the pre-#946 re-walk reached it by accident, and
+                    // multiple times.)
                     break;
                 }
             } catch (e) {

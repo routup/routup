@@ -67,7 +67,7 @@ describe('routing/dispatch-count', () => {
         expect(await response.text()).toEqual('post-next failure');
     });
 
-    it('should replay the cached walk when a middleware calls next() twice', async () => {
+    it('should dispatch downstream once when a middleware calls next() twice (facade dedupe)', async () => {
         const app = new App();
         let downstreamDispatched = 0;
 
@@ -86,5 +86,72 @@ describe('routing/dispatch-count', () => {
         await app.fetch(createTestRequest('/miss'));
 
         expect(downstreamDispatched).toEqual(1);
+    });
+
+    it('should dispatch a downstream error handler once per next(error)', async () => {
+        const app = new App();
+        let errorDispatched = 0;
+
+        app.use(defineCoreHandler((event) => event.next(new Error('boom'))));
+
+        app.use(defineErrorHandler((error, event) => {
+            errorDispatched++;
+
+            // pass the error along — no response, the walk used to re-enter
+            return event.next(error);
+        }));
+
+        await app.fetch(createTestRequest('/anything'));
+
+        expect(errorDispatched).toEqual(1);
+    });
+
+    it('should keep OPTIONS Allow synthesis intact (the suffix walk records methodsAllowed before the break)', async () => {
+        const app = new App();
+        let middlewareDispatched = 0;
+
+        app.use(defineCoreHandler((event) => {
+            middlewareDispatched++;
+
+            return event.next();
+        }));
+
+        app.get('/resource', defineCoreHandler(() => 'get'));
+        app.post('/resource', defineCoreHandler(() => 'post'));
+
+        const response = await app.fetch(createTestRequest('/resource', { method: 'OPTIONS' }));
+
+        const allow = (response.headers.get('allow') ?? '').split(',').sort();
+        expect(allow).toEqual(['GET', 'HEAD', 'POST']);
+        expect(middlewareDispatched).toEqual(1);
+    });
+
+    it('should NOT revisit an error handler registered before the failure point (forward-only error flow)', async () => {
+        // pre-#946 the exponential re-walk accidentally re-entered EARLIER
+        // error handlers (multiple times) after a later middleware threw.
+        // Error flow is forward-only now: only handlers after the failure
+        // point see the error; without one, the error surfaces as the
+        // fallback error response.
+        const app = new App();
+        let earlyErrorDispatched = 0;
+
+        app.use(defineCoreHandler((event) => event.next()));
+
+        app.use(defineErrorHandler(() => {
+            earlyErrorDispatched++;
+
+            return 'early-handler';
+        }));
+
+        app.use(defineCoreHandler(async (event) => {
+            await event.next();
+
+            throw new Error('post-next failure');
+        }));
+
+        const response = await app.fetch(createTestRequest('/anything'));
+
+        expect(earlyErrorDispatched).toEqual(0);
+        expect(response.status).toBeGreaterThanOrEqual(500);
     });
 });
