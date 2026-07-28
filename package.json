@@ -117,7 +117,7 @@
         "@tada5hi/eslint-config": "^2.3.1",
         "@tada5hi/tsconfig": "^0.7.2",
         "@types/negotiator": "^0.6.4",
-        "@types/node": "^25.9.1",
+        "@types/node": "^26.1.2",
         "@types/proxy-addr": "^2.0.3",
         "@vitest/coverage-v8": "^4.1.10",
         "autocannon": "^8.0.0",
@@ -125,7 +125,7 @@
         "eslint-plugin-vue": "^10.10.0",
         "husky": "^9.1.7",
         "tsdown": "^0.22.14",
-        "typescript": "^6.0.3",
+        "typescript": "^7.0.2",
         "typescript-eslint": "^8.65.0",
         "vitest": "^4.1.1"
     }
