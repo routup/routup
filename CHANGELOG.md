@@ -6,6 +6,23 @@
 * **deps:** bump negotiator from 0.6.3 to 1.0.0 ([#700](https://github.com/routup/routup/issues/700)) ([84edd77](https://github.com/routup/routup/commit/84edd778b87d8baa9072319909385324f265e8a7))
 * **deps:** bump the minorandpatch group with 3 updates ([#758](https://github.com/routup/routup/issues/758)) ([c0117b3](https://github.com/routup/routup/commit/c0117b34c81f3be26f5c60a5ce71e7e81b6ed4ed))
 
+## [6.1.0](https://github.com/routup/routup/compare/v6.0.0...v6.1.0) (2026-07-28)
+
+
+### Features
+
+* **response:** expose createContentDisposition / parseContentDisposition ([#922](https://github.com/routup/routup/issues/922)) ([82a154c](https://github.com/routup/routup/commit/82a154c4d253d90967db00a9e55a78d4030cf5b4))
+
+
+### Bug Fixes
+
+* **app:** stop re-walking consumed match suffixes in runMatches ([#947](https://github.com/routup/routup/issues/947)) ([2f5f632](https://github.com/routup/routup/commit/2f5f6323e2046432d78f71def5b4c09dcc956b4f))
+* **deps:** bump actions/setup-node from 6 to 7 ([#938](https://github.com/routup/routup/issues/938)) ([7f76704](https://github.com/routup/routup/commit/7f76704df62cdae926c3aae74ef192159e581499))
+* **deps:** bump codecov/codecov-action from 6.0.1 to 7.0.0 ([#930](https://github.com/routup/routup/issues/930)) ([6b4c72f](https://github.com/routup/routup/commit/6b4c72f65d1a4c791286fcf2c19674759fc8eff2))
+* **deps:** bump the minorandpatch group across 1 directory with 10 updates ([#929](https://github.com/routup/routup/issues/929)) ([f2babb6](https://github.com/routup/routup/commit/f2babb6194b875759ad7c9d01a3cfb07f07a72de))
+* **deps:** bump the minorandpatch group across 1 directory with 6 updates ([#945](https://github.com/routup/routup/issues/945)) ([622d813](https://github.com/routup/routup/commit/622d8133073d0aad015ff346b18396fd29561ed1))
+* **deps:** bump the minorandpatch group across 1 directory with 9 updates ([#939](https://github.com/routup/routup/issues/939)) ([c8b1202](https://github.com/routup/routup/commit/c8b1202aea2a57d1f9a14ba11810685b214c2e16))
+
 ## [6.0.0](https://github.com/routup/routup/compare/v5.2.0...v6.0.0) (2026-05-20)
 
 
