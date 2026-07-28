@@ -431,12 +431,17 @@ export class App implements IApp {
             let nextResult: Promise<Response | undefined> | undefined;
 
             event.setNext(async (error?: Error) => {
-                if (nextResult) {
-                    return nextResult;
-                }
-
+                // Record the error BEFORE the cache short-circuit: even on
+                // the (defensively guarded, normally unreachable) replay of
+                // an already-consumed continuation, an error argument is a
+                // signal the walk must not silently discard — the loop's
+                // error-state skip logic picks it up either way.
                 if (error) {
                     event.error = createError(error);
+                }
+
+                if (nextResult) {
+                    return nextResult;
                 }
 
                 nextResult = this.runMatches(event, capturedMatches, nextIndex);
