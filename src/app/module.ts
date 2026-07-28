@@ -418,11 +418,27 @@ export class App implements IApp {
             const capturedMatches = matches;
             const nextIndex = i + 1;
 
+            // Consumption of THIS iteration's continuation is tracked in a
+            // closure: the dispatcher's `_nextCalled` guard is a single
+            // shared field that every deeper `setNext` resets, so after the
+            // dispatch returns it reflects the deepest walked level — not
+            // whether this handler called its `next()`. The same closure
+            // also restores the double-invocation guard across the
+            // recursion (a second `next()` at this level replays the cached
+            // walk instead of re-running it).
+            let nextResult: Promise<Response | undefined> | undefined;
+
             event.setNext(async (error?: Error) => {
+                if (nextResult) {
+                    return nextResult;
+                }
+
                 if (error) {
                     event.error = createError(error);
                 }
-                return this.runMatches(event, capturedMatches, nextIndex);
+
+                nextResult = this.runMatches(event, capturedMatches, nextIndex);
+                return nextResult;
             });
 
             try {
@@ -431,6 +447,18 @@ export class App implements IApp {
                 if (dispatchResponse) {
                     response = dispatchResponse;
                     event.dispatched = true;
+                } else if (nextResult) {
+                    // The handler consumed its continuation: matches
+                    // `nextIndex..end` were already walked (recursively)
+                    // and produced no response. Falling through to `i++`
+                    // would walk the same suffix AGAIN — exponentially so
+                    // for a chain of next()-calling middlewares on a
+                    // request nothing answers (#946). The walk is
+                    // complete; stop here. (A handler that THROWS after
+                    // calling next() still falls through via the catch —
+                    // an error handler later in the chain must see the
+                    // error.)
+                    break;
                 }
             } catch (e) {
                 event.error = createError(e);
