@@ -9,7 +9,7 @@
     "dependencies": {
         "routup": "file:..",
         "vitepress": "^1.2.3",
-        "vue": "^3.5.40"
+        "vue": "^3.5.42"
     },
     "devDependencies": {
         "flexsearch": "^0.8.212",
