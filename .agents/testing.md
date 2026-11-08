@@ -6,8 +6,6 @@
 - **Environment**: Node.js
 - **Config**: `test/vitest.config.ts`
 
-> **Note**: The test suite has been rewritten for the v5 srvx-based API. Tests use `router.fetch()` with Web `Request` objects directly.
-
 ## Running Tests
 
 ```bash
@@ -17,37 +15,41 @@ npm run test:coverage  # Run with coverage report
 
 ## Test Structure
 
-Tests live in `test/unit/` and mirror the `src/` directory structure:
+Tests live in `test/unit/`:
 
 ```
 test/
 ├── unit/
-│   ├── dispatcher/     # Dispatch pipeline tests
-│   ├── error/          # Error creation tests
-│   ├── handler/        # Handler definition tests
-│   ├── request/        # Request helper tests (body, cache, headers, hostname, IP, etc.)
-│   ├── response/       # Response helper tests (cache, headers, to-response, etc.)
-│   ├── router.spec.ts  # Router integration tests
-│   ├── path.spec.ts    # Path matching tests
-│   └── plugin.spec.ts  # Plugin system tests
+│   ├── app/            # App options, mounting (flatten), plugins, timeouts
+│   ├── cache/          # LruCache
+│   ├── error/          # Error creation and chaining
+│   ├── event/          # AppEvent
+│   ├── handler/        # Handler definitions, adapters, lifecycle callbacks
+│   ├── plugin/         # Plugin install and errors
+│   ├── request/        # Request helpers (cache, headers, hostname, IP, etc.)
+│   ├── response/       # Response helpers (cache, headers, send*, to-response)
+│   ├── router/         # Router implementations and compliance suite
+│   ├── routing/        # End-to-end routing, middleware, dispatch counts
+│   └── utils/          # Shared utilities
 ├── data/               # Test fixtures (static files, etc.)
+├── helpers.ts          # createTestRequest and event helpers
 └── vitest.config.ts    # Vitest configuration
 ```
 
 ## Test Pattern
 
 - File naming: `*.spec.ts`
-- Tests use `supertest` for HTTP-level assertions via `toNodeHandler()` from srvx, or test `router.fetch()` directly with Web `Request` objects
+- Tests call `app.fetch()` directly with `createTestRequest()` from `test/helpers.ts`
 - Typical pattern:
 
 ```typescript
-import { Router, defineCoreHandler } from '../../src';
+import { App, defineCoreHandler } from '../../src';
 import { createTestRequest } from '../helpers';
 
-const router = new Router();
-router.get('/', defineCoreHandler((event) => 'ok'));
+const app = new App();
+app.get('/', defineCoreHandler((event) => 'ok'));
 
-const response = await router.fetch(createTestRequest('/'));
+const response = await app.fetch(createTestRequest('/'));
 expect(await response.text()).toBe('ok');
 ```
 

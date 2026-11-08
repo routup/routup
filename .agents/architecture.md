@@ -2,45 +2,41 @@
 
 ## Core Concepts
 
-Routup's architecture centers on a **dispatch pipeline** that processes HTTP requests through a stack of handlers. It uses **srvx** as the universal HTTP server layer, providing a consistent `ServerRequest` interface across all runtimes.
+Routup's architecture centers on a **dispatch pipeline** that processes HTTP requests through the handlers matched by a pluggable router. It uses **srvx** as the universal HTTP server layer, providing a consistent `ServerRequest` interface across all runtimes.
 
 ### Request Flow
 
 ```text
-HTTP Request → srvx → ServerRequest → RoutupEvent → Router Pipeline → Response
+HTTP Request → srvx → ServerRequest (AppRequest) → App.fetch() → DispatcherEvent → IRouter.lookup() → App.runMatches() → Handler.dispatch() → Response
 ```
 
 1. **srvx** receives the raw HTTP request and normalizes it into a `ServerRequest`
-2. The **Router**'s `fetch()` method creates a `RoutupEvent` from the request
-3. The **Router** iterates its handler stack, matching path and method
-4. Matched **Handlers** execute, returning response values or calling `event.next()`
+2. **`App.fetch()`** creates a `DispatcherEvent` and applies the global timeout
+3. **`App.dispatch()`** asks the active `IRouter` for the matches of the path and method
+4. **`App.runMatches()`** walks the matches in order; matched **Handlers** run, returning response values or calling `event.next()`
 5. Return values are converted to a Web `Response` via `toResponse()`
-6. **Hooks** fire at each pipeline step for cross-cutting concerns
+6. With no response, `App.fetch()` builds a fallback: the pending error's status (default 500), or 404. The body is JSON when the request accepts JSON, plain text otherwise
 
-### Pipeline Steps
+### Pipeline Rules
 
-The router dispatches through these ordered steps:
-
-```
-START → LOOKUP → CHILD_BEFORE → CHILD_DISPATCH → CHILD_AFTER → FINISH
-```
-
-Each step corresponds to hook events that plugins and middleware can tap into.
+- CORE handlers run only while no error is pending; ERROR handlers run only while one is.
+- The match list is captured once per dispatch. `IAppEvent.path` is a snapshot on the handler's event, so middleware cannot rewrite the path before `event.next()` (see #913).
+- An `OPTIONS` request that no handler answers gets a synthesized `Allow` response on the root App, built from the methods of the matched routes.
 
 ## Entry Files Pattern
 
 Routup uses conditional exports in `package.json` to auto-select the correct runtime adapter. Always import from `routup`:
 
 ```typescript
-import { Router, defineCoreHandler, serve } from 'routup';
+import { App, defineCoreHandler, serve } from 'routup';
 
-const router = new Router();
-router.get('/', defineCoreHandler((event) => 'Hello'));
-serve(router);
+const app = new App();
+app.get('/', defineCoreHandler((event) => 'Hello'));
+serve(app);
 ```
 
 This works on Node.js, Bun, Deno, and Cloudflare Workers. Under the hood, each runtime resolves to a dedicated entry file (`src/_entries/*.ts`) that bundles:
-- All core exports (Router, handlers, helpers, etc.)
+- All core exports (App, handlers, helpers, etc.)
 - Runtime-specific `serve()` function from srvx
 - `toNodeHandler()` where applicable (Node.js entry)
 
@@ -71,7 +67,7 @@ defineErrorHandler((error, event) => {
 });
 ```
 
-Handlers are distinguished by their `type` property (`HandlerType.CORE` or `HandlerType.ERROR`), set by the `defineCoreHandler()` and `defineErrorHandler()` factories.
+Handlers are distinguished by their `type` property (`HandlerType.CORE` or `HandlerType.ERROR`), set by the `defineCoreHandler()` and `defineErrorHandler()` factories. `fromNodeHandler()`, `fromNodeMiddleware()` and `fromWebHandler()` adapt foreign handlers.
 
 ### Response Model
 
@@ -114,81 +110,87 @@ defineCoreHandler((event) => {
 });
 ```
 
-## RoutupEvent
+`event.next(error)` forwards an error instead. Calling `next()` more than once returns the same cached result.
 
-The `RoutupEvent` (implementing `IRoutupEvent`) is the central object passed to every handler:
+## AppEvent
+
+The `AppEvent` (implementing `IAppEvent`) is the central object passed to every handler:
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `request` | `RoutupRequest` | The srvx-normalized request object |
-| `params` | `Record<string, any>` | Route parameters extracted from path |
+| `request` | `AppRequest` | The srvx-normalized request object |
+| `params` | `Record<string, string \| undefined>` | Route parameters extracted from path |
 | `path` | `string` | Current request path (relative to mount point) |
-| `method` | `string` | HTTP method |
-| `mountPath` | `string` | Path prefix where the router is mounted |
+| `method` | `MethodNameLike` | HTTP method |
+| `mountPath` | `string` | Path prefix where the handler is mounted |
 | `headers` | `Headers` | Request headers |
 | `searchParams` | `URLSearchParams` | Query string parameters |
-| `response` | `RoutupResponse` | Response accumulator for status, headers, statusText |
-| `signal` | `AbortSignal` | Abort signal for cooperative cancellation (aborted on timeout) |
-| `dispatched` | `boolean` | Whether a response has been produced |
+| `response` | `AppResponse` | Response accumulator for status and headers |
 | `store` | `Record<string \| symbol, unknown>` | Per-request state store for caching and plugin state |
+| `appOptions` | `Readonly<AppOptions>` | Options of the App running the handler |
+| `signal` | `AbortSignal` | Abort signal for cooperative cancellation (aborted on timeout) |
+| `next(error?)` | `Promise<Response \| undefined>` | Continue with the next handler |
+| `nextCalled` | `boolean` | Whether `next()` has been invoked |
+| `nextResult` | `Promise<Response \| undefined> \| undefined` | The captured downstream result |
 
-## Router.fetch()
+## App.fetch()
 
-The `Router` exposes a `fetch()` method as its public entry point, compatible with the Web Fetch API signature:
+The `App` exposes a `fetch()` method as its public entry point, compatible with the Web Fetch API signature:
 
 ```typescript
-const router = new Router();
-const response: Response = await router.fetch(request);
+const app = new App();
+const response: Response = await app.fetch(request);
 ```
 
 This is what srvx calls internally when routing requests.
 
-## Router Nesting
+## Routers
 
-Routers can be nested for modular route organization:
+`App` delegates route lookup to an `IRouter`: `LinearRouter` (default), `TrieRouter`, or `SmartRouter`. Pass one with `new App({ router })` or `app.setRouter(router)`. Each router owns its lookup cache: `new TrieRouter({ cache })`, default bounded LRU (`LruCache`), `null` to disable.
+
+## App Nesting
+
+Apps can be mounted for modular route organization:
 
 ```typescript
-const api = new Router();
+const api = new App();
 api.get('/users', handler);
 
-const app = new Router();
+const app = new App();
 app.use('/api', api);  // /api/users
 ```
 
-Child routers are dispatched as handlers in the parent's stack. The dispatch event's path is adjusted to strip the mount prefix.
+Mounting **flattens**: `app.use()` copies the child's routes and plugin registry into the parent's router at call time and does not retain the child. Routes added to the child after mounting do not reach the parent.
 
-## Hook System
+## Handler Lifecycle Callbacks
 
-Hooks provide lifecycle events on the Router:
-
-| Hook | Fires when |
-|------|-----------|
-| `request` | Router begins processing a request |
-| `response` | Router finishes processing and has a response |
-| `error` | An error occurs during dispatch |
+Per-handler instrumentation lives on the handler options; there is no App-level hook surface.
 
 ```typescript
-router.on('request', (event) => { /* ... */ });
-router.on('response', (event) => { /* ... */ });
-router.on('error', (event) => { /* event.error contains the error */ });
+defineCoreHandler({
+    onBefore: (event) => { /* before fn */ },
+    onAfter: (event, response) => { /* after the response is built */ },
+    onError: (error, event) => { /* fn failed */ },
+    fn: () => 'ok',
+});
 ```
 
 ## Plugin System
 
-Plugins encapsulate reusable functionality:
+Plugins encapsulate reusable functionality. A plugin has a `name`, an `install(app)` function, and optionally a semver `version` and `singleton` opt-in. By default the same plugin may be installed repeatedly and each install stacks.
 
 ```typescript
 const myPlugin = {
     name: 'my-plugin',
-    install(router: Router) {
-        router.use(defineCoreHandler(async (event) => {
+    install(app: IApp) {
+        app.use(defineCoreHandler(async (event) => {
             // plugin logic
             return event.next();
         }));
     }
 };
 
-router.use(myPlugin);
+app.use(myPlugin);
 ```
 
 ## Request/Response Helpers
@@ -216,10 +218,10 @@ Routup supports two levels of timeout, both returning `408 Request Timeout`:
 
 ### Global timeout (`timeout`)
 
-Applied in `Router.fetch()` around the entire dispatch pipeline. Uses `AbortController` internally — when the timeout fires, `event.signal` is aborted for cooperative cancellation.
+Applied in `App.fetch()` around the entire dispatch pipeline. Uses `AbortController` internally — when the timeout fires, `event.signal` is aborted for cooperative cancellation.
 
 ```typescript
-const router = new Router({ timeout: 5000 }); // 5s for entire request
+const app = new App({ options: { timeout: 5000 } }); // 5s for entire request
 ```
 
 ### Per-handler timeout (`handlerTimeout`)
@@ -227,13 +229,15 @@ const router = new Router({ timeout: 5000 }); // 5s for entire request
 Applied in `Handler.dispatch()` around each handler's `fn()` execution. Handlers can override this default via their own `timeout` option. When the per-handler timeout fires, a handler-scoped `AbortController` is aborted so that `event.signal` inside the handler reflects the timeout — enabling cooperative cancellation for signal-aware APIs.
 
 ```typescript
-const router = new Router({
-    handlerTimeout: 2000,              // default: 2s per handler
-    handlerTimeoutOverridable: false,  // handlers can only narrow, not extend
+const app = new App({
+    options: {
+        handlerTimeout: 2000,              // default: 2s per handler
+        handlerTimeoutOverridable: false,  // handlers can only narrow, not extend
+    },
 });
 
 // This handler gets a shorter timeout (1s)
-router.get('/fast', defineCoreHandler({
+app.get('/fast', defineCoreHandler({
     timeout: 1000,
     fn: (event) => fetchFastData(),
 }));
@@ -259,8 +263,8 @@ defineCoreHandler(async (event) => {
 Errors thrown in handlers are caught by the pipeline and routed to error handlers:
 
 ```typescript
-// RoutupError with HTTP semantics
-throw new RoutupError({ statusCode: 404, statusMessage: 'Not Found' });
+// AppError with HTTP semantics
+throw new AppError({ status: 404, message: 'Not Found' });
 ```
 
-`RoutupError` extends `@ebec/http`'s `HTTPError`, providing `statusCode` and `statusMessage` properties. Unhandled errors are converted to an appropriate error response by the pipeline.
+`AppError` extends `@ebec/http`'s `HTTPError`; `createError()` normalizes any thrown value into one. Unhandled errors become the fallback response described under Request Flow.

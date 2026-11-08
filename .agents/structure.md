@@ -12,29 +12,31 @@ routup/
 │   │   ├── generic.ts      # Generic Web API entry (srvx generic adapter)
 │   │   ├── cloudflare.ts   # Cloudflare Workers entry
 │   │   └── service-worker.ts # Service Worker entry
-│   ├── dispatcher/         # Dispatcher interface and pipeline triggers
-│   ├── event/              # RoutupEvent class and IRoutupEvent interface
-│   ├── error/              # RoutupError (extends @ebec/http)
+│   ├── app/                # App class (central module) and options
+│   ├── cache/              # ICache and LruCache for router lookups
+│   ├── dispatcher/         # IDispatcher, DispatcherEvent
+│   ├── event/              # AppEvent class and IAppEvent interface
+│   ├── error/              # AppError (extends @ebec/http), createError, isError
 │   ├── handler/            # Handler definitions
 │   │   ├── core/           # defineCoreHandler — standard request handlers
 │   │   ├── error/          # defineErrorHandler — error-specific handlers
-│   │   └── helpers/        # fromNodeHandler — Node.js middleware bridge
-│   ├── hook/               # Lifecycle hook system
+│   │   └── adapters/       # fromNodeHandler, fromNodeMiddleware, fromWebHandler
 │   ├── path/               # PathMatcher using path-to-regexp
-│   ├── plugin/             # Plugin install/management
+│   ├── plugin/             # Plugin types, checks and errors
 │   ├── request/            # Request helpers
-│   │   └── helpers/        # Tree-shakeable helper functions (body, headers, IP, etc.)
+│   │   └── helpers/        # Tree-shakeable helper functions (headers, hostname, IP, etc.)
 │   ├── response/           # Response helpers
-│   │   ├── helpers/        # Tree-shakeable helper functions (cache, headers, etc.)
+│   │   ├── helpers/        # Tree-shakeable helper functions (cache, headers, send*, etc.)
 │   │   └── to-response.ts  # Converts handler return values to Web Response
-│   ├── router/             # Router class (central module)
-│   ├── router-options/     # Router configuration merging
+│   ├── router/             # IRouter and the linear, trie and smart routers
 │   ├── utils/              # Shared utilities
-│   ├── constants.ts        # MethodName, HeaderName enums
+│   ├── constants.ts        # MethodName, HeaderName constants
+│   ├── types.ts            # Shared types
 │   └── index.ts            # Barrel export (public API)
 ├── test/                   # Vitest test suite
-│   ├── unit/               # Unit tests mirroring src/ structure
+│   ├── unit/               # Unit tests
 │   ├── data/               # Test fixtures
+│   ├── helpers.ts          # createTestRequest and event helpers
 │   └── vitest.config.ts    # Vitest configuration
 ├── docs/                   # VitePress documentation site
 │   ├── src/                # Documentation source (guide, API reference)
@@ -50,20 +52,21 @@ routup/
 | Module | Purpose |
 |--------|---------|
 | `_entries/` | Runtime-specific entry points — each re-exports core API plus runtime adapter (`serve`, `toNodeHandler`, etc.) via srvx |
-| `router/` | Core `Router` class — registers handlers, manages stack, dispatches requests through pipeline steps, exposes `fetch()` |
+| `app/` | Core `App` class — registers handlers, mounts apps, installs plugins, dispatches requests, exposes `fetch()` |
+| `router/` | `IRouter` route-table family: `LinearRouter` (default), `TrieRouter`, `SmartRouter` |
+| `cache/` | `ICache` contract and the `LruCache` default used by routers |
 | `handler/core/` | `defineCoreHandler()` factory — creates typed request handlers with shorthand and verbose syntax |
 | `handler/error/` | `defineErrorHandler()` factory — creates error handlers that receive `(error, event)` |
-| `handler/helpers/` | `fromNodeHandler()` — wraps Node.js `(req, res)` or `(req, res, next)` middleware for use in routup |
-| `dispatcher/` | `IDispatcher` interface for dispatch pipeline |
-| `event/` | `RoutupEvent` class and `IRoutupEvent` interface — event object carrying request, params, path, method, mountPath, headers, searchParams, store through the pipeline |
-| `hook/` | Lifecycle events: `request`, `response`, `error` |
-| `plugin/` | Plugin system — objects with `name` and `install(router)` method |
-| `path/` | `PathMatcher` — wraps `path-to-regexp` for URL pattern matching with query string support |
+| `handler/adapters/` | `fromNodeHandler()`, `fromNodeMiddleware()`, `fromWebHandler()` — wrap foreign handlers for use in routup |
+| `dispatcher/` | `IDispatcher` interface and the `DispatcherEvent` carried through the pipeline |
+| `event/` | `AppEvent` class and `IAppEvent` interface — the event object handed to each handler |
+| `plugin/` | Plugin contract — objects with `name` and `install(app)` |
+| `path/` | `PathMatcher` — wraps `path-to-regexp` for URL pattern matching |
 | `request/helpers/` | Tree-shakeable request helpers (`getRequestHeader`, `getRequestIP`, etc.) |
-| `response/helpers/` | Tree-shakeable response helpers (`sendFile`, `sendRedirect`, `sendCreated`, etc.) |
+| `response/helpers/` | Tree-shakeable response helpers (`sendFile`, `sendRedirect`, `sendStream`, etc.) |
 | `response/to-response.ts` | Converts handler return values (string, object, Response, etc.) into a Web `Response` with automatic ETag/304 |
-| `error/` | `RoutupError` extending `@ebec/http` `HTTPError` with statusCode/statusMessage |
-| `constants.ts` | `MethodName` and `HeaderName` enums for type-safe HTTP constants |
+| `error/` | `AppError` extending `@ebec/http` `HTTPError` with `status` and `message` |
+| `constants.ts` | `MethodName` and `HeaderName` constants for type-safe HTTP values |
 
 ## Key Dependencies
 
@@ -71,16 +74,18 @@ routup/
 |---------|---------|
 | `srvx` | Universal HTTP server adapter (Node.js, Bun, Deno, Cloudflare, etc.) |
 | `path-to-regexp` | URL pattern matching (`:id`, wildcards, regex) |
-| `@ebec/http` | Base HTTP error class |
+| `@ebec/http` / `@ebec/core` | Base HTTP error class and instanceof brands |
+| `content-disposition` | `Content-Disposition` creation and parsing |
 | `mime-explorer` | MIME type detection for file serving |
 | `negotiator` | HTTP content negotiation |
 | `proxy-addr` | Trust proxy compilation for hostname/protocol helpers |
+| `quick-lru` | Backing store of `LruCache` |
 | `smob` | Object merge/utility functions |
 | `uncrypto` | Cross-platform crypto (ETags, etc.) |
 
 ## Build Output
 
-The package ships multiple ESM/CJS entry points with TypeScript declarations:
+The package ships multiple ESM entry points with TypeScript declarations:
 
 | Entry | Path | Purpose |
 |-------|------|---------|
