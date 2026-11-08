@@ -1,4 +1,4 @@
-import { HeaderName } from '../../constants.ts';
+import { HeaderName, MethodName } from '../../constants.ts';
 import { basename } from '../../utils/index.ts';
 import type { IAppEvent } from '../../event/index.ts';
 import { setResponseHeaderAttachment, setResponseHeaderInline } from './header-disposition.ts';
@@ -109,8 +109,11 @@ export async function sendFile(
     let statusCode = event.response.status;
 
     if (stats.size) {
-        const rangeHeader = event.headers.get(HeaderName.RANGE);
-        const range = rangeHeader ? parseByteRange(rangeHeader, stats.size) : undefined;
+        const rangeHeader = event.method === MethodName.GET ? event.headers.get(HeaderName.RANGE) : null;
+        // The weak ETag can never satisfy If-Range, so only the modification date can match.
+        const ifRange = event.headers.get(HeaderName.IF_RANGE);
+        const isCurrent = !ifRange || (!!stats.mtime && ifRange === new Date(stats.mtime).toUTCString());
+        const range = rangeHeader && isCurrent ? parseByteRange(rangeHeader, stats.size) : undefined;
         if (range) {
             contentOptions.start = range.start;
             contentOptions.end = range.end;

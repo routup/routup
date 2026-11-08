@@ -38,6 +38,7 @@ export const HeaderName = {
     HOST: 'host',
     IF_MODIFIED_SINCE: 'if-modified-since',
     IF_NONE_MATCH: 'if-none-match',
+    IF_RANGE: 'if-range',
     LAST_MODIFIED: 'last-modified',
     LOCATION: 'location',
     RANGE: 'range',

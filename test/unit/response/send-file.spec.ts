@@ -172,6 +172,40 @@ describe('src/helpers/response/send-file', () => {
         expect(await response.text()).toEqual(file);
     });
 
+    it('should ignore a range on a non-GET request', async () => {
+        const event = createTestEvent('/', { method: 'POST', headers: { 'range': 'bytes=-5' } });
+        const response = await sendFile(event, buildSendFileOptions('test/data/dummy.txt'));
+
+        expect(response.status).toEqual(200);
+        expect(response.headers.get(HeaderName.CONTENT_RANGE)).toBeNull();
+    });
+
+    it('should ignore a range when If-Range does not match the file', async () => {
+        const event = createTestEvent('/', {
+            headers: {
+                'range': 'bytes=0-5',
+                'if-range': 'Thu, 01 Jan 1970 00:00:00 GMT',
+            },
+        });
+        const response = await sendFile(event, buildSendFileOptions('test/data/dummy.txt'));
+
+        expect(response.status).toEqual(200);
+        expect(response.headers.get(HeaderName.CONTENT_RANGE)).toBeNull();
+    });
+
+    it('should serve a range when If-Range matches the last modification date', async () => {
+        const stat = await fs.promises.stat('test/data/dummy.txt');
+        const event = createTestEvent('/', {
+            headers: {
+                'range': 'bytes=0-5',
+                'if-range': stat.mtime.toUTCString(),
+            },
+        });
+        const response = await sendFile(event, buildSendFileOptions('test/data/dummy.txt'));
+
+        expect(response.status).toEqual(206);
+    });
+
     it('should return 416 when start range exceeds file size', async () => {
         const event = createTestEvent('/', { headers: { 'range': 'bytes=999-999999' } });
         const response = await sendFile(event, buildSendFileOptions('test/data/dummy.txt'));
