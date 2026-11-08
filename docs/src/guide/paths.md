@@ -1,6 +1,6 @@
 # Paths
 
-Paths define the URL patterns that handlers and routers respond to. Routup uses [path-to-regexp](https://github.com/pillarjs/path-to-regexp) (v8) for pattern matching.
+Paths define the URL patterns that handlers and routers respond to. Routup uses [path-to-regexp](https://github.com/pillarjs/path-to-regexp) (v9) for pattern matching.
 
 ## Basic Paths
 
@@ -25,6 +25,13 @@ app.get('/users/:id/roles/:roleId', defineCoreHandler((event) => {
         roleId: event.params.roleId
     };
 }));
+```
+
+When a segment contains several parameters and the input is ambiguous, the last one is greedy:
+
+```typescript
+// GET /foo.json.html → { file: 'foo', ext: 'json.html' }
+app.get('/:file.:ext', defineCoreHandler((event) => event.params));
 ```
 
 ## Wildcards
