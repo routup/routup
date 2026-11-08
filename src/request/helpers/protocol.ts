@@ -13,6 +13,7 @@ export function getRequestProtocol(
     options: RequestProtocolOptions = {},
 ) : string {
     let trustProxy : TrustProxyFn;
+
     if (typeof options.trustProxy !== 'undefined') {
         trustProxy = buildTrustProxyFn(options.trustProxy);
     } else {
@@ -21,8 +22,10 @@ export function getRequestProtocol(
 
     // Derive protocol from the request URL scheme
     let protocol : string;
+
     try {
         const url = new URL(event.request.url);
+
         if (url.protocol === 'https:') {
             protocol = 'https';
         } else {
@@ -37,6 +40,7 @@ export function getRequestProtocol(
     }
 
     const header = event.headers.get(HeaderName.X_FORWARDED_PROTO);
+
     if (!header) {
         return protocol;
     }

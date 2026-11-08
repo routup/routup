@@ -6,12 +6,14 @@ describe('src/response/to-response', () => {
     it('should return undefined for undefined', async () => {
         const event = createTestEvent('/');
         const result = await toResponse(undefined, event);
+
         expect(result).toBeUndefined();
     });
 
     it('should return empty response for null', async () => {
         const event = createTestEvent('/');
         const result = await toResponse(null, event);
+
         expect(result).toBeInstanceOf(Response);
         expect(result!.status).toBe(200);
         expect(await result!.text()).toBe('');
@@ -19,8 +21,11 @@ describe('src/response/to-response', () => {
 
     it('should return custom status for null when set', async () => {
         const event = createTestEvent('/');
+
         event.response.status = 204;
+
         const result = await toResponse(null, event);
+
         expect(result!.status).toBe(204);
     });
 
@@ -28,12 +33,14 @@ describe('src/response/to-response', () => {
         const event = createTestEvent('/');
         const original = new Response('custom', { status: 201 });
         const result = await toResponse(original, event);
+
         expect(result).toBe(original);
     });
 
     it('should convert string to text/plain response', async () => {
         const event = createTestEvent('/');
         const result = await toResponse('hello', event);
+
         expect(result!.headers.get('content-type')).toBe('text/plain; charset=utf-8');
         expect(await result!.text()).toBe('hello');
         expect(result!.status).toBe(200);
@@ -41,14 +48,18 @@ describe('src/response/to-response', () => {
 
     it('should preserve existing content-type for string', async () => {
         const event = createTestEvent('/');
+
         event.response.headers.set('content-type', 'text/html');
+
         const result = await toResponse('<p>hi</p>', event);
+
         expect(result!.headers.get('content-type')).toBe('text/html');
     });
 
     it('should convert object to JSON response', async () => {
         const event = createTestEvent('/');
         const result = await toResponse({ a: 1 }, event);
+
         expect(result!.headers.get('content-type')).toBe('application/json; charset=utf-8');
         expect(await result!.json()).toEqual({ a: 1 });
     });
@@ -56,12 +67,14 @@ describe('src/response/to-response', () => {
     it('should convert array to JSON response', async () => {
         const event = createTestEvent('/');
         const result = await toResponse([1, 2, 3], event);
+
         expect(await result!.json()).toEqual([1, 2, 3]);
     });
 
     it('should convert number to JSON response', async () => {
         const event = createTestEvent('/');
         const result = await toResponse(42, event);
+
         expect(await result!.text()).toBe('42');
         expect(result!.headers.get('content-type')).toBe('application/json; charset=utf-8');
     });
@@ -70,6 +83,7 @@ describe('src/response/to-response', () => {
         const event = createTestEvent('/');
         const buf = new ArrayBuffer(4);
         const result = await toResponse(buf, event);
+
         expect(result!.headers.get('content-type')).toBe('application/octet-stream');
     });
 
@@ -77,6 +91,7 @@ describe('src/response/to-response', () => {
         const event = createTestEvent('/');
         const arr = new Uint8Array([1, 2, 3]);
         const result = await toResponse(arr, event);
+
         expect(result!.headers.get('content-type')).toBe('application/octet-stream');
     });
 
@@ -89,6 +104,7 @@ describe('src/response/to-response', () => {
             },
         });
         const result = await toResponse(stream, event);
+
         expect(await result!.text()).toBe('streamed');
     });
 
@@ -96,6 +112,7 @@ describe('src/response/to-response', () => {
         const event = createTestEvent('/');
         const blob = new Blob(['data'], { type: 'text/csv' });
         const result = await toResponse(blob, event);
+
         expect(result!.headers.get('content-type')).toBe('text/csv');
     });
 
@@ -103,26 +120,34 @@ describe('src/response/to-response', () => {
         const event = createTestEvent('/');
         const blob = new Blob(['data']);
         const result = await toResponse(blob, event);
+
         expect(result!.headers.get('content-type')).toBe('application/octet-stream');
     });
 
     it('should respect event.response.status', async () => {
         const event = createTestEvent('/');
+
         event.response.status = 201;
+
         const result = await toResponse('created', event);
+
         expect(result!.status).toBe(201);
     });
 
     it('should respect event.response.headers', async () => {
         const event = createTestEvent('/');
+
         event.response.headers.set('x-custom', 'value');
+
         const result = await toResponse('ok', event);
+
         expect(result!.headers.get('x-custom')).toBe('value');
     });
 
     it('should throw AppError when JSON.stringify fails', async () => {
         const event = createTestEvent('/');
         const circular: Record<string, unknown> = {};
+
         circular.self = circular;
 
         try {

@@ -54,6 +54,7 @@ describe('routing/middleware', () => {
 
         router.use('/bar', defineCoreHandler((event) => {
             event.store.bar = 'baz';
+
             return event.next();
         }));
 

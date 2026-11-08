@@ -36,6 +36,7 @@ describe('src/helpers/response/header', () => {
         appendResponseHeader(event, HeaderName.SET_COOKIE, 'bar=baz; Path=/');
 
         const cookies = event.response.headers.getSetCookie();
+
         expect(cookies).toEqual([
             'foo=bar; Path=/',
             'bar=baz; Path=/',

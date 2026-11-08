@@ -33,6 +33,7 @@ export class PathMatcher implements IPathMatcher {
         this.path = path;
 
         this.regexpOptions = options || {};
+
         const regexp = pathToRegexp(path, options);
 
         this.regexp = regexp.regexp;
@@ -64,7 +65,11 @@ export class PathMatcher implements IPathMatcher {
 
         for (let i = 1; i < match.length; i++) {
             const key = this.regexpKeys[i - 1];
-            if (!key) continue;
+
+            if (!key) {
+                continue;
+            }
+
             const prop = key.name;
             const val = decodeParam(match[i]);
 

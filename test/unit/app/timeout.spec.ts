@@ -22,7 +22,10 @@ describe('src/app/timeout', () => {
             const router = new App({ options: { timeout: 50 } });
 
             router.use(defineCoreHandler(async () => {
-                await new Promise((resolve) => { setTimeout(resolve, 200); });
+                await new Promise((resolve) => {
+                    setTimeout(resolve, 200);
+                });
+
                 return 'too late';
             }));
 
@@ -42,6 +45,7 @@ describe('src/app/timeout', () => {
                         resolve();
                     });
                 });
+
                 return 'too late';
             }));
 
@@ -56,6 +60,7 @@ describe('src/app/timeout', () => {
 
             router.use(defineCoreHandler((event) => {
                 signalAborted = event.signal.aborted;
+
                 return 'ok';
             }));
 
@@ -68,7 +73,10 @@ describe('src/app/timeout', () => {
             const router = new App();
 
             router.use(defineCoreHandler(async () => {
-                await new Promise((resolve) => { setTimeout(resolve, 10); });
+                await new Promise((resolve) => {
+                    setTimeout(resolve, 10);
+                });
+
                 return 'ok';
             }));
 
@@ -84,6 +92,7 @@ describe('src/app/timeout', () => {
 
             router.use(defineCoreHandler((event) => {
                 hasSignal = event.signal instanceof AbortSignal;
+
                 return 'ok';
             }));
 
@@ -109,7 +118,10 @@ describe('src/app/timeout', () => {
             const router = new App({ options: { handlerTimeout: 50 } });
 
             router.use(defineCoreHandler(async () => {
-                await new Promise((resolve) => { setTimeout(resolve, 200); });
+                await new Promise((resolve) => {
+                    setTimeout(resolve, 200);
+                });
+
                 return 'too late';
             }));
 
@@ -124,7 +136,10 @@ describe('src/app/timeout', () => {
             router.use(defineCoreHandler({
                 timeout: 50,
                 fn: async () => {
-                    await new Promise((resolve) => { setTimeout(resolve, 200); });
+                    await new Promise((resolve) => {
+                        setTimeout(resolve, 200);
+                    });
+
                     return 'too late';
                 },
             }));
@@ -140,7 +155,10 @@ describe('src/app/timeout', () => {
             router.use(defineCoreHandler({
                 timeout: 500,
                 fn: async () => {
-                    await new Promise((resolve) => { setTimeout(resolve, 200); });
+                    await new Promise((resolve) => {
+                        setTimeout(resolve, 200);
+                    });
+
                     return 'too late';
                 },
             }));
@@ -161,7 +179,10 @@ describe('src/app/timeout', () => {
             router.use(defineCoreHandler({
                 timeout: 500,
                 fn: async () => {
-                    await new Promise((resolve) => { setTimeout(resolve, 100); });
+                    await new Promise((resolve) => {
+                        setTimeout(resolve, 100);
+                    });
+
                     return 'extended ok';
                 },
             }));
@@ -178,7 +199,10 @@ describe('src/app/timeout', () => {
             router.use(defineCoreHandler({
                 timeout: 50,
                 fn: async () => {
-                    await new Promise((resolve) => { setTimeout(resolve, 200); });
+                    await new Promise((resolve) => {
+                        setTimeout(resolve, 200);
+                    });
+
                     return 'too late';
                 },
             }));
@@ -199,6 +223,7 @@ describe('src/app/timeout', () => {
                         resolve();
                     });
                 });
+
                 return 'too late';
             }));
 
@@ -220,6 +245,7 @@ describe('src/app/timeout', () => {
                             resolve();
                         });
                     });
+
                     return 'too late';
                 },
             }));
@@ -235,6 +261,7 @@ describe('src/app/timeout', () => {
 
             router.use(defineCoreHandler((event) => {
                 signalAborted = event.signal.aborted;
+
                 return 'ok';
             }));
 
@@ -254,6 +281,7 @@ describe('src/app/timeout', () => {
                         resolve();
                     });
                 });
+
                 return 'too late';
             }));
 
@@ -266,7 +294,10 @@ describe('src/app/timeout', () => {
             const router = new App();
 
             router.use(defineCoreHandler(async () => {
-                await new Promise((resolve) => { setTimeout(resolve, 10); });
+                await new Promise((resolve) => {
+                    setTimeout(resolve, 10);
+                });
+
                 return 'ok';
             }));
 
@@ -288,7 +319,10 @@ describe('src/app/timeout', () => {
             router.use(defineCoreHandler({
                 timeout: 500,
                 fn: async () => {
-                    await new Promise((resolve) => { setTimeout(resolve, 200); });
+                    await new Promise((resolve) => {
+                        setTimeout(resolve, 200);
+                    });
+
                     return 'too late';
                 },
             }));

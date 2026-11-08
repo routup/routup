@@ -35,15 +35,18 @@ function extractTrieParams(
     indexMap: ParamCapture[],
 ): Record<string, string | undefined> {
     const out = Object.create(null) as Record<string, string | undefined>;
+
     for (const cap of indexMap) {
         if (cap.kind === 'segment') {
             out[cap.name] = decodeOrRaw(segments[cap.depth]!);
         } else {
             // Splat: capture every remaining segment, joined with '/'.
             const slice = segments.slice(cap.depth).join('/');
+
             out[cap.name] = decodeOrRaw(slice);
         }
     }
+
     return out;
 }
 
@@ -66,9 +69,11 @@ function trieMatchedPath(
     splatTerminated: boolean,
 ): string {
     const upTo = splatTerminated ? segments.length : matchDepth;
+
     if (upTo === 0) {
         return '/';
     }
+
     return `/${segments.slice(0, upTo).join('/')}`;
 }
 
@@ -80,6 +85,7 @@ function trieMatchedPath(
  */
 function buildParamsIndexMap(segments: Segment[]): ParamCapture[] {
     const out: ParamCapture[] = [];
+
     for (const [i, seg] of segments.entries()) {
         if (seg.kind === 'param') {
             out.push({
@@ -93,11 +99,13 @@ function buildParamsIndexMap(segments: Segment[]): ParamCapture[] {
                 depth: i,
                 name: seg.name,
             });
+
             // Splats are always last in a variant — the trie parser
             // emits at most one per variant.
             break;
         }
     }
+
     return out;
 }
 
@@ -114,9 +122,11 @@ function methodBucketKeys(method: MethodNameLike | undefined): readonly string[]
     if (typeof method === 'undefined' || method === MethodName.OPTIONS) {
         return null;
     }
+
     if (method === MethodName.HEAD) {
         return ['', MethodName.HEAD, MethodName.GET];
     }
+
     return ['', method];
 }
 
@@ -126,17 +136,29 @@ function emitBucket<T extends ObjectLiteral>(
     out: IndexedRoute<T>[],
 ): void {
     const keys = methodBucketKeys(method);
+
     if (keys === null) {
         for (const k in buckets) {
             const list = buckets[k]!;
-            for (const r of list) out.push(r);
+
+            for (const r of list) {
+                out.push(r);
+            }
         }
+
         return;
     }
+
     for (const k of keys) {
         const list = buckets[k];
-        if (!list) continue;
-        for (const r of list) out.push(r);
+
+        if (!list) {
+            continue;
+        }
+
+        for (const r of list) {
+            out.push(r);
+        }
     }
 }
 
@@ -145,6 +167,7 @@ function hasAnyBucket<T extends ObjectLiteral>(buckets: MethodBuckets<T>): boole
     for (const _k in buckets) {
         return true;
     }
+
     return false;
 }
 
@@ -154,6 +177,7 @@ function pushIntoBucket<T extends ObjectLiteral>(
     route: IndexedRoute<T>,
 ): void {
     const bucket = buckets[methodKey];
+
     if (bucket) {
         bucket.push(route);
     } else {
@@ -248,10 +272,12 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
                 matcher: buildRoutePathMatcher(route),
             });
             this.cache?.clear();
+
             return;
         }
 
         const variants = parsePath(route.path);
+
         if (variants === null) {
             // Trie parser doesn't handle this syntax (compound
             // segments like `/files/:n.ext`, escape sequences,
@@ -262,6 +288,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
                 matcher: buildRoutePathMatcher(route),
             });
             this.cache?.clear();
+
             return;
         }
 
@@ -271,6 +298,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         for (const segments of variants) {
             this.insertIntoTrie(segments, route, index);
         }
+
         this.cache?.clear();
     }
 
@@ -280,6 +308,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         // sharing a cache entry across methods would leak matches.
         const cacheKey = `${method ?? ''}\t${path}`;
         const cached = this.cache?.get(cacheKey);
+
         if (typeof cached !== 'undefined') {
             return cached;
         }
@@ -292,6 +321,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
 
         const segments = this.parseRequestPath(path);
         const shortCircuit = this.shortCircuit(segments, method);
+
         if (shortCircuit !== null) {
             for (const c of shortCircuit) {
                 candidates.push(c);
@@ -312,14 +342,19 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         // variant of the same route wins (in practice they don't
         // overlap — a route is in either bucket).
         candidates.sort((a, b) => {
-            if (a.index !== b.index) return a.index - b.index;
+            if (a.index !== b.index) {
+                return a.index - b.index;
+            }
+
             const ad = a.matchDepth ?? -1;
             const bd = b.matchDepth ?? -1;
+
             return bd - ad;
         });
 
         const matches: RouteMatch<T>[] = [];
         let lastIndex = -1; // dedupe — multiple variants of one route share `index`
+
         for (const candidate of candidates) {
             const {
                 route,
@@ -336,9 +371,11 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
             if (matcher) {
                 // Universal-bucket route: still uses path-to-regexp.
                 const output = matcher.exec(path);
+
                 if (typeof output === 'undefined') {
                     continue;
                 }
+
                 matches.push({
                     route,
                     index,
@@ -346,6 +383,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
                     path: output.path,
                 });
                 lastIndex = index;
+
                 continue;
             }
 
@@ -359,6 +397,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
                     path: trieMatchedPath(segments, matchDepth, candidate.splatTerminated === true),
                 });
                 lastIndex = index;
+
                 continue;
             }
 
@@ -372,6 +411,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         }
 
         this.cache?.set(cacheKey, matches);
+
         return matches;
     }
 
@@ -398,9 +438,11 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
             }
 
             const child = node.staticChildren.get(segment!);
+
             if (!child) {
                 return null;
             }
+
             node = child;
         }
 
@@ -411,22 +453,28 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         // Pure static spine reached the leaf — `exactRoutes` (for the
         // request method's relevant buckets) is the complete answer.
         const out: IndexedRoute<T>[] = [];
+
         emitBucket(node.exactRoutes, method, out);
+
         return out;
     }
 
     protected parseRequestPath(path: string): string[] {
         const trimmed = path.charAt(0) === '/' ? path.slice(1) : path;
+
         if (trimmed === '') {
             return [];
         }
+
         const parts = trimmed.split('/');
         const result: string[] = [];
+
         for (const part of parts) {
             if (part !== '') {
                 result.push(part);
             }
         }
+
         return result;
     }
 
@@ -453,6 +501,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
                     matchDepth: i,
                     splatTerminated: true,
                 });
+
                 return;
             }
 
@@ -460,15 +509,19 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
                 if (!node.paramChild) {
                     node.paramChild = createTrieNode();
                 }
+
                 node = node.paramChild;
+
                 continue;
             }
 
             let child = node.staticChildren.get(seg.value);
+
             if (!child) {
                 child = createTrieNode();
                 node.staticChildren.set(seg.value, child);
             }
+
             node = child;
         }
 
@@ -502,9 +555,11 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
             // Request path is fully consumed at this node: collect
             // both exact-match and prefix-match routes that ended here.
             emitBucket(node.exactRoutes, method, collected);
+
             for (const p of node.prefixRoutes) {
                 collected.push(p);
             }
+
             return;
         }
 
@@ -517,6 +572,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         const seg = segments[depth]!;
 
         const staticChild = node.staticChildren.get(seg);
+
         if (staticChild) {
             this.walk(staticChild, segments, depth + 1, collected, method);
         }
@@ -539,11 +595,13 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         source: Record<string, string | undefined>,
     ): Record<string, string | undefined> {
         const out = Object.create(null) as Record<string, string | undefined>;
+
         for (const k in source) {
             if (Object.prototype.hasOwnProperty.call(source, k)) {
                 out[k] = source[k];
             }
         }
+
         return out;
     }
 }

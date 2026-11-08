@@ -60,19 +60,24 @@ export class SmartRouter<T extends ObjectLiteral = ObjectLiteral> implements IRo
     add(route: Route<T>): void {
         if (this.inner) {
             this.inner.add(route);
+
             return;
         }
+
         this.pending.push(route);
     }
 
     lookup(path: string, method?: string): readonly RouteMatch<T>[] {
         if (!this.inner) {
             this.inner = this.choose();
+
             for (const r of this.pending) {
                 this.inner.add(r);
             }
+
             this.pending = [];
         }
+
         return this.inner.lookup(path, method);
     }
 
@@ -87,6 +92,7 @@ export class SmartRouter<T extends ObjectLiteral = ObjectLiteral> implements IRo
         if (this.pending.length < this.threshold) {
             return new LinearRouter<T>({ cache: this.cache });
         }
+
         return new TrieRouter<T>({ cache: this.cache });
     }
 }

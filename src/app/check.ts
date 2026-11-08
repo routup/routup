@@ -23,9 +23,11 @@ export function isAppInstance(input: unknown): input is IApp {
     if (hasInstanceof(input, AppSymbol)) {
         return true;
     }
+
     if (!isObject(input)) {
         return false;
     }
+
     return typeof input.fetch === 'function' &&
         Array.isArray(input.routes) &&
         isObject(input.plugins) &&

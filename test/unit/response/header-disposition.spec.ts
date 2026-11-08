@@ -11,13 +11,17 @@ import { createTestEvent } from '../../helpers';
 
 function dispositionFor(filename?: string): string | null {
     const event = createTestEvent('/');
+
     setResponseHeaderAttachment(event, filename);
+
     return event.response.headers.get(HeaderName.CONTENT_DISPOSITION);
 }
 
 function inlineDispositionFor(filename?: string): string | null {
     const event = createTestEvent('/');
+
     setResponseHeaderInline(event, filename);
+
     return event.response.headers.get(HeaderName.CONTENT_DISPOSITION);
 }
 
@@ -144,6 +148,7 @@ describe('src/helpers/response/header-disposition (jshttp/content-disposition pa
             const parsed = parseContentDisposition(
                 "attachment; filename=\"? rates.pdf\"; filename*=UTF-8''%E2%82%AC%20rates.pdf",
             );
+
             expect(parsed.type).toBe('attachment');
             expect(parsed.parameters.filename).toBe('€ rates.pdf');
         });
@@ -153,6 +158,7 @@ describe('src/helpers/response/header-disposition (jshttp/content-disposition pa
                 "attachment; filename*=UTF-8''%E2%82%AC%20rates.pdf",
                 { extended: false },
             );
+
             expect(parsed.parameters['filename*']).toBe("UTF-8''%E2%82%AC%20rates.pdf");
         });
 
@@ -166,6 +172,7 @@ describe('src/helpers/response/header-disposition (jshttp/content-disposition pa
 
         it('should rethrow underlying parse errors as AppError 400', () => {
             let caught: unknown;
+
             try {
                 parseContentDisposition(123 as unknown as string);
             } catch (error) {

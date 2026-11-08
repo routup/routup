@@ -55,6 +55,7 @@ describe('routing/methods', () => {
 
     it('should define global head handler', async () => {
         const router = new App();
+
         router.head(defineCoreHandler(async () => 'HEAD'));
 
         const response = await router.fetch(createTestRequest('/', { method: 'HEAD' }));
@@ -64,6 +65,7 @@ describe('routing/methods', () => {
 
     it('should define global options handler', async () => {
         const router = new App();
+
         router.options(defineCoreHandler(async () => 'options'));
 
         const response = await router.fetch(createTestRequest('/', { method: 'OPTIONS' }));

@@ -8,8 +8,12 @@ function createFakeNodeRuntime() {
     const res = {
         writableEnded: false,
         destroyed: false,
-        once() { return res; },
-        removeListener() { return res; },
+        once() {
+            return res;
+        },
+        removeListener() {
+            return res;
+        },
     };
 
     return {
@@ -20,6 +24,7 @@ function createFakeNodeRuntime() {
 
 function attachNodeRuntime(request: ReturnType<typeof createTestRequest>) {
     (request as any).runtime = { node: createFakeNodeRuntime() };
+
     return request;
 }
 
@@ -31,11 +36,15 @@ describe('src/handler/helpers/from-node-handler', () => {
 
     it('should create a Handler from node handler', () => {
         const handler = fromNodeHandler((_req, _res) => {});
+
         expect(handler.type).toBe(HandlerType.CORE);
     });
 
     it('should create a Handler from node middleware', () => {
-        const handler = fromNodeMiddleware((_req, _res, next) => { next(); });
+        const handler = fromNodeMiddleware((_req, _res, next) => {
+            next();
+        });
+
         expect(handler.type).toBe(HandlerType.CORE);
     });
 
@@ -44,6 +53,7 @@ describe('src/handler/helpers/from-node-handler', () => {
         const router = new App({ options: { timeout: 1000 } });
 
         let middlewareCalled = false;
+
         router.use(fromNodeMiddleware((_req, _res, next) => {
             middlewareCalled = true;
             next();

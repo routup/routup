@@ -78,6 +78,7 @@ describe('src/request/helpers/ip', () => {
 
         // Custom function: trust 10.x.x.x addresses
         const trustFn = (addr: string) => addr.startsWith('10.');
+
         expect(getRequestIP(event, { trustProxy: trustFn })).toEqual('203.0.113.50');
     });
 });

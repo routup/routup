@@ -10,6 +10,7 @@
  */
 export function acceptsJson(request: Request): boolean {
     const accept = request.headers.get('accept');
+
     if (!accept) {
         return true;
     }
@@ -26,6 +27,7 @@ export function acceptsJson(request: Request): boolean {
                 .map((param) => param.split('=').map((s) => s.trim()))
                 .find(([key]) => key === 'q');
             const q = qParam ? Number.parseFloat(qParam[1] ?? '') : 1;
+
             if (!Number.isFinite(q) || q <= 0) {
                 return false;
             }

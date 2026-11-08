@@ -5,6 +5,7 @@ import { getRequestHeader } from './header.ts';
 
 export function matchRequestContentType(event: IAppEvent, contentType: string) : boolean {
     const header = getRequestHeader(event, HeaderName.CONTENT_TYPE);
+
     if (!header) {
         return true;
     }

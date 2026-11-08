@@ -27,14 +27,20 @@ function callHandler(
         }
 
         function settle(value: typeof kHandled | void) {
-            if (settled) return;
+            if (settled) {
+                return;
+            }
+
             settled = true;
             cleanup();
             resolve(value);
         }
 
         function fail(error: unknown) {
-            if (settled) return;
+            if (settled) {
+                return;
+            }
+
             settled = true;
             cleanup();
             reject(error);
@@ -73,14 +79,20 @@ function callMiddleware(
         }
 
         function settle(value: typeof kHandled | void) {
-            if (settled) return;
+            if (settled) {
+                return;
+            }
+
             settled = true;
             cleanup();
             resolve(value);
         }
 
         function fail(error: unknown) {
-            if (settled) return;
+            if (settled) {
+                return;
+            }
+
             settled = true;
             cleanup();
             reject(error);
@@ -114,6 +126,7 @@ function createNodeBridge(handler: NodeHandler | NodeMiddleware, isMiddleware: b
     return defineCoreHandler({
         fn: (async (event: IAppEvent) => {
             const node = event.request.runtime?.node;
+
             if (!node?.req || !node?.res) {
                 throw new AppError('fromNodeHandler/fromNodeMiddleware requires a Node.js runtime.');
             }

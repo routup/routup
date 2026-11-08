@@ -32,6 +32,7 @@ export function withTrailingSlash(input = '', queryParams = false): string {
     }
 
     const [s0, ...s] = input.split('?');
+
     return `${s0}/${s.length ? `?${s.join('?')}` : ''}`;
 }
 
@@ -75,18 +76,24 @@ export function cleanDoubleSlashes(input = ''): string {
  */
 export function joinPaths(...parts: Array<string | undefined>): string | undefined {
     const kept: string[] = [];
+
     for (const part of parts) {
         if (typeof part !== 'string' || part === '') {
             continue;
         }
+
         kept.push(part);
     }
+
     if (kept.length === 0) {
         return undefined;
     }
+
     const normalized = cleanDoubleSlashes(withLeadingSlash(kept.join('/')));
+
     if (normalized.length > 1 && normalized.endsWith('/')) {
         return normalized.slice(0, -1);
     }
+
     return normalized;
 }

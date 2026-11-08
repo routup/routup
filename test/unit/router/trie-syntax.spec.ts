@@ -27,6 +27,7 @@ describe('TrieRouter — Phase 2 syntax', () => {
     describe('T2 — optional params (`:name?`)', () => {
         it('matches with and without the optional param', async () => {
             const a = app();
+
             a.get('/users/:id?', defineCoreHandler((event) => `id=${event.params.id ?? 'none'}`));
 
             expect(await (await a.fetch(createTestRequest('/users'))).text()).toBe('id=none');
@@ -37,6 +38,7 @@ describe('TrieRouter — Phase 2 syntax', () => {
     describe('T2 — optional groups (`{/segment}`)', () => {
         it('matches with and without the group', async () => {
             const a = app();
+
             a.get('/users{/edit}', defineCoreHandler(() => 'matched'));
 
             expect((await a.fetch(createTestRequest('/users'))).status).toBe(200);
@@ -46,6 +48,7 @@ describe('TrieRouter — Phase 2 syntax', () => {
 
         it('expands param inside group', async () => {
             const a = app();
+
             a.get('/users{/:id}', defineCoreHandler((event) => `id=${event.params.id ?? 'none'}`));
 
             expect(await (await a.fetch(createTestRequest('/users'))).text()).toBe('id=none');
@@ -56,6 +59,7 @@ describe('TrieRouter — Phase 2 syntax', () => {
     describe('T3 — ParamsIndexMap-style extraction', () => {
         it('extracts a single param', async () => {
             const a = app();
+
             a.get('/users/:id', defineCoreHandler((event) => String(event.params.id)));
 
             expect(await (await a.fetch(createTestRequest('/users/42'))).text()).toBe('42');
@@ -63,6 +67,7 @@ describe('TrieRouter — Phase 2 syntax', () => {
 
         it('extracts multiple params', async () => {
             const a = app();
+
             a.get(
                 '/orgs/:org/repos/:repo',
                 defineCoreHandler((event) => `${event.params.org}:${event.params.repo}`),
@@ -74,6 +79,7 @@ describe('TrieRouter — Phase 2 syntax', () => {
 
         it('captures named splat as the joined remainder', async () => {
             const a = app();
+
             a.get('/static/*file', defineCoreHandler((event) => String(event.params.file)));
 
             expect(await (await a.fetch(createTestRequest('/static/css/main.css'))).text())
@@ -82,6 +88,7 @@ describe('TrieRouter — Phase 2 syntax', () => {
 
         it('captures bare splat as `*`', async () => {
             const a = app();
+
             a.get('/proxy/*', defineCoreHandler((event) => String(event.params['*'])));
 
             expect(await (await a.fetch(createTestRequest('/proxy/api/users'))).text())
@@ -90,10 +97,12 @@ describe('TrieRouter — Phase 2 syntax', () => {
 
         it('decodes URL-encoded param values', async () => {
             const a = app();
+
             a.get('/users/:name', defineCoreHandler((event) => String(event.params.name)));
 
             // %20 → space
             const res = await a.fetch(createTestRequest('/users/john%20doe'));
+
             expect(await res.text()).toBe('john doe');
         });
 
@@ -105,12 +114,15 @@ describe('TrieRouter — Phase 2 syntax', () => {
             // `event.mountPath` is no longer accumulated — there is
             // no per-request descent into a child app to strip.
             const inner = new App({ router: new TrieRouter<Handler>() });
+
             inner.get('/items', defineCoreHandler((event) => `${event.path}|${event.params.version}`));
 
             const outer = new App({ router: new TrieRouter<Handler>() });
+
             outer.use('/api/:version', inner);
 
             const res = await outer.fetch(createTestRequest('/api/v1/items'));
+
             expect(await res.text()).toBe('/api/v1/items|v1');
         });
     });
@@ -124,9 +136,11 @@ describe('TrieRouter — Phase 2 syntax', () => {
             // '/api/v1'`. Picking the shorter variant blindly would
             // lose params.
             const inner = new App({ router: new TrieRouter<Handler>() });
+
             inner.get('/', defineCoreHandler((event) => `version=${event.params.version ?? 'none'}`));
 
             const outer = new App({ router: new TrieRouter<Handler>() });
+
             outer.use('/api/:version?', inner);
 
             expect(await (await outer.fetch(createTestRequest('/api/v1'))).text())
@@ -143,9 +157,10 @@ describe('TrieRouter — Phase 2 syntax', () => {
             // wrong. Falling to the universal bucket lets path-to-
             // regexp speak with authority.
             const a = app();
+
             a.get('/a{/b}c', defineCoreHandler(() => 'matched'));
 
-            // path-to-regexp v8 interprets `/a{/b}c` as `/a/c` or
+            // path-to-regexp v9 interprets `/a{/b}c` as `/a/c` or
             // `/a/b/c` (the literal `c` is consumed by the group's
             // tail). The trie should NOT promiscuously match
             // anything else — `/a/x` must 404.
@@ -157,6 +172,7 @@ describe('TrieRouter — Phase 2 syntax', () => {
             // cap of 16. The route should still register and dispatch
             // correctly via the universal-bucket fallback.
             const a = app();
+
             a.get('/a{/b}{/c}{/d}{/e}{/f}', defineCoreHandler(() => 'capped'));
 
             expect((await a.fetch(createTestRequest('/a'))).status).toBe(200);
@@ -168,9 +184,11 @@ describe('TrieRouter — Phase 2 syntax', () => {
             // try/catch in `decodeOrRaw` returns the raw segment so
             // the route still matches without crashing.
             const a = app();
+
             a.get('/users/:name', defineCoreHandler((event) => String(event.params.name)));
 
             const res = await a.fetch(createTestRequest('/users/bad%2'));
+
             expect(res.status).toBe(200);
             expect(await res.text()).toBe('bad%2');
         });
@@ -186,6 +204,7 @@ describe('TrieRouter — Phase 2 syntax', () => {
             // making the parser refuse such paths so they fall back
             // to path-to-regexp via the universal bucket.
             const a = app();
+
             a.get('/files/*rest/extra', defineCoreHandler(() => 'matched'));
 
             // Without `/extra` → 404 (path-to-regexp template
@@ -201,6 +220,7 @@ describe('TrieRouter — Phase 2 syntax', () => {
             // omitting the matcher would silently make this handler
             // serve every request.
             const a = app();
+
             a.get('/', defineCoreHandler(() => 'root'));
 
             expect((await a.fetch(createTestRequest('/'))).status).toBe(200);
@@ -214,12 +234,15 @@ describe('TrieRouter — Phase 2 syntax', () => {
             // handler reads the full request path from `event.path`;
             // the splat capture surfaces via `event.params.rest`.
             const inner = new App({ router: new TrieRouter<Handler>() });
+
             inner.get('/', defineCoreHandler((event) => event.path));
 
             const outer = new App({ router: new TrieRouter<Handler>() });
+
             outer.use('/files/*rest', inner);
 
             const res = await outer.fetch(createTestRequest('/files/a/b/c'));
+
             expect(await res.text()).toBe('/files/a/b/c');
         });
     });
@@ -227,6 +250,7 @@ describe('TrieRouter — Phase 2 syntax', () => {
     describe('T6 — trie-native parser', () => {
         it('collapses trailing slash (parseRequestPath drops empty trailing segments)', async () => {
             const a = app();
+
             a.get('/users', defineCoreHandler(() => 'matched'));
 
             // `parseRequestPath` splits on `/` and drops empty
@@ -241,11 +265,12 @@ describe('TrieRouter — Phase 2 syntax', () => {
 
         it('falls back to universal bucket on compound segments', async () => {
             // `/files/:name.ext` is a compound segment (param +
-            // literal in the same path segment) — path-to-regexp v8
+            // literal in the same path segment) — path-to-regexp v9
             // supports it but the trie's own parser doesn't. The
             // route must still work via the universal-bucket
             // fallback.
             const a = app();
+
             a.get('/files/:name.ext', defineCoreHandler((event) => String(event.params.name)));
 
             expect(await (await a.fetch(createTestRequest('/files/report.ext'))).text())

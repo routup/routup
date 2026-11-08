@@ -51,6 +51,7 @@ export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IR
         // the call site discriminate. Method-aware routers (TrieRouter)
         // narrow at lookup time for the per-request perf win.
         const cached = this.cache?.get(path);
+
         if (typeof cached !== 'undefined') {
             return cached;
         }
@@ -63,15 +64,18 @@ export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IR
 
             if (matcher) {
                 const output = matcher.exec(path);
+
                 if (typeof output === 'undefined') {
                     continue;
                 }
+
                 matches.push({
                     route,
                     index: i,
                     params: output.params,
                     path: output.path,
                 });
+
                 continue;
             }
 
@@ -88,6 +92,7 @@ export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IR
         }
 
         this.cache?.set(path, matches);
+
         return matches;
     }
 }

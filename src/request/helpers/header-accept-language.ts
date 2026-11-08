@@ -3,6 +3,7 @@ import { useRequestNegotiator } from './negotiator.ts';
 
 export function getRequestAcceptableLanguages(event: IAppEvent) : string[] {
     const negotiator = useRequestNegotiator(event);
+
     return negotiator.languages();
 }
 
@@ -16,5 +17,6 @@ export function getRequestAcceptableLanguage(event: IAppEvent, input?: string | 
     }
 
     const negotiator = useRequestNegotiator(event);
+
     return negotiator.languages(items).shift() || undefined;
 }

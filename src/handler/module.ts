@@ -63,12 +63,14 @@ export class Handler implements IDispatcher {
 
             if (effectiveTimeout) {
                 const parentSignal = event.signal;
+
                 childController = new AbortController();
 
                 if (parentSignal.aborted) {
                     childController.abort(parentSignal.reason);
                 } else {
                     const onAbort = () => childController!.abort(parentSignal.reason);
+
                     parentSignal.addEventListener('abort', onAbort, { once: true });
                     cleanupParentListener = () => parentSignal.removeEventListener('abort', onAbort);
                 }
@@ -91,17 +93,21 @@ export class Handler implements IDispatcher {
             }
 
             let invocation: unknown;
+
             if (skipFn) {
                 // invocation stays undefined; falls through to toResponse(undefined) → undefined.
             } else if (this.config.type === HandlerType.ERROR) {
                 const { fn } = this.config;
+
                 invocation = fn(event.error!, handlerEvent);
             } else {
                 const { fn } = this.config;
+
                 invocation = fn(handlerEvent);
             }
 
             let result: unknown;
+
             if (skipFn) {
                 // no-op
             } else if (effectiveTimeout) {
@@ -132,12 +138,14 @@ export class Handler implements IDispatcher {
             // `toResponse` returns sync when no ETag is configured —
             // avoid an unconditional `await` to save a microtask.
             const toResp = toResponse(result, handlerEvent);
+
             response = isPromise(toResp) ?
                 await toResp :
                 toResp;
 
             if (response) {
                 event.dispatched = true;
+
                 // ERROR handler resolved the pending error — clear it
                 // so parent pipelines don't observe a stale error.
                 if (this.config.type === HandlerType.ERROR && event.error) {
@@ -191,6 +199,7 @@ export class Handler implements IDispatcher {
         handlerEvent: IAppEvent,
     ): Promise<unknown> {
         const value = await invocation;
+
         if (typeof value !== 'undefined') {
             return value;
         }
@@ -242,6 +251,7 @@ export class Handler implements IDispatcher {
                         if (controller) {
                             controller.abort();
                         }
+
                         reject(createError({
                             status: 408,
                             message: 'Request Timeout',

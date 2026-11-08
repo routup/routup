@@ -13,7 +13,7 @@ npm run lint       # Check
 npm run lint:fix   # Auto-fix
 ```
 
-`eslint.config.js` adds one rule override: `@typescript-eslint/no-unused-vars` ignores names starting with `_`.
+`eslint.config.js` makes `@typescript-eslint/no-unused-vars` ignore names starting with `_`, and turns off the `@tada5hi/eslint-config` rules that conflict with the ES2022 / Node.js 22 baseline or the public API. Each override has a comment explaining why.
 
 ## Commit Conventions
 

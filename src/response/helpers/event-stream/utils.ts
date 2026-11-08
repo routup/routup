@@ -17,15 +17,17 @@ export function serializeEventStreamMessage(message: EventStreamMessage): string
 
     if (
         typeof message.retry === 'number' &&
-        Number.isInteger(message.retry)
+        Number.isSafeInteger(message.retry)
     ) {
         result += `retry: ${message.retry}\n`;
     }
 
     const lines = message.data.replace(/\r/g, '').split('\n');
+
     for (const line of lines) {
         result += `data: ${line}\n`;
     }
+
     result += '\n';
 
     return result;

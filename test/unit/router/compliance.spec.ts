@@ -18,21 +18,25 @@ const resolvers: Record<string, ResolverFactory> = {
 describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, factory) => {
     it('dispatches a simple static GET', async () => {
         const router = new App({ router: factory() });
+
         router.get('/users', defineCoreHandler(() => 'users-list'));
 
         const res = await router.fetch(createTestRequest('/users'));
+
         expect(res.status).toBe(200);
         expect(await res.text()).toBe('users-list');
     });
 
     it('extracts route params', async () => {
         const router = new App({ router: factory() });
+
         router.get(
             '/users/:id',
             defineCoreHandler((event) => `user-${event.params.id}`),
         );
 
         const res = await router.fetch(createTestRequest('/users/42'));
+
         expect(await res.text()).toBe('user-42');
     });
 
@@ -42,23 +46,28 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
 
         router.use(defineCoreHandler(async (event) => {
             order.push('mw');
+
             return event.next();
         }));
         router.get('/', defineCoreHandler(() => {
             order.push('handler');
+
             return 'ok';
         }));
 
         const res = await router.fetch(createTestRequest('/'));
+
         expect(await res.text()).toBe('ok');
         expect(order).toEqual(['mw', 'handler']);
     });
 
     it('returns 404 for unmatched paths', async () => {
         const router = new App({ router: factory() });
+
         router.get('/users', defineCoreHandler(() => 'ok'));
 
         const res = await router.fetch(createTestRequest('/missing'));
+
         expect(res.status).toBe(404);
     });
 
@@ -68,18 +77,22 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
 
         router.use(defineCoreHandler(async (event) => {
             order.push('a');
+
             return event.next();
         }));
         router.use(defineCoreHandler(async (event) => {
             order.push('b');
+
             return event.next();
         }));
         router.use(defineCoreHandler(async (event) => {
             order.push('c');
+
             return event.next();
         }));
         router.get('/x', defineCoreHandler(() => {
             order.push('handler');
+
             return 'ok';
         }));
 
@@ -89,34 +102,43 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
 
     it('dispatches across a mounted child router', async () => {
         const inner = new App({ router: factory() });
+
         inner.get('/list', defineCoreHandler(() => 'inner-list'));
 
         const outer = new App({ router: factory() });
+
         outer.use('/api', inner);
 
         const res = await outer.fetch(createTestRequest('/api/list'));
+
         expect(await res.text()).toBe('inner-list');
     });
 
     it('discriminates by HTTP method', async () => {
         const router = new App({ router: factory() });
+
         router.get('/r', defineCoreHandler(() => 'get'));
         router.post('/r', defineCoreHandler(() => 'post'));
 
         const gres = await router.fetch(createTestRequest('/r', { method: 'GET' }));
         const pres = await router.fetch(createTestRequest('/r', { method: 'POST' }));
+
         expect(await gres.text()).toBe('get');
         expect(await pres.text()).toBe('post');
     });
 
     it('returns OPTIONS auto-Allow with the registered methods', async () => {
         const router = new App({ router: factory() });
+
         router.get('/r', defineCoreHandler(() => 'g'));
         router.post('/r', defineCoreHandler(() => 'p'));
 
         const res = await router.fetch(createTestRequest('/r', { method: 'OPTIONS' }));
+
         expect(res.status).toBe(200);
+
         const allow = res.headers.get('allow') ?? '';
+
         expect(allow).toContain('GET');
         expect(allow).toContain('POST');
         expect(allow).toContain('HEAD');
@@ -124,6 +146,7 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
 
     it('matches multiple route patterns with shared prefix', async () => {
         const router = new App({ router: factory() });
+
         router.get('/users/:id', defineCoreHandler((event) => `user-${event.params.id}`));
         router.get('/users/:id/posts', defineCoreHandler((event) => `posts-of-${event.params.id}`));
         router.get('/products', defineCoreHandler(() => 'products'));
@@ -139,10 +162,12 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
 
     it('supports repeated lookups (memoization stability)', async () => {
         const router = new App({ router: factory() });
+
         router.get('/x', defineCoreHandler(() => 'x'));
 
         for (let i = 0; i < 3; i++) {
             const res = await router.fetch(createTestRequest('/x'));
+
             expect(await res.text()).toBe('x');
         }
     });
@@ -153,12 +178,14 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
         // the intrinsic path was silently ignored when a mount path was also
         // passed.
         const router = new App({ router: factory() });
+
         router.get('/users', defineCoreHandler({
             path: '/:id',
             fn: (event) => `user-${event.params.id}`,
         }));
 
         const res = await router.fetch(createTestRequest('/users/42'));
+
         expect(await res.text()).toBe('user-42');
     });
 });

@@ -18,6 +18,7 @@ describe('src/dispatcher/module (DispatcherEvent)', () => {
         const event = new DispatcherEvent(createTestRequest('/'));
 
         const res = event.response;
+
         expect(res.status).toBe(200);
         expect(res.headers).toBeInstanceOf(Headers);
 
@@ -28,45 +29,55 @@ describe('src/dispatcher/module (DispatcherEvent)', () => {
     describe('setNext', () => {
         it('should set continuation that converts return values via toResponse', async () => {
             const event = new DispatcherEvent(createTestRequest('/'));
+
             event.setNext(() => 'hello');
 
             const routup = event.build();
             const response = await routup.next();
+
             expect(response).toBeInstanceOf(Response);
             expect(await response!.text()).toBe('hello');
         });
 
         it('should replace previous continuation', async () => {
             const event = new DispatcherEvent(createTestRequest('/'));
+
             event.setNext(() => new Response('original'));
             event.setNext(() => new Response('replaced'));
 
             const routup = event.build();
             const response = await routup.next();
+
             expect(response).toBeInstanceOf(Response);
             expect(await response!.text()).toBe('replaced');
         });
 
         it('should clear continuation when called with undefined', async () => {
             const event = new DispatcherEvent(createTestRequest('/'));
+
             event.setNext(() => new Response('set'));
             event.setNext(undefined);
 
             const routup = event.build();
             const response = await routup.next();
+
             expect(response).toBeUndefined();
         });
 
         it('should reset cache so new fn fires after re-setting', async () => {
             const event = new DispatcherEvent(createTestRequest('/'));
+
             event.setNext(() => new Response('first'));
 
             const routup1 = event.build();
+
             await routup1.next();
 
             event.setNext(() => new Response('second'));
+
             const routup2 = event.build();
             const response = await routup2.next();
+
             expect(await response!.text()).toBe('second');
         });
 
@@ -76,10 +87,12 @@ describe('src/dispatcher/module (DispatcherEvent)', () => {
 
             event.setNext((error) => {
                 receivedError = error;
+
                 return new Response('handled');
             });
 
             const routup = event.build();
+
             await routup.next(new Error('test error'));
             expect(receivedError).toBeInstanceOf(Error);
             expect(receivedError!.message).toBe('test error');
@@ -89,6 +102,7 @@ describe('src/dispatcher/module (DispatcherEvent)', () => {
     describe('build', () => {
         it('should create an AppEvent with shared references', () => {
             const dispatch = new DispatcherEvent(createTestRequest('http://localhost/test'));
+
             dispatch.response.status = 201;
 
             const routup = dispatch.build();
@@ -152,14 +166,17 @@ describe('src/dispatcher/module (DispatcherEvent)', () => {
             const dispatch = new DispatcherEvent(createTestRequest('/'));
 
             const routup1 = dispatch.build();
+
             routup1.store.shared = 'yes';
 
             const routup2 = dispatch.build();
+
             expect(routup2.store.shared).toBe('yes');
         });
 
         it('should expose appOptions set on the dispatcher event', () => {
             const dispatch = new DispatcherEvent(createTestRequest('/'));
+
             // App.dispatch sets `event.appOptions` to the App's
             // mount-time-resolved options. Simulate that here.
             dispatch.appOptions = { subdomainOffset: 5 };
@@ -172,8 +189,10 @@ describe('src/dispatcher/module (DispatcherEvent)', () => {
         it('should cache next() result on repeated calls', async () => {
             const dispatch = new DispatcherEvent(createTestRequest('/'));
             let callCount = 0;
+
             dispatch.setNext(async () => {
                 callCount++;
+
                 return new Response('ok');
             });
 
@@ -190,6 +209,7 @@ describe('src/dispatcher/module (DispatcherEvent)', () => {
             const routup = dispatch.build();
 
             const result = await routup.next();
+
             expect(result).toBeUndefined();
         });
 

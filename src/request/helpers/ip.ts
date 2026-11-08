@@ -16,6 +16,7 @@ export type RequestIpOptions = {
  */
 export function getRequestIP(event: IAppEvent, options: RequestIpOptions = {}) : string | undefined {
     let trustProxy : TrustProxyFn;
+
     if (typeof options.trustProxy !== 'undefined') {
         trustProxy = buildTrustProxyFn(options.trustProxy);
     } else {
@@ -23,6 +24,7 @@ export function getRequestIP(event: IAppEvent, options: RequestIpOptions = {}) :
     }
 
     const socketAddr = event.request.ip;
+
     if (!socketAddr) {
         return undefined;
     }
@@ -33,8 +35,10 @@ export function getRequestIP(event: IAppEvent, options: RequestIpOptions = {}) :
 
     if (forwarded) {
         const parts = forwarded.split(',');
+
         for (let i = parts.length - 1; i >= 0; i--) {
             const addr = parts[i]!.trim();
+
             if (addr) {
                 addrs.push(addr);
             }

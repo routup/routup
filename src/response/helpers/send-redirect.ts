@@ -22,6 +22,7 @@ function isAllowedRedirectUrl(location: string) : boolean {
 
     try {
         const url = new URL(location);
+
         return url.protocol === 'http:' || url.protocol === 'https:';
     } catch {
         return true;
@@ -41,6 +42,7 @@ export function sendRedirect(event: IAppEvent, location: string, statusCode = 30
     const html = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=${escapedLoc}"></head></html>`;
 
     const headers = new Headers(event.response.headers);
+
     headers.set('location', sanitizedLocation);
     headers.set('content-type', 'text/html; charset=utf-8');
     headers.delete('content-length');

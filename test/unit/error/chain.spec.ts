@@ -35,7 +35,9 @@ describe('error context preservation', () => {
         const response = await router.fetch(createTestRequest('/'));
 
         expect(response.status).toEqual(404);
+
         const body = await response.json();
+
         expect(body.message).toEqual('Not Found');
     });
 });

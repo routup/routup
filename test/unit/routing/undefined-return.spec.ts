@@ -29,6 +29,7 @@ describe('routing/undefined-return', () => {
 
         router.get(defineCoreHandler((event) => {
             event.response.status = 204;
+
             return null;
         }));
 

@@ -14,9 +14,11 @@ import { createTestRequest } from '../../helpers';
 describe('App.use — flatten-on-use', () => {
     it('snapshots child routes at mount time (late additions do NOT propagate)', async () => {
         const child = new App();
+
         child.get('/early', defineCoreHandler(() => 'early'));
 
         const parent = new App();
+
         parent.use('/api', child);
 
         // Registered AFTER the parent.use snapshot — must NOT appear
@@ -29,6 +31,7 @@ describe('App.use — flatten-on-use', () => {
 
     it('merges child plugin registry into the parent at mount time', async () => {
         const child = new App();
+
         child.use({
             name: 'child-plug',
             version: '2.1.0',
@@ -36,6 +39,7 @@ describe('App.use — flatten-on-use', () => {
         });
 
         const parent = new App();
+
         parent.use(child);
 
         expect(parent.hasPlugin('child-plug')).toBe(true);
@@ -44,10 +48,12 @@ describe('App.use — flatten-on-use', () => {
 
     it('prefixes the mount path onto every flattened route', async () => {
         const child = new App();
+
         child.get('/users', defineCoreHandler(() => 'users'));
         child.get('/posts/:id', defineCoreHandler((event) => `post-${event.params.id}`));
 
         const parent = new App();
+
         parent.use('/api/v2', child);
 
         expect(await (await parent.fetch(createTestRequest('/api/v2/users'))).text()).toBe('users');
@@ -56,9 +62,11 @@ describe('App.use — flatten-on-use', () => {
 
     it('mounting a child without a path flattens its routes verbatim onto the parent', async () => {
         const child = new App();
+
         child.get('/health', defineCoreHandler(() => 'ok'));
 
         const parent = new App();
+
         parent.use(child);
 
         expect(await (await parent.fetch(createTestRequest('/health'))).text()).toBe('ok');
@@ -66,12 +74,15 @@ describe('App.use — flatten-on-use', () => {
 
     it('two siblings flattened at different paths each get their own prefix', async () => {
         const a = new App();
+
         a.get('/x', defineCoreHandler(() => 'a-x'));
 
         const b = new App();
+
         b.get('/x', defineCoreHandler(() => 'b-x'));
 
         const parent = new App();
+
         parent.use('/a', a);
         parent.use('/b', b);
 

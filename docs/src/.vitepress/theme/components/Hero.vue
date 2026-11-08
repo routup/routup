@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { 
-    computed, 
-    onMounted, 
-    reactive, 
-    ref, 
-    shallowRef, 
+import {
+    computed,
+    onMounted,
+    reactive,
+    ref,
+    shallowRef,
 } from 'vue';
 import { useData } from 'vitepress';
 import { App, type IAppEvent, defineCoreHandler } from 'routup';
@@ -43,6 +43,7 @@ const specs: RouteSpec[] = [
         label: 'create user',
         handle: (event) => {
             event.response.status = 201;
+
             return 'Created';
         },
     },
@@ -57,10 +58,13 @@ const specs: RouteSpec[] = [
 const lastMatchedSpec = shallowRef<RouteSpec | null>(null);
 
 const app = new App();
+
 for (const spec of specs) {
     const method = spec.method.toLowerCase() as 'get' | 'post' | 'put' | 'patch' | 'delete';
+
     app[method](spec.pattern, defineCoreHandler((event) => {
         lastMatchedSpec.value = spec;
+
         return spec.handle(event);
     }));
 }
@@ -92,9 +96,13 @@ const pending = ref(false);
 const ready = ref(false);
 
 async function runDispatch() {
-    if (!form.path) return;
+    if (!form.path) {
+        return;
+    }
+
     pending.value = true;
     lastMatchedSpec.value = null;
+
     try {
         const url = new URL(form.path, 'http://localhost');
         const request = new Request(url, { method: form.method });
@@ -103,13 +111,16 @@ async function runDispatch() {
             specs.indexOf(lastMatchedSpec.value) :
             -1;
         const params: Record<string, string> = {};
+
         if (matchedIndex !== -1) {
             for (const [k, v] of extractParams(specs[matchedIndex].pattern, url.pathname)) {
                 params[k] = v;
             }
         }
+
         const contentType = response.headers.get('content-type') ?? '';
         const text = await response.text();
+
         dispatch.value = {
             matchedIndex,
             params,
@@ -128,15 +139,19 @@ function extractParams(pattern: string, path: string): Array<[string, string]> {
     const patternParts = pattern.split('/').filter(Boolean);
     const pathParts = path.split('/').filter(Boolean);
     const result: Array<[string, string]> = [];
+
     for (const [i, seg] of patternParts.entries()) {
         if (seg.startsWith('*')) {
             result.push([seg.slice(1), pathParts.slice(i).join('/')]);
+
             return result;
         }
+
         if (seg.startsWith(':')) {
             result.push([seg.slice(1), pathParts[i] ?? '']);
         }
     }
+
     return result;
 }
 
@@ -148,6 +163,7 @@ function prettify(text: string, contentType: string): string {
             return text;
         }
     }
+
     return text;
 }
 
@@ -157,8 +173,13 @@ onMounted(() => {
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 function scheduleDispatch() {
-    if (debounceTimer) clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => { void runDispatch(); }, 60);
+    if (debounceTimer) {
+        clearTimeout(debounceTimer);
+    }
+
+    debounceTimer = setTimeout(() => {
+        void runDispatch();
+    }, 60);
 }
 
 const paramEntries = computed(() => Object.entries(dispatch.value.params));
