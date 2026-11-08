@@ -6,6 +6,20 @@
 * **deps:** bump negotiator from 0.6.3 to 1.0.0 ([#700](https://github.com/routup/routup/issues/700)) ([84edd77](https://github.com/routup/routup/commit/84edd778b87d8baa9072319909385324f265e8a7))
 * **deps:** bump the minorandpatch group with 3 updates ([#758](https://github.com/routup/routup/issues/758)) ([c0117b3](https://github.com/routup/routup/commit/c0117b34c81f3be26f5c60a5ce71e7e81b6ed4ed))
 
+## [6.1.1](https://github.com/routup/routup/compare/v6.1.0...v6.1.1) (2026-11-08)
+
+
+### Bug Fixes
+
+* **deps-dev:** bump @humanfs/node from 0.16.7 to 0.16.8 ([#960](https://github.com/routup/routup/issues/960)) ([3e49551](https://github.com/routup/routup/commit/3e4955132eb379887fa8bba2d76b840573b659c5))
+* **deps-dev:** bump brace-expansion from 5.0.5 to 5.0.12 ([#971](https://github.com/routup/routup/issues/971)) ([0a1d8db](https://github.com/routup/routup/commit/0a1d8db47a97766863f7b8b72095a231ea077532))
+* **deps:** bump @vue/server-renderer and vue ([#974](https://github.com/routup/routup/issues/974)) ([efa43db](https://github.com/routup/routup/commit/efa43dbdaa292fbcaab2454a006c243a16d75be1))
+* **deps:** bump form-data from 4.0.5 to 4.0.6 ([#935](https://github.com/routup/routup/issues/935)) ([3a31085](https://github.com/routup/routup/commit/3a31085d48656df6e1d1bd8977d112725d99dd29))
+* **deps:** bump js-yaml from 4.1.1 to 4.3.2 ([#965](https://github.com/routup/routup/issues/965)) ([0e6cef3](https://github.com/routup/routup/commit/0e6cef3a2de76da66f753b588f696d7d70c72cdc))
+* **deps:** bump postcss-selector-parser from 7.1.4 to 7.1.6 ([#973](https://github.com/routup/routup/issues/973)) ([b14f24d](https://github.com/routup/routup/commit/b14f24d0e5d97caa945ba175789cd02971450b9a))
+* **deps:** bump tada5hi/monoship from 2 to 2.1.0 ([#949](https://github.com/routup/routup/issues/949)) ([710a13c](https://github.com/routup/routup/commit/710a13cae610a641389bdebb7e3ddc3f436f86a3))
+* honor suffix ranges and ignore unsupported range forms in sendFile ([#985](https://github.com/routup/routup/issues/985)) ([cb37144](https://github.com/routup/routup/commit/cb371442952722ed0ca63bd61ea96f5556def96b))
+
 ## [6.1.0](https://github.com/routup/routup/compare/v6.0.0...v6.1.0) (2026-07-28)
 
 
