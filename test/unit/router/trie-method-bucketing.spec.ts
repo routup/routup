@@ -23,13 +23,16 @@ import { createTestRequest } from '../../helpers';
 describe('TrieRouter — method bucketing (T4)', () => {
     it('same path, different methods: each fires only its handler', async () => {
         const app = new App({ router: new TrieRouter<Handler>() });
+
         app.get('/users', defineCoreHandler(() => 'list'));
         app.post('/users', defineCoreHandler(() => 'created'));
 
         const get = await app.fetch(createTestRequest('/users'));
+
         expect(await get.text()).toBe('list');
 
         const post = await app.fetch(createTestRequest('/users', { method: 'POST' }));
+
         expect(await post.text()).toBe('created');
     });
 
@@ -39,6 +42,7 @@ describe('TrieRouter — method bucketing (T4)', () => {
 
         app.use('/users', defineCoreHandler(async (event) => {
             fired.push(event.method);
+
             return event.next();
         }));
         app.get('/users', defineCoreHandler(() => 'list'));
@@ -52,13 +56,17 @@ describe('TrieRouter — method bucketing (T4)', () => {
 
     it('OPTIONS sees every registered method (auto-Allow header)', async () => {
         const app = new App({ router: new TrieRouter<Handler>() });
+
         app.get('/items', defineCoreHandler(() => 'list'));
         app.post('/items', defineCoreHandler(() => 'created'));
         app.delete('/items', defineCoreHandler(() => 'deleted'));
 
         const res = await app.fetch(createTestRequest('/items', { method: 'OPTIONS' }));
+
         expect(res.status).toBe(200);
+
         const allow = (res.headers.get('allow') ?? '').split(',').map((s) => s.trim()).sort();
+
         // HEAD is implicitly allowed when GET is present. OPTIONS
         // itself isn't included in the Allow header (matches the
         // existing OPTIONS auto-Allow behaviour in methods.spec.ts).
@@ -67,18 +75,21 @@ describe('TrieRouter — method bucketing (T4)', () => {
 
     it('HEAD falls through to a GET handler', async () => {
         const app = new App({ router: new TrieRouter<Handler>() });
+
         app.get('/users', defineCoreHandler(() => 'list'));
 
         const res = await app.fetch(createTestRequest('/users', { method: 'HEAD' }));
+
         expect(res.status).toBe(200);
     });
 
     it('splat with method binding only fires for that method', async () => {
         // Named splat (`*rest`) — bare `*` isn't accepted by
-        // path-to-regexp v8, but the trie still buckets named splats
+        // path-to-regexp v9, but the trie still buckets named splats
         // per method. This catches the per-bucket emission for
         // `splatRoutes`.
         const app = new App({ router: new TrieRouter<Handler>() });
+
         app.get('/files/*rest', defineCoreHandler(() => 'get-files'));
         app.post('/files/*rest', defineCoreHandler(() => 'post-files'));
 
@@ -92,6 +103,7 @@ describe('TrieRouter — method bucketing (T4)', () => {
         // not share a cached candidate set — they would emit
         // different handler buckets after T4.
         const app = new App({ router: new TrieRouter<Handler>({ cache: new LruCache() }) });
+
         app.get('/users', defineCoreHandler(() => 'list'));
         app.post('/users', defineCoreHandler(() => 'created'));
 

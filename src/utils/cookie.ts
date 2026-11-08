@@ -30,6 +30,7 @@ export function splitCookiesString(input?: string | string[]) : string[] {
         while (pos < input.length && /\s/.test(input.charAt(pos))) {
             pos += 1;
         }
+
         return pos < input.length;
     };
 
@@ -45,6 +46,7 @@ export function splitCookiesString(input?: string | string[]) : string[] {
 
         while (skipWhitespace()) {
             ch = input.charAt(pos);
+
             if (ch === ',') {
                 // ',' is a cookie separator if we have later first '=', not ';' or ','
                 lastComma = pos;

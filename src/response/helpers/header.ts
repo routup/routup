@@ -31,6 +31,7 @@ export function appendResponseHeaderDirective(
         } else {
             headers.set(name, sanitizeHeaderValue(value));
         }
+
         return;
     }
 

@@ -50,11 +50,13 @@ export type SendFileOptions = {
  */
 function parseByteRange(header: string, size: number) : Required<SendFileContentOptions> | undefined {
     const match = /^bytes=(\d*)-(\d*)$/i.exec(header.trim());
+
     if (!match) {
         return undefined;
     }
 
     const [, first, last] = match as unknown as [string, string, string];
+
     if (first === '' && last === '') {
         return undefined;
     }
@@ -77,6 +79,7 @@ export async function sendFile(
     options: SendFileOptions,
 ) : Promise<Response> {
     let stats : SendFileStats;
+
     if (typeof options.stats === 'function') {
         stats = await options.stats();
     } else {
@@ -93,6 +96,7 @@ export async function sendFile(
 
         if (disposition) {
             const dispositionHeader = headers.get(HeaderName.CONTENT_DISPOSITION);
+
             if (!dispositionHeader) {
                 if (disposition === 'inline') {
                     setResponseHeaderInline(event, fileName);
@@ -114,6 +118,7 @@ export async function sendFile(
         const ifRange = event.headers.get(HeaderName.IF_RANGE);
         const isCurrent = !ifRange || (!!stats.mtime && ifRange === new Date(stats.mtime).toUTCString());
         const range = rangeHeader && isCurrent ? parseByteRange(rangeHeader, stats.size) : undefined;
+
         if (range) {
             contentOptions.start = range.start;
             contentOptions.end = range.end;
@@ -123,7 +128,9 @@ export async function sendFile(
                 contentOptions.start > contentOptions.end
             ) {
                 const rangeHeaders = new Headers(headers);
+
                 rangeHeaders.set(HeaderName.CONTENT_RANGE, `bytes */${stats.size}`);
+
                 return new Response(null, {
                     status: 416,
                     headers: rangeHeaders,
@@ -141,6 +148,7 @@ export async function sendFile(
 
         if (stats.mtime) {
             const mtime = new Date(stats.mtime);
+
             headers.set(HeaderName.LAST_MODIFIED, mtime.toUTCString());
             headers.set(HeaderName.ETag, `W/"${stats.size}-${mtime.getTime()}"`);
         }

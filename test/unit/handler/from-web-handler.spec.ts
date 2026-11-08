@@ -26,6 +26,7 @@ describe('src/handler/adapters/web', () => {
         };
 
         const router = new App();
+
         router.use('/app', fromWebHandler(app));
 
         const response = await router.fetch(createTestRequest('/app/hello'));
@@ -72,6 +73,7 @@ describe('src/handler/adapters/web', () => {
 
         router.use('/api', fromWebHandler(async (req: Request) => {
             const body = await req.text();
+
             return new Response(body);
         }));
 
@@ -102,6 +104,7 @@ describe('src/handler/adapters/web', () => {
         router.use('/external', fromWebHandler(() => new Response('external')));
 
         let response = await router.fetch(createTestRequest('/native'));
+
         expect(response.status).toEqual(200);
         expect(await response.text()).toEqual('native');
 
@@ -115,6 +118,7 @@ describe('src/handler/adapters/web', () => {
 
         router.use('/api', fromWebHandler((req: Request) => {
             const url = new URL(req.url);
+
             return new Response(url.search);
         }));
 

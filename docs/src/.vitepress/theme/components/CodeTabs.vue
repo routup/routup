@@ -45,15 +45,25 @@ const copied = ref(false);
 let copyTimer: ReturnType<typeof setTimeout> | null = null;
 
 const copy = async (code: string) => {
-    if (typeof navigator === 'undefined' || !navigator.clipboard) return;
+    if (typeof navigator === 'undefined' || !navigator.clipboard) {
+        return;
+    }
+
     try {
         await navigator.clipboard.writeText(code);
     } catch {
         return;
     }
+
     copied.value = true;
-    if (copyTimer) clearTimeout(copyTimer);
-    copyTimer = setTimeout(() => { copied.value = false; }, 1500);
+
+    if (copyTimer) {
+        clearTimeout(copyTimer);
+    }
+
+    copyTimer = setTimeout(() => {
+        copied.value = false;
+    }, 1500);
 };
 </script>
 

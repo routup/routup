@@ -9,6 +9,7 @@ export type RequestHostNameOptions = {
 
 export function getRequestHostName(event: IAppEvent, options: RequestHostNameOptions = {}) : string | undefined {
     let trustProxy : TrustProxyFn;
+
     if (typeof options.trustProxy !== 'undefined') {
         trustProxy = buildTrustProxyFn(options.trustProxy);
     } else {
@@ -16,6 +17,7 @@ export function getRequestHostName(event: IAppEvent, options: RequestHostNameOpt
     }
 
     let hostname = event.headers.get(HeaderName.X_FORWARDED_HOST);
+
     if (!hostname || !event.request.ip || !trustProxy(event.request.ip, 0)) {
         hostname = event.headers.get(HeaderName.HOST);
     } else if (hostname && hostname.includes(',')) {

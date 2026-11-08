@@ -4,13 +4,19 @@ import autocannon from 'autocannon';
 
 function readPositiveNumber(name, fallback, { integer = false } = {}) {
     const raw = process.env[name];
-    if (raw === undefined || raw === '') return fallback;
+
+    if (raw === undefined || raw === '') {
+        return fallback;
+    }
+
     const value = Number(raw);
-    if (!Number.isFinite(value) || value <= 0 || (integer && !Number.isInteger(value))) {
+
+    if (!Number.isFinite(value) || value <= 0 || (integer && !Number.isSafeInteger(value))) {
         throw new Error(
             `Invalid ${name}: "${raw}". Expected a positive${integer ? ' integer' : ' number'}.`,
         );
     }
+
     return value;
 }
 
@@ -25,6 +31,7 @@ const RUNTIME_BIN = process.env.RUNTIME_BIN ?? RUNTIME;
 
 async function runOne() {
     const server = spawn(RUNTIME_BIN, ['benchmark/server.mjs'], { stdio: ['ignore', 'ignore', 'inherit'] });
+
     try {
         // wait for server to bind
         await wait(800);
@@ -44,11 +51,13 @@ async function runOne() {
             pipelining: PIPELINING,
             duration: DURATION,
         });
+
         return result;
     } finally {
         server.kill('SIGINT');
         // give srvx the configured 5s grace... but cap at 1s for benchmarks
         await wait(800);
+
         // `server.killed` flips when the signal is sent, not when the
         // process exits — check exit state directly so SIGKILL actually
         // fires when SIGINT didn't take.
@@ -62,9 +71,12 @@ console.log(`runtime=${RUNTIME}  resolver=${process.env.RESOLVER ?? 'linear'}  c
 
 const reqs = [];
 const lats = [];
+
 for (let i = 0; i < TRIALS; i++) {
     process.stdout.write(`trial ${i + 1}/${TRIALS}... `);
+
     const r = await runOne();
+
     reqs.push(r.requests.average);
     lats.push(r.latency.average);
     console.log(`req/s=${r.requests.average.toFixed(0)} lat=${r.latency.average.toFixed(2)}ms`);
@@ -73,6 +85,7 @@ for (let i = 0; i < TRIALS; i++) {
 const median = (xs) => {
     const s = [...xs].sort((a, b) => a - b);
     const m = Math.floor(s.length / 2);
+
     return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 };
 const min = (xs) => Math.min(...xs);

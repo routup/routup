@@ -81,7 +81,10 @@ export class AppEvent implements IAppEvent {
     whenNextCalled(): Promise<void> {
         if (!this._nextCalledDeferred) {
             let resolve!: () => void;
-            const promise = new Promise<void>((r) => { resolve = r; });
+            const promise = new Promise<void>((r) => {
+                resolve = r;
+            });
+
             this._nextCalledDeferred = { promise, resolve };
 
             if (this._nextCalled) {

@@ -14,6 +14,7 @@ describe('src/response/helpers/send-stream', () => {
                     controller.close();
                 },
             });
+
             return sendStream(event, stream);
         }));
 
@@ -36,6 +37,7 @@ describe('src/response/helpers/send-stream', () => {
                     controller.close();
                 },
             });
+
             return sendStream(event, stream);
         }));
 

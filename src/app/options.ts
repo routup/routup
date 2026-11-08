@@ -8,6 +8,7 @@ import type { AppOptions, AppOptionsInput } from './types.ts';
 
 export function normalizeAppOptions(input: AppOptionsInput): AppOptions {
     let etag : EtagFn | null | undefined;
+
     if (typeof input.etag !== 'undefined') {
         // Keep `false` (and `null` from already-normalized options
         // being re-spread) as the literal `null` sentinel so
@@ -22,6 +23,7 @@ export function normalizeAppOptions(input: AppOptionsInput): AppOptions {
     }
 
     let trustProxy : TrustProxyFn | undefined;
+
     if (typeof input.trustProxy !== 'undefined') {
         trustProxy = buildTrustProxyFn(input.trustProxy);
     }

@@ -21,6 +21,7 @@ export function sendFormat(event: IAppEvent, input: ResponseFormats): Response |
     }
 
     const contentType = getRequestAcceptableContentType(event, contentTypes);
+
     if (contentType && formats[contentType]) {
         return formats[contentType]();
     }

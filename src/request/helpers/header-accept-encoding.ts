@@ -3,6 +3,7 @@ import { useRequestNegotiator } from './negotiator.ts';
 
 export function getRequestAcceptableEncodings(event: IAppEvent) : string[] {
     const negotiator = useRequestNegotiator(event);
+
     return negotiator.encodings();
 }
 
@@ -16,5 +17,6 @@ export function getRequestAcceptableEncoding(event: IAppEvent, input: string | s
     }
 
     const negotiator = useRequestNegotiator(event);
+
     return negotiator.encodings(items).shift() || undefined;
 }

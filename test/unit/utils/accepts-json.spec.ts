@@ -3,9 +3,11 @@ import { acceptsJson } from '../../../src/utils';
 
 function make(accept?: string): Request {
     const headers = new Headers();
+
     if (typeof accept === 'string') {
         headers.set('accept', accept);
     }
+
     return new Request('http://localhost/', { headers });
 }
 

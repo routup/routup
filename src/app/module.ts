@@ -45,14 +45,18 @@ function mergeMatchParams(
 ): void {
     // Cheap emptiness probe — short-circuits on the first own key.
     let hasKeys = false;
+
     // eslint-disable-next-line no-unreachable-loop
     for (const _k in matchParams) {
         hasKeys = true;
+
         break;
     }
+
     if (!hasKeys) {
         return;
     }
+
     event.params = {
         ...event.params,
         ...matchParams,
@@ -212,6 +216,7 @@ export class App implements IApp {
         for (const route of this._routes) {
             router.add(route);
         }
+
         this.router = router;
     }
 
@@ -231,6 +236,7 @@ export class App implements IApp {
 
             if (timeoutMs) {
                 const controller = new AbortController();
+
                 event.signal = controller.signal;
 
                 let timerId: ReturnType<typeof setTimeout> | undefined;
@@ -279,6 +285,7 @@ export class App implements IApp {
 
         if (acceptsJson(request)) {
             headers.set('content-type', 'application/json; charset=utf-8');
+
             return new Response(JSON.stringify({ status, message }), {
                 status,
                 headers,
@@ -286,6 +293,7 @@ export class App implements IApp {
         }
 
         headers.set('content-type', 'text/plain; charset=utf-8');
+
         return new Response(message, {
             status,
             headers,
@@ -312,6 +320,7 @@ export class App implements IApp {
 
         try {
             const matches = this.router.lookup(event.path, event.method);
+
             response = await this.runMatches(event, matches, 0);
 
             // OPTIONS auto-Allow synthesis — runs only on the root and
@@ -331,6 +340,7 @@ export class App implements IApp {
                     .join(',');
 
                 const optionsHeaders = new Headers(event.response.headers);
+
                 optionsHeaders.set(HeaderName.ALLOW, options);
                 response = new Response(options, {
                     status: event.response.status || 200,
@@ -390,6 +400,7 @@ export class App implements IApp {
                 (!event.error && handler.type === HandlerType.ERROR)
             ) {
                 i++;
+
                 continue;
             }
 
@@ -401,6 +412,7 @@ export class App implements IApp {
 
             if (!matchHandlerMethod(method, event.method as MethodName)) {
                 i++;
+
                 continue;
             }
 
@@ -411,6 +423,7 @@ export class App implements IApp {
             // helpers can strip it off `event.path`. Save and restore
             // around the dispatch so siblings see their own prefixes.
             const savedMountPath = event.mountPath;
+
             if (typeof match.path === 'string') {
                 event.mountPath = match.path;
             }
@@ -445,6 +458,7 @@ export class App implements IApp {
                 }
 
                 nextResult = this.runMatches(event, capturedMatches, nextIndex);
+
                 return nextResult;
             });
 
@@ -567,10 +581,12 @@ export class App implements IApp {
         for (const element of input) {
             if (isPath(element)) {
                 path = element;
+
                 continue;
             }
 
             let handler: Handler;
+
             // Check isHandler (instanceof brand) BEFORE isHandlerOptions
             // (structural). Handler exposes `fn` and `type` as fields and
             // would otherwise match the structural check and get wrapped
@@ -612,14 +628,17 @@ export class App implements IApp {
 
     use(...input: unknown[]): this {
         let path: Path | undefined;
+
         for (const item of input) {
             if (isPath(item)) {
                 path = withLeadingSlash(item);
+
                 continue;
             }
 
             if (isAppInstance(item)) {
                 this.flatten(item, path);
+
                 continue;
             }
 
@@ -631,6 +650,7 @@ export class App implements IApp {
                     method: item.method,
                     data: item,
                 });
+
                 continue;
             }
 
@@ -642,6 +662,7 @@ export class App implements IApp {
                     method: handler.method,
                     data: handler,
                 });
+
                 continue;
             }
 
@@ -711,18 +732,23 @@ export class App implements IApp {
             if (this._pluginSingletons.has(name)) {
                 continue;
             }
+
             let entry = this._plugins.get(name);
+
             for (const [childKey, version] of childPaths) {
                 const composedKey = joinPaths(this._path, path, childKey) ?? '/';
+
                 // Silent dedup — first writer wins for the same
                 // composed key, mirroring `install()`'s silent skip.
                 if (entry && entry.has(composedKey)) {
                     continue;
                 }
+
                 if (!entry) {
                     entry = new Map();
                     this._plugins.set(name, entry);
                 }
+
                 entry.set(composedKey, version);
             }
         }
@@ -749,6 +775,7 @@ export class App implements IApp {
      */
     hasPlugin(name: string): boolean {
         const entry = this._plugins.get(name);
+
         return !!entry && entry.size > 0;
     }
 
@@ -760,10 +787,13 @@ export class App implements IApp {
      */
     hasPluginAt(name: string, path?: Path): boolean {
         const entry = this._plugins.get(name);
+
         if (!entry) {
             return false;
         }
+
         const key = joinPaths(this._path, path) ?? '/';
+
         return entry.has(key);
     }
 
@@ -777,10 +807,13 @@ export class App implements IApp {
      */
     getPluginVersion(name: string): string | undefined {
         const entry = this._plugins.get(name);
+
         if (!entry) {
             return undefined;
         }
+
         const first = entry.values().next();
+
         return first.done ? undefined : first.value;
     }
 
@@ -792,9 +825,11 @@ export class App implements IApp {
      */
     getPluginVersionAt(name: string, path?: Path): string | undefined {
         const entry = this._plugins.get(name);
+
         if (!entry) {
             return undefined;
         }
+
         return entry.get(joinPaths(this._path, path) ?? '/');
     }
 
@@ -806,9 +841,11 @@ export class App implements IApp {
      */
     getPluginMountPaths(name: string): readonly string[] {
         const entry = this._plugins.get(name);
+
         if (!entry) {
             return [];
         }
+
         return Array.from(entry.keys());
     }
 
@@ -849,6 +886,7 @@ export class App implements IApp {
         // mount this scratch app, which flattens its routes onto
         // `this` and discards it.
         const scratch = new App({ name: plugin.name });
+
         plugin.install(scratch);
 
         if (context.path) {
@@ -858,10 +896,12 @@ export class App implements IApp {
         }
 
         let entry = this._plugins.get(plugin.name);
+
         if (!entry) {
             entry = new Map();
             this._plugins.set(plugin.name, entry);
         }
+
         entry.set(mountKey, plugin.version);
 
         if (plugin.singleton) {

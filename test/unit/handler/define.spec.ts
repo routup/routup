@@ -9,6 +9,7 @@ import {
 describe('src/handler/define', () => {
     it('should define core handler', () => {
         const handler = defineCoreHandler(async () => Promise.resolve());
+
         expect(handler.type).toEqual(HandlerType.CORE);
     });
 
@@ -24,6 +25,7 @@ describe('src/handler/define', () => {
 
     it('should define error handler', () => {
         const handler = defineErrorHandler(async () => Promise.resolve());
+
         expect(handler.type).toEqual(HandlerType.ERROR);
     });
 });

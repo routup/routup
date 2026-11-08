@@ -18,17 +18,21 @@ describe('handler lifecycle callbacks', () => {
         const app = new App();
 
         app.get('/', defineCoreHandler({
-            onBefore: () => { order.push('before'); },
+            onBefore: () => {
+                order.push('before');
+            },
             onAfter: (_event, response) => {
                 order.push(`after:${response?.status ?? 'none'}`);
             },
             fn: () => {
                 order.push('fn');
+
                 return 'ok';
             },
         }));
 
         const res = await app.fetch(createTestRequest('/'));
+
         expect(res.status).toBe(200);
         expect(await res.text()).toBe('ok');
         expect(order).toEqual(['before', 'fn', 'after:200']);
@@ -40,11 +44,14 @@ describe('handler lifecycle callbacks', () => {
 
         app.get('/', defineCoreHandler({
             onBefore: async () => {
-                await new Promise<void>((resolve) => { setTimeout(resolve, 5); });
+                await new Promise<void>((resolve) => {
+                    setTimeout(resolve, 5);
+                });
                 order.push('before-resolved');
             },
             fn: () => {
                 order.push('fn');
+
                 return 'ok';
             },
         }));
@@ -58,15 +65,21 @@ describe('handler lifecycle callbacks', () => {
         const app = new App();
 
         app.get('/', defineCoreHandler({
-            onError: (error) => { seen.push(error); },
-            fn: () => { throw new AppError({ status: 422, message: 'nope' }); },
+            onError: (error) => {
+                seen.push(error);
+            },
+            fn: () => {
+                throw new AppError({ status: 422, message: 'nope' });
+            },
         }));
         app.use(defineErrorHandler((error, event) => {
             event.response.status = error.status;
+
             return { message: error.message };
         }));
 
         const res = await app.fetch(createTestRequest('/'));
+
         expect(res.status).toBe(422);
         expect(seen.length).toBe(1);
         expect(seen[0]!.status).toBe(422);
@@ -79,17 +92,26 @@ describe('handler lifecycle callbacks', () => {
         app.get('/', defineCoreHandler({
             onBefore: () => {
                 order.push('before');
+
                 throw new AppError({ status: 401, message: 'forbidden' });
             },
-            onError: (error) => { order.push(`onError:${error.status}`); },
-            fn: () => { order.push('fn'); return 'ok'; },
+            onError: (error) => {
+                order.push(`onError:${error.status}`);
+            },
+            fn: () => {
+                order.push('fn');
+
+                return 'ok';
+            },
         }));
         app.use(defineErrorHandler((error, event) => {
             event.response.status = error.status;
+
             return { message: error.message };
         }));
 
         const res = await app.fetch(createTestRequest('/'));
+
         expect(res.status).toBe(401);
         expect(order).toEqual(['before', 'onError:401']);
     });
@@ -101,16 +123,22 @@ describe('handler lifecycle callbacks', () => {
             onError: () => {
                 throw new AppError({ status: 503, message: 'replaced' });
             },
-            fn: () => { throw new AppError({ status: 422, message: 'original' }); },
+            fn: () => {
+                throw new AppError({ status: 422, message: 'original' });
+            },
         }));
         app.use(defineErrorHandler((error, event) => {
             event.response.status = error.status;
+
             return { message: error.message };
         }));
 
         const res = await app.fetch(createTestRequest('/'));
+
         expect(res.status).toBe(503);
+
         const body = await res.json();
+
         expect(body.message).toBe('replaced');
     });
 
@@ -119,8 +147,12 @@ describe('handler lifecycle callbacks', () => {
         const app = new App();
 
         app.use(defineErrorHandler({
-            onBefore: () => { order.push('before'); },
-            onAfter: () => { order.push('after'); },
+            onBefore: () => {
+                order.push('before');
+            },
+            onAfter: () => {
+                order.push('after');
+            },
             fn: () => 'recovered',
         }));
         app.get('/', defineCoreHandler(() => 'ok'));
@@ -138,19 +170,26 @@ describe('handler lifecycle callbacks', () => {
         // owns cleanup. This test exercises the path end-to-end —
         // the assertion that matters is "no hang, error surfaces."
         const app = new App();
+
         app.get('/', defineCoreHandler({
             timeout: 1_000,
-            onBefore: () => { throw new AppError({ status: 500, message: 'before-failed' }); },
+            onBefore: () => {
+                throw new AppError({ status: 500, message: 'before-failed' });
+            },
             fn: () => 'ok',
         }));
         app.use(defineErrorHandler((error, event) => {
             event.response.status = error.status;
+
             return { message: error.message };
         }));
 
         const res = await app.fetch(createTestRequest('/'));
+
         expect(res.status).toBe(500);
+
         const body = await res.json();
+
         expect(body.message).toBe('before-failed');
     });
 
@@ -158,14 +197,21 @@ describe('handler lifecycle callbacks', () => {
         const order: string[] = [];
         const app = new App();
 
-        app.use(defineCoreHandler(() => { throw new AppError({ status: 500, message: 'boom' }); }));
+        app.use(defineCoreHandler(() => {
+            throw new AppError({ status: 500, message: 'boom' });
+        }));
         app.use(defineErrorHandler({
-            onBefore: () => { order.push('before'); },
-            onAfter: (_e, response) => { order.push(`after:${response?.status ?? 'none'}`); },
+            onBefore: () => {
+                order.push('before');
+            },
+            onAfter: (_e, response) => {
+                order.push(`after:${response?.status ?? 'none'}`);
+            },
             fn: () => 'recovered',
         }));
 
         const res = await app.fetch(createTestRequest('/'));
+
         expect(res.status).toBe(200);
         expect(await res.text()).toBe('recovered');
         expect(order).toEqual(['before', 'after:200']);

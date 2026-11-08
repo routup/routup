@@ -37,6 +37,7 @@ describe('src/router etag', () => {
         // First request to get the ETag
         const first = await router.fetch(createTestRequest('/'));
         const etag = first.headers.get('etag');
+
         expect(etag).toBeTruthy();
 
         // Second request with If-None-Match
@@ -53,6 +54,7 @@ describe('src/router etag', () => {
         // First request — server generates weak ETag (W/"...")
         const first = await router.fetch(createTestRequest('/'));
         const etag = first.headers.get('etag');
+
         expect(etag).toBeTruthy();
         expect(etag!.startsWith('W/')).toBe(true);
 

@@ -22,36 +22,45 @@ describe('routing/paths', () => {
 
     it('should prepend AppOptions.path to every registered entry', async () => {
         const router = new App({ path: '/api' });
+
         router.get('/users', defineCoreHandler(() => 'users'));
         router.get('/users/:id', defineCoreHandler((event) => `user-${event.params.id}`));
 
         const list = await router.fetch(createTestRequest('/api/users'));
+
         expect(await list.text()).toEqual('users');
 
         const item = await router.fetch(createTestRequest('/api/users/42'));
+
         expect(await item.text()).toEqual('user-42');
 
         // Unprefixed paths should not match.
         const miss = await router.fetch(createTestRequest('/users'));
+
         expect(miss.status).toEqual(404);
     });
 
     it('should compose AppOptions.path with explicit child mounts', async () => {
         const inner = new App();
+
         inner.get('/list', defineCoreHandler(() => 'list'));
 
         const outer = new App({ path: '/api' });
+
         outer.use('/v1', inner);
 
         const ok = await outer.fetch(createTestRequest('/api/v1/list'));
+
         expect(await ok.text()).toEqual('list');
     });
 
     it('should bind a router under a mount path via use()', async () => {
         const inner = new App();
+
         inner.get('/bar', defineCoreHandler(() => '/foo/bar'));
 
         const router = new App();
+
         router.use('/foo', inner);
 
         const response = await router.fetch(createTestRequest('/foo/bar'));
@@ -62,12 +71,15 @@ describe('routing/paths', () => {
 
     it('should handle path for nested routers', async () => {
         const child = new App();
+
         child.get('/baz', defineCoreHandler(() => '/foo/bar/baz'));
 
         const middle = new App();
+
         middle.use('/bar', child);
 
         const router = new App();
+
         router.use('/foo', middle);
 
         const response = await router.fetch(createTestRequest('/foo/bar/baz'));

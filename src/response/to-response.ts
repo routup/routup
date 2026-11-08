@@ -15,8 +15,15 @@ function stripWeakPrefix(etag: string): string {
  */
 function effectiveEtagFn(event: IAppEvent): EtagFn | null {
     const opt = event.appOptions.etag;
-    if (opt === null) return null;
-    if (typeof opt === 'undefined') return DEFAULT_ETAG_FN;
+
+    if (opt === null) {
+        return null;
+    }
+
+    if (typeof opt === 'undefined') {
+        return DEFAULT_ETAG_FN;
+    }
+
     return opt;
 }
 
@@ -34,11 +41,13 @@ async function applyEtag(
     // The `null` short-circuit is handled by the caller so this
     // function isn't even invoked on the hot path.
     const etagFn = effectiveEtagFn(event);
+
     if (!etagFn) {
         return undefined;
     }
 
     const etag = await etagFn(body);
+
     if (!etag) {
         return undefined;
     }
@@ -46,7 +55,11 @@ async function applyEtag(
     headers.set('etag', etag);
 
     const ifNoneMatch = event.headers.get('if-none-match');
-    if (ifNoneMatch && (ifNoneMatch === '*' || ifNoneMatch.split(',').some((t) => stripWeakPrefix(t.trim()) === stripWeakPrefix(etag)))) {
+
+    const isFresh = !!ifNoneMatch &&
+        (ifNoneMatch === '*' || ifNoneMatch.split(',').some((t) => stripWeakPrefix(t.trim()) === stripWeakPrefix(etag)));
+
+    if (isFresh) {
         return new Response(null, {
             status: 304,
             headers,
@@ -92,6 +105,7 @@ export function toResponse(
 
     if (t === 'string') {
         const { status, headers } = event.response;
+
         if (!headers.has('content-type')) {
             headers.set('content-type', 'text/plain; charset=utf-8');
         }
@@ -133,6 +147,7 @@ export function toResponse(
             if (!headers.has('content-type')) {
                 headers.set('content-type', 'application/octet-stream');
             }
+
             return new Response(value as BodyInit, {
                 status,
                 headers,
@@ -150,6 +165,7 @@ export function toResponse(
             if (!headers.has('content-type')) {
                 headers.set('content-type', value.type || 'application/octet-stream');
             }
+
             return new Response(value, {
                 status,
                 headers,
@@ -158,11 +174,13 @@ export function toResponse(
     }
 
     const { status, headers } = event.response;
+
     if (!headers.has('content-type')) {
         headers.set('content-type', 'application/json; charset=utf-8');
     }
 
     let json: string;
+
     try {
         json = JSON.stringify(value);
     } catch (e) {

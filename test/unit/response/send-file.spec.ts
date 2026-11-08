@@ -17,6 +17,7 @@ const buildSendFileOptions = (
     name: filePath,
     async stats() {
         const stat = await fs.promises.stat(filePath);
+
         return {
             size: stat.size,
             mtime: stat.mtime,
@@ -25,9 +26,11 @@ const buildSendFileOptions = (
     },
     async content(options) {
         const buffer = await fs.promises.readFile(filePath);
+
         if (options.start !== undefined || options.end !== undefined) {
             return buffer.slice(options.start || 0, options.end !== undefined ? options.end + 1 : undefined);
         }
+
         return buffer;
     },
     disposition,
@@ -43,6 +46,7 @@ describe('src/helpers/response/send-file', () => {
             .toEqual('application/json; charset=utf-8');
 
         const body = await response.json();
+
         expect(body).toEqual({
             id: 1,
             name: 'tada5hi',
@@ -71,6 +75,7 @@ describe('src/helpers/response/send-file', () => {
             .toEqual('attachment; filename=dummy.json');
 
         const body = await response.json();
+
         expect(body).toEqual({
             id: 1,
             name: 'tada5hi',

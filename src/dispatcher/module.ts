@@ -121,6 +121,7 @@ export class DispatcherEvent implements IDispatcherEvent {
 
         if (value === this.request.signal) {
             this._signal = value;
+
             return;
         }
 
@@ -129,6 +130,7 @@ export class DispatcherEvent implements IDispatcherEvent {
             const reason = e?.target instanceof AbortSignal ?
                 e.target.reason :
                 undefined;
+
             this.request.signal.removeEventListener('abort', abort);
             value.removeEventListener('abort', abort);
             controller.abort(reason);
@@ -138,6 +140,7 @@ export class DispatcherEvent implements IDispatcherEvent {
             const reason = this.request.signal.aborted ?
                 this.request.signal.reason :
                 value.reason;
+
             controller.abort(reason);
         } else {
             this.request.signal.addEventListener('abort', abort, { once: true });
@@ -165,6 +168,7 @@ export class DispatcherEvent implements IDispatcherEvent {
         if (this._nextCalled) {
             return this._nextResult;
         }
+
         this._nextCalled = true;
 
         if (this._next) {
@@ -178,6 +182,7 @@ export class DispatcherEvent implements IDispatcherEvent {
         if (fn) {
             this._next = async (event, error?: Error) => {
                 const result = await fn(error);
+
                 return toResponse(result, event);
             };
         } else {

@@ -17,5 +17,6 @@ export function getRequestAcceptableCharset(event: IAppEvent, input: string | st
     }
 
     const negotiator = useRequestNegotiator(event);
+
     return negotiator.charsets(items).shift() || undefined;
 }

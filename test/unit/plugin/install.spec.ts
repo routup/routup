@@ -55,9 +55,11 @@ function routeCount(app: App): number {
 describe('src/plugin install', () => {
     it('should run a plugin\'s install function and serve its handlers', async () => {
         const router = new App();
+
         router.use(cookiePlugin());
 
         const response = await router.fetch(createTestRequest('/'));
+
         expect(response.status).toEqual(200);
         expect(await response.text()).toEqual('cookie');
     });
@@ -74,6 +76,7 @@ describe('src/plugin install', () => {
 
     it('should track plugin version via getPluginVersion', () => {
         const router = new App();
+
         router.use(cookiePlugin('3.2.1'));
 
         expect(router.getPluginVersion('@routup/cookie')).toBe('3.2.1');
@@ -82,10 +85,13 @@ describe('src/plugin install', () => {
     it('install is permissive by default — same plugin at the same path appends', () => {
         const router = new App();
         const before = routeCount(router);
+
         router.use(cookiePlugin('1.0.0'));
+
         const after1 = routeCount(router);
 
         router.use(cookiePlugin('1.0.1'));
+
         const after2 = routeCount(router);
 
         // No flag → both installs ran; the second registered its route again.
@@ -93,6 +99,7 @@ describe('src/plugin install', () => {
         // gives `new App()` a non-zero baseline (e.g. built-in middleware).
         const firstDelta = after1 - before;
         const secondDelta = after2 - after1;
+
         expect(firstDelta).toBeGreaterThan(0);
         expect(secondDelta).toBe(firstDelta);
         expect(router.hasPlugin('@routup/cookie')).toBe(true);
@@ -106,9 +113,11 @@ describe('src/plugin install', () => {
 
     it('should allow installing the same plugin on a child router when the parent already has it', () => {
         const parent = new App();
+
         parent.use(cookiePlugin('1.0.0'));
 
         const child = new App();
+
         parent.use(child);
 
         expect(() => child.use(cookiePlugin('1.0.0'))).not.toThrow();
@@ -116,24 +125,30 @@ describe('src/plugin install', () => {
 
     it('should mount a plugin at a path when one is provided', async () => {
         const router = new App();
+
         router.use('/api', cookiePlugin());
 
         const matched = await router.fetch(createTestRequest('/api/'));
+
         expect(await matched.text()).toEqual('cookie');
 
         const unmatched = await router.fetch(createTestRequest('/'));
+
         expect(unmatched.status).toEqual(404);
     });
 
     it('should allow installing a non-singleton plugin at distinct mount paths', async () => {
         const router = new App();
+
         router.use('/v1', assetsPlugin('v1'));
         router.use('/v2', assetsPlugin('v2'));
 
         const v1 = await router.fetch(createTestRequest('/v1/file'));
+
         expect(await v1.text()).toEqual('v1');
 
         const v2 = await router.fetch(createTestRequest('/v2/file'));
+
         expect(await v2.text()).toEqual('v2');
 
         expect(router.hasPlugin('@routup/assets')).toBe(true);
@@ -145,10 +160,13 @@ describe('src/plugin install', () => {
 
     it('singletonByPath silently skips a second install at the same path', () => {
         const router = new App();
+
         router.use('/api', singletonByPathPlugin());
+
         const after1 = routeCount(router);
 
         router.use('/api', singletonByPathPlugin());
+
         const after2 = routeCount(router);
 
         // Second install no-ops — route count stays the same.
@@ -158,6 +176,7 @@ describe('src/plugin install', () => {
 
     it('singletonByPath still allows installs at distinct paths', () => {
         const router = new App();
+
         router.use('/api', singletonByPathPlugin());
         router.use('/admin', singletonByPathPlugin());
 
@@ -166,10 +185,13 @@ describe('src/plugin install', () => {
 
     it('singleton silently skips any second install, even at a different path', () => {
         const router = new App();
+
         router.use(singletonPlugin());
+
         const after1 = routeCount(router);
 
         router.use('/elsewhere', singletonPlugin());
+
         const after2 = routeCount(router);
 
         // Second install no-ops despite the different path.
@@ -183,6 +205,7 @@ describe('src/plugin install', () => {
         // isn't set — a third non-flag install at yet another path
         // succeeds.
         const router = new App();
+
         router.use('/v1', assetsPlugin('v1'));
         router.use('/v2', { ...assetsPlugin('v2'), singleton: true });
         router.use('/v3', assetsPlugin('v3'));
@@ -192,6 +215,7 @@ describe('src/plugin install', () => {
 
     it('hasPluginAt resolves paths relative to the App._path', () => {
         const api = new App({ path: '/api' });
+
         api.use(cookiePlugin());
 
         expect(api.hasPluginAt('@routup/cookie')).toBe(true);
@@ -200,6 +224,7 @@ describe('src/plugin install', () => {
 
     it('getPluginVersionAt returns the version of a specific mount', () => {
         const router = new App();
+
         router.use('/v1', { ...assetsPlugin('v1'), version: '1.0.0' });
         router.use('/v2', { ...assetsPlugin('v2'), version: '2.0.0' });
 
@@ -211,9 +236,11 @@ describe('src/plugin install', () => {
 
     it('flatten composes child plugin mount paths through the parent prefix', () => {
         const child = new App();
+
         child.use('/inner', assetsPlugin('inner'));
 
         const parent = new App();
+
         parent.use('/api', child);
 
         expect(parent.hasPlugin('@routup/assets')).toBe(true);
@@ -223,9 +250,11 @@ describe('src/plugin install', () => {
 
     it('flatten propagates a child singleton claim to the parent', () => {
         const child = new App();
+
         child.use(singletonPlugin());
 
         const parent = new App();
+
         parent.use('/api', child);
 
         expect(parent.hasPlugin('@routup/cors')).toBe(true);
@@ -233,6 +262,7 @@ describe('src/plugin install', () => {
         // A subsequent install of the same name on the parent is silently
         // dropped because the claim survived the mount.
         const before = routeCount(parent);
+
         parent.use(singletonPlugin());
         expect(routeCount(parent)).toBe(before);
     });
@@ -245,9 +275,11 @@ describe('src/plugin install', () => {
         // — that would override the parent's looser stance just because
         // a child was mounted later.
         const parent = new App();
+
         parent.use('/v1', { ...singletonPlugin(), singleton: false });
 
         const child = new App();
+
         child.use(singletonPlugin());
         parent.use('/api', child);
 
@@ -258,6 +290,7 @@ describe('src/plugin install', () => {
         // …but the parent's claim set must stay empty so further
         // non-singleton installs of the name continue to succeed.
         const before = routeCount(parent);
+
         parent.use('/v2', { ...singletonPlugin(), singleton: false });
         expect(routeCount(parent)).toBeGreaterThan(before);
         expect(parent.hasPluginAt('@routup/cors', '/v2')).toBe(true);
@@ -269,15 +302,18 @@ describe('src/plugin install', () => {
         // it (sticky claim blocks the merge). Routes still propagate —
         // sticky claim is forward-looking on the registry only.
         const parent = new App();
+
         parent.use(singletonPlugin());
 
         const child = new App();
+
         child.use('/inner', {
             ...singletonPlugin(),
             singleton: false,
         });
 
         const beforeMerge = parent.getPluginMountPaths('@routup/cors').slice();
+
         parent.use('/api', child);
 
         expect(parent.getPluginMountPaths('@routup/cors')).toEqual(beforeMerge);

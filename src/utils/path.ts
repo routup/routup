@@ -13,6 +13,7 @@ function normalizeWindowsPath(input = '') {
 const EXTNAME_RE = /.(\.[^./]+)$/;
 export function extname(input: string) {
     const match = EXTNAME_RE.exec(normalizeWindowsPath(input));
+
     return (match && match[1]) || '';
 }
 

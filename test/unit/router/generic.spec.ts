@@ -31,6 +31,7 @@ const resolvers: Record<string, ResolverFactory> = {
 describe.each(Object.entries(resolvers))('IRouter<MyData> generic — %s', (_name, factory) => {
     it('stores and returns custom data opaquely', () => {
         const router = factory();
+
         router.add({
             path: '/users',
             method: MethodName.GET,
@@ -38,12 +39,14 @@ describe.each(Object.entries(resolvers))('IRouter<MyData> generic — %s', (_nam
         });
 
         const matches = router.lookup('/users');
+
         expect(matches).toHaveLength(1);
         expect(matches[0]!.route.data).toEqual({ name: 'users-list', tag: 1 });
     });
 
     it('treats method-bound routes as exact-match (no prefix bleed)', () => {
         const router = factory();
+
         router.add({
             path: '/users',
             method: MethodName.GET,
@@ -58,6 +61,7 @@ describe.each(Object.entries(resolvers))('IRouter<MyData> generic — %s', (_nam
 
     it('treats method-less routes as prefix-match', () => {
         const router = factory();
+
         router.add({
             path: '/api',
             data: { name: 'mw', tag: 2 },
@@ -70,6 +74,7 @@ describe.each(Object.entries(resolvers))('IRouter<MyData> generic — %s', (_nam
 
     it('extracts params and path for parametric routes', () => {
         const router = factory();
+
         router.add({
             path: '/users/:id',
             method: MethodName.GET,
@@ -77,6 +82,7 @@ describe.each(Object.entries(resolvers))('IRouter<MyData> generic — %s', (_nam
         });
 
         const matches = router.lookup('/users/42');
+
         expect(matches).toHaveLength(1);
         expect(matches[0]!.params).toEqual({ id: '42' });
         expect(matches[0]!.path).toBe('/users/42');
@@ -85,6 +91,7 @@ describe.each(Object.entries(resolvers))('IRouter<MyData> generic — %s', (_nam
 
     it('preserves registration order in lookup results', () => {
         const router = factory();
+
         router.add({
             path: '/x',
             method: MethodName.GET,
@@ -102,6 +109,7 @@ describe.each(Object.entries(resolvers))('IRouter<MyData> generic — %s', (_nam
         });
 
         const matches = router.lookup('/x');
+
         expect(matches.map((m) => m.route.data.name)).toEqual(['a', 'b', 'c']);
     });
 });

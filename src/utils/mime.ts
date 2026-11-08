@@ -14,6 +14,7 @@ export function getCharsetForMimeType(type: string) : string | undefined {
     }
 
     const meta = get(type);
+
     if (
         meta &&
         meta.charset

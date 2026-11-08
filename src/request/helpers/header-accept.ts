@@ -20,14 +20,17 @@ export function getRequestAcceptableContentType(event: IAppEvent, input?: string
     }
 
     const header = getRequestHeader(event, HeaderName.ACCEPT);
+
     if (!header) {
         return items[0];
     }
 
     let polluted = false;
     const mimeTypes : string[] = [];
+
     for (const item of items) {
         const mimeType = getMimeType(item);
+
         if (mimeType) {
             mimeTypes.push(mimeType);
         } else {
@@ -37,6 +40,7 @@ export function getRequestAcceptableContentType(event: IAppEvent, input?: string
 
     const negotiator = useRequestNegotiator(event);
     const matches = negotiator.mediaTypes(mimeTypes);
+
     if (matches.length > 0) {
         if (polluted) {
             return items[0];

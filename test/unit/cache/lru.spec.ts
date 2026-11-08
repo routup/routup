@@ -4,6 +4,7 @@ import { LruCache } from '../../../src';
 describe('LruCache', () => {
     it('stores and retrieves values', () => {
         const cache = new LruCache<string>();
+
         cache.set('a', 'A');
         cache.set('b', 'B');
 
@@ -13,11 +14,13 @@ describe('LruCache', () => {
 
     it('returns undefined for absent keys', () => {
         const cache = new LruCache<string>();
+
         expect(cache.get('missing')).toBeUndefined();
     });
 
     it('overwrites existing values on set', () => {
         const cache = new LruCache<string>();
+
         cache.set('k', 'first');
         cache.set('k', 'second');
 
@@ -26,6 +29,7 @@ describe('LruCache', () => {
 
     it('delete removes a single entry', () => {
         const cache = new LruCache<string>();
+
         cache.set('a', 'A');
         cache.set('b', 'B');
 
@@ -37,12 +41,14 @@ describe('LruCache', () => {
 
     it('delete is a no-op for absent keys', () => {
         const cache = new LruCache<string>();
+
         // Must not throw.
         expect(() => cache.delete('missing')).not.toThrow();
     });
 
     it('clear drops every entry', () => {
         const cache = new LruCache<string>();
+
         cache.set('a', 'A');
         cache.set('b', 'B');
 
@@ -58,6 +64,7 @@ describe('LruCache', () => {
         // maxSize=2, inserting 5 entries guarantees the first one
         // has been evicted, but the most recent ones are kept.
         const cache = new LruCache<string>({ maxSize: 2 });
+
         cache.set('a', 'A');
         cache.set('b', 'B');
         cache.set('c', 'C');

@@ -10,6 +10,7 @@ import { createTestRequest } from '../../helpers';
 describe('App.setRouter', () => {
     it('replays previously-registered routes onto the new router', async () => {
         const app = new App();
+
         app.get('/users/:id', defineCoreHandler((event) => `id=${event.params.id}`));
         app.post('/users', defineCoreHandler(() => 'created'));
 
@@ -17,14 +18,17 @@ describe('App.setRouter', () => {
         app.setRouter(new TrieRouter<Handler>());
 
         const a = await app.fetch(createTestRequest('/users/42'));
+
         expect(await a.text()).toBe('id=42');
 
         const b = await app.fetch(createTestRequest('/users', { method: 'POST' }));
+
         expect(await b.text()).toBe('created');
     });
 
     it('routes registered after setRouter land on the new router', async () => {
         const app = new App();
+
         app.get('/before', defineCoreHandler(() => 'before'));
 
         app.setRouter(new TrieRouter<Handler>());

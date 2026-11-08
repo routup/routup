@@ -7,6 +7,7 @@ describe('src/utils/etag', () => {
         const defaultFn : EtagFn = () => Promise.resolve(undefined);
 
         let fn = buildEtagFn(defaultFn);
+
         expect(fn).toEqual(defaultFn);
 
         fn = buildEtagFn(false);
@@ -20,6 +21,7 @@ describe('src/utils/etag', () => {
 
     it('should generate etag', async () => {
         let etag = await generateETag('');
+
         expect(etag).toEqual('"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk"');
 
         etag = await generateETag('foo');
@@ -28,6 +30,7 @@ describe('src/utils/etag', () => {
 
     it('should create etag', async () => {
         const etag = await createEtag('');
+
         expect(etag).toEqual('"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk"');
     });
 });

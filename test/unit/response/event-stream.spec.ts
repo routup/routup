@@ -26,7 +26,11 @@ describe('src/helpers/response/event-stream', () => {
 
         while (true) {
             const { done, value } = await reader.read();
-            if (done) break;
+
+            if (done) {
+                break;
+            }
+
             result += decoder.decode(value, { stream: true });
         }
 

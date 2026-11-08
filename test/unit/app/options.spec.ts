@@ -20,12 +20,15 @@ import { createTestRequest } from '../../helpers';
 describe('App option inheritance (mount-time)', () => {
     it('child inherits parent option set at construction', async () => {
         const child = new App();
+
         child.get('/x', defineCoreHandler((event) => `offset=${event.appOptions.subdomainOffset}`));
 
         const parent = new App({ options: { subdomainOffset: 5 } });
+
         parent.use(child);
 
         const res = await parent.fetch(createTestRequest('/x'));
+
         expect(await res.text()).toBe('offset=5');
     });
 
@@ -35,26 +38,33 @@ describe('App option inheritance (mount-time)', () => {
         // option scopes do not survive the flatten — every flattened
         // handler dispatches with the parent's options view.
         const child = new App({ options: { subdomainOffset: 7 } });
+
         child.get('/x', defineCoreHandler((event) => `offset=${event.appOptions.subdomainOffset}`));
 
         const parent = new App({ options: { subdomainOffset: 3 } });
+
         parent.use(child);
 
         const res = await parent.fetch(createTestRequest('/x'));
+
         expect(await res.text()).toBe('offset=3');
     });
 
     it('grandchild inherits through two mount levels', async () => {
         const grandchild = new App();
+
         grandchild.get('/x', defineCoreHandler((event) => `offset=${event.appOptions.subdomainOffset}`));
 
         const child = new App();
+
         child.use(grandchild);
 
         const parent = new App({ options: { subdomainOffset: 9 } });
+
         parent.use(child);
 
         const res = await parent.fetch(createTestRequest('/x'));
+
         expect(await res.text()).toBe('offset=9');
     });
 
@@ -64,10 +74,12 @@ describe('App option inheritance (mount-time)', () => {
         // its own, so handlers from both children see `undefined`.
         const a = new App({ options: { subdomainOffset: 1 } });
         const b = new App({ options: { subdomainOffset: 2 } });
+
         a.get('/a', defineCoreHandler((event) => `${event.appOptions.subdomainOffset}`));
         b.get('/b', defineCoreHandler((event) => `${event.appOptions.subdomainOffset}`));
 
         const parent = new App();
+
         parent.use('/a', a);
         parent.use('/b', b);
 
@@ -77,12 +89,15 @@ describe('App option inheritance (mount-time)', () => {
 
     it('options are undefined when neither parent nor child set them', async () => {
         const child = new App();
+
         child.get('/x', defineCoreHandler((event) => String(event.appOptions.subdomainOffset)));
 
         const parent = new App();
+
         parent.use(child);
 
         const res = await parent.fetch(createTestRequest('/x'));
+
         // No framework default at the App level — consumer-site code
         // is responsible for falling back. Reading the raw option
         // returns undefined.
@@ -98,9 +113,11 @@ describe('App option inheritance (mount-time)', () => {
         //      own object, so even if a mutation *were* to land on the
         //      parent, the child would not see it.
         const child = new App();
+
         child.get('/x', defineCoreHandler((event) => String(event.appOptions.subdomainOffset)));
 
         const parent = new App({ options: { subdomainOffset: 1 } });
+
         parent.use(child);
 
         // Reach past the type-level `Readonly<AppOptions>` guard to
@@ -112,6 +129,7 @@ describe('App option inheritance (mount-time)', () => {
         }).toThrow(TypeError);
 
         const res = await parent.fetch(createTestRequest('/x'));
+
         expect(await res.text()).toBe('1');
     });
 });

@@ -4,6 +4,7 @@ import { getCharsetForMimeType } from '../../../src/utils';
 describe('src/utils/mime', () => {
     it('should get charset for content type', () => {
         let charset = getCharsetForMimeType('image/png');
+
         expect(charset).toBeUndefined();
 
         charset = getCharsetForMimeType('application/json');

@@ -20,6 +20,7 @@ describe('routing/dispatch-count', () => {
 
         for (let i = 0; i < size; i++) {
             const index = i;
+
             counts[index] = 0;
             app.use(defineCoreHandler((event) => {
                 counts[index] = (counts[index] ?? 0) + 1;
@@ -122,6 +123,7 @@ describe('routing/dispatch-count', () => {
         const response = await app.fetch(createTestRequest('/resource', { method: 'OPTIONS' }));
 
         const allow = (response.headers.get('allow') ?? '').split(',').sort();
+
         expect(allow).toEqual(['GET', 'HEAD', 'POST']);
         expect(middlewareDispatched).toEqual(1);
     });

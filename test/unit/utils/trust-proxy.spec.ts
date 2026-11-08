@@ -7,6 +7,7 @@ describe('src/utils/trust-proxy', () => {
         const defaultFn : TrustProxyFn = () => true;
 
         let fn = buildTrustProxyFn(defaultFn);
+
         expect(fn).toEqual(defaultFn);
 
         fn = buildTrustProxyFn(true);

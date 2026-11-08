@@ -18,7 +18,9 @@ type LookupCache = ICache<readonly RouteMatch<MyData>[]>;
  */
 class BrandedCache implements LookupCache {
     public gets = 0;
+
     public sets = 0;
+
     public clears = 0;
 
     protected inner: LruCache<readonly RouteMatch<MyData>[]>;
@@ -29,6 +31,7 @@ class BrandedCache implements LookupCache {
 
     get(key: string): readonly RouteMatch<MyData>[] | undefined {
         this.gets += 1;
+
         return this.inner.get(key);
     }
 
@@ -57,6 +60,7 @@ describe.each(Object.entries(routers))('router cache option — %s', (_name, bui
         // Cache is opt-in. Without one, repeated lookups produce
         // fresh arrays — a freshly allocated RouteMatch[] every time.
         const router = build();
+
         router.add({
             path: '/x',
             method: MethodName.GET,
@@ -75,11 +79,13 @@ describe.each(Object.entries(routers))('router cache option — %s', (_name, bui
     it('explicit ICache is consulted on every lookup', () => {
         const cache = new BrandedCache();
         const router = build(cache);
+
         router.add({
             path: '/x',
             method: MethodName.GET,
             data: { name: 'a' },
         });
+
         const clearsAfterAdd = cache.clears;
 
         // Miss → set.
@@ -96,6 +102,7 @@ describe.each(Object.entries(routers))('router cache option — %s', (_name, bui
 
     it('explicit cache memoizes by reference equality', () => {
         const router = build(new LruCache());
+
         router.add({
             path: '/x',
             method: MethodName.GET,
@@ -111,6 +118,7 @@ describe.each(Object.entries(routers))('router cache option — %s', (_name, bui
     it('invalidates cache on add()', () => {
         const cache = new BrandedCache();
         const router = build(cache);
+
         router.add({
             path: '/x',
             method: MethodName.GET,
@@ -119,10 +127,12 @@ describe.each(Object.entries(routers))('router cache option — %s', (_name, bui
 
         // Prime the cache.
         router.lookup('/x');
+
         const setsAfterPrime = cache.sets;
 
         // New route invalidates the whole cache.
         const clearsBefore = cache.clears;
+
         router.add({
             path: '/y',
             method: MethodName.GET,
@@ -137,6 +147,7 @@ describe.each(Object.entries(routers))('router cache option — %s', (_name, bui
 
     it('explicit LruCache with custom maxSize works end-to-end', () => {
         const router = build(new LruCache({ maxSize: 16 }));
+
         router.add({
             path: '/users/:id',
             method: MethodName.GET,
@@ -145,6 +156,7 @@ describe.each(Object.entries(routers))('router cache option — %s', (_name, bui
 
         for (let i = 0; i < 32; i++) {
             const matches = router.lookup(`/users/${i}`);
+
             expect(matches).toHaveLength(1);
             expect(matches[0]!.params).toEqual({ id: String(i) });
         }

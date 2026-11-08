@@ -27,12 +27,14 @@ describe('SmartRouter', () => {
     it('picks LinearRouter under the threshold', async () => {
         const router = new SmartRouter<Handler>({ threshold: 5 });
         const app = new App({ router });
+
         for (let i = 0; i < 3; i++) {
             app.get(`/r${i}`, defineCoreHandler(() => `r${i}`));
         }
 
         // First fetch triggers the choice.
         const res = await app.fetch(createTestRequest('/r0'));
+
         expect(await res.text()).toBe('r0');
         expect(inner(router)).toBeInstanceOf(LinearRouter);
     });
@@ -40,11 +42,13 @@ describe('SmartRouter', () => {
     it('picks TrieRouter at or above the threshold', async () => {
         const router = new SmartRouter<Handler>({ threshold: 5 });
         const app = new App({ router });
+
         for (let i = 0; i < 5; i++) {
             app.get(`/r${i}`, defineCoreHandler(() => `r${i}`));
         }
 
         const res = await app.fetch(createTestRequest('/r0'));
+
         expect(await res.text()).toBe('r0');
         expect(inner(router)).toBeInstanceOf(TrieRouter);
     });
@@ -52,6 +56,7 @@ describe('SmartRouter', () => {
     it('forwards routes registered after the first lookup to the chosen inner', async () => {
         const router = new SmartRouter<Handler>({ threshold: 5 });
         const app = new App({ router });
+
         app.get('/before', defineCoreHandler(() => 'before'));
 
         // First lookup → SmartRouter commits to LinearRouter.
@@ -69,10 +74,14 @@ describe('SmartRouter', () => {
         let setCalls = 0;
         const cache = new LruCache<readonly any[]>();
         const originalSet = cache.set.bind(cache);
-        cache.set = (k, v) => { setCalls++; originalSet(k, v); };
+
+        cache.set = (k, v) => {
+            setCalls++; originalSet(k, v);
+        };
 
         const router = new SmartRouter<Handler>({ threshold: 3, cache });
         const app = new App({ router });
+
         for (let i = 0; i < 3; i++) {
             app.get(`/r${i}`, defineCoreHandler(() => `r${i}`));
         }
@@ -84,9 +93,11 @@ describe('SmartRouter', () => {
     it('default threshold defers to TrieRouter at 30+ entries', async () => {
         const router = new SmartRouter<Handler>();
         const app = new App({ router });
+
         for (let i = 0; i < 30; i++) {
             app.get(`/r${i}`, defineCoreHandler(() => `r${i}`));
         }
+
         await app.fetch(createTestRequest('/r0'));
         expect(inner(router)).toBeInstanceOf(TrieRouter);
     });
@@ -95,6 +106,7 @@ describe('SmartRouter', () => {
         const router = new SmartRouter<Handler>();
         const app = new App({ router });
         const res = await app.fetch(createTestRequest('/anything'));
+
         expect(res.status).toBe(404);
     });
 });

@@ -31,6 +31,7 @@ describe('src/helpers/request/header', () => {
         const event = createTestEvent('/', { headers: { [HeaderName.ACCEPT]: 'application/json, text/html' } });
 
         const accepts = getRequestAcceptableContentTypes(event);
+
         expect(accepts).toEqual(['application/json', 'text/html']);
     });
 
@@ -86,6 +87,7 @@ describe('src/helpers/request/header', () => {
         const event = createTestEvent('/', { headers: { [HeaderName.ACCEPT_ENCODING]: 'gzip, deflate' } });
 
         const encodings = getRequestAcceptableEncodings(event);
+
         expect(encodings).toEqual(['gzip', 'deflate', 'identity']);
     });
 

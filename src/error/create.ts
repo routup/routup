@@ -51,6 +51,7 @@ export function createError(input: HTTPErrorInput | unknown) : AppError {
     }
 
     const options = { ...input as Record<string, unknown> };
+
     if (options.cause === undefined) {
         options.cause = input;
     }
