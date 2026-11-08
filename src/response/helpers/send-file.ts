@@ -1,4 +1,4 @@
-import { HeaderName } from '../../constants.ts';
+import { HeaderName, MethodName } from '../../constants.ts';
 import { basename } from '../../utils/index.ts';
 import type { IAppEvent } from '../../event/index.ts';
 import { setResponseHeaderAttachment, setResponseHeaderInline } from './header-disposition.ts';
@@ -43,6 +43,35 @@ export type SendFileOptions = {
     name?: string
 };
 
+/**
+ * Parse a single-range `Range` header value against a file of the given size.
+ * Returns `undefined` for anything else (other units, multiple ranges,
+ * malformed values), which callers must ignore by serving the whole file.
+ */
+function parseByteRange(header: string, size: number) : Required<SendFileContentOptions> | undefined {
+    const match = /^bytes=(\d*)-(\d*)$/i.exec(header.trim());
+    if (!match) {
+        return undefined;
+    }
+
+    const [, first, last] = match as unknown as [string, string, string];
+    if (first === '' && last === '') {
+        return undefined;
+    }
+
+    if (first === '') {
+        return {
+            start: Math.max(size - Number.parseInt(last, 10), 0),
+            end: size - 1,
+        };
+    }
+
+    return {
+        start: Number.parseInt(first, 10),
+        end: last === '' ? size - 1 : Math.min(Number.parseInt(last, 10), size - 1),
+    };
+}
+
 export async function sendFile(
     event: IAppEvent,
     options: SendFileOptions,
@@ -80,18 +109,14 @@ export async function sendFile(
     let statusCode = event.response.status;
 
     if (stats.size) {
-        const rangeHeader = event.headers.get(HeaderName.RANGE);
-        if (rangeHeader) {
-            const [x, y] = rangeHeader.replace('bytes=', '')
-                .split('-') as [string, string];
-
-            const parsedStart = Number.parseInt(x, 10);
-            const parsedEnd = Number.parseInt(y, 10);
-
-            contentOptions.start = Number.isFinite(parsedStart) && parsedStart >= 0 ? parsedStart : 0;
-            contentOptions.end = Number.isFinite(parsedEnd) && parsedEnd >= 0 ?
-                Math.min(parsedEnd, stats.size - 1) :
-                stats.size - 1;
+        const rangeHeader = event.method === MethodName.GET ? event.headers.get(HeaderName.RANGE) : null;
+        // The weak ETag can never satisfy If-Range, so only the modification date can match.
+        const ifRange = event.headers.get(HeaderName.IF_RANGE);
+        const isCurrent = !ifRange || (!!stats.mtime && ifRange === new Date(stats.mtime).toUTCString());
+        const range = rangeHeader && isCurrent ? parseByteRange(rangeHeader, stats.size) : undefined;
+        if (range) {
+            contentOptions.start = range.start;
+            contentOptions.end = range.end;
 
             if (
                 contentOptions.start >= stats.size ||

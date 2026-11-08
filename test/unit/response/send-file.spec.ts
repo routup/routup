@@ -123,6 +123,89 @@ describe('src/helpers/response/send-file', () => {
             .toEqual(`bytes 10-${file.length - 1}/${file.length}`);
     });
 
+    it('should serve the last bytes for a suffix range', async () => {
+        const event = createTestEvent('/', { headers: { 'range': 'bytes=-5' } });
+        const response = await sendFile(event, buildSendFileOptions('test/data/dummy.txt'));
+
+        const file = await fs.promises.readFile('test/data/dummy.txt', { encoding: 'utf-8' });
+
+        expect(response.status).toEqual(206);
+        expect(response.headers.get(HeaderName.CONTENT_RANGE))
+            .toEqual(`bytes ${file.length - 5}-${file.length - 1}/${file.length}`);
+        expect(response.headers.get(HeaderName.CONTENT_LENGTH)).toEqual('5');
+        expect(await response.text()).toEqual(file.slice(-5));
+    });
+
+    it('should serve the whole file for a suffix range larger than the file', async () => {
+        const event = createTestEvent('/', { headers: { 'range': 'bytes=-9999999' } });
+        const response = await sendFile(event, buildSendFileOptions('test/data/dummy.txt'));
+
+        const file = await fs.promises.readFile('test/data/dummy.txt', { encoding: 'utf-8' });
+
+        expect(response.status).toEqual(206);
+        expect(response.headers.get(HeaderName.CONTENT_RANGE))
+            .toEqual(`bytes 0-${file.length - 1}/${file.length}`);
+        expect(await response.text()).toEqual(file);
+    });
+
+    it('should return 416 for an empty suffix range', async () => {
+        const event = createTestEvent('/', { headers: { 'range': 'bytes=-0' } });
+        const response = await sendFile(event, buildSendFileOptions('test/data/dummy.txt'));
+
+        expect(response.status).toEqual(416);
+    });
+
+    it.each([
+        ['multiple ranges', 'bytes=0-1,4-5'],
+        ['another range unit', 'items=0-5'],
+        ['a malformed range', 'bytes=abc'],
+        ['a range without positions', 'bytes=-'],
+    ])('should ignore %s and serve the whole file', async (_name, range) => {
+        const event = createTestEvent('/', { headers: { range } });
+        const response = await sendFile(event, buildSendFileOptions('test/data/dummy.txt'));
+
+        const file = await fs.promises.readFile('test/data/dummy.txt', { encoding: 'utf-8' });
+
+        expect(response.status).toEqual(200);
+        expect(response.headers.get(HeaderName.CONTENT_RANGE)).toBeNull();
+        expect(response.headers.get(HeaderName.CONTENT_LENGTH)).toEqual(`${file.length}`);
+        expect(await response.text()).toEqual(file);
+    });
+
+    it('should ignore a range on a non-GET request', async () => {
+        const event = createTestEvent('/', { method: 'POST', headers: { 'range': 'bytes=-5' } });
+        const response = await sendFile(event, buildSendFileOptions('test/data/dummy.txt'));
+
+        expect(response.status).toEqual(200);
+        expect(response.headers.get(HeaderName.CONTENT_RANGE)).toBeNull();
+    });
+
+    it('should ignore a range when If-Range does not match the file', async () => {
+        const event = createTestEvent('/', {
+            headers: {
+                'range': 'bytes=0-5',
+                'if-range': 'Thu, 01 Jan 1970 00:00:00 GMT',
+            },
+        });
+        const response = await sendFile(event, buildSendFileOptions('test/data/dummy.txt'));
+
+        expect(response.status).toEqual(200);
+        expect(response.headers.get(HeaderName.CONTENT_RANGE)).toBeNull();
+    });
+
+    it('should serve a range when If-Range matches the last modification date', async () => {
+        const stat = await fs.promises.stat('test/data/dummy.txt');
+        const event = createTestEvent('/', {
+            headers: {
+                'range': 'bytes=0-5',
+                'if-range': stat.mtime.toUTCString(),
+            },
+        });
+        const response = await sendFile(event, buildSendFileOptions('test/data/dummy.txt'));
+
+        expect(response.status).toEqual(206);
+    });
+
     it('should return 416 when start range exceeds file size', async () => {
         const event = createTestEvent('/', { headers: { 'range': 'bytes=999-999999' } });
         const response = await sendFile(event, buildSendFileOptions('test/data/dummy.txt'));
