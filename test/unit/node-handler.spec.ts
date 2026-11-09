@@ -40,6 +40,9 @@ describe('toNodeHandler', () => {
 
         const { port } = server.address() as AddressInfo;
         const client = connect(`http://127.0.0.1:${port}`);
+        const closed = new Promise<void>((resolve) => {
+            client.once('close', () => resolve());
+        });
 
         try {
             const request = client.request({ ':path': '/' });
@@ -56,8 +59,8 @@ describe('toNodeHandler', () => {
             expect(headers[':status']).toBe(200);
             expect(body).toBe('ok');
         } finally {
-            client.close();
-            await once(client, 'close');
+            client.destroy();
+            await closed;
             server.close();
         }
     });
