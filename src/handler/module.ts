@@ -55,6 +55,8 @@ export class Handler {
      * Resolves with the response, or `undefined` when the handler
      * forwarded a continuation that produced none. A failure is
      * recorded on `state.error` and rethrown.
+     *
+     * @internal
      */
     async dispatch(step: PipelineStep): Promise<Response | undefined> {
         const { state } = step;

@@ -404,5 +404,32 @@ describe('src/helpers/response/send-file', () => {
             expect(response.status).toEqual(200);
             expect(response.headers.get(HeaderName.ETag)).toBeNull();
         });
+
+        it('should not answer with 304 for a file with an unparsable mtime', async () => {
+            const stats = { size: 3, mtime: 'garbage' };
+            const content = () => new Uint8Array([1, 2, 3]);
+
+            const wildcard = await sendFile(
+                createTestEvent('/', { headers: { 'if-none-match': '*' } }),
+                { stats, content },
+            );
+
+            expect(wildcard.status).toEqual(200);
+
+            const exact = await sendFile(
+                createTestEvent('/', { headers: { 'if-none-match': 'W/"3-NaN"' } }),
+                { stats, content },
+            );
+
+            expect(exact.status).toEqual(200);
+
+            const since = await sendFile(
+                createTestEvent('/', { headers: { 'if-modified-since': 'Invalid Date' } }),
+                { stats, content },
+            );
+
+            expect(since.status).toEqual(200);
+            expect(new Uint8Array(await since.arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
+        });
     });
 });

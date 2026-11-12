@@ -129,7 +129,11 @@ export class AppEvent implements IAppEvent {
         this._nextCalled = true;
 
         try {
-            this._nextResult = this._context.next(this, error);
+            // `Promise.resolve` hands a native promise back as is, so
+            // the walk's promise is cached without an extra hop; a
+            // hand-built context returning a plain value still yields
+            // a promise.
+            this._nextResult = Promise.resolve(this._context.next(this, error));
         } catch (e) {
             this._nextResult = Promise.reject(e);
         }

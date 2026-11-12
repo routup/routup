@@ -6,7 +6,7 @@ import type { Plugin } from './types.ts';
  * The plugin fields the registry reads to decide on and record an
  * install.
  */
-export type PluginRegistryEntry = Pick<Plugin, 'name' | 'version' | 'singleton' | 'singletonByPath'>;
+export type PluginRegistryInput = Pick<Plugin, 'name' | 'version' | 'singleton' | 'singletonByPath'>;
 
 /**
  * The public registry surface of a mounted child App. Read through
@@ -65,7 +65,7 @@ export class PluginRegistry {
      * Decide whether an install of `plugin` at `mountKey` may proceed.
      * Every refusal is a silent skip for the caller.
      */
-    canInstall(plugin: PluginRegistryEntry, mountKey: string): boolean {
+    canInstall(plugin: PluginRegistryInput, mountKey: string): boolean {
         // Sticky claim: a previous successful `singleton: true` install
         // locked this name. Every further install is a silent no-op so
         // an idempotent `app.use(plugin)` is safe to call from setup
@@ -97,7 +97,7 @@ export class PluginRegistry {
      * Record a completed install of `plugin` at `mountKey`, and claim
      * the name when the plugin is a singleton.
      */
-    record(plugin: PluginRegistryEntry, mountKey: string): void {
+    record(plugin: PluginRegistryInput, mountKey: string): void {
         let entry = this._entries.get(plugin.name);
 
         if (!entry) {

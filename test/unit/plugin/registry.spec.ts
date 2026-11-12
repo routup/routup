@@ -3,9 +3,9 @@ import {
     PluginRegistry,
     buildPluginMountKey,
 } from '../../../src/plugin/registry.ts';
-import type { PluginRegistryEntry } from '../../../src/plugin/registry.ts';
+import type { PluginRegistryInput } from '../../../src/plugin/registry.ts';
 
-type Install = PluginRegistryEntry & { key: string };
+type Install = PluginRegistryInput & { key: string };
 
 function registryOf(installs: Install[]): PluginRegistry {
     const registry = new PluginRegistry();
@@ -53,43 +53,43 @@ describe('src/plugin/registry', () => {
             ['plain, same name and key', [{ name: 'p', key: '/' }], { name: 'p', key: '/' }, true],
             ['plain, same name other key', [{ name: 'p', key: '/' }], { name: 'p', key: '/a' }, true],
             ['singleton, empty registry', [], {
-                name: 'p', 
-                singleton: true, 
-                key: '/', 
+                name: 'p',
+                singleton: true,
+                key: '/',
             }, true],
             ['singleton, name already installed', [{ name: 'p', key: '/a' }], {
-                name: 'p', 
-                singleton: true, 
-                key: '/', 
+                name: 'p',
+                singleton: true,
+                key: '/',
             }, false],
             ['singleton, other name installed', [{ name: 'q', key: '/' }], {
-                name: 'p', 
-                singleton: true, 
-                key: '/', 
+                name: 'p',
+                singleton: true,
+                key: '/',
             }, true],
             ['plain, name claimed singleton', [{
-                name: 'p', 
-                singleton: true, 
-                key: '/', 
+                name: 'p',
+                singleton: true,
+                key: '/',
             }], { name: 'p', key: '/b' }, false],
             ['singletonByPath, same key', [{ name: 'p', key: '/a' }], {
-                name: 'p', 
-                singletonByPath: true, 
-                key: '/a', 
+                name: 'p',
+                singletonByPath: true,
+                key: '/a',
             }, false],
             ['singletonByPath, other key', [{ name: 'p', key: '/a' }], {
-                name: 'p', 
-                singletonByPath: true, 
-                key: '/b', 
+                name: 'p',
+                singletonByPath: true,
+                key: '/b',
             }, true],
             ['singletonByPath, name claimed singleton', [{
-                name: 'p', 
-                singleton: true, 
-                key: '/a', 
+                name: 'p',
+                singleton: true,
+                key: '/a',
             }], {
-                name: 'p', 
-                singletonByPath: true, 
-                key: '/b', 
+                name: 'p',
+                singletonByPath: true,
+                key: '/b',
             }, false],
         ])('%s -> %s', (_label, installs, next, expected) => {
             const registry = registryOf(installs);
@@ -102,14 +102,14 @@ describe('src/plugin/registry', () => {
         it('should write the latest version for the same name and key', () => {
             const registry = registryOf([
                 {
-                    name: 'p', 
-                    version: '1.0.0', 
-                    key: '/', 
+                    name: 'p',
+                    version: '1.0.0',
+                    key: '/',
                 },
                 {
-                    name: 'p', 
-                    version: '2.0.0', 
-                    key: '/', 
+                    name: 'p',
+                    version: '2.0.0',
+                    key: '/',
                 },
             ]);
 
@@ -120,14 +120,14 @@ describe('src/plugin/registry', () => {
             const registry = registryOf([
                 { name: 'p', key: '/' },
                 {
-                    name: 'q', 
-                    singleton: true, 
-                    key: '/', 
+                    name: 'q',
+                    singleton: true,
+                    key: '/',
                 },
                 {
-                    name: 'r', 
-                    singletonByPath: true, 
-                    key: '/', 
+                    name: 'r',
+                    singletonByPath: true,
+                    key: '/',
                 },
             ]);
 
@@ -138,9 +138,9 @@ describe('src/plugin/registry', () => {
             const registry = registryOf([
                 { name: 'p', key: '/' },
                 {
-                    name: 'p', 
-                    singleton: true, 
-                    key: '/a', 
+                    name: 'p',
+                    singleton: true,
+                    key: '/a',
                 },
                 { name: 'p', key: '/b' },
             ]);
@@ -153,14 +153,14 @@ describe('src/plugin/registry', () => {
     describe('queries', () => {
         const registry = registryOf([
             {
-                name: 'p', 
-                version: '1.0.0', 
-                key: '/', 
+                name: 'p',
+                version: '1.0.0',
+                key: '/',
             },
             {
-                name: 'p', 
-                version: '1.0.0', 
-                key: '/api', 
+                name: 'p',
+                version: '1.0.0',
+                key: '/api',
             },
             { name: 'q', key: '/admin' },
         ]);
@@ -202,13 +202,13 @@ describe('src/plugin/registry', () => {
                 label: 'lifts child keys under the prefix',
                 parent: [],
                 child: [{
-                    name: 'p', 
-                    version: '1', 
-                    key: '/', 
+                    name: 'p',
+                    version: '1',
+                    key: '/',
                 }, {
-                    name: 'p', 
-                    version: '1', 
-                    key: '/x', 
+                    name: 'p',
+                    version: '1',
+                    key: '/x',
                 }],
                 prefix: ['/base', '/api'],
                 entries: { p: { '/base/api': '1', '/base/api/x': '1' } },
@@ -225,18 +225,18 @@ describe('src/plugin/registry', () => {
             {
                 label: 'first writer wins on the same composed key',
                 parent: [{
-                    name: 'p', 
-                    version: 'parent', 
-                    key: '/api', 
+                    name: 'p',
+                    version: 'parent',
+                    key: '/api',
                 }],
                 child: [{
-                    name: 'p', 
-                    version: 'child', 
-                    key: '/', 
+                    name: 'p',
+                    version: 'child',
+                    key: '/',
                 }, {
-                    name: 'p', 
-                    version: 'child', 
-                    key: '/x', 
+                    name: 'p',
+                    version: 'child',
+                    key: '/x',
                 }],
                 prefix: ['/api'],
                 entries: { p: { '/api': 'parent', '/api/x': 'child' } },
@@ -246,9 +246,9 @@ describe('src/plugin/registry', () => {
                 label: 'child claim propagates for a name the parent did not have',
                 parent: [],
                 child: [{
-                    name: 'p', 
-                    singleton: true, 
-                    key: '/', 
+                    name: 'p',
+                    singleton: true,
+                    key: '/',
                 }],
                 prefix: ['/api'],
                 entries: { p: { '/api': undefined } },
@@ -258,9 +258,9 @@ describe('src/plugin/registry', () => {
                 label: 'child claim merges entries but does not propagate for a name the parent had',
                 parent: [{ name: 'p', key: '/' }],
                 child: [{
-                    name: 'p', 
-                    singleton: true, 
-                    key: '/', 
+                    name: 'p',
+                    singleton: true,
+                    key: '/',
                 }],
                 prefix: ['/api'],
                 entries: { p: { '/': undefined, '/api': undefined } },
@@ -269,9 +269,9 @@ describe('src/plugin/registry', () => {
             {
                 label: 'parent claim blocks the merge of that name',
                 parent: [{
-                    name: 'p', 
-                    singleton: true, 
-                    key: '/', 
+                    name: 'p',
+                    singleton: true,
+                    key: '/',
                 }],
                 child: [{ name: 'p', key: '/' }, { name: 'q', key: '/' }],
                 prefix: ['/api'],
@@ -281,14 +281,14 @@ describe('src/plugin/registry', () => {
             {
                 label: 'parent claim stays when the child also claims the name',
                 parent: [{
-                    name: 'p', 
-                    singleton: true, 
-                    key: '/', 
+                    name: 'p',
+                    singleton: true,
+                    key: '/',
                 }],
                 child: [{
-                    name: 'p', 
-                    singleton: true, 
-                    key: '/', 
+                    name: 'p',
+                    singleton: true,
+                    key: '/',
                 }],
                 prefix: ['/api'],
                 entries: { p: { '/': undefined } },

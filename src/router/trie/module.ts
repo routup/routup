@@ -564,8 +564,8 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
      * Copy params onto a prototype-less object so downstream
      * lookups skip prototype-chain traversal and avoid `__proto__` /
      * `hasOwnProperty` shadowing from user-controlled segment values.
-     * Applied to universal-bucket matcher output: measured ~6% faster
-     * on `GET /` dispatch than handing out the matcher's own object.
+     * Applied to universal-bucket matcher output instead of handing
+     * out the matcher's own object.
      */
     protected assignParams(
         source: Record<string, string | undefined>,

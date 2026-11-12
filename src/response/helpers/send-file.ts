@@ -125,12 +125,16 @@ export async function sendFile(
     let statusCode = event.response.status;
 
     if (stats.size) {
-        const validators = stats.mtime ?
-            buildValidators(stats.size, new Date(stats.mtime)) :
+        const mtime = stats.mtime ? new Date(stats.mtime) : undefined;
+        const validators = mtime ?
+            buildValidators(stats.size, mtime) :
             undefined;
 
         if (
             validators &&
+            // An unparsable mtime yields validators that identify
+            // nothing; they must not confirm a cached copy.
+            !Number.isNaN(mtime!.getTime()) &&
             (event.method === MethodName.GET || event.method === MethodName.HEAD) &&
             isFresh({
                 ifNoneMatch: event.headers.get(HeaderName.IF_NONE_MATCH),

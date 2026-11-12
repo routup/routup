@@ -321,6 +321,19 @@ describe('src/event/module (AppEvent)', () => {
         await routup.whenNextCalled();
     });
 
+    it('should return a promise when the continuation returns a plain value', async () => {
+        const response = new Response('plain');
+        const next = (() => response) as unknown as AppEventCreateContext['next'];
+        const routup = new AppEvent(createContext(next));
+
+        const result = routup.next();
+
+        expect(result).toBeInstanceOf(Promise);
+        expect(routup.nextResult).toBe(result);
+        expect(await result).toBe(response);
+        expect(routup.next()).toBe(result);
+    });
+
     it('should reject the next() promise when the continuation throws synchronously', async () => {
         const routup = new AppEvent(createContext(() => {
             throw new Error('sync failure');

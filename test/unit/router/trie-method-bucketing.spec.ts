@@ -15,8 +15,8 @@ import { createTestRequest } from '../../helpers';
  * routes in `Record<method, IndexedRoute[]>` instead of a flat
  * list. Lookup emits only the relevant buckets for the request
  * method (`'' | <method>` for normal requests; `'' | HEAD | GET`
- * for HEAD; every bucket for OPTIONS so `event.methodsAllowed`
- * still populates).
+ * for HEAD; every bucket for OPTIONS so the synthesized `Allow`
+ * response lists every method).
  *
  * Middleware (`prefixRoutes`) stays method-agnostic.
  */

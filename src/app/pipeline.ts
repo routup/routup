@@ -232,12 +232,17 @@ export async function walkMatches(
             if (step.event && step.event.nextCalled) {
                 return undefined;
             }
-        } catch {
-            // The handler recorded its failure on `state.error`. Move
-            // on to the next match, also when the handler threw after
-            // calling `next()`: an error handler later in the chain
-            // must see the error. Error flow is forward-only — an
-            // ERROR handler registered before the failure point is
+        } catch (e) {
+            // `Handler.dispatch` records its failure on `state.error`
+            // and rethrows that same error, which `createError`
+            // returns unchanged; a dispatch that throws anything else
+            // is recorded here.
+            state.error = createError(e);
+
+            // Move on to the next match, also when the handler threw
+            // after calling `next()`: an error handler later in the
+            // chain must see the error. Error flow is forward-only —
+            // an ERROR handler registered before the failure point is
             // not revisited (#946).
         } finally {
             state.mountPath = savedMountPath;

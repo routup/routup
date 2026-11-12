@@ -76,6 +76,7 @@ export class App implements IApp {
      * `parent.hasPlugin('foo')` reflects plugins installed on mounted
      * children too.
      *
+     * @internal
      * @protected
      */
     protected _pluginRegistry: PluginRegistry;
@@ -230,6 +231,11 @@ export class App implements IApp {
         return this.buildFallbackResponse(request, state, 404, 'Not Found');
     }
 
+    /**
+     * Build the `Allow` response of an unanswered `OPTIONS` request.
+     *
+     * @internal
+     */
     protected buildAllowResponse(state: PipelineState, methods: Set<string>): Response {
         addImpliedAllowedMethods(methods);
 
@@ -247,6 +253,11 @@ export class App implements IApp {
         });
     }
 
+    /**
+     * Build the 404 / error response of a request no handler answered.
+     *
+     * @internal
+     */
     protected buildFallbackResponse(request: AppRequest, state: PipelineState, status: number, message: string): Response {
         const headers = new Headers(state.response.headers);
 
