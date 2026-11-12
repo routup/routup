@@ -394,6 +394,51 @@ describe('src/helpers/response/send-file', () => {
             expect(response.status).toEqual(200);
         });
 
+        it.each([404, 500, 301])('should keep an accumulated %d status on a conditional request', async (status) => {
+            const { etag, lastModified } = await getValidators();
+
+            const conditionals: Record<string, string>[] = [
+                { 'if-none-match': '*' },
+                { 'if-none-match': etag },
+                { 'if-modified-since': lastModified },
+            ];
+
+            for (const headers of conditionals) {
+                const event = createTestEvent('/', { headers });
+
+                event.response.status = status;
+
+                const response = await sendFile(event, buildSendFileOptions(filePath));
+
+                expect(response.status).toEqual(status);
+            }
+        });
+
+        it('should still answer with 304 for an accumulated 2xx status', async () => {
+            const { etag } = await getValidators();
+            const event = createTestEvent('/', { headers: { 'if-none-match': etag } });
+
+            event.response.status = 203;
+
+            const response = await sendFile(event, buildSendFileOptions(filePath));
+
+            expect(response.status).toEqual(304);
+        });
+
+        it('should send the file for an empty If-None-Match with a current If-Modified-Since', async () => {
+            const { lastModified } = await getValidators();
+            const event = createTestEvent('/', {
+                headers: {
+                    'if-none-match': '',
+                    'if-modified-since': lastModified,
+                },
+            });
+
+            const response = await sendFile(event, buildSendFileOptions(filePath));
+
+            expect(response.status).toEqual(200);
+        });
+
         it('should not answer with 304 for a file without validators', async () => {
             const event = createTestEvent('/', { headers: { 'if-none-match': '*' } });
             const response = await sendFile(event, {

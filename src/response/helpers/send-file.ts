@@ -135,6 +135,11 @@ export async function sendFile(
             // An unparsable mtime yields validators that identify
             // nothing; they must not confirm a cached copy.
             !Number.isNaN(mtime!.getTime()) &&
+            // Preconditions apply only when the response would
+            // otherwise be a 2xx (RFC 9110 section 13.2.1): a file
+            // sent as an error or redirect body keeps that status.
+            statusCode >= 200 &&
+            statusCode < 300 &&
             (event.method === MethodName.GET || event.method === MethodName.HEAD) &&
             isFresh({
                 ifNoneMatch: event.headers.get(HeaderName.IF_NONE_MATCH),

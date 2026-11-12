@@ -63,7 +63,9 @@ export function isFresh(
     request: ConditionalRequestHeaders,
     validators: ConditionalValidators,
 ): boolean {
-    if (request.ifNoneMatch) {
+    // Presence, not truthiness: an empty `If-None-Match` is still
+    // present, matches no tag, and suppresses `If-Modified-Since`.
+    if (typeof request.ifNoneMatch === 'string') {
         return !!validators.etag && matchesETagList(request.ifNoneMatch, validators.etag);
     }
 

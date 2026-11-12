@@ -99,6 +99,25 @@ describe('src/utils/conditional', () => {
             }, validators)).toBe(true);
         });
 
+        it('should let an empty but present If-None-Match suppress If-Modified-Since', () => {
+            expect(isFresh({
+                ifNoneMatch: '',
+                ifModifiedSince: lastModified.toUTCString(),
+            }, validators)).toBe(false);
+        });
+
+        it('should fall back to If-Modified-Since when If-None-Match is null or undefined', () => {
+            expect(isFresh({
+                ifNoneMatch: null,
+                ifModifiedSince: lastModified.toUTCString(),
+            }, validators)).toBe(true);
+
+            expect(isFresh({
+                ifNoneMatch: undefined,
+                ifModifiedSince: lastModified.toUTCString(),
+            }, validators)).toBe(true);
+        });
+
         it('should not be fresh without the validator the request asks about', () => {
             expect(isFresh({ ifNoneMatch: etag }, { lastModified })).toBe(false);
             expect(isFresh({ ifModifiedSince: lastModified.toUTCString() }, { etag })).toBe(false);
