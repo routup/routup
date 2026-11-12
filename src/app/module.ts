@@ -1,5 +1,4 @@
 import { markInstanceof } from '@ebec/core';
-import { FastResponse } from 'srvx';
 import { HeaderName, MethodName } from '../constants.ts';
 import type { AppRequest } from '../event/index.ts';
 import { createError } from '../error/index.ts';
@@ -21,6 +20,7 @@ import {
     Deadline,
     acceptsJson,
     addImpliedAllowedMethods,
+    createFastResponse,
     joinPaths,
     withLeadingSlash,
 } from '../utils/index.ts';
@@ -247,10 +247,7 @@ export class App implements IApp {
 
         headers.set(HeaderName.ALLOW, options);
 
-        return new FastResponse(options, {
-            status: state.response.status || 200,
-            headers,
-        });
+        return createFastResponse(options, state.response.status || 200, headers);
     }
 
     /**
@@ -264,18 +261,12 @@ export class App implements IApp {
         if (acceptsJson(request)) {
             headers.set('content-type', 'application/json; charset=utf-8');
 
-            return new FastResponse(JSON.stringify({ status, message }), {
-                status,
-                headers,
-            });
+            return createFastResponse(JSON.stringify({ status, message }), status, headers);
         }
 
         headers.set('content-type', 'text/plain; charset=utf-8');
 
-        return new FastResponse(message, {
-            status,
-            headers,
-        });
+        return createFastResponse(message, status, headers);
     }
 
     // --------------------------------------------------

@@ -89,6 +89,16 @@ describe('routing/wire', () => {
     app.get('/handled', defineCoreHandler(() => {
         throw new Error('handled');
     }));
+    app.get('/invalid-status', defineCoreHandler((event) => {
+        event.response.status = 999;
+
+        return 'x';
+    }));
+    app.get('/null-body-status', defineCoreHandler((event) => {
+        event.response.status = 204;
+
+        return 'body';
+    }));
     app.use(defineErrorHandler((error, event) => {
         if (error.message !== 'handled') {
             throw error;
@@ -221,6 +231,25 @@ describe('routing/wire', () => {
 
         expect(missing.status).toBe(404);
         expect(await missing.text()).toBe('Not Found');
+    });
+
+    it.each([
+        ['/invalid-status', /200 to 599/],
+        ['/null-body-status', /204/],
+    ])('sends %s as a 500 through the pipeline, not with the invalid status', async (path, message) => {
+        const json = await fetch(`${origin}${path}`, { headers: { accept: 'application/json' } });
+
+        expect(json.status).toBe(500);
+
+        const body = await json.json();
+
+        expect(body.status).toBe(500);
+        expect(body.message).toMatch(message);
+
+        const text = await fetch(`${origin}${path}`, { headers: { accept: 'text/plain' } });
+
+        expect(text.status).toBe(500);
+        expect(await text.text()).toMatch(message);
     });
 
     it('reads path, params and query from the incoming request', async () => {

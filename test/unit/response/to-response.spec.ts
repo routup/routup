@@ -238,4 +238,29 @@ describe('src/response/to-response', () => {
             expect(e.cause).toBeInstanceOf(TypeError);
         }
     });
+
+    it.each([
+        ['a string with status 999', 999, 'x', RangeError],
+        ['an object with status 0', 0, { a: 1 }, RangeError],
+        ['an empty string with status 204', 204, '', TypeError],
+        ['a Uint8Array with status 304', 304, new Uint8Array([1]), TypeError],
+    ])('should throw the platform error for %s', async (_label, status, value, type) => {
+        const event = createTestEvent('/');
+
+        event.response.status = status;
+
+        // `toResponse` throws synchronously or rejects depending on
+        // whether an ETag is computed; the async wrapper covers both.
+        await expect((async () => toResponse(value, event))()).rejects.toThrow(type);
+    });
+
+    it('should still build a 204 for null', async () => {
+        const event = createTestEvent('/');
+
+        event.response.status = 204;
+
+        const result = await toResponse(null, event);
+
+        expect(result!.status).toBe(204);
+    });
 });

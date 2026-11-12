@@ -12,4 +12,5 @@ export * from './method-rule.ts';
 export * from './object.ts';
 export * from './path.ts';
 export * from './promise.ts';
+export * from './response.ts';
 export * from './url.ts';
