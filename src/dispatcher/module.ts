@@ -55,9 +55,12 @@ export class DispatcherEvent implements IDispatcherEvent {
     protected _store?: Record<string | symbol, unknown>;
 
     /**
-     * Cached parsed URL (avoids double-parsing).
+     * Parsed request URL. Taken from the srvx request when the adapter
+     * already holds one (`request._url` on Node.js) — `request.url`
+     * would serialize it to an absolute string that then needs a full
+     * native parse again, on every request.
      */
-    protected _url: InstanceType<typeof FastURL>;
+    protected _url: URL;
 
     /**
      * Continuation function for middleware onion model.
@@ -82,7 +85,7 @@ export class DispatcherEvent implements IDispatcherEvent {
 
     constructor(request: AppRequest) {
         this.request = request;
-        this._url = new FastURL(request.url);
+        this._url = request._url ?? new FastURL(request.url);
         this.method = request.method;
         this.path = this._url.pathname;
         this.mountPath = '/';
@@ -203,7 +206,7 @@ export class DispatcherEvent implements IDispatcherEvent {
             method: this.method,
             mountPath: this.mountPath,
             headers: this.request.headers,
-            searchParams: new URLSearchParams(this._url.search),
+            search: this._url.search,
             response: this.response,
             store: this.store,
             signal: signal ?? this.signal,

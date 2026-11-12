@@ -81,6 +81,8 @@ Handlers return values directly instead of calling `send()`. The `toResponse()` 
 - **Response** → passed through as-is
 - **null** → empty `Response` (status from `event.response`)
 
+A response built by `toResponse()` or an App fallback is a snapshot: copy `event.response.headers` and binary bodies into srvx's `FastResponse`, which on Node.js holds its init by reference until the socket write. Rejected: passing the accumulator or the handler's buffer directly, which lets code running after `event.next()` rewrite a finished response (#993).
+
 ### Returning `undefined`
 
 `undefined` is **not** treated as an implicit pass-through. A handler that returns `undefined` is making a contract: it must have either called `event.next()` (forwarding the downstream result) or it must intend `event.next()` to be invoked later from an async callback.
@@ -146,7 +148,7 @@ This is what srvx calls internally when routing requests.
 
 ## Routers
 
-`App` delegates route lookup to an `IRouter`: `LinearRouter` (default), `TrieRouter`, or `SmartRouter`. Pass one with `new App({ router })` or `app.setRouter(router)`. Each router owns its lookup cache: `new TrieRouter({ cache })`, default bounded LRU (`LruCache`), `null` to disable.
+`App` delegates route lookup to an `IRouter`: `LinearRouter` (default), `TrieRouter`, or `SmartRouter`. Pass one with `new App({ router })` or `app.setRouter(router)`. Each router owns its lookup cache: `new TrieRouter({ cache: new LruCache() })`. Routers do not cache by default.
 
 ## App Nesting
 

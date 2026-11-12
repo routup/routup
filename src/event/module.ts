@@ -13,7 +13,16 @@ export type AppEventCreateContext = {
     method: MethodNameLike;
     mountPath: string;
     headers: Headers;
-    searchParams: URLSearchParams;
+    /**
+     * Parsed query string. Omit it and pass `search` to have the event
+     * parse lazily, on the first `event.searchParams` read.
+     */
+    searchParams?: URLSearchParams;
+    /**
+     * Raw query string (`?a=1`, or empty). Ignored when `searchParams`
+     * is given.
+     */
+    search?: string;
     response: AppResponse;
     store: Record<string | symbol, unknown>;
     signal: AbortSignal;
@@ -34,8 +43,6 @@ export class AppEvent implements IAppEvent {
 
     readonly headers: Headers;
 
-    readonly searchParams: URLSearchParams;
-
     readonly response: AppResponse;
 
     readonly store: Record<string | symbol, unknown>;
@@ -45,6 +52,8 @@ export class AppEvent implements IAppEvent {
     readonly appOptions: Readonly<AppOptions>;
 
     protected _context: AppEventCreateContext;
+
+    protected _searchParams: URLSearchParams | undefined;
 
     protected _nextCalled = false;
 
@@ -63,11 +72,24 @@ export class AppEvent implements IAppEvent {
         this.method = context.method;
         this.mountPath = context.mountPath;
         this.headers = context.headers;
-        this.searchParams = context.searchParams;
+        this._searchParams = context.searchParams;
         this.response = context.response;
         this.store = context.store;
         this.signal = context.signal;
         this.appOptions = context.appOptions;
+    }
+
+    /**
+     * Parsed on first read — most handlers never look at the query
+     * string. Each event owns its instance, so a handler mutating it
+     * does not affect the next one.
+     */
+    get searchParams(): URLSearchParams {
+        if (!this._searchParams) {
+            this._searchParams = new URLSearchParams(this._context.search);
+        }
+
+        return this._searchParams;
     }
 
     get nextCalled(): boolean {

@@ -6,7 +6,7 @@ const {
     TrieRouter,
     defineCoreHandler,
     serve,
-} = await import(`../dist/${runtime}.mjs`);
+} = await import(`../${process.env.DIST ?? 'dist'}/${runtime}.mjs`);
 
 const RESOLVER = process.env.RESOLVER ?? 'linear';
 const CACHE = process.env.CACHE ?? 'none';
@@ -64,4 +64,4 @@ for (const p of noise) {
 
 app.get('/', defineCoreHandler(() => ({ hello: 'world' })));
 
-serve(app, { port: 3000, hostname: '127.0.0.1' });
+serve(app, { port: Number(process.env.PORT ?? 3000), hostname: '127.0.0.1' });

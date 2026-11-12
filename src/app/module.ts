@@ -1,4 +1,5 @@
 import { markInstanceof } from '@ebec/core';
+import { FastResponse } from 'srvx';
 import { HeaderName, MethodName } from '../constants.ts';
 import { DispatcherEvent } from '../dispatcher/index.ts';
 import type { IDispatcherEvent } from '../dispatcher/index.ts';
@@ -286,7 +287,7 @@ export class App implements IApp {
         if (acceptsJson(request)) {
             headers.set('content-type', 'application/json; charset=utf-8');
 
-            return new Response(JSON.stringify({ status, message }), {
+            return new FastResponse(JSON.stringify({ status, message }), {
                 status,
                 headers,
             });
@@ -294,7 +295,7 @@ export class App implements IApp {
 
         headers.set('content-type', 'text/plain; charset=utf-8');
 
-        return new Response(message, {
+        return new FastResponse(message, {
             status,
             headers,
         });
@@ -342,7 +343,7 @@ export class App implements IApp {
                 const optionsHeaders = new Headers(event.response.headers);
 
                 optionsHeaders.set(HeaderName.ALLOW, options);
-                response = new Response(options, {
+                response = new FastResponse(options, {
                     status: event.response.status || 200,
                     headers: optionsHeaders,
                 });
