@@ -1,4 +1,5 @@
 export * from './accepts-json.ts';
+export * from './conditional.ts';
 export * from './cookie.ts';
 export * from './deadline.ts';
 export * from './header.ts';

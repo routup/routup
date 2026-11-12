@@ -1,6 +1,7 @@
 import { FastResponse } from 'srvx';
 import { createError } from '../error/create.ts';
 import type { IAppEvent } from '../event/index.ts';
+import { matchesETagList } from '../utils/conditional.ts';
 import { DEFAULT_ETAG_FN } from '../utils/etag/utils.ts';
 import type { EtagFn } from '../utils/etag/types.ts';
 
@@ -28,10 +29,6 @@ function createResponse(
         status,
         headers: [...headers],
     });
-}
-
-function stripWeakPrefix(etag: string): string {
-    return etag.startsWith('W/') ? etag.slice(2) : etag;
 }
 
 /**
@@ -81,12 +78,7 @@ async function applyEtag(
 
     headers.set('etag', etag);
 
-    const ifNoneMatch = event.headers.get('if-none-match');
-
-    const isFresh = !!ifNoneMatch &&
-        (ifNoneMatch === '*' || ifNoneMatch.split(',').some((t) => stripWeakPrefix(t.trim()) === stripWeakPrefix(etag)));
-
-    if (isFresh) {
+    if (matchesETagList(event.headers.get('if-none-match'), etag)) {
         return createResponse(null, 304, headers);
     }
 
