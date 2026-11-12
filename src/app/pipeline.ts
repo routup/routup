@@ -1,58 +1,26 @@
-import type { MethodName, MethodNameLike } from '../constants.ts';
+import type { MethodName } from '../constants.ts';
 import { createError } from '../error/create.ts';
 import { AppEvent } from '../event/module.ts';
-import type { AppEventCreateContext } from '../event/module.ts';
-import type {
-    AppRequest,
-    AppResponse,
-    IAppEvent,
-} from '../event/types.ts';
 import { HandlerType } from '../handler/constants.ts';
 import type { Handler } from '../handler/module.ts';
 import { matchHandlerMethod } from '../handler/utils.ts';
 import type { RouteMatch } from '../types.ts';
-import type { PipelineState } from './pipeline-state.ts';
-import type { AppOptions } from './types.ts';
+import type { IPipelineState } from './pipeline-state.ts';
 
 /**
- * One handler invocation of the walk: the snapshot its `AppEvent` is
- * created from, and the continuation behind `event.next()`.
- *
- * `path`, `params` and `mountPath` are copied when the walk reaches
- * the match, so the handler's event keeps them however far the walk
- * moves on afterwards.
+ * One handler invocation of the walk, as `Handler.dispatch` and the
+ * walk see it. It says nothing about how the handler's event is
+ * built.
  */
-export class PipelineStep implements AppEventCreateContext {
-    readonly state: PipelineState;
-
-    readonly request: AppRequest;
-
-    readonly params: Record<string, string | undefined>;
-
-    readonly path: string;
-
-    readonly method: MethodNameLike;
-
-    readonly mountPath: string;
-
-    readonly headers: Headers;
-
-    readonly search: string;
-
-    readonly response: AppResponse;
-
-    readonly store: Record<string | symbol, unknown>;
-
-    readonly appOptions: Readonly<AppOptions>;
-
-    signal: AbortSignal;
+export interface IPipelineStep {
+    readonly state: IPipelineState;
 
     /**
      * The event handed to the handler, once `createEvent()` built it.
      * The walk reads `event.nextCalled` to learn whether the handler
      * consumed its continuation.
      */
-    event?: AppEvent;
+    readonly event?: AppEvent;
 
     /**
      * Set by `Handler.dispatch` when the handler settled with a
@@ -61,6 +29,33 @@ export class PipelineStep implements AppEventCreateContext {
      */
     failed: boolean;
 
+    /**
+     * Build the handler's event.
+     *
+     * @param signal - Handler-scoped signal (per-handler deadline).
+     *                 Defaults to the signal of the request.
+     */
+    createEvent(signal?: AbortSignal): AppEvent;
+}
+
+/**
+ * The step of the walk. `params` and `mountPath` are copied when the
+ * walk reaches the match, so the handler's event keeps them however
+ * far the walk moves on afterwards.
+ */
+export class PipelineStep implements IPipelineStep {
+    readonly state: IPipelineState;
+
+    event?: AppEvent;
+
+    failed: boolean;
+
+    protected params: Record<string, string | undefined>;
+
+    protected mountPath: string;
+
+    protected signal: AbortSignal;
+
     protected matches: readonly RouteMatch<Handler>[];
 
     protected index: number;
@@ -68,21 +63,13 @@ export class PipelineStep implements AppEventCreateContext {
     // ------------------------------------------------------------------------
 
     constructor(
-        state: PipelineState,
+        state: IPipelineState,
         matches: readonly RouteMatch<Handler>[],
         index: number,
     ) {
         this.state = state;
-        this.request = state.request;
         this.params = state.params;
-        this.path = state.path;
-        this.method = state.method;
         this.mountPath = state.mountPath;
-        this.headers = state.request.headers;
-        this.search = state.search;
-        this.response = state.response;
-        this.store = state.store;
-        this.appOptions = state.appOptions;
         this.signal = state.signal;
         this.matches = matches;
         this.index = index;
@@ -91,18 +78,27 @@ export class PipelineStep implements AppEventCreateContext {
 
     // ------------------------------------------------------------------------
 
-    /**
-     * Build the handler's event.
-     *
-     * @param signal - Handler-scoped signal (per-handler deadline).
-     *                 Defaults to the signal of the request.
-     */
     createEvent(signal?: AbortSignal): AppEvent {
         if (signal) {
             this.signal = signal;
         }
 
-        this.event = new AppEvent(this);
+        const { state } = this;
+
+        this.event = new AppEvent({
+            request: state.request,
+            params: this.params,
+            path: state.path,
+            method: state.method,
+            mountPath: this.mountPath,
+            headers: state.request.headers,
+            search: state.search,
+            response: state.response,
+            store: state.store,
+            appOptions: state.appOptions,
+            signal: this.signal,
+            next: (_event, error) => this.next(error),
+        });
 
         return this.event;
     }
@@ -112,7 +108,7 @@ export class PipelineStep implements AppEventCreateContext {
      * at most once per step — `AppEvent.next()` is the guard and
      * caches the returned promise.
      */
-    next(_event: IAppEvent, error?: Error): Promise<Response | undefined> {
+    next(error?: Error): Promise<Response | undefined> {
         // A late call from a handler that already failed (typically
         // one that outlived its deadline) starts no walk: the walk is
         // past this step and may be inside an ERROR handler, which a
@@ -136,7 +132,7 @@ export class PipelineStep implements AppEventCreateContext {
  * an allocation per match.
  */
 function mergeMatchParams(
-    state: PipelineState,
+    state: IPipelineState,
     matchParams: Record<string, string | undefined>,
 ): void {
     // Cheap emptiness probe — short-circuits on the first own key.
@@ -173,7 +169,7 @@ function mergeMatchParams(
  * `methodsAllowed` reset here (see #913).
  */
 export async function walkMatches(
-    state: PipelineState,
+    state: IPipelineState,
     matches: readonly RouteMatch<Handler>[],
     startIndex: number,
 ): Promise<Response | undefined> {

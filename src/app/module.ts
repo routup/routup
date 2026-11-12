@@ -16,6 +16,7 @@ import { PluginRegistry, buildPluginMountKey } from '../plugin/registry.ts';
 import { normalizeAppOptions } from './options.ts';
 import { walkMatches } from './pipeline.ts';
 import { PipelineState } from './pipeline-state.ts';
+import type { IPipelineState } from './pipeline-state.ts';
 import {
     Deadline,
     acceptsJson,
@@ -236,7 +237,7 @@ export class App implements IApp {
      *
      * @internal
      */
-    protected buildAllowResponse(state: PipelineState, methods: Set<string>): Response {
+    protected buildAllowResponse(state: IPipelineState, methods: Set<string>): Response {
         addImpliedAllowedMethods(methods);
 
         const options = [...methods]
@@ -255,7 +256,7 @@ export class App implements IApp {
      *
      * @internal
      */
-    protected buildFallbackResponse(request: AppRequest, state: PipelineState, status: number, message: string): Response {
+    protected buildFallbackResponse(request: AppRequest, state: IPipelineState, status: number, message: string): Response {
         const headers = new Headers(state.response.headers);
 
         if (acceptsJson(request)) {
