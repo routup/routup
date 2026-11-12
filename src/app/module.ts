@@ -17,6 +17,7 @@ import type { Path } from '../path/index.ts';
 import { isPath } from '../path/index.ts';
 import type { Plugin, PluginInstallContext } from '../plugin/index.ts';
 import { isPlugin } from '../plugin/index.ts';
+import { PluginRegistry, buildPluginMountKey } from '../plugin/registry.ts';
 import { normalizeAppOptions } from './options.ts';
 import {
     Deadline,
@@ -99,35 +100,16 @@ export class App implements IApp {
     protected _options: Readonly<AppOptions>;
 
     /**
-     * Registry of installed plugins on this App, keyed by plugin name
-     * then by canonical mount key (the joined `this._path` +
-     * install-time `path`, falling back to `'/'` for a root install).
-     * Inner-map value is the plugin version (or `undefined`).
+     * Registry of installed plugins on this App. Mount keys are the
+     * joined `this._path` + install-time `path` (`buildPluginMountKey`).
      *
-     * Per-path keying lets `hasPluginAt` answer "is plugin X mounted at
-     * /api?" precisely. By default `install()` is permissive and
-     * appends — same `(name, key)` writes the latest version. Plugins
-     * opt into deduplication via `singleton` (any-path) or
-     * `singletonByPath` (same-path) flags.
-     *
-     * Read by `flatten()` when merging a child's registry into this
-     * one, so `parent.hasPlugin('foo')` reflects plugins installed on
-     * mounted children too.
+     * `flatten()` merges a child's registry into this one, so
+     * `parent.hasPlugin('foo')` reflects plugins installed on mounted
+     * children too.
      *
      * @protected
      */
-    protected _plugins: Map<string, Map<string, string | undefined>>;
-
-    /**
-     * Names of plugins installed with `singleton: true`. Re-installing
-     * any of these names — even at a different mount path — is a
-     * silent no-op. The claim is sticky: once a name is in here, it
-     * stays for the lifetime of the App. Propagated through
-     * `flatten()` so a child's singleton claim survives the mount.
-     *
-     * @protected
-     */
-    protected _pluginSingletons: Set<string>;
+    protected _pluginRegistry: PluginRegistry;
 
     /**
      * Every route registered on this App, in registration order.
@@ -143,8 +125,7 @@ export class App implements IApp {
         this.name = input.name;
         this._path = input.path;
 
-        this._plugins = new Map();
-        this._pluginSingletons = new Set();
+        this._pluginRegistry = new PluginRegistry();
         this.router = input.router ?? new LinearRouter<Handler>();
 
         this._options = Object.freeze(normalizeAppOptions(input.options ?? {}));
@@ -178,7 +159,7 @@ export class App implements IApp {
      * through `app.use(plugin)` to install.
      */
     get plugins(): ReadonlyMap<string, ReadonlyMap<string, string | undefined>> {
-        return this._plugins;
+        return this._pluginRegistry.entries;
     }
 
     /**
@@ -190,7 +171,7 @@ export class App implements IApp {
      * Returned as `ReadonlySet` — callers must not mutate.
      */
     get pluginSingletons(): ReadonlySet<string> {
-        return this._pluginSingletons;
+        return this._pluginRegistry.singletons;
     }
 
     /**
@@ -687,71 +668,12 @@ export class App implements IApp {
             });
         }
 
-        // Snapshot which plugin names this App already had *before* the
-        // merge. The sticky-claim propagation below uses this to honor
-        // the same first-install-wins rule `install()` enforces — a
-        // child's `singleton: true` claim must not retroactively lock a
-        // name the parent already installed non-singleton.
-        const namesBeforeMerge = new Set(this._plugins.keys());
-
-        // Merge the child's plugin registry. Each child key is in the
-        // child's canonical path space; composing with `this._path` +
-        // the mount `path` lifts it into our canonical space. The
-        // child's state is read through its public `plugins` /
-        // `pluginSingletons` getters — never the protected fields, so
-        // any future custom `IApp` only has to honor the public
-        // surface to be mountable.
-        //
-        // Note: this branch is intentionally asymmetric with
-        // `install()`. install() with `singleton: true` against an
-        // existing entry suppresses *both* the install and the claim.
-        // flatten() with a child-side sticky claim against an existing
-        // parent entry still merges the entry — child routes have
-        // already propagated unconditionally above, and suppressing
-        // the registry record too would leave `hasPluginAt` lying
-        // about routes that are demonstrably mounted.
-        for (const [name, childPaths] of child.plugins) {
-            // Sticky claim on this side blocks the merge of child's
-            // entries for that name. The claim is forward-looking; we
-            // don't drop the child's routes (registered above) — only
-            // the registry record so `hasPluginAt` reflects the locked
-            // namespace.
-            if (this._pluginSingletons.has(name)) {
-                continue;
-            }
-
-            let entry = this._plugins.get(name);
-
-            for (const [childKey, version] of childPaths) {
-                const composedKey = joinPaths(this._path, path, childKey) ?? '/';
-
-                // Silent dedup — first writer wins for the same
-                // composed key, mirroring `install()`'s silent skip.
-                if (entry && entry.has(composedKey)) {
-                    continue;
-                }
-
-                if (!entry) {
-                    entry = new Map();
-                    this._plugins.set(name, entry);
-                }
-
-                entry.set(composedKey, version);
-            }
-        }
-
-        // Propagate sticky singleton claims so a child's contract
-        // survives the mount — but only for names this App did not
-        // already have. Mirrors `install()`'s rule that a
-        // `singleton: true` install on a previously-claimed name is a
-        // silent no-op without claiming; flatten would otherwise leak
-        // child claims into a parent that had its own non-singleton
-        // install of the same name.
-        for (const name of child.pluginSingletons) {
-            if (!namesBeforeMerge.has(name)) {
-                this._pluginSingletons.add(name);
-            }
-        }
+        // Merge the child's plugin registry under `this._path` + the
+        // mount `path`. The child's state is read through its public
+        // `plugins` / `pluginSingletons` getters — never the protected
+        // fields, so any future custom `IApp` only has to honor the
+        // public surface to be mountable.
+        this._pluginRegistry.merge(child, this._path, path);
     }
 
     // --------------------------------------------------
@@ -761,9 +683,7 @@ export class App implements IApp {
      * *any* mount path.
      */
     hasPlugin(name: string): boolean {
-        const entry = this._plugins.get(name);
-
-        return !!entry && entry.size > 0;
+        return this._pluginRegistry.has(name);
     }
 
     /**
@@ -773,15 +693,7 @@ export class App implements IApp {
      * `path` to check the root install.
      */
     hasPluginAt(name: string, path?: Path): boolean {
-        const entry = this._plugins.get(name);
-
-        if (!entry) {
-            return false;
-        }
-
-        const key = joinPaths(this._path, path) ?? '/';
-
-        return entry.has(key);
+        return this._pluginRegistry.hasAt(name, buildPluginMountKey(this._path, path));
     }
 
     /**
@@ -793,15 +705,7 @@ export class App implements IApp {
      * version of a specific mount.
      */
     getPluginVersion(name: string): string | undefined {
-        const entry = this._plugins.get(name);
-
-        if (!entry) {
-            return undefined;
-        }
-
-        const first = entry.values().next();
-
-        return first.done ? undefined : first.value;
+        return this._pluginRegistry.getVersion(name);
     }
 
     /**
@@ -811,13 +715,7 @@ export class App implements IApp {
      * `app.use(path, plugin)`); omit it to read the root install.
      */
     getPluginVersionAt(name: string, path?: Path): string | undefined {
-        const entry = this._plugins.get(name);
-
-        if (!entry) {
-            return undefined;
-        }
-
-        return entry.get(joinPaths(this._path, path) ?? '/');
+        return this._pluginRegistry.getVersionAt(name, buildPluginMountKey(this._path, path));
     }
 
     /**
@@ -827,13 +725,7 @@ export class App implements IApp {
      * normalized to `'/'` for root mounts.
      */
     getPluginMountPaths(name: string): readonly string[] {
-        const entry = this._plugins.get(name);
-
-        if (!entry) {
-            return [];
-        }
-
-        return Array.from(entry.keys());
+        return this._pluginRegistry.getMountPaths(name);
     }
 
     // --------------------------------------------------
@@ -842,28 +734,9 @@ export class App implements IApp {
         plugin: Plugin,
         context: PluginInstallContext = {},
     ): this {
-        const mountKey = joinPaths(this._path, context.path) ?? '/';
-        const existing = this._plugins.get(plugin.name);
+        const mountKey = buildPluginMountKey(this._path, context.path);
 
-        // Sticky claim: a previous successful `singleton: true` install
-        // locked this name. Every further install is a silent no-op so
-        // an idempotent `app.use(plugin)` is safe to call from setup
-        // code that doesn't know whether the plugin is already mounted.
-        if (this._pluginSingletons.has(plugin.name)) {
-            return this;
-        }
-
-        // This install opts into singleton but the name is already
-        // mounted at some path. Silent skip — we do *not* retroactively
-        // claim the name singleton, so a later non-flagged install of
-        // the same name can still succeed (first-install-wins).
-        if (plugin.singleton && existing && existing.size > 0) {
-            return this;
-        }
-
-        // SingletonByPath: silently skip a second install at the same
-        // canonical mount path. Installs at other paths still proceed.
-        if (plugin.singletonByPath && existing && existing.has(mountKey)) {
+        if (!this._pluginRegistry.canInstall(plugin, mountKey)) {
             return this;
         }
 
@@ -882,18 +755,7 @@ export class App implements IApp {
             this.use(scratch);
         }
 
-        let entry = this._plugins.get(plugin.name);
-
-        if (!entry) {
-            entry = new Map();
-            this._plugins.set(plugin.name, entry);
-        }
-
-        entry.set(mountKey, plugin.version);
-
-        if (plugin.singleton) {
-            this._pluginSingletons.add(plugin.name);
-        }
+        this._pluginRegistry.record(plugin, mountKey);
 
         return this;
     }

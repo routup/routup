@@ -22,7 +22,7 @@ routup/
 │   │   ├── error/          # defineErrorHandler — error-specific handlers
 │   │   └── adapters/       # fromNodeHandler, fromNodeMiddleware, fromWebHandler
 │   ├── path/               # PathMatcher using path-to-regexp
-│   ├── plugin/             # Plugin types, checks and errors
+│   ├── plugin/             # Plugin types, checks, errors and the internal registry
 │   ├── request/            # Request helpers
 │   │   └── helpers/        # Tree-shakeable helper functions (headers, hostname, IP, etc.)
 │   ├── response/           # Response helpers
@@ -60,7 +60,7 @@ routup/
 | `handler/adapters/` | `fromNodeHandler()`, `fromNodeMiddleware()`, `fromWebHandler()` — wrap foreign handlers for use in routup |
 | `dispatcher/` | `IDispatcher` interface and the `DispatcherEvent` carried through the pipeline |
 | `event/` | `AppEvent` class and `IAppEvent` interface — the event object handed to each handler |
-| `plugin/` | Plugin contract — objects with `name` and `install(app)` |
+| `plugin/` | Plugin contract — objects with `name` and `install(app)`; internal `PluginRegistry` holds an App's install/singleton rules |
 | `path/` | `PathMatcher` — wraps `path-to-regexp` for URL pattern matching |
 | `request/helpers/` | Tree-shakeable request helpers (`getRequestHeader`, `getRequestIP`, etc.) |
 | `response/helpers/` | Tree-shakeable response helpers (`sendFile`, `sendRedirect`, `sendStream`, etc.) |
