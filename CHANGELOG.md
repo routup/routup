@@ -6,6 +6,20 @@
 * **deps:** bump negotiator from 0.6.3 to 1.0.0 ([#700](https://github.com/routup/routup/issues/700)) ([84edd77](https://github.com/routup/routup/commit/84edd778b87d8baa9072319909385324f265e8a7))
 * **deps:** bump the minorandpatch group with 3 updates ([#758](https://github.com/routup/routup/issues/758)) ([c0117b3](https://github.com/routup/routup/commit/c0117b34c81f3be26f5c60a5ce71e7e81b6ed4ed))
 
+## [6.2.0](https://github.com/routup/routup/compare/v6.1.1...v6.2.0) (2026-11-12)
+
+
+### Features
+
+* add comment support and spec-compliant line breaks to the event stream ([#992](https://github.com/routup/routup/issues/992)) ([708a821](https://github.com/routup/routup/commit/708a8210fe548f8d1c805a5e7ec2726ed4751816))
+
+
+### Bug Fixes
+
+* **deps:** bump codecov/codecov-action from 7.0.0 to 7.1.1 ([#970](https://github.com/routup/routup/issues/970)) ([5d3933c](https://github.com/routup/routup/commit/5d3933c89523d3ef236fba2b747915e658aadb7e))
+* **deps:** bump tada5hi/monoship from 2.1.0 to 2.2.1 ([#991](https://github.com/routup/routup/issues/991)) ([b87ed8b](https://github.com/routup/routup/commit/b87ed8b2944a71edee86feb86f394e3ae75dd27e))
+* **node:** make toNodeHandler assignable to http and http2 servers ([#990](https://github.com/routup/routup/issues/990)) ([1f41fa5](https://github.com/routup/routup/commit/1f41fa504f555656010a79305bfe382c3936e022))
+
 ## [6.1.1](https://github.com/routup/routup/compare/v6.1.0...v6.1.1) (2026-11-08)
 
 
