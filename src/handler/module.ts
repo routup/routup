@@ -139,6 +139,9 @@ export class Handler {
                 await this.config.onAfter(handlerEvent, response);
             }
         } catch (e) {
+            // From here on a late `event.next()` of this handler must
+            // not start a walk (see `PipelineStep.next`).
+            step.failed = true;
             state.error = createError(e);
 
             // Fire `onError` even if the error came from `onBefore`

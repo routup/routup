@@ -54,6 +54,13 @@ export class PipelineStep implements AppEventCreateContext {
      */
     event?: AppEvent;
 
+    /**
+     * Set by `Handler.dispatch` when the handler settled with a
+     * failure (a throw, or its deadline). The walk has moved on from
+     * this step by then, so its continuation is inert.
+     */
+    failed: boolean;
+
     protected matches: readonly RouteMatch<Handler>[];
 
     protected index: number;
@@ -79,6 +86,7 @@ export class PipelineStep implements AppEventCreateContext {
         this.signal = state.signal;
         this.matches = matches;
         this.index = index;
+        this.failed = false;
     }
 
     // ------------------------------------------------------------------------
@@ -105,6 +113,14 @@ export class PipelineStep implements AppEventCreateContext {
      * caches the returned promise.
      */
     next(_event: IAppEvent, error?: Error): Promise<Response | undefined> {
+        // A late call from a handler that already failed (typically
+        // one that outlived its deadline) starts no walk: the walk is
+        // past this step and may be inside an ERROR handler, which a
+        // walk from `index + 1` would enter a second time.
+        if (this.failed) {
+            return Promise.resolve(undefined);
+        }
+
         if (error) {
             this.state.error = createError(error);
         }
