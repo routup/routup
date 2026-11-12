@@ -15,7 +15,9 @@ import type { EtagFn } from '../utils/etag/types.ts';
  * `FastResponse` keeps its init by reference until it is sent, so the
  * headers are copied here. The response must be a snapshot — a
  * middleware touching `event.response.headers` after `event.next()`
- * resolved must not rewrite a response that was already built.
+ * resolved must not rewrite a response that was already built. Binary
+ * bodies are snapshotted the same way by `toResponse()`, so a handler
+ * reusing its buffer cannot change what the client receives.
  */
 function createResponse(
     body: BodyInit | null,
@@ -161,7 +163,13 @@ export function toResponse(
                 headers.set('content-type', 'application/octet-stream');
             }
 
-            return createResponse(value as BodyInit, status, headers);
+            // Copy: `new Uint8Array(view)` takes exactly the view's
+            // bytes, not the whole backing buffer.
+            const body = value instanceof ArrayBuffer ?
+                value.slice(0) :
+                new Uint8Array(value);
+
+            return createResponse(body, status, headers);
         }
 
         if (value instanceof ReadableStream) {

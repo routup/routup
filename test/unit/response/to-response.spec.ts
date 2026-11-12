@@ -95,6 +95,37 @@ describe('src/response/to-response', () => {
         expect(result!.headers.get('content-type')).toBe('application/octet-stream');
     });
 
+    it('should snapshot a Uint8Array body', async () => {
+        const event = createTestEvent('/');
+        const arr = new Uint8Array([1, 2, 3]);
+        const result = await toResponse(arr, event);
+
+        arr.fill(0);
+
+        expect([...new Uint8Array(await result!.arrayBuffer())]).toEqual([1, 2, 3]);
+    });
+
+    it('should snapshot an ArrayBuffer body', async () => {
+        const event = createTestEvent('/');
+        const arr = new Uint8Array([4, 5, 6]);
+        const result = await toResponse(arr.buffer, event);
+
+        arr.fill(0);
+
+        expect([...new Uint8Array(await result!.arrayBuffer())]).toEqual([4, 5, 6]);
+    });
+
+    it('should send exactly the bytes of a Uint8Array view', async () => {
+        const event = createTestEvent('/');
+        const backing = new Uint8Array([9, 1, 2, 3, 9]);
+        const view = backing.subarray(1, 4);
+        const result = await toResponse(view, event);
+
+        backing.fill(0);
+
+        expect([...new Uint8Array(await result!.arrayBuffer())]).toEqual([1, 2, 3]);
+    });
+
     it('should convert ReadableStream to streaming response', async () => {
         const event = createTestEvent('/');
         const stream = new ReadableStream({

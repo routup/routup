@@ -1,6 +1,5 @@
-import { spawn } from 'node:child_process';
-import { setTimeout as wait } from 'node:timers/promises';
 import autocannon from 'autocannon';
+import { startServer } from './server-process.mjs';
 
 function readPositiveNumber(name, fallback, { integer = false } = {}) {
     const raw = process.env[name];
@@ -28,14 +27,16 @@ const PIPELINING = readPositiveNumber('PIPELINING', 10, { integer: true });
 const URL = process.env.URL ?? 'http://127.0.0.1:3000';
 const RUNTIME = process.env.RUNTIME ?? 'node';
 const RUNTIME_BIN = process.env.RUNTIME_BIN ?? RUNTIME;
+const PORT = new globalThis.URL(URL).port || '80';
 
 async function runOne() {
-    const server = spawn(RUNTIME_BIN, ['benchmark/server.mjs'], { stdio: ['ignore', 'ignore', 'inherit'] });
+    const server = await startServer({
+        bin: RUNTIME_BIN,
+        port: PORT,
+        url: URL,
+    });
 
     try {
-        // wait for server to bind
-        await wait(800);
-
         // warmup
         await autocannon({
             url: URL,
@@ -52,18 +53,13 @@ async function runOne() {
             duration: DURATION,
         });
 
+        server.assertAlive();
+
         return result;
     } finally {
-        server.kill('SIGINT');
-        // give srvx the configured 5s grace... but cap at 1s for benchmarks
-        await wait(800);
-
-        // `server.killed` flips when the signal is sent, not when the
-        // process exits — check exit state directly so SIGKILL actually
-        // fires when SIGINT didn't take.
-        if (server.exitCode === null && server.signalCode === null) {
-            server.kill('SIGKILL');
-        }
+        // give srvx the configured 5s grace... but cap at 0.8s for
+        // benchmarks, then SIGKILL
+        await server.stop('SIGINT', 800);
     }
 }
 
