@@ -6,6 +6,24 @@
 * **deps:** bump negotiator from 0.6.3 to 1.0.0 ([#700](https://github.com/routup/routup/issues/700)) ([84edd77](https://github.com/routup/routup/commit/84edd778b87d8baa9072319909385324f265e8a7))
 * **deps:** bump the minorandpatch group with 3 updates ([#758](https://github.com/routup/routup/issues/758)) ([c0117b3](https://github.com/routup/routup/commit/c0117b34c81f3be26f5c60a5ce71e7e81b6ed4ed))
 
+## [6.3.0](https://github.com/routup/routup/compare/v6.2.0...v6.3.0) (2026-11-12)
+
+
+### Features
+
+* **event:** rename AppEventCreateContext and add pipeline interfaces ([#998](https://github.com/routup/routup/issues/998)) ([8a72cd3](https://github.com/routup/routup/commit/8a72cd3570827c89a788a9a4183d3cce48077596))
+
+
+### Bug Fixes
+
+* **deps:** bump actions/checkout from 6 to 7 ([#933](https://github.com/routup/routup/issues/933)) ([141d7f9](https://github.com/routup/routup/commit/141d7f9f67f8f920301910477a31101ac3bef77f))
+* return 304 from sendFile and deepen the dispatch modules ([#995](https://github.com/routup/routup/issues/995)) ([fa1a9a0](https://github.com/routup/routup/commit/fa1a9a02160d94477831ab971a21af74b7220c07))
+
+
+### Performance Improvements
+
+* build responses with srvx FastResponse and trim per-request work ([#993](https://github.com/routup/routup/issues/993)) ([2a718f8](https://github.com/routup/routup/commit/2a718f85e9b556fd81f5ad36428c93958c3ad5be))
+
 ## [6.2.0](https://github.com/routup/routup/compare/v6.1.1...v6.2.0) (2026-11-12)
 
 
