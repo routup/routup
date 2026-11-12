@@ -90,7 +90,7 @@ describe('src/utils/deadline', () => {
         expect(deadline.signal.reason).toBe(reason);
     });
 
-    it('should clear the timer and remove the parent listener after the work resolves', async () => {
+    it('should clear the timer but keep the parent linked after the work resolves', async () => {
         const parent = new AbortController();
         const removeSpy = vi.spyOn(parent.signal, 'removeEventListener');
         const deadline = new Deadline(100, parent.signal);
@@ -102,13 +102,17 @@ describe('src/utils/deadline', () => {
         await promise;
 
         expect(vi.getTimerCount()).toBe(0);
-        expect(removeSpy).toHaveBeenCalledWith('abort', expect.any(Function));
+        expect(removeSpy).not.toHaveBeenCalled();
 
-        parent.abort(new Error('late'));
-        expect(deadline.signal.aborted).toBe(false);
+        const reason = new Error('late');
+
+        parent.abort(reason);
+
+        expect(deadline.signal.aborted).toBe(true);
+        expect(deadline.signal.reason).toBe(reason);
     });
 
-    it('should clear the timer and remove the parent listener after the work rejects', async () => {
+    it('should clear the timer but keep the parent linked after the work rejects', async () => {
         const parent = new AbortController();
         const removeSpy = vi.spyOn(parent.signal, 'removeEventListener');
         const deadline = new Deadline(100, parent.signal);
@@ -118,7 +122,22 @@ describe('src/utils/deadline', () => {
         await expect(promise).rejects.toThrow('boom');
 
         expect(vi.getTimerCount()).toBe(0);
+        expect(removeSpy).not.toHaveBeenCalled();
+    });
+
+    it('should unlink the parent on release after the work settled', async () => {
+        const parent = new AbortController();
+        const removeSpy = vi.spyOn(parent.signal, 'removeEventListener');
+        const deadline = new Deadline(100, parent.signal);
+
+        await deadline.run(() => 'ok');
+        deadline.release();
+
         expect(removeSpy).toHaveBeenCalledWith('abort', expect.any(Function));
+        expect(vi.getTimerCount()).toBe(0);
+
+        parent.abort(new Error('late'));
+        expect(deadline.signal.aborted).toBe(false);
     });
 
     it('should clear the timer after the deadline fires', async () => {

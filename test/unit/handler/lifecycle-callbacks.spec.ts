@@ -216,4 +216,29 @@ describe('handler lifecycle callbacks', () => {
         expect(await res.text()).toBe('recovered');
         expect(order).toEqual(['before', 'after:200']);
     });
+
+    it('keeps a timed handler signal linked to the request signal during onAfter', async () => {
+        const controller = new AbortController();
+        const reason = new Error('client gone');
+        let abortedInAfter = false;
+        let reasonInAfter: unknown;
+
+        const app = new App();
+
+        app.get('/', defineCoreHandler({
+            timeout: 1000,
+            onAfter: (event) => {
+                controller.abort(reason);
+                abortedInAfter = event.signal.aborted;
+                reasonInAfter = event.signal.reason;
+            },
+            fn: () => 'ok',
+        }));
+
+        const res = await app.fetch(createTestRequest('/', { signal: controller.signal }));
+
+        expect(res.status).toBe(200);
+        expect(abortedInAfter).toBe(true);
+        expect(reasonInAfter).toBe(reason);
+    });
 });

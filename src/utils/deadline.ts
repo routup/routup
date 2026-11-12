@@ -53,7 +53,7 @@ export class Deadline {
      * Race `work` against the deadline. On expiry the signal aborts and
      * the returned promise rejects with the 408 error; a rejection from
      * `work` passes through unchanged. Once settled, the timer is
-     * cleared and the parent listener removed.
+     * cleared; the signal stays linked to the parent until `release()`.
      */
     async run<T>(work: () => T | Promise<T>): Promise<T> {
         try {
@@ -67,13 +67,15 @@ export class Deadline {
                 }),
             ]);
         } finally {
-            this.release();
+            clearTimeout(this.timerId);
+            this.timerId = undefined;
         }
     }
 
     /**
-     * Clear the timer and remove the parent listener. Idempotent; covers
-     * callers that fail before reaching `run()`.
+     * Clear the timer and remove the parent listener. Idempotent; the
+     * caller invokes it once the signal's consumer is done, including
+     * when it fails before reaching `run()`.
      */
     release(): void {
         clearTimeout(this.timerId);
