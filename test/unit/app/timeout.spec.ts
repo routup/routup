@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     App,
     defineCoreHandler,
+    defineErrorHandler,
 } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
@@ -330,6 +331,99 @@ describe('src/app/timeout', () => {
             const response = await router.fetch(createTestRequest('/'));
 
             expect(response.status).toBe(408);
+        });
+    });
+
+    describe('late next() after a per-handler timeout', () => {
+        const sleep = (ms: number) => new Promise<void>((resolve) => {
+            setTimeout(resolve, ms);
+        });
+
+        it('should not re-enter an error handler that is still running', async () => {
+            // Overridable, so the error handler can outlive the 20ms
+            // default that the middleware runs under.
+            const app = new App({
+                options: {
+                    handlerTimeout: 20,
+                    handlerTimeoutOverridable: true,
+                },
+            });
+            const entered: number[] = [];
+            let routeDispatched = 0;
+            let lateResult: Response | undefined | null = null;
+            let lateSettled!: () => void;
+            const late = new Promise<void>((resolve) => {
+                lateSettled = resolve;
+            });
+
+            app.use(defineCoreHandler(async (event) => {
+                await sleep(60);
+
+                // The handler timed out at 20ms; this call comes late.
+                const pending = event.next();
+
+                expect(event.nextCalled).toBe(true);
+                expect(event.nextResult).toBe(pending);
+
+                lateResult = await pending;
+                lateSettled();
+
+                return lateResult;
+            }));
+
+            app.get('/', defineCoreHandler(() => {
+                routeDispatched++;
+
+                return 'route';
+            }));
+
+            app.use(defineErrorHandler({
+                timeout: 1000,
+                fn: async (error, event) => {
+                    entered.push(error.status);
+
+                    // Still in flight when the late next() arrives.
+                    await sleep(120);
+
+                    event.response.status = error.status;
+
+                    return 'handled';
+                },
+            }));
+
+            const response = await app.fetch(createTestRequest('/'));
+
+            await late;
+
+            expect(entered).toEqual([408]);
+            expect(routeDispatched).toBe(0);
+            expect(lateResult).toBeUndefined();
+            expect(response.status).toBe(408);
+            expect(await response.text()).toBe('handled');
+        });
+
+        it('should still reach a later error handler when a timed handler throws after next()', async () => {
+            const app = new App({ options: { handlerTimeout: 500 } });
+            const entered: string[] = [];
+
+            app.use(defineCoreHandler(async (event) => {
+                await event.next();
+
+                throw new Error('post-next failure');
+            }));
+
+            app.use(defineCoreHandler((event) => event.next()));
+
+            app.use(defineErrorHandler((error) => {
+                entered.push(error.message);
+
+                return 'handled';
+            }));
+
+            const response = await app.fetch(createTestRequest('/'));
+
+            expect(entered).toEqual(['post-next failure']);
+            expect(await response.text()).toBe('handled');
         });
     });
 });

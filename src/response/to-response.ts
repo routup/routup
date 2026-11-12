@@ -1,13 +1,14 @@
-import { FastResponse } from 'srvx';
 import { createError } from '../error/create.ts';
 import type { IAppEvent } from '../event/index.ts';
+import { matchesETagList } from '../utils/conditional.ts';
 import { DEFAULT_ETAG_FN } from '../utils/etag/utils.ts';
 import type { EtagFn } from '../utils/etag/types.ts';
+import { createFastResponse } from '../utils/response.ts';
 
 /**
  * Build the final `Response` from the accumulated status and headers.
  *
- * Uses srvx's `FastResponse`: on Node.js the adapter writes its body
+ * Uses srvx's `FastResponse` (via `createFastResponse()`): on Node.js the adapter writes its body
  * and headers straight to the socket instead of materializing a Web
  * `Response` and draining it as a stream; on every other runtime it is
  * the global `Response`.
@@ -24,14 +25,7 @@ function createResponse(
     status: number,
     headers: Headers,
 ): Response {
-    return new FastResponse(body, {
-        status,
-        headers: [...headers],
-    });
-}
-
-function stripWeakPrefix(etag: string): string {
-    return etag.startsWith('W/') ? etag.slice(2) : etag;
+    return createFastResponse(body, status, [...headers]);
 }
 
 /**
@@ -81,12 +75,7 @@ async function applyEtag(
 
     headers.set('etag', etag);
 
-    const ifNoneMatch = event.headers.get('if-none-match');
-
-    const isFresh = !!ifNoneMatch &&
-        (ifNoneMatch === '*' || ifNoneMatch.split(',').some((t) => stripWeakPrefix(t.trim()) === stripWeakPrefix(etag)));
-
-    if (isFresh) {
+    if (matchesETagList(event.headers.get('if-none-match'), etag)) {
         return createResponse(null, 304, headers);
     }
 

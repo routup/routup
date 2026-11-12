@@ -12,6 +12,7 @@ import {
     App,
     defineCoreHandler,
     defineErrorHandler,
+    sendFile,
     toNodeHandler,
 } from '../../../src/_entries/node.ts';
 
@@ -78,11 +79,25 @@ describe('routing/wire', () => {
         path: event.path,
         q: event.searchParams.getAll('q'),
     })));
+    app.get('/file', defineCoreHandler((event) => sendFile(event, {
+        stats: { size: 4, mtime: new Date('2024-01-01T10:00:00.000Z') },
+        content: () => new TextEncoder().encode('file'),
+    })));
     app.get('/throw', defineCoreHandler(() => {
         throw new Error('boom');
     }));
     app.get('/handled', defineCoreHandler(() => {
         throw new Error('handled');
+    }));
+    app.get('/invalid-status', defineCoreHandler((event) => {
+        event.response.status = 999;
+
+        return 'x';
+    }));
+    app.get('/null-body-status', defineCoreHandler((event) => {
+        event.response.status = 204;
+
+        return 'body';
     }));
     app.use(defineErrorHandler((error, event) => {
         if (error.message !== 'handled') {
@@ -218,6 +233,25 @@ describe('routing/wire', () => {
         expect(await missing.text()).toBe('Not Found');
     });
 
+    it.each([
+        ['/invalid-status', /200 to 599/],
+        ['/null-body-status', /204/],
+    ])('sends %s as a 500 through the pipeline, not with the invalid status', async (path, message) => {
+        const json = await fetch(`${origin}${path}`, { headers: { accept: 'application/json' } });
+
+        expect(json.status).toBe(500);
+
+        const body = await json.json();
+
+        expect(body.status).toBe(500);
+        expect(body.message).toMatch(message);
+
+        const text = await fetch(`${origin}${path}`, { headers: { accept: 'text/plain' } });
+
+        expect(text.status).toBe(500);
+        expect(await text.text()).toMatch(message);
+    });
+
     it('reads path, params and query from the incoming request', async () => {
         const response = await fetch(`${origin}/users/a%20b?q=1&q=x%26y`);
 
@@ -233,6 +267,22 @@ describe('routing/wire', () => {
 
         expect(response.status).toBe(200);
         expect(response.headers.get('content-type')).toBe('application/json; charset=utf-8');
+        expect(await response.text()).toBe('');
+    });
+
+    it('answers a conditional file request with 304 and no body', async () => {
+        const fresh = await fetch(`${origin}/file`);
+        const etag = fresh.headers.get('etag')!;
+
+        expect(fresh.status).toBe(200);
+        expect(await fresh.text()).toBe('file');
+
+        const response = await fetch(`${origin}/file`, { headers: { 'if-none-match': etag } });
+
+        expect(response.status).toBe(304);
+        expect(response.headers.get('etag')).toBe(etag);
+        expect(response.headers.get('last-modified')).toBe('Mon, 01 Jan 2024 10:00:00 GMT');
+        expect(response.headers.has('content-length')).toBe(false);
         expect(await response.text()).toBe('');
     });
 });

@@ -1,25 +1,26 @@
 import { markInstanceof } from '@ebec/core';
-import { FastResponse } from 'srvx';
 import { HeaderName, MethodName } from '../constants.ts';
-import { DispatcherEvent } from '../dispatcher/index.ts';
-import type { IDispatcherEvent } from '../dispatcher/index.ts';
 import type { AppRequest } from '../event/index.ts';
 import { createError } from '../error/index.ts';
 import {
     Handler,
     type HandlerOptions,
-    HandlerType,
     isHandler,
     isHandlerOptions,
-    matchHandlerMethod,
 } from '../handler/index.ts';
 import type { Path } from '../path/index.ts';
 import { isPath } from '../path/index.ts';
 import type { Plugin, PluginInstallContext } from '../plugin/index.ts';
 import { isPlugin } from '../plugin/index.ts';
+import { PluginRegistry, buildPluginMountKey } from '../plugin/registry.ts';
 import { normalizeAppOptions } from './options.ts';
+import { walkMatches } from './pipeline.ts';
+import { PipelineState } from './pipeline-state.ts';
 import {
+    Deadline,
     acceptsJson,
+    addImpliedAllowedMethods,
+    createFastResponse,
     joinPaths,
     withLeadingSlash,
 } from '../utils/index.ts';
@@ -32,37 +33,7 @@ import type {
     IApp,
 } from './types.ts';
 import { isAppInstance } from './check.ts';
-import type { Route, RouteMatch } from '../types.ts';
-
-/**
- * Merge resolver-supplied path params into `event.params` *only* when
- * `match.params` actually has keys. Skipping the object spread on the
- * empty-params path (every static route, every middleware match) saves
- * an allocation per match — the hottest path in static-route apps.
- */
-function mergeMatchParams(
-    event: IDispatcherEvent,
-    matchParams: Record<string, string | undefined>,
-): void {
-    // Cheap emptiness probe — short-circuits on the first own key.
-    let hasKeys = false;
-
-    // eslint-disable-next-line no-unreachable-loop
-    for (const _k in matchParams) {
-        hasKeys = true;
-
-        break;
-    }
-
-    if (!hasKeys) {
-        return;
-    }
-
-    event.params = {
-        ...event.params,
-        ...matchParams,
-    };
-}
+import type { Route } from '../types.ts';
 
 export class App implements IApp {
     /**
@@ -98,35 +69,17 @@ export class App implements IApp {
     protected _options: Readonly<AppOptions>;
 
     /**
-     * Registry of installed plugins on this App, keyed by plugin name
-     * then by canonical mount key (the joined `this._path` +
-     * install-time `path`, falling back to `'/'` for a root install).
-     * Inner-map value is the plugin version (or `undefined`).
+     * Registry of installed plugins on this App. Mount keys are the
+     * joined `this._path` + install-time `path` (`buildPluginMountKey`).
      *
-     * Per-path keying lets `hasPluginAt` answer "is plugin X mounted at
-     * /api?" precisely. By default `install()` is permissive and
-     * appends — same `(name, key)` writes the latest version. Plugins
-     * opt into deduplication via `singleton` (any-path) or
-     * `singletonByPath` (same-path) flags.
+     * `flatten()` merges a child's registry into this one, so
+     * `parent.hasPlugin('foo')` reflects plugins installed on mounted
+     * children too.
      *
-     * Read by `flatten()` when merging a child's registry into this
-     * one, so `parent.hasPlugin('foo')` reflects plugins installed on
-     * mounted children too.
-     *
+     * @internal
      * @protected
      */
-    protected _plugins: Map<string, Map<string, string | undefined>>;
-
-    /**
-     * Names of plugins installed with `singleton: true`. Re-installing
-     * any of these names — even at a different mount path — is a
-     * silent no-op. The claim is sticky: once a name is in here, it
-     * stays for the lifetime of the App. Propagated through
-     * `flatten()` so a child's singleton claim survives the mount.
-     *
-     * @protected
-     */
-    protected _pluginSingletons: Set<string>;
+    protected _pluginRegistry: PluginRegistry;
 
     /**
      * Every route registered on this App, in registration order.
@@ -142,8 +95,7 @@ export class App implements IApp {
         this.name = input.name;
         this._path = input.path;
 
-        this._plugins = new Map();
-        this._pluginSingletons = new Set();
+        this._pluginRegistry = new PluginRegistry();
         this.router = input.router ?? new LinearRouter<Handler>();
 
         this._options = Object.freeze(normalizeAppOptions(input.options ?? {}));
@@ -177,7 +129,7 @@ export class App implements IApp {
      * through `app.use(plugin)` to install.
      */
     get plugins(): ReadonlyMap<string, ReadonlyMap<string, string | undefined>> {
-        return this._plugins;
+        return this._pluginRegistry.entries;
     }
 
     /**
@@ -189,7 +141,7 @@ export class App implements IApp {
      * Returned as `ReadonlySet` — callers must not mutate.
      */
     get pluginSingletons(): ReadonlySet<string> {
-        return this._pluginSingletons;
+        return this._pluginRegistry.singletons;
     }
 
     /**
@@ -224,279 +176,97 @@ export class App implements IApp {
     // --------------------------------------------------
 
     /**
-     * Public entry point — creates a DispatcherEvent from the request,
-     * runs the pipeline, and returns a Response (with 404/500 fallbacks).
+     * Public entry point, and the only one: looks up the matches of
+     * the request, walks them under the global deadline, and returns
+     * a Response (with the `Allow` / 404 / error fallbacks).
      */
     async fetch(request: AppRequest): Promise<Response> {
-        const event = new DispatcherEvent(request);
+        const state = new PipelineState(request, this._options);
 
         let response: Response | undefined;
 
         try {
+            const matches = this.router.lookup(state.path, state.method);
             const timeoutMs = this._options.timeout;
 
             if (timeoutMs) {
-                const controller = new AbortController();
+                // Not released: the signal stays linked to the request
+                // signal after the response is built, so a body that
+                // streams afterwards still sees the client going away.
+                const deadline = new Deadline(timeoutMs, request.signal);
 
-                event.signal = controller.signal;
+                state.signal = deadline.signal;
 
-                let timerId: ReturnType<typeof setTimeout> | undefined;
-
-                try {
-                    response = await Promise.race([
-                        this.dispatch(event),
-                        new Promise<never>((_, reject) => {
-                            timerId = setTimeout(() => {
-                                controller.abort();
-                                reject(createError({
-                                    status: 408,
-                                    message: 'Request Timeout',
-                                }));
-                            }, timeoutMs);
-                        }),
-                    ]);
-                } finally {
-                    clearTimeout(timerId);
-                }
+                response = await deadline.run(() => walkMatches(state, matches, 0));
             } else {
-                response = await this.dispatch(event);
+                response = await walkMatches(state, matches, 0);
+            }
+
+            // An `OPTIONS` request no handler answered, and none
+            // failed on, gets the methods of the matched routes.
+            if (
+                !state.error &&
+                !state.dispatched &&
+                state.methodsAllowed
+            ) {
+                response = this.buildAllowResponse(state, state.methodsAllowed);
             }
         } catch (e) {
-            event.error = createError(e);
+            state.error = createError(e);
         }
 
         if (response) {
             return response;
         }
 
-        if (event.error) {
+        if (state.error) {
             return this.buildFallbackResponse(
                 request,
-                event,
-                event.error.status || 500,
-                event.error.message,
+                state,
+                state.error.status || 500,
+                state.error.message,
             );
         }
 
-        return this.buildFallbackResponse(request, event, 404, 'Not Found');
+        return this.buildFallbackResponse(request, state, 404, 'Not Found');
     }
 
-    protected buildFallbackResponse(request: AppRequest, event: IDispatcherEvent, status: number, message: string): Response {
-        const headers = new Headers(event.response.headers);
+    /**
+     * Build the `Allow` response of an unanswered `OPTIONS` request.
+     *
+     * @internal
+     */
+    protected buildAllowResponse(state: PipelineState, methods: Set<string>): Response {
+        addImpliedAllowedMethods(methods);
+
+        const options = [...methods]
+            .map((key) => key.toUpperCase())
+            .join(',');
+
+        const headers = new Headers(state.response.headers);
+
+        headers.set(HeaderName.ALLOW, options);
+
+        return createFastResponse(options, state.response.status || 200, headers);
+    }
+
+    /**
+     * Build the 404 / error response of a request no handler answered.
+     *
+     * @internal
+     */
+    protected buildFallbackResponse(request: AppRequest, state: PipelineState, status: number, message: string): Response {
+        const headers = new Headers(state.response.headers);
 
         if (acceptsJson(request)) {
             headers.set('content-type', 'application/json; charset=utf-8');
 
-            return new FastResponse(JSON.stringify({ status, message }), {
-                status,
-                headers,
-            });
+            return createFastResponse(JSON.stringify({ status, message }), status, headers);
         }
 
         headers.set('content-type', 'text/plain; charset=utf-8');
 
-        return new FastResponse(message, {
-            status,
-            headers,
-        });
-    }
-
-    // --------------------------------------------------
-
-    async dispatch(
-        event: IDispatcherEvent,
-    ): Promise<Response | undefined> {
-        const savedPath = event.path;
-        const savedMountPath = event.mountPath;
-        const savedParams = event.params;
-        const savedAppOptions = event.appOptions;
-        const wasDispatching = event.isDispatching;
-
-        const isRoot = !wasDispatching;
-
-        event.appOptions = this._options;
-        event.isDispatching = true;
-
-        let response: Response | undefined;
-
-        try {
-            const matches = this.router.lookup(event.path, event.method);
-
-            response = await this.runMatches(event, matches, 0);
-
-            // OPTIONS auto-Allow synthesis — runs only on the root and
-            // only when no handler produced a response or an error.
-            if (
-                !event.error &&
-                !event.dispatched &&
-                isRoot &&
-                event.method === MethodName.OPTIONS
-            ) {
-                if (event.methodsAllowed.has(MethodName.GET)) {
-                    event.methodsAllowed.add(MethodName.HEAD);
-                }
-
-                const options = [...event.methodsAllowed]
-                    .map((key) => key.toUpperCase())
-                    .join(',');
-
-                const optionsHeaders = new Headers(event.response.headers);
-
-                optionsHeaders.set(HeaderName.ALLOW, options);
-                response = new FastResponse(options, {
-                    status: event.response.status || 200,
-                    headers: optionsHeaders,
-                });
-
-                event.dispatched = true;
-            }
-        } finally {
-            event.appOptions = savedAppOptions;
-            event.isDispatching = wasDispatching;
-
-            // Restore routing state when this App did not produce a
-            // response, so a re-entrant dispatch caller (anyone
-            // invoking another App's `dispatch` on the same event
-            // afterwards) sees its own pre-dispatch state.
-            if (!event.dispatched) {
-                event.path = savedPath;
-                event.mountPath = savedMountPath;
-                event.params = savedParams;
-            }
-        }
-
-        return response;
-    }
-
-    /**
-     * Walk the matched routes for the current event, dispatching each
-     * handler in order. Re-entered (recursively) from the `setNext`
-     * continuation so `event.next()` resumes from the next match.
-     *
-     * The match list is captured once per dispatch — there is no
-     * mid-walk path-rewrite refresh. `IAppEvent.path` is a snapshot
-     * on the handler's facade event (see `event/module.ts`), so user
-     * middleware cannot mutate the dispatcher's path before calling
-     * `event.next()`. If a future API surface lets middleware rewrite
-     * paths end-to-end, this loop will need a per-call refresh + a
-     * `methodsAllowed` reset (see closed issue #913).
-     */
-    protected async runMatches(
-        event: IDispatcherEvent,
-        matches: readonly RouteMatch<Handler>[],
-        startIndex: number,
-    ): Promise<Response | undefined> {
-        let i = startIndex;
-        let response: Response | undefined;
-
-        while (!event.dispatched && i < matches.length) {
-            const match = matches[i]!;
-            const handler = match.route.data;
-
-            // Skip handlers that don't fit the current error state:
-            // CORE handlers only run when no error is pending;
-            // ERROR handlers only run when one is.
-            if (
-                (event.error && handler.type === HandlerType.CORE) ||
-                (!event.error && handler.type === HandlerType.ERROR)
-            ) {
-                i++;
-
-                continue;
-            }
-
-            const { method } = match.route;
-
-            if (method) {
-                event.methodsAllowed.add(method);
-            }
-
-            if (!matchHandlerMethod(method, event.method as MethodName)) {
-                i++;
-
-                continue;
-            }
-
-            mergeMatchParams(event, match.params);
-
-            // Surface the matched prefix as `event.mountPath` for the
-            // duration of this handler so static-asset / mount-aware
-            // helpers can strip it off `event.path`. Save and restore
-            // around the dispatch so siblings see their own prefixes.
-            const savedMountPath = event.mountPath;
-
-            if (typeof match.path === 'string') {
-                event.mountPath = match.path;
-            }
-
-            const capturedMatches = matches;
-            const nextIndex = i + 1;
-
-            // Consumption of THIS iteration's continuation is tracked in a
-            // closure: the dispatcher's `_nextCalled` guard is a single
-            // shared field that every deeper `setNext` resets, so after the
-            // dispatch returns it reflects the deepest walked level — not
-            // whether this handler called its `next()`. (The early-return on
-            // a set `nextResult` is defensive only: under the current
-            // dispatcher invariants a consumed continuation cannot be
-            // re-invoked — the facade guard dedupes same-handler double
-            // next() calls, and `setNext` replaces `_next` whenever it
-            // resets `_nextCalled`.)
-            let nextResult: Promise<Response | undefined> | undefined;
-
-            event.setNext(async (error?: Error) => {
-                // Record the error BEFORE the cache short-circuit: even on
-                // the (defensively guarded, normally unreachable) replay of
-                // an already-consumed continuation, an error argument is a
-                // signal the walk must not silently discard — the loop's
-                // error-state skip logic picks it up either way.
-                if (error) {
-                    event.error = createError(error);
-                }
-
-                if (nextResult) {
-                    return nextResult;
-                }
-
-                nextResult = this.runMatches(event, capturedMatches, nextIndex);
-
-                return nextResult;
-            });
-
-            try {
-                const dispatchResponse = await handler.dispatch(event);
-
-                if (dispatchResponse) {
-                    response = dispatchResponse;
-                    event.dispatched = true;
-                } else if (nextResult) {
-                    // The handler consumed its continuation: matches
-                    // `nextIndex..end` were already walked (recursively)
-                    // and produced no response. Falling through to `i++`
-                    // would walk the same suffix AGAIN — exponentially so
-                    // for a chain of next()-calling middlewares on a
-                    // request nothing answers (#946). The walk is
-                    // complete; stop here. (A handler that THROWS after
-                    // calling next() still falls through via the catch —
-                    // an error handler later in the chain must see the
-                    // error. Error flow is FORWARD-ONLY: an ERROR handler
-                    // registered BEFORE the failure point is not revisited
-                    // — the pre-#946 re-walk reached it by accident, and
-                    // multiple times.)
-                    break;
-                }
-            } catch (e) {
-                event.error = createError(e);
-                // Fall through to the next match — could be an error
-                // handler registered later in the chain.
-            } finally {
-                event.mountPath = savedMountPath;
-            }
-
-            i++;
-        }
-
-        return response;
+        return createFastResponse(message, status, headers);
     }
 
     // --------------------------------------------------
@@ -701,71 +471,12 @@ export class App implements IApp {
             });
         }
 
-        // Snapshot which plugin names this App already had *before* the
-        // merge. The sticky-claim propagation below uses this to honor
-        // the same first-install-wins rule `install()` enforces — a
-        // child's `singleton: true` claim must not retroactively lock a
-        // name the parent already installed non-singleton.
-        const namesBeforeMerge = new Set(this._plugins.keys());
-
-        // Merge the child's plugin registry. Each child key is in the
-        // child's canonical path space; composing with `this._path` +
-        // the mount `path` lifts it into our canonical space. The
-        // child's state is read through its public `plugins` /
-        // `pluginSingletons` getters — never the protected fields, so
-        // any future custom `IApp` only has to honor the public
-        // surface to be mountable.
-        //
-        // Note: this branch is intentionally asymmetric with
-        // `install()`. install() with `singleton: true` against an
-        // existing entry suppresses *both* the install and the claim.
-        // flatten() with a child-side sticky claim against an existing
-        // parent entry still merges the entry — child routes have
-        // already propagated unconditionally above, and suppressing
-        // the registry record too would leave `hasPluginAt` lying
-        // about routes that are demonstrably mounted.
-        for (const [name, childPaths] of child.plugins) {
-            // Sticky claim on this side blocks the merge of child's
-            // entries for that name. The claim is forward-looking; we
-            // don't drop the child's routes (registered above) — only
-            // the registry record so `hasPluginAt` reflects the locked
-            // namespace.
-            if (this._pluginSingletons.has(name)) {
-                continue;
-            }
-
-            let entry = this._plugins.get(name);
-
-            for (const [childKey, version] of childPaths) {
-                const composedKey = joinPaths(this._path, path, childKey) ?? '/';
-
-                // Silent dedup — first writer wins for the same
-                // composed key, mirroring `install()`'s silent skip.
-                if (entry && entry.has(composedKey)) {
-                    continue;
-                }
-
-                if (!entry) {
-                    entry = new Map();
-                    this._plugins.set(name, entry);
-                }
-
-                entry.set(composedKey, version);
-            }
-        }
-
-        // Propagate sticky singleton claims so a child's contract
-        // survives the mount — but only for names this App did not
-        // already have. Mirrors `install()`'s rule that a
-        // `singleton: true` install on a previously-claimed name is a
-        // silent no-op without claiming; flatten would otherwise leak
-        // child claims into a parent that had its own non-singleton
-        // install of the same name.
-        for (const name of child.pluginSingletons) {
-            if (!namesBeforeMerge.has(name)) {
-                this._pluginSingletons.add(name);
-            }
-        }
+        // Merge the child's plugin registry under `this._path` + the
+        // mount `path`. The child's state is read through its public
+        // `plugins` / `pluginSingletons` getters — never the protected
+        // fields, so any future custom `IApp` only has to honor the
+        // public surface to be mountable.
+        this._pluginRegistry.merge(child, this._path, path);
     }
 
     // --------------------------------------------------
@@ -775,9 +486,7 @@ export class App implements IApp {
      * *any* mount path.
      */
     hasPlugin(name: string): boolean {
-        const entry = this._plugins.get(name);
-
-        return !!entry && entry.size > 0;
+        return this._pluginRegistry.has(name);
     }
 
     /**
@@ -787,15 +496,7 @@ export class App implements IApp {
      * `path` to check the root install.
      */
     hasPluginAt(name: string, path?: Path): boolean {
-        const entry = this._plugins.get(name);
-
-        if (!entry) {
-            return false;
-        }
-
-        const key = joinPaths(this._path, path) ?? '/';
-
-        return entry.has(key);
+        return this._pluginRegistry.hasAt(name, buildPluginMountKey(this._path, path));
     }
 
     /**
@@ -807,15 +508,7 @@ export class App implements IApp {
      * version of a specific mount.
      */
     getPluginVersion(name: string): string | undefined {
-        const entry = this._plugins.get(name);
-
-        if (!entry) {
-            return undefined;
-        }
-
-        const first = entry.values().next();
-
-        return first.done ? undefined : first.value;
+        return this._pluginRegistry.getVersion(name);
     }
 
     /**
@@ -825,13 +518,7 @@ export class App implements IApp {
      * `app.use(path, plugin)`); omit it to read the root install.
      */
     getPluginVersionAt(name: string, path?: Path): string | undefined {
-        const entry = this._plugins.get(name);
-
-        if (!entry) {
-            return undefined;
-        }
-
-        return entry.get(joinPaths(this._path, path) ?? '/');
+        return this._pluginRegistry.getVersionAt(name, buildPluginMountKey(this._path, path));
     }
 
     /**
@@ -841,13 +528,7 @@ export class App implements IApp {
      * normalized to `'/'` for root mounts.
      */
     getPluginMountPaths(name: string): readonly string[] {
-        const entry = this._plugins.get(name);
-
-        if (!entry) {
-            return [];
-        }
-
-        return Array.from(entry.keys());
+        return this._pluginRegistry.getMountPaths(name);
     }
 
     // --------------------------------------------------
@@ -856,28 +537,9 @@ export class App implements IApp {
         plugin: Plugin,
         context: PluginInstallContext = {},
     ): this {
-        const mountKey = joinPaths(this._path, context.path) ?? '/';
-        const existing = this._plugins.get(plugin.name);
+        const mountKey = buildPluginMountKey(this._path, context.path);
 
-        // Sticky claim: a previous successful `singleton: true` install
-        // locked this name. Every further install is a silent no-op so
-        // an idempotent `app.use(plugin)` is safe to call from setup
-        // code that doesn't know whether the plugin is already mounted.
-        if (this._pluginSingletons.has(plugin.name)) {
-            return this;
-        }
-
-        // This install opts into singleton but the name is already
-        // mounted at some path. Silent skip — we do *not* retroactively
-        // claim the name singleton, so a later non-flagged install of
-        // the same name can still succeed (first-install-wins).
-        if (plugin.singleton && existing && existing.size > 0) {
-            return this;
-        }
-
-        // SingletonByPath: silently skip a second install at the same
-        // canonical mount path. Installs at other paths still proceed.
-        if (plugin.singletonByPath && existing && existing.has(mountKey)) {
+        if (!this._pluginRegistry.canInstall(plugin, mountKey)) {
             return this;
         }
 
@@ -896,18 +558,7 @@ export class App implements IApp {
             this.use(scratch);
         }
 
-        let entry = this._plugins.get(plugin.name);
-
-        if (!entry) {
-            entry = new Map();
-            this._plugins.set(plugin.name, entry);
-        }
-
-        entry.set(mountKey, plugin.version);
-
-        if (plugin.singleton) {
-            this._pluginSingletons.add(plugin.name);
-        }
+        this._pluginRegistry.record(plugin, mountKey);
 
         return this;
     }

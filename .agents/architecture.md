@@ -7,21 +7,22 @@ Routup's architecture centers on a **dispatch pipeline** that processes HTTP req
 ### Request Flow
 
 ```text
-HTTP Request → srvx → ServerRequest (AppRequest) → App.fetch() → DispatcherEvent → IRouter.lookup() → App.runMatches() → Handler.dispatch() → Response
+HTTP Request → srvx → ServerRequest (AppRequest) → App.fetch() → IRouter.lookup() → walkMatches() → Handler.dispatch() → Response
 ```
 
 1. **srvx** receives the raw HTTP request and normalizes it into a `ServerRequest`
-2. **`App.fetch()`** creates a `DispatcherEvent` and applies the global timeout
-3. **`App.dispatch()`** asks the active `IRouter` for the matches of the path and method
-4. **`App.runMatches()`** walks the matches in order; matched **Handlers** run, returning response values or calling `event.next()`
+2. **`App.fetch()`**, the only entry point, creates the request-scoped `PipelineState` (internal, `src/app/pipeline-state.ts`) and asks the active `IRouter` for the matches of the path and method
+3. It applies the global timeout around the walk
+4. **`walkMatches()`** (internal, `src/app/pipeline.ts`) walks the matches in order; matched **Handlers** run, returning response values or calling `event.next()`
 5. Return values are converted to a Web `Response` via `toResponse()`
 6. With no response, `App.fetch()` builds a fallback: the pending error's status (default 500), or 404. The body is JSON when the request accepts JSON, plain text otherwise
 
 ### Pipeline Rules
 
 - CORE handlers run only while no error is pending; ERROR handlers run only while one is.
-- The match list is captured once per dispatch. `IAppEvent.path` is a snapshot on the handler's event, so middleware cannot rewrite the path before `event.next()` (see #913).
-- An `OPTIONS` request that no handler answers gets a synthesized `Allow` response on the root App, built from the methods of the matched routes.
+- `AppEvent.next()` is the only guard of the continuation: the first call starts the walk of the matches after the handler and caches its promise. The walk reads `event.nextCalled`; a handler that consumed its continuation and produced no response ends the walk, a handler that throws lets it move on to later ERROR handlers only (#946). Do not add a second guard in the walk or the state.
+- The match list is captured once per request. `IAppEvent.path` is a snapshot on the handler's event, so middleware cannot rewrite the path before `event.next()` (see #913).
+- An `OPTIONS` request that no handler answers gets a synthesized `Allow` response, built from the methods of the matched routes.
 
 ## Entry Files Pattern
 
@@ -81,7 +82,7 @@ Handlers return values directly instead of calling `send()`. The `toResponse()` 
 - **Response** → passed through as-is
 - **null** → empty `Response` (status from `event.response`)
 
-A response built by `toResponse()` or an App fallback is a snapshot: copy `event.response.headers` and binary bodies into srvx's `FastResponse`, which on Node.js holds its init by reference until the socket write. Rejected: passing the accumulator or the handler's buffer directly, which lets code running after `event.next()` rewrite a finished response (#993).
+A response built by `toResponse()` or an App fallback is a snapshot: copy `event.response.headers` and binary bodies into srvx's `FastResponse` (built only via `createFastResponse()`), which on Node.js holds its init by reference until the socket write and does not validate it, so an init the platform `Response` rejects (status outside 200..599, a body with 204/205/304) must still throw there. Rejected: passing the accumulator or the handler's buffer directly, which lets code running after `event.next()` rewrite a finished response (#993).
 
 ### Returning `undefined`
 

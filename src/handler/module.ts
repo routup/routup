@@ -1,15 +1,21 @@
 import { markInstanceof } from '@ebec/core';
 import type { MethodName } from '../constants.ts';
-import type { IDispatcher, IDispatcherEvent } from '../dispatcher/index.ts';
-import { createError, isError } from '../error/index.ts';
+import { createError } from '../error/index.ts';
 import type { IAppEvent } from '../event/index.ts';
 import { toResponse } from '../response/index.ts';
+import type { PipelineStep } from '../app/pipeline.ts';
 import type { AppOptions } from '../app/types.ts';
-import { isPromise, toMethodName, withLeadingSlash } from '../utils/index.ts';
+import {
+    Deadline,
+    createTimeoutError,
+    isPromise,
+    toMethodName,
+    withLeadingSlash,
+} from '../utils/index.ts';
 import { HandlerSymbol, HandlerType } from './constants.ts';
 import type { HandlerOptions } from './types.ts';
 
-export class Handler implements IDispatcher {
+export class Handler {
     protected config: HandlerOptions;
 
     readonly method: MethodName | undefined;
@@ -40,66 +46,50 @@ export class Handler implements IDispatcher {
 
     // --------------------------------------------------
 
-    async dispatch(event: IDispatcherEvent): Promise<Response | undefined> {
+    /**
+     * Run the handler for one step of the match walk. The walk only
+     * hands over handlers that fit the error state: an ERROR handler
+     * is dispatched while `state.error` is set, a CORE handler while
+     * it is not.
+     *
+     * Resolves with the response, or `undefined` when the handler
+     * forwarded a continuation that produced none. A failure is
+     * recorded on `state.error` and rethrown.
+     *
+     * @internal
+     */
+    async dispatch(step: PipelineStep): Promise<Response | undefined> {
+        const { state } = step;
+
         let response: Response | undefined;
         // Hoisted so the outer catch can forward it to `onError` and
-        // so the outer finally can release the parent-signal abort
-        // listener even when `onBefore` / `event.build()` throws —
-        // the inner try/finally that used to own this cleanup was
-        // unreachable from those throw sites.
+        // so the outer finally can release the deadline even when
+        // `onBefore` throws before `deadline.run()`.
         let handlerEvent: IAppEvent | undefined;
-        let cleanupParentListener: (() => void) | undefined;
+        let deadline: Deadline | undefined;
 
         try {
-            // Read router options directly from the dispatcher event so we
-            // can decide on the per-handler timeout without first wrapping
-            // into a AppEvent — saves a `build()` allocation on the
-            // common no-timeout path.
-            const effectiveTimeout = this.resolveTimeout(event.appOptions);
+            const effectiveTimeout = this.resolveTimeout(state.appOptions);
 
-            // When a per-handler timeout is active, create a child AbortController
-            // linked to the parent signal so the handler's signal aborts on timeout
-            let childController: AbortController | undefined;
-
+            // When a per-handler timeout is active, the handler's signal
+            // is the deadline's: it aborts on timeout and follows the
+            // signal of the request.
             if (effectiveTimeout) {
-                const parentSignal = event.signal;
-
-                childController = new AbortController();
-
-                if (parentSignal.aborted) {
-                    childController.abort(parentSignal.reason);
-                } else {
-                    const onAbort = () => childController!.abort(parentSignal.reason);
-
-                    parentSignal.addEventListener('abort', onAbort, { once: true });
-                    cleanupParentListener = () => parentSignal.removeEventListener('abort', onAbort);
-                }
+                deadline = new Deadline(effectiveTimeout, state.signal);
             }
 
-            // Build the handler event exactly once — with the child signal
-            // when a timeout is configured, otherwise inheriting the
-            // dispatcher's own signal.
-            handlerEvent = childController ?
-                event.build(childController.signal) :
-                event.build();
+            handlerEvent = step.createEvent(deadline?.signal);
 
-            // ERROR handlers with no pending error are a no-op — and
-            // the onBefore/onAfter callbacks are too (no `fn` ran, so
-            // there's nothing to bracket).
-            const skipFn = this.config.type === HandlerType.ERROR && !event.error;
-
-            if (!skipFn && this.config.onBefore) {
+            if (this.config.onBefore) {
                 await this.config.onBefore(handlerEvent);
             }
 
             let invocation: unknown;
 
-            if (skipFn) {
-                // invocation stays undefined; falls through to toResponse(undefined) → undefined.
-            } else if (this.config.type === HandlerType.ERROR) {
+            if (this.config.type === HandlerType.ERROR) {
                 const { fn } = this.config;
 
-                invocation = fn(event.error!, handlerEvent);
+                invocation = fn(state.error!, handlerEvent);
             } else {
                 const { fn } = this.config;
 
@@ -108,15 +98,9 @@ export class Handler implements IDispatcher {
 
             let result: unknown;
 
-            if (skipFn) {
-                // no-op
-            } else if (effectiveTimeout) {
+            if (deadline) {
                 // Race the (possibly-async) invocation against the timeout.
-                result = await this.executeWithTimeout(
-                    () => this.resolveHandlerResult(invocation, handlerEvent!),
-                    effectiveTimeout,
-                    childController,
-                );
+                result = await deadline.run(() => this.resolveHandlerResult(invocation, handlerEvent!));
             } else if (isPromise(invocation)) {
                 // Async handler return — await once. If it resolves
                 // to undefined, fall back to the async resolver
@@ -144,37 +128,40 @@ export class Handler implements IDispatcher {
                 toResp;
 
             if (response) {
-                event.dispatched = true;
+                state.dispatched = true;
 
                 // ERROR handler resolved the pending error — clear it
-                // so parent pipelines don't observe a stale error.
-                if (this.config.type === HandlerType.ERROR && event.error) {
-                    event.error = undefined;
+                // so the fallback does not report a handled error.
+                if (this.config.type === HandlerType.ERROR && state.error) {
+                    state.error = undefined;
                 }
             }
 
-            if (!skipFn && this.config.onAfter) {
+            if (this.config.onAfter) {
                 await this.config.onAfter(handlerEvent, response);
             }
         } catch (e) {
-            event.error = isError(e) ? e : createError(e);
+            // From here on a late `event.next()` of this handler must
+            // not start a walk (see `PipelineStep.next`).
+            step.failed = true;
+            state.error = createError(e);
 
             // Fire `onError` even if the error came from `onBefore`
             // or `onAfter` — it is the handler-scoped error hook.
-            // `event.build()` is the fallback when the throw landed
-            // before we built `handlerEvent`.
+            // `step.createEvent()` is the fallback when the throw
+            // landed before `handlerEvent` was built.
             if (this.config.onError) {
                 try {
-                    await this.config.onError(event.error, handlerEvent ?? event.build());
+                    await this.config.onError(state.error, handlerEvent ?? step.createEvent());
                 } catch (innerErr) {
-                    event.error = isError(innerErr) ? innerErr : createError(innerErr);
+                    state.error = createError(innerErr);
                 }
             }
 
-            throw event.error;
+            throw state.error;
         } finally {
-            if (cleanupParentListener) {
-                cleanupParentListener();
+            if (deadline) {
+                deadline.release();
             }
         }
 
@@ -211,16 +198,13 @@ export class Handler implements IDispatcher {
         const { signal } = handlerEvent;
 
         if (signal.aborted) {
-            throw createError({ status: 408, message: 'Request Timeout' });
+            throw createTimeoutError();
         }
 
         return new Promise<unknown>((resolve, reject) => {
             const onAbort = () => {
                 signal.removeEventListener('abort', onAbort);
-                reject(createError({
-                    status: 408,
-                    message: 'Request Timeout',
-                }));
+                reject(createTimeoutError());
             };
 
             signal.addEventListener('abort', onAbort, { once: true });
@@ -230,38 +214,6 @@ export class Handler implements IDispatcher {
                 resolve(handlerEvent.nextResult);
             });
         });
-    }
-
-    protected async executeWithTimeout(
-        fn: () => unknown | Promise<unknown>,
-        effectiveTimeout: number | undefined,
-        controller?: AbortController,
-    ): Promise<unknown> {
-        if (!effectiveTimeout) {
-            return fn();
-        }
-
-        let timerId: ReturnType<typeof setTimeout> | undefined;
-
-        try {
-            return await Promise.race([
-                fn(),
-                new Promise<never>((_, reject) => {
-                    timerId = setTimeout(() => {
-                        if (controller) {
-                            controller.abort();
-                        }
-
-                        reject(createError({
-                            status: 408,
-                            message: 'Request Timeout',
-                        }));
-                    }, effectiveTimeout);
-                }),
-            ]);
-        } finally {
-            clearTimeout(timerId);
-        }
     }
 
     protected resolveTimeout(appOptions: AppOptions): number | undefined {

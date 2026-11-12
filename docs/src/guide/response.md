@@ -53,7 +53,7 @@ App provides helper functions for common response patterns:
 
 ### sendFile
 
-Send a file with support for range requests, ETag generation, and automatic content-type detection:
+Send a file with support for range requests, ETag generation, conditional requests, and automatic content-type detection. A conditional `GET` or `HEAD` request whose cached copy is still fresh gets `304 Not Modified` without the file content being read:
 
 ```typescript
 import { defineCoreHandler, sendFile } from 'routup';

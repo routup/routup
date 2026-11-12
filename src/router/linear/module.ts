@@ -4,6 +4,7 @@ import type { IPathMatcher } from '../../path/index.ts';
 import type { ObjectLiteral, Route, RouteMatch } from '../../types.ts';
 import type { BaseRouterOptions, IRouter } from '../types.ts';
 import { buildRoutePathMatcher } from '../utils.ts';
+import { matchLinearRoute } from '../walk.ts';
 
 /**
  * Default router — walks registered routes linearly per request and
@@ -12,11 +13,9 @@ import { buildRoutePathMatcher } from '../utils.ts';
  * middleware / nested apps registered via `.use(handler)`) match every
  * request directly — there is no per-route `matchPath()` fallback.
  *
- * Behaviour-preserving wrapper around the previous in-line stack walk
- * in `executePipelineStepLookup`. The matcher allocations live here
- * (not on the registered route), so routers using a different matching
- * strategy (radix tree, aggregated regex, …) can ignore this file
- * entirely.
+ * The matchers live here (not on the registered route), so routers
+ * using a different matching strategy (radix tree, aggregated regex,
+ * …) can ignore this file entirely.
  *
  * Optional per-router lookup cache: pass an `ICache` via
  * `BaseRouterOptions.cache` to skip the linear walk on repeated
@@ -45,8 +44,8 @@ export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IR
     }
 
     lookup(path: string, _method?: MethodNameLike): readonly RouteMatch<T>[] {
-        // LinearRouter ignores `method`: the dispatcher's own
-        // `matchHandlerMethod` check runs on every returned candidate
+        // LinearRouter ignores `method`: the App's match walk runs its
+        // `matchHandlerMethod` check on every returned candidate
         // anyway, so we simply emit every path-matching route and let
         // the call site discriminate. Method-aware routers (TrieRouter)
         // narrow at lookup time for the per-request perf win.
@@ -59,36 +58,11 @@ export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IR
         const matches: RouteMatch<T>[] = [];
 
         for (let i = 0; i < this._routes.length; i++) {
-            const route = this._routes[i]!;
-            const matcher = this._matchers[i];
+            const match = matchLinearRoute(this._routes[i]!, i, this._matchers[i], path);
 
-            if (matcher) {
-                const output = matcher.exec(path);
-
-                if (typeof output === 'undefined') {
-                    continue;
-                }
-
-                matches.push({
-                    route,
-                    index: i,
-                    params: output.params,
-                    path: output.path,
-                });
-
-                continue;
+            if (match) {
+                matches.push(match);
             }
-
-            // No matcher → route has no mount path (middleware /
-            // mount-less router). Matches every request.
-            matches.push({
-                route,
-                index: i,
-                // Prototype-less for symmetry with TrieRouter — avoids
-                // `__proto__` / `hasOwnProperty` shadowing if user
-                // code does `'foo' in match.params`.
-                params: Object.create(null) as Record<string, string | undefined>,
-            });
         }
 
         this.cache?.set(path, matches);

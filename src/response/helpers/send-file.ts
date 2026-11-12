@@ -1,5 +1,5 @@
 import { HeaderName, MethodName } from '../../constants.ts';
-import { basename } from '../../utils/index.ts';
+import { basename, isFresh } from '../../utils/index.ts';
 import type { IAppEvent } from '../../event/index.ts';
 import { setResponseHeaderAttachment, setResponseHeaderInline } from './header-disposition.ts';
 import { setResponseContentTypeByFileName } from './utils.ts';
@@ -17,7 +17,8 @@ export type SendFileContentOptions = {
  *             `ETag`, and `Last-Modified` are all omitted (the response is sent
  *             without HTTP-level caching or seekability).
  * - `mtime` — without it, `Last-Modified` is omitted and the `ETag` is not
- *             emitted (`ETag` requires both `size` and `mtime`).
+ *             emitted (`ETag` requires both `size` and `mtime`), so a
+ *             conditional request is never answered with `304`.
  * - `name`  — falls back to `SendFileOptions.name` when set; if both are
  *             missing, no `Content-Disposition` or extension-derived
  *             `Content-Type` is set.
@@ -74,6 +75,17 @@ function parseByteRange(header: string, size: number) : Required<SendFileContent
     };
 }
 
+/**
+ * The validators of a file. `lastModified` is an HTTP date, so an
+ * `If-Modified-Since` comparison against it has second resolution.
+ */
+function buildValidators(size: number, mtime: Date) : { etag: string, lastModified: string } {
+    return {
+        etag: `W/"${size}-${mtime.getTime()}"`,
+        lastModified: mtime.toUTCString(),
+    };
+}
+
 export async function sendFile(
     event: IAppEvent,
     options: SendFileOptions,
@@ -113,6 +125,42 @@ export async function sendFile(
     let statusCode = event.response.status;
 
     if (stats.size) {
+        const mtime = stats.mtime ? new Date(stats.mtime) : undefined;
+        const validators = mtime ?
+            buildValidators(stats.size, mtime) :
+            undefined;
+
+        if (
+            validators &&
+            // An unparsable mtime yields validators that identify
+            // nothing; they must not confirm a cached copy.
+            !Number.isNaN(mtime!.getTime()) &&
+            // Preconditions apply only when the response would
+            // otherwise be a 2xx (RFC 9110 section 13.2.1): a file
+            // sent as an error or redirect body keeps that status.
+            statusCode >= 200 &&
+            statusCode < 300 &&
+            (event.method === MethodName.GET || event.method === MethodName.HEAD) &&
+            isFresh({
+                ifNoneMatch: event.headers.get(HeaderName.IF_NONE_MATCH),
+                ifModifiedSince: event.headers.get(HeaderName.IF_MODIFIED_SINCE),
+            }, validators)
+        ) {
+            // A fresh conditional request wins over Range; the body is never read.
+            const notModifiedHeaders = new Headers(headers);
+
+            notModifiedHeaders.delete(HeaderName.CONTENT_LENGTH);
+            notModifiedHeaders.delete(HeaderName.CONTENT_RANGE);
+            notModifiedHeaders.set(HeaderName.ACCEPT_RANGES, 'bytes');
+            notModifiedHeaders.set(HeaderName.LAST_MODIFIED, validators.lastModified);
+            notModifiedHeaders.set(HeaderName.ETag, validators.etag);
+
+            return new Response(null, {
+                status: 304,
+                headers: notModifiedHeaders,
+            });
+        }
+
         const rangeHeader = event.method === MethodName.GET ? event.headers.get(HeaderName.RANGE) : null;
         // The weak ETag can never satisfy If-Range, so only the modification date can match.
         const ifRange = event.headers.get(HeaderName.IF_RANGE);
@@ -146,11 +194,9 @@ export async function sendFile(
 
         headers.set(HeaderName.ACCEPT_RANGES, 'bytes');
 
-        if (stats.mtime) {
-            const mtime = new Date(stats.mtime);
-
-            headers.set(HeaderName.LAST_MODIFIED, mtime.toUTCString());
-            headers.set(HeaderName.ETag, `W/"${stats.size}-${mtime.getTime()}"`);
+        if (validators) {
+            headers.set(HeaderName.LAST_MODIFIED, validators.lastModified);
+            headers.set(HeaderName.ETag, validators.etag);
         }
     }
 

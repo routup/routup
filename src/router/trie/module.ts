@@ -1,9 +1,11 @@
-import { MethodName } from '../../constants.ts';
 import type { MethodNameLike } from '../../constants.ts';
 import type { ICache } from '../../cache/index.ts';
 import type { ObjectLiteral, Route, RouteMatch } from '../../types.ts';
+import { decodeParam } from '../../utils/decode-param.ts';
+import { getMethodFallback, seesEveryMethod } from '../../utils/method-rule.ts';
 import type { BaseRouterOptions, IRouter } from '../types.ts';
 import { buildRoutePathMatcher } from '../utils.ts';
+import { matchLinearRoute } from '../walk.ts';
 import type {
     IndexedRoute,
     MethodBuckets,
@@ -14,14 +16,6 @@ import type {
 import { parsePath } from './parser.ts';
 
 import { createTrieNode } from './node.ts';
-
-function decodeOrRaw(s: string): string {
-    try {
-        return decodeURIComponent(s);
-    } catch {
-        return s;
-    }
-}
 
 /**
  * Build a `params` object from a request's pre-split segments using
@@ -38,12 +32,12 @@ function extractTrieParams(
 
     for (const cap of indexMap) {
         if (cap.kind === 'segment') {
-            out[cap.name] = decodeOrRaw(segments[cap.depth]!);
+            out[cap.name] = decodeParam(segments[cap.depth]!);
         } else {
             // Splat: capture every remaining segment, joined with '/'.
             const slice = segments.slice(cap.depth).join('/');
 
-            out[cap.name] = decodeOrRaw(slice);
+            out[cap.name] = decodeParam(slice);
         }
     }
 
@@ -109,56 +103,50 @@ function buildParamsIndexMap(segments: Segment[]): ParamCapture[] {
     return out;
 }
 
-/**
- * Decide which method buckets a given request method should pull
- * from. Always includes `''` (method-agnostic). For HEAD also
- * includes GET (per `matchHandlerMethod`). For OPTIONS or no-method
- * lookups, returns `null` to signal "emit every bucket" — needed so
- * `event.methodsAllowed` is populated for OPTIONS auto-Allow and so
- * `IRouter.lookup(path)` (no method) keeps returning a complete
- * candidate set.
- */
-function methodBucketKeys(method: MethodNameLike | undefined): readonly string[] | null {
-    if (typeof method === 'undefined' || method === MethodName.OPTIONS) {
-        return null;
+function pushAll<T extends ObjectLiteral>(
+    list: IndexedRoute<T>[] | undefined,
+    out: IndexedRoute<T>[],
+): void {
+    if (!list) {
+        return;
     }
 
-    if (method === MethodName.HEAD) {
-        return ['', MethodName.HEAD, MethodName.GET];
+    for (const r of list) {
+        out.push(r);
     }
-
-    return ['', method];
 }
 
+/**
+ * Emit the routes of the method buckets a request method can match,
+ * following the method rule (`src/utils/method-rule.ts`):
+ *
+ * - OPTIONS and no-method lookups see every bucket, so the App can
+ *   build the `Allow` header and `IRouter.lookup(path)` returns the
+ *   complete candidate set.
+ * - Otherwise: the method-agnostic `''` bucket, the request method's
+ *   bucket, then the bucket of the method it falls through to
+ *   (`GET` for `HEAD`).
+ */
 function emitBucket<T extends ObjectLiteral>(
     buckets: MethodBuckets<T>,
     method: MethodNameLike | undefined,
     out: IndexedRoute<T>[],
 ): void {
-    const keys = methodBucketKeys(method);
-
-    if (keys === null) {
+    if (seesEveryMethod(method)) {
         for (const k in buckets) {
-            const list = buckets[k]!;
-
-            for (const r of list) {
-                out.push(r);
-            }
+            pushAll(buckets[k], out);
         }
 
         return;
     }
 
-    for (const k of keys) {
-        const list = buckets[k];
+    pushAll(buckets[''], out);
+    pushAll(buckets[method!], out);
 
-        if (!list) {
-            continue;
-        }
+    const fallback = getMethodFallback(method!);
 
-        for (const r of list) {
-            out.push(r);
-        }
+    if (fallback) {
+        pushAll(buckets[fallback], out);
     }
 }
 
@@ -203,7 +191,7 @@ function pushIntoBucket<T extends ObjectLiteral>(
  *
  * Per-leaf storage is bucketed by HTTP method (T4) so lookup
  * narrows to the request method's bucket(s) instead of emitting
- * every entry at the leaf and letting the dispatcher's filter
+ * every entry at the leaf and letting the App's match walk
  * discard mismatches.
  *
  * Param extraction is `paramsIndexMap`-driven (T3): a pre-built
@@ -226,10 +214,9 @@ function pushIntoBucket<T extends ObjectLiteral>(
 export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRouter<T> {
     /**
      * Monotonic counter assigned as the registration `index` on each
-     * route — the dispatch loop uses it to preserve registration
-     * order across the candidate list. App owns the canonical
-     * `Route<T>[]` list (Plan 019); the trie no longer keeps a
-     * parallel copy.
+     * route — `lookup()` sorts candidates by it to return matches in
+     * registration order. App owns the canonical `Route<T>[]` list;
+     * the trie keeps no copy of it.
      */
     protected _routeCount: number;
 
@@ -368,25 +355,6 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
                 continue;
             }
 
-            if (matcher) {
-                // Universal-bucket route: still uses path-to-regexp.
-                const output = matcher.exec(path);
-
-                if (typeof output === 'undefined') {
-                    continue;
-                }
-
-                matches.push({
-                    route,
-                    index,
-                    params: this.assignParams(output.params),
-                    path: output.path,
-                });
-                lastIndex = index;
-
-                continue;
-            }
-
             if (paramsIndexMap && typeof matchDepth === 'number') {
                 // Trie-walked route: extract params from the request
                 // segments using the pre-built index map. No regex.
@@ -401,13 +369,19 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
                 continue;
             }
 
-            // Universal-bucket route with no matcher (empty / root path).
-            matches.push({
-                route,
-                index,
-                params: Object.create(null) as Record<string, string | undefined>,
-            });
-            lastIndex = index;
+            // Universal-bucket route: the same per-route step as
+            // `LinearRouter` (path-to-regexp matcher, or no matcher
+            // for empty / root paths, which matches every request).
+            const match = matchLinearRoute(route, index, matcher, path);
+
+            if (match) {
+                if (matcher) {
+                    match.params = this.assignParams(match.params);
+                }
+
+                matches.push(match);
+                lastIndex = index;
+            }
         }
 
         this.cache?.set(cacheKey, matches);
@@ -587,9 +561,11 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
     }
 
     /**
-     * T5: copy params onto a prototype-less object so downstream
+     * Copy params onto a prototype-less object so downstream
      * lookups skip prototype-chain traversal and avoid `__proto__` /
      * `hasOwnProperty` shadowing from user-controlled segment values.
+     * Applied to universal-bucket matcher output instead of handing
+     * out the matcher's own object.
      */
     protected assignParams(
         source: Record<string, string | undefined>,

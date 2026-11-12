@@ -117,13 +117,26 @@ export class AppEvent implements IAppEvent {
         return this._nextCalledDeferred.promise;
     }
 
-    async next(error?: Error): Promise<Response | undefined> {
+    /**
+     * The one guard of the continuation: the first call starts it and
+     * caches its promise, every later call returns that promise.
+     */
+    next(error?: Error): Promise<Response | undefined> {
         if (this._nextCalled) {
-            return this._nextResult;
+            return this._nextResult!;
         }
 
         this._nextCalled = true;
-        this._nextResult = this._context.next(this, error);
+
+        try {
+            // `Promise.resolve` hands a native promise back as is, so
+            // the walk's promise is cached without an extra hop; a
+            // hand-built context returning a plain value still yields
+            // a promise.
+            this._nextResult = Promise.resolve(this._context.next(this, error));
+        } catch (e) {
+            this._nextResult = Promise.reject(e);
+        }
 
         if (this._nextCalledDeferred) {
             this._nextCalledDeferred.resolve();

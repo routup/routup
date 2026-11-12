@@ -1,6 +1,6 @@
 import { isHTTPError } from '@ebec/http';
 import type { HTTPErrorInput } from '@ebec/http';
-import { isObject } from '../utils/index.ts';
+import { isObject } from '../utils/object.ts';
 import { isError } from './is.ts';
 import { AppError } from './module.ts';
 
