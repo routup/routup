@@ -12,6 +12,7 @@ import {
     App,
     defineCoreHandler,
     defineErrorHandler,
+    sendFile,
     toNodeHandler,
 } from '../../../src/_entries/node.ts';
 
@@ -77,6 +78,10 @@ describe('routing/wire', () => {
         id: event.params.id,
         path: event.path,
         q: event.searchParams.getAll('q'),
+    })));
+    app.get('/file', defineCoreHandler((event) => sendFile(event, {
+        stats: { size: 4, mtime: new Date('2024-01-01T10:00:00.000Z') },
+        content: () => new TextEncoder().encode('file'),
     })));
     app.get('/throw', defineCoreHandler(() => {
         throw new Error('boom');
@@ -233,6 +238,22 @@ describe('routing/wire', () => {
 
         expect(response.status).toBe(200);
         expect(response.headers.get('content-type')).toBe('application/json; charset=utf-8');
+        expect(await response.text()).toBe('');
+    });
+
+    it('answers a conditional file request with 304 and no body', async () => {
+        const fresh = await fetch(`${origin}/file`);
+        const etag = fresh.headers.get('etag')!;
+
+        expect(fresh.status).toBe(200);
+        expect(await fresh.text()).toBe('file');
+
+        const response = await fetch(`${origin}/file`, { headers: { 'if-none-match': etag } });
+
+        expect(response.status).toBe(304);
+        expect(response.headers.get('etag')).toBe(etag);
+        expect(response.headers.get('last-modified')).toBe('Mon, 01 Jan 2024 10:00:00 GMT');
+        expect(response.headers.has('content-length')).toBe(false);
         expect(await response.text()).toBe('');
     });
 });

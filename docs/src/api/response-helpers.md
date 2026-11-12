@@ -24,6 +24,8 @@ return sendRedirect(event, '/login', 302);
 
 Send a file with support for range requests, ETag generation, and automatic content-type detection.
 
+It sets `ETag` and `Last-Modified` from the file stats and answers a conditional `GET` or `HEAD` request (`If-None-Match`, or `If-Modified-Since` without `If-None-Match`) whose cached copy is still fresh with `304 Not Modified`, without reading the file content.
+
 ```typescript
 declare function sendFile(
     event: IAppEvent,

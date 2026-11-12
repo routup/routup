@@ -218,4 +218,191 @@ describe('src/helpers/response/send-file', () => {
         expect(response).toBeDefined();
         expect(response.status).toEqual(416);
     });
+
+    describe('conditional requests', () => {
+        const filePath = 'test/data/dummy.txt';
+
+        const getValidators = async () => {
+            const stat = await fs.promises.stat(filePath);
+
+            return {
+                etag: `W/"${stat.size}-${stat.mtime.getTime()}"`,
+                lastModified: stat.mtime.toUTCString(),
+                mtime: stat.mtime,
+            };
+        };
+
+        const buildTrackedOptions = () => {
+            const options = buildSendFileOptions(filePath);
+            const tracked = { calls: 0 };
+
+            return {
+                tracked,
+                options: {
+                    ...options,
+                    content(contentOptions: Parameters<SendFileOptions['content']>[0]) {
+                        tracked.calls++;
+
+                        return options.content(contentOptions);
+                    },
+                } satisfies SendFileOptions,
+            };
+        };
+
+        it('should answer a matching If-None-Match with 304 without reading the file', async () => {
+            const { etag, lastModified } = await getValidators();
+            const event = createTestEvent('/', { headers: { 'if-none-match': etag } });
+            const { tracked, options } = buildTrackedOptions();
+
+            const response = await sendFile(event, options);
+
+            expect(response.status).toEqual(304);
+            expect(await response.text()).toEqual('');
+            expect(response.headers.get(HeaderName.ETag)).toEqual(etag);
+            expect(response.headers.get(HeaderName.LAST_MODIFIED)).toEqual(lastModified);
+            expect(response.headers.get(HeaderName.ACCEPT_RANGES)).toEqual('bytes');
+            expect(response.headers.get(HeaderName.CONTENT_LENGTH)).toBeNull();
+            expect(response.headers.get(HeaderName.CONTENT_RANGE)).toBeNull();
+            expect(tracked.calls).toEqual(0);
+        });
+
+        it('should return a 304 whose headers can be changed', async () => {
+            const { etag } = await getValidators();
+            const event = createTestEvent('/', { headers: { 'if-none-match': etag } });
+
+            const response = await sendFile(event, buildSendFileOptions(filePath));
+
+            response.headers.set('cache-control', 'no-cache');
+
+            expect(response.headers.get('cache-control')).toEqual('no-cache');
+        });
+
+        it('should keep cache headers set before sendFile on a 304', async () => {
+            const { etag } = await getValidators();
+            const event = createTestEvent('/', { headers: { 'if-none-match': etag } });
+
+            event.response.headers.set('cache-control', 'public, max-age=60');
+
+            const response = await sendFile(event, buildSendFileOptions(filePath));
+
+            expect(response.status).toEqual(304);
+            expect(response.headers.get('cache-control')).toEqual('public, max-age=60');
+        });
+
+        it('should answer If-None-Match: * with 304', async () => {
+            const event = createTestEvent('/', { headers: { 'if-none-match': '*' } });
+            const response = await sendFile(event, buildSendFileOptions(filePath));
+
+            expect(response.status).toEqual(304);
+        });
+
+        it('should compare the etag weakly', async () => {
+            const { etag } = await getValidators();
+            const strong = etag.slice(2);
+            const event = createTestEvent('/', { headers: { 'if-none-match': `"other", ${strong}` } });
+            const response = await sendFile(event, buildSendFileOptions(filePath));
+
+            expect(response.status).toEqual(304);
+        });
+
+        it('should send the file for a non-matching If-None-Match', async () => {
+            const event = createTestEvent('/', { headers: { 'if-none-match': 'W/"0-0"' } });
+            const response = await sendFile(event, buildSendFileOptions(filePath));
+
+            const file = await fs.promises.readFile(filePath, { encoding: 'utf-8' });
+
+            expect(response.status).toEqual(200);
+            expect(response.headers.get(HeaderName.CONTENT_LENGTH)).toEqual(`${file.length}`);
+            expect(await response.text()).toEqual(file);
+        });
+
+        it('should answer an If-Modified-Since equal to Last-Modified with 304', async () => {
+            const { lastModified } = await getValidators();
+            const event = createTestEvent('/', { headers: { 'if-modified-since': lastModified } });
+            const { tracked, options } = buildTrackedOptions();
+
+            const response = await sendFile(event, options);
+
+            expect(response.status).toEqual(304);
+            expect(response.headers.get(HeaderName.LAST_MODIFIED)).toEqual(lastModified);
+            expect(response.headers.get(HeaderName.CONTENT_LENGTH)).toBeNull();
+            expect(tracked.calls).toEqual(0);
+        });
+
+        it('should compare If-Modified-Since at second resolution', async () => {
+            const mtime = new Date('2024-01-01T10:00:00.750Z');
+            const event = createTestEvent('/', { headers: { 'if-modified-since': mtime.toUTCString() } });
+
+            const response = await sendFile(event, {
+                stats: { size: 3, mtime },
+                content: () => new Uint8Array([1, 2, 3]),
+            });
+
+            expect(response.status).toEqual(304);
+        });
+
+        it('should send the file for an older If-Modified-Since', async () => {
+            const { mtime } = await getValidators();
+            const older = new Date(mtime.getTime() - 3_600_000).toUTCString();
+            const event = createTestEvent('/', { headers: { 'if-modified-since': older } });
+            const response = await sendFile(event, buildSendFileOptions(filePath));
+
+            expect(response.status).toEqual(200);
+        });
+
+        it('should ignore a fresh If-Modified-Since when If-None-Match does not match', async () => {
+            const { lastModified } = await getValidators();
+            const event = createTestEvent('/', {
+                headers: {
+                    'if-none-match': 'W/"0-0"',
+                    'if-modified-since': lastModified,
+                },
+            });
+            const response = await sendFile(event, buildSendFileOptions(filePath));
+
+            expect(response.status).toEqual(200);
+        });
+
+        it('should prefer a fresh conditional over a range', async () => {
+            const { etag } = await getValidators();
+            const event = createTestEvent('/', {
+                headers: {
+                    'if-none-match': etag,
+                    'range': 'bytes=0-5',
+                },
+            });
+            const response = await sendFile(event, buildSendFileOptions(filePath));
+
+            expect(response.status).toEqual(304);
+            expect(response.headers.get(HeaderName.CONTENT_RANGE)).toBeNull();
+            expect(response.headers.get(HeaderName.CONTENT_LENGTH)).toBeNull();
+        });
+
+        it('should answer a conditional HEAD request with 304', async () => {
+            const { etag } = await getValidators();
+            const event = createTestEvent('/', { method: 'HEAD', headers: { 'if-none-match': etag } });
+            const response = await sendFile(event, buildSendFileOptions(filePath));
+
+            expect(response.status).toEqual(304);
+        });
+
+        it('should not answer a conditional POST request with 304', async () => {
+            const { etag } = await getValidators();
+            const event = createTestEvent('/', { method: 'POST', headers: { 'if-none-match': etag } });
+            const response = await sendFile(event, buildSendFileOptions(filePath));
+
+            expect(response.status).toEqual(200);
+        });
+
+        it('should not answer with 304 for a file without validators', async () => {
+            const event = createTestEvent('/', { headers: { 'if-none-match': '*' } });
+            const response = await sendFile(event, {
+                stats: { size: 3 },
+                content: () => new Uint8Array([1, 2, 3]),
+            });
+
+            expect(response.status).toEqual(200);
+            expect(response.headers.get(HeaderName.ETag)).toBeNull();
+        });
+    });
 });
