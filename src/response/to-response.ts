@@ -1,13 +1,13 @@
-import { FastResponse } from 'srvx';
 import { createError } from '../error/create.ts';
 import type { IAppEvent } from '../event/index.ts';
 import { DEFAULT_ETAG_FN } from '../utils/etag/utils.ts';
 import type { EtagFn } from '../utils/etag/types.ts';
+import { createFastResponse } from '../utils/response.ts';
 
 /**
  * Build the final `Response` from the accumulated status and headers.
  *
- * Uses srvx's `FastResponse`: on Node.js the adapter writes its body
+ * Uses srvx's `FastResponse` (via `createFastResponse()`): on Node.js the adapter writes its body
  * and headers straight to the socket instead of materializing a Web
  * `Response` and draining it as a stream; on every other runtime it is
  * the global `Response`.
@@ -24,10 +24,7 @@ function createResponse(
     status: number,
     headers: Headers,
 ): Response {
-    return new FastResponse(body, {
-        status,
-        headers: [...headers],
-    });
+    return createFastResponse(body, status, [...headers]);
 }
 
 function stripWeakPrefix(etag: string): string {

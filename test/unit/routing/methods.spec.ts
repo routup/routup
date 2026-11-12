@@ -118,4 +118,30 @@ describe('routing/methods', () => {
         expect(response.headers.get(HeaderName.ALLOW)).toEqual('DELETE,GET,PATCH,POST,PUT,HEAD');
         expect(await response.text()).toEqual('DELETE,GET,PATCH,POST,PUT,HEAD');
     });
+
+    it('should fail the synthesized Allow response when a middleware set a null-body status', async () => {
+        const router = new App();
+
+        router.use(defineCoreHandler((event) => {
+            event.response.status = 204;
+
+            return event.next();
+        }));
+        router.get('/', defineCoreHandler(() => 'get'));
+
+        const response = await router.fetch(createTestRequest('/', {
+            method: 'OPTIONS',
+            headers: { accept: 'application/json' },
+        }));
+
+        // The Allow body is not allowed with 204: the platform error
+        // escapes dispatch and becomes the 500 fallback.
+        expect(response.status).toEqual(500);
+        expect(response.headers.has(HeaderName.ALLOW)).toBe(false);
+
+        const body = await response.json();
+
+        expect(body.status).toEqual(500);
+        expect(body.message).toMatch(/204/);
+    });
 });

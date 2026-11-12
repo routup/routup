@@ -81,7 +81,7 @@ Handlers return values directly instead of calling `send()`. The `toResponse()` 
 - **Response** → passed through as-is
 - **null** → empty `Response` (status from `event.response`)
 
-A response built by `toResponse()` or an App fallback is a snapshot: copy `event.response.headers` and binary bodies into srvx's `FastResponse`, which on Node.js holds its init by reference until the socket write. Rejected: passing the accumulator or the handler's buffer directly, which lets code running after `event.next()` rewrite a finished response (#993).
+A response built by `toResponse()` or an App fallback is a snapshot: copy `event.response.headers` and binary bodies into srvx's `FastResponse` (built only via `createFastResponse()`), which on Node.js holds its init by reference until the socket write and does not validate it, so an init the platform `Response` rejects (status outside 200..599, a body with 204/205/304) must still throw there. Rejected: passing the accumulator or the handler's buffer directly, which lets code running after `event.next()` rewrite a finished response (#993).
 
 ### Returning `undefined`
 
