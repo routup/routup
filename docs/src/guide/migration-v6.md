@@ -68,7 +68,7 @@ defineCoreHandler((event) => event.params.id!.toUpperCase()); // ! when route gu
 defineCoreHandler((event) => event.params.id?.toUpperCase()); // ? when it may be absent
 ```
 
-The same narrowing applies to `AppEventCreateContext.method` / `params`, `RouteMatch.params`, and the trie helpers `extractTrieParams` / `assignParams`.
+The same narrowing applies to `AppEventContext.method` / `params`, `RouteMatch.params`, and the trie helpers `extractTrieParams` / `assignParams`.
 
 ## Sub-apps are flattened at mount time
 

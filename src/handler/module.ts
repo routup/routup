@@ -3,7 +3,7 @@ import type { MethodName } from '../constants.ts';
 import { createError } from '../error/index.ts';
 import type { IAppEvent } from '../event/index.ts';
 import { toResponse } from '../response/index.ts';
-import type { PipelineStep } from '../app/pipeline.ts';
+import type { IPipelineStep } from '../app/pipeline.ts';
 import type { AppOptions } from '../app/types.ts';
 import {
     Deadline,
@@ -58,7 +58,7 @@ export class Handler {
      *
      * @internal
      */
-    async dispatch(step: PipelineStep): Promise<Response | undefined> {
+    async dispatch(step: IPipelineStep): Promise<Response | undefined> {
         const { state } = step;
 
         let response: Response | undefined;

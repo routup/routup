@@ -9,7 +9,7 @@ import type { AppOptions } from './types.ts';
  * Request-scoped state of one `App.fetch()` call: what the match walk
  * and the handlers share while a request moves through the pipeline.
  */
-export class PipelineState {
+export interface IPipelineState {
     readonly request: AppRequest;
 
     readonly method: MethodNameLike;
@@ -54,6 +54,38 @@ export class PipelineState {
      * Methods of the routes matching the path, for the synthesized
      * `Allow` response. Collected for `OPTIONS` requests only.
      */
+    readonly methodsAllowed: Set<string> | undefined;
+
+    readonly response: AppResponse;
+
+    readonly store: Record<string | symbol, unknown>;
+
+    /**
+     * Signal handlers inherit: the request's own, unless a
+     * request-wide deadline replaced it.
+     */
+    signal: AbortSignal;
+}
+
+export class PipelineState implements IPipelineState {
+    readonly request: AppRequest;
+
+    readonly method: MethodNameLike;
+
+    readonly path: string;
+
+    readonly search: string;
+
+    readonly appOptions: Readonly<AppOptions>;
+
+    params: Record<string, string | undefined>;
+
+    mountPath: string;
+
+    error?: AppError;
+
+    dispatched: boolean;
+
     readonly methodsAllowed: Set<string> | undefined;
 
     protected _response?: AppResponse;
@@ -102,10 +134,6 @@ export class PipelineState {
         return this._store;
     }
 
-    /**
-     * Signal handlers inherit: the request's own, unless a
-     * request-wide deadline replaced it.
-     */
     get signal(): AbortSignal {
         return this._signal ?? this.request.signal;
     }

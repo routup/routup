@@ -6,7 +6,7 @@ import type {
     IAppEvent,
 } from './types.ts';
 
-export type AppEventCreateContext = {
+export type AppEventContext = {
     request: AppRequest;
     params: Record<string, string | undefined>;
     path: string;
@@ -30,6 +30,11 @@ export type AppEventCreateContext = {
     next: (event: IAppEvent, error?: Error) => Promise<Response | undefined>;
 };
 
+/**
+ * @deprecated Use `AppEventContext`.
+ */
+export type AppEventCreateContext = AppEventContext;
+
 export class AppEvent implements IAppEvent {
     readonly request: AppRequest;
 
@@ -51,7 +56,7 @@ export class AppEvent implements IAppEvent {
 
     readonly appOptions: Readonly<AppOptions>;
 
-    protected _context: AppEventCreateContext;
+    protected _context: AppEventContext;
 
     protected _searchParams: URLSearchParams | undefined;
 
@@ -64,7 +69,7 @@ export class AppEvent implements IAppEvent {
         resolve: () => void,
     } | undefined;
 
-    constructor(context: AppEventCreateContext) {
+    constructor(context: AppEventContext) {
         this._context = context;
         this.request = context.request;
         this.params = context.params;

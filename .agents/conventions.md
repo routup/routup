@@ -88,6 +88,7 @@ npm run build:types    # tsc --noEmit (type-check only)
 
 ## Design Conventions
 
+- **Interfaces**: A class `implements` only `I`-prefixed interfaces (`IApp`, `IPipelineStep`), never a plain data or options type such as `AppEventContext`; build that object instead
 - **Type checks**: Use `isObject()` from `src/utils/` instead of `typeof x === 'object'` for object checks
 - **Tree-shakeable helpers**: Request/response operations are standalone functions, not object methods
 - **Factory pattern**: `defineCoreHandler()` and `defineErrorHandler()` factories for type-safe handler creation
