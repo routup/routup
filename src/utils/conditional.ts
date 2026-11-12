@@ -64,6 +64,11 @@ const IMF_FIXDATE = new RegExp(`^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun), (\\d{2}) ${MON
 const RFC_850_DATE = new RegExp(`^(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day, (\\d{2})-${MONTH}-(\\d{2}) ${TIME} GMT$`);
 const ASCTIME_DATE = new RegExp(`^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun) ${MONTH} ([ \\d]\\d) ${TIME} (\\d{4})$`);
 
+/**
+ * Timestamp of a UTC calendar date and time, or `NaN` when a component
+ * is out of range. `Date.UTC` would roll `99:00:00` or `31 Feb` over
+ * into a later, valid date instead.
+ */
 function toTimestamp(
     year: number,
     month: string,
@@ -72,7 +77,27 @@ function toTimestamp(
     minutes: string,
     seconds: string,
 ): number {
-    return Date.UTC(year, MONTHS.indexOf(month), Number(day), Number(hours), Number(minutes), Number(seconds));
+    const d = Number(day);
+    const h = Number(hours);
+    const m = Number(minutes);
+    const sec = Number(seconds);
+
+    // 60 is a leap second.
+    if (h > 23 || m > 59 || sec > 60) {
+        return NaN;
+    }
+
+    const date = new Date(0);
+
+    // `setUTCFullYear` takes the year as written; `Date.UTC` maps
+    // 0..99 to 1900..1999.
+    date.setUTCFullYear(year, MONTHS.indexOf(month), d);
+
+    if (date.getUTCDate() !== d) {
+        return NaN;
+    }
+
+    return date.getTime() + ((h * 60 + m) * 60 + sec) * 1000;
 }
 
 /**

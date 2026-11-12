@@ -86,6 +86,26 @@ describe('src/utils/conditional', () => {
             )).toBe(false);
         });
 
+        it('should ignore an HTTP-date with an out-of-range component', () => {
+            // Shaped like a date after `lastModified`, but not a real one.
+            expect(isNotModifiedSince('Mon, 01 Jan 2024 99:00:00 GMT', lastModified)).toBe(false);
+            expect(isNotModifiedSince('Mon, 01 Jan 2024 24:00:00 GMT', lastModified)).toBe(false);
+            expect(isNotModifiedSince('Mon, 01 Jan 2024 10:60:00 GMT', lastModified)).toBe(false);
+            expect(isNotModifiedSince('Mon, 01 Jan 2024 10:00:61 GMT', lastModified)).toBe(false);
+            expect(isNotModifiedSince('Wed, 31 Feb 2024 10:00:00 GMT', lastModified)).toBe(false);
+            expect(isNotModifiedSince('Mon, 00 Feb 2024 10:00:00 GMT', lastModified)).toBe(false);
+            expect(isNotModifiedSince('Thu, 32 Dec 2099 10:00:00 GMT', lastModified)).toBe(false);
+            expect(isNotModifiedSince('Thursday, 32-Dec-99 10:00:00 GMT', new Date('1990-01-01T00:00:00.000Z'))).toBe(false);
+            expect(isNotModifiedSince('Mon Jan 32 10:00:00 2024', lastModified)).toBe(false);
+        });
+
+        it('should accept valid edge dates', () => {
+            expect(isNotModifiedSince('Thu, 29 Feb 2024 23:59:59 GMT', lastModified)).toBe(true);
+            expect(isNotModifiedSince('Thu, 29 Feb 2024 23:59:60 GMT', lastModified)).toBe(true);
+            expect(isNotModifiedSince('Wed, 29 Feb 2023 10:00:00 GMT', new Date('2023-01-01T00:00:00.000Z'))).toBe(false);
+            expect(isNotModifiedSince('Sat, 01 Jan 0050 00:00:00 GMT', new Date('1900-01-01T00:00:00.000Z'))).toBe(false);
+        });
+
         it('should be false for a missing or invalid header', () => {
             expect(isNotModifiedSince(null, lastModified)).toBe(false);
             expect(isNotModifiedSince('', lastModified)).toBe(false);
