@@ -44,6 +44,14 @@ describe('routing/wire', () => {
     }));
     app.get('/binary', defineCoreHandler(() => new Uint8Array([1, 2, 3])));
     app.get('/buffer', defineCoreHandler(() => new Uint8Array([4, 5]).buffer));
+    app.get('/reused', defineCoreHandler(() => {
+        const bytes = new Uint8Array([7, 8, 9]);
+
+        // A handler reusing its buffer once it returned.
+        queueMicrotask(() => bytes.fill(0));
+
+        return bytes;
+    }));
     app.get('/blob', defineCoreHandler(() => new Blob(['blob'], { type: 'text/x-blob' })));
     app.get('/stream', defineCoreHandler(() => new ReadableStream({
         start(controller) {
@@ -145,6 +153,12 @@ describe('routing/wire', () => {
         expect(response.headers.get('content-type')).toBe('application/octet-stream');
         expect(response.headers.get('content-length')).toBe(String(bytes.length));
         expect([...new Uint8Array(await response.arrayBuffer())]).toEqual(bytes);
+    });
+
+    it('sends the bytes a binary body had when it was returned', async () => {
+        const response = await fetch(`${origin}/reused`);
+
+        expect([...new Uint8Array(await response.arrayBuffer())]).toEqual([7, 8, 9]);
     });
 
     it('sends a Blob with its own type', async () => {
