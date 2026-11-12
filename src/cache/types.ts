@@ -26,11 +26,6 @@ export interface ICache<V> {
     set(key: string, value: V): void;
 
     /**
-     * Remove a single entry. No-op when `key` is absent.
-     */
-    delete(key: string): void;
-
-    /**
      * Drop every entry. Routers call this from inside `add()` so a
      * newly registered route can never be hidden by stale matches
      * cached against an earlier route set.

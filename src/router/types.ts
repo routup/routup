@@ -53,8 +53,8 @@ export interface IRouter<T extends ObjectLiteral = ObjectLiteral> {
 
     /**
      * Return every entry that matches the given path, in registration
-     * order. The dispatch loop iterates this list; nested `setNext`
-     * re-entries resume from a later index in the same list.
+     * order. The App walks this list in order; `event.next()` resumes
+     * from the next entry in the same list.
      *
      * `method`, when provided, is the request HTTP method. Routers
      * MAY use it to filter at lookup time (e.g. method-bucketed

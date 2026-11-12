@@ -22,6 +22,7 @@ import { normalizeAppOptions } from './options.ts';
 import {
     Deadline,
     acceptsJson,
+    addImpliedAllowedMethods,
     joinPaths,
     withLeadingSlash,
 } from '../utils/index.ts';
@@ -299,9 +300,7 @@ export class App implements IApp {
                 isRoot &&
                 event.method === MethodName.OPTIONS
             ) {
-                if (event.methodsAllowed.has(MethodName.GET)) {
-                    event.methodsAllowed.add(MethodName.HEAD);
-                }
+                addImpliedAllowedMethods(event.methodsAllowed);
 
                 const options = [...event.methodsAllowed]
                     .map((key) => key.toUpperCase())

@@ -40,10 +40,6 @@ class BrandedCache implements LookupCache {
         this.inner.set(key, value);
     }
 
-    delete(key: string): void {
-        this.inner.delete(key);
-    }
-
     clear(): void {
         this.clears += 1;
         this.inner.clear();

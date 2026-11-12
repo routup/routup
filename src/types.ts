@@ -47,17 +47,18 @@ export type Route<T extends ObjectLiteral = ObjectLiteral> = {
 };
 
 /**
- * A single matched route returned by `IRouter.lookup`. The dispatch
- * loop consumes these instead of walking the raw routes — `params`
- * are pre-extracted at lookup time so we don't re-run the matcher
- * later, and `path` (when set) tells the loop how much of
- * `event.path` to strip when recursing into a child app.
+ * A single matched route returned by `IRouter.lookup`. The App walks
+ * these in list order — `params` are pre-extracted at lookup time so
+ * the matcher does not run again, and `path` (when set) becomes the
+ * handler's `event.mountPath`.
  */
 export type RouteMatch<T extends ObjectLiteral = ObjectLiteral> = {
     route: Route<T>;
     /**
-     * Registration index in the router. Used by the dispatch loop's
-     * `setNext` continuation ("resume from index + 1").
+     * Registration index in the router: the position of the route in
+     * `add()` order. Ascending across a lookup result. The App walks
+     * the result by list position and does not read it; `TrieRouter`
+     * sorts and deduplicates its candidates by it.
      */
     index: number;
     /**
@@ -67,10 +68,9 @@ export type RouteMatch<T extends ObjectLiteral = ObjectLiteral> = {
      */
     params: Record<string, string | undefined>;
     /**
-     * For routes with a matcher: the path substring the matcher
-     * consumed. Used by `executePipelineStepChildDispatch` to strip
-     * the matched prefix off `event.path` before dispatching into a
-     * child app. Undefined for routes without a matcher.
+     * For routes with a matcher: the path prefix the matcher
+     * consumed. The App sets it as `event.mountPath` while the
+     * matched handler runs. Undefined for routes without a matcher.
      */
     path?: string;
 };

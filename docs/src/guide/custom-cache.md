@@ -48,7 +48,6 @@ const app = new App({
 export interface ICache<V> {
     get(key: string): V | undefined;
     set(key: string, value: V): void;
-    delete(key: string): void;
     clear(): void;
 }
 ```
@@ -72,7 +71,6 @@ class TtlCache<V extends {}> implements ICache<V> {
 
     get(key: string)        { return this.inner.get(key); }
     set(key: string, v: V)  { this.inner.set(key, v); }
-    delete(key: string)     { this.inner.delete(key); }
     clear()                 { this.inner.clear(); }
 }
 

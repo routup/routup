@@ -1,24 +1,12 @@
 import type { Key } from 'path-to-regexp';
 import { pathToRegexp } from 'path-to-regexp';
+import { decodeParam } from '../utils/decode-param.ts';
 import type {
     IPathMatcher,
     Path,
     PathMatcherExecResult,
     PathMatcherOptions,
 } from './type.ts';
-
-function decodeParam(val: unknown) {
-    /* istanbul ignore next */
-    if (typeof val !== 'string' || val.length === 0) {
-        return val;
-    }
-
-    try {
-        return decodeURIComponent(val);
-    } catch {
-        return val;
-    }
-}
 
 export class PathMatcher implements IPathMatcher {
     protected path: Path;

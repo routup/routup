@@ -43,7 +43,7 @@ Method matching against the request's HTTP method stays at the dispatch-loop cal
 
 ### Registration order
 
-Lookup results must come back in registration order. The dispatch loop's `setNext` continuation relies on this: when a middleware calls `event.next()`, the pipeline resumes from `index + 1` in the same list.
+Lookup results must come back in registration order. `App` walks the returned list in order: when a middleware calls `event.next()`, the pipeline resumes from the next entry in the same list.
 
 ## A minimal example
 
