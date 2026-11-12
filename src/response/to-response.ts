@@ -1,7 +1,32 @@
+import { FastResponse } from 'srvx';
 import { createError } from '../error/create.ts';
 import type { IAppEvent } from '../event/index.ts';
 import { DEFAULT_ETAG_FN } from '../utils/etag/utils.ts';
 import type { EtagFn } from '../utils/etag/types.ts';
+
+/**
+ * Build the final `Response` from the accumulated status and headers.
+ *
+ * Uses srvx's `FastResponse`: on Node.js the adapter writes its body
+ * and headers straight to the socket instead of materializing a Web
+ * `Response` and draining it as a stream; on every other runtime it is
+ * the global `Response`.
+ *
+ * `FastResponse` keeps its init by reference until it is sent, so the
+ * headers are copied here. The response must be a snapshot — a
+ * middleware touching `event.response.headers` after `event.next()`
+ * resolved must not rewrite a response that was already built.
+ */
+function createResponse(
+    body: BodyInit | null,
+    status: number,
+    headers: Headers,
+): Response {
+    return new FastResponse(body, {
+        status,
+        headers: [...headers],
+    });
+}
 
 function stripWeakPrefix(etag: string): string {
     return etag.startsWith('W/') ? etag.slice(2) : etag;
@@ -60,10 +85,7 @@ async function applyEtag(
         (ifNoneMatch === '*' || ifNoneMatch.split(',').some((t) => stripWeakPrefix(t.trim()) === stripWeakPrefix(etag)));
 
     if (isFresh) {
-        return new Response(null, {
-            status: 304,
-            headers,
-        });
+        return createResponse(null, 304, headers);
     }
 
     return undefined;
@@ -91,10 +113,7 @@ export function toResponse(
     }
 
     if (value === null) {
-        return new Response(null, {
-            status: event.response.status,
-            headers: event.response.headers,
-        });
+        return createResponse(null, event.response.status, event.response.headers);
     }
 
     // typeof gate avoids running `instanceof` against every Web
@@ -114,16 +133,10 @@ export function toResponse(
         // default fn. Either truthy fn or undefined → run applyEtag.
         if (event.appOptions.etag !== null) {
             return applyEtag(value as string, event, headers)
-                .then((cached) => cached ?? new Response(value as string, {
-                    status,
-                    headers,
-                }));
+                .then((cached) => cached ?? createResponse(value as string, status, headers));
         }
 
-        return new Response(value as string, {
-            status,
-            headers,
-        });
+        return createResponse(value as string, status, headers);
     }
 
     if (
@@ -148,17 +161,11 @@ export function toResponse(
                 headers.set('content-type', 'application/octet-stream');
             }
 
-            return new Response(value as BodyInit, {
-                status,
-                headers,
-            });
+            return createResponse(value as BodyInit, status, headers);
         }
 
         if (value instanceof ReadableStream) {
-            return new Response(value, {
-                status,
-                headers,
-            });
+            return createResponse(value, status, headers);
         }
 
         if (value instanceof Blob) {
@@ -166,10 +173,7 @@ export function toResponse(
                 headers.set('content-type', value.type || 'application/octet-stream');
             }
 
-            return new Response(value, {
-                status,
-                headers,
-            });
+            return createResponse(value, status, headers);
         }
     }
 
@@ -193,14 +197,8 @@ export function toResponse(
 
     if (event.appOptions.etag !== null) {
         return applyEtag(json, event, headers)
-            .then((cached) => cached ?? new Response(json, {
-                status,
-                headers,
-            }));
+            .then((cached) => cached ?? createResponse(json, status, headers));
     }
 
-    return new Response(json, {
-        status,
-        headers,
-    });
+    return createResponse(json, status, headers);
 }

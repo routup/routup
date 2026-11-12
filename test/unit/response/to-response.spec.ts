@@ -144,6 +144,54 @@ describe('src/response/to-response', () => {
         expect(result!.headers.get('x-custom')).toBe('value');
     });
 
+    it.each([
+        ['string', 'ok'],
+        ['object', { ok: true }],
+        ['null', null],
+        ['binary', new Uint8Array([1, 2, 3])],
+    ])('should snapshot the headers into a %s response', async (_label, value) => {
+        const event = createTestEvent('/');
+
+        event.response.headers.set('x-early', '1');
+
+        const result = await toResponse(value, event);
+
+        // A middleware touching the accumulator after the response was
+        // built must not rewrite that response.
+        event.response.headers.set('x-late', '1');
+        event.response.headers.delete('x-early');
+
+        expect(result!.headers.get('x-early')).toBe('1');
+        expect(result!.headers.has('x-late')).toBe(false);
+    });
+
+    it('should keep every set-cookie value', async () => {
+        const event = createTestEvent('/');
+
+        event.response.headers.append('set-cookie', 'a=1');
+        event.response.headers.append('set-cookie', 'b=2');
+
+        const result = await toResponse('ok', event);
+
+        expect(result!.headers.getSetCookie()).toEqual(['a=1', 'b=2']);
+    });
+
+    it('should build responses that can be cloned and re-wrapped', async () => {
+        const event = createTestEvent('/');
+
+        event.response.status = 201;
+
+        const result = await toResponse({ ok: true }, event);
+        const clone = result!.clone();
+        const rewrapped = new Response(result!.body, result!);
+
+        expect(clone.status).toBe(201);
+        expect(await clone.json()).toEqual({ ok: true });
+        expect(rewrapped.status).toBe(201);
+        expect(rewrapped.headers.get('content-type')).toBe('application/json; charset=utf-8');
+        expect(await rewrapped.json()).toEqual({ ok: true });
+    });
+
     it('should throw AppError when JSON.stringify fails', async () => {
         const event = createTestEvent('/');
         const circular: Record<string, unknown> = {};

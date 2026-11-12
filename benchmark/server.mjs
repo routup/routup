@@ -6,7 +6,7 @@ const {
     TrieRouter,
     defineCoreHandler,
     serve,
-} = await import(`../dist/${runtime}.mjs`);
+} = await import(`../${process.env.DIST ?? 'dist'}/${runtime}.mjs`);
 
 const RESOLVER = process.env.RESOLVER ?? 'linear';
 const CACHE = process.env.CACHE ?? 'none';

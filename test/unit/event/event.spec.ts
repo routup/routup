@@ -132,6 +132,63 @@ describe('src/dispatcher/module (DispatcherEvent)', () => {
             expect(routup.searchParams.get('b')).toBe('2');
         });
 
+        it('should return the same searchParams on every read of one event', () => {
+            const dispatch = new DispatcherEvent(createTestRequest('http://localhost/foo?a=1'));
+            const routup = dispatch.build();
+
+            expect(routup.searchParams).toBe(routup.searchParams);
+        });
+
+        it('should give every built event its own searchParams', () => {
+            const dispatch = new DispatcherEvent(createTestRequest('http://localhost/foo?a=1'));
+            const first = dispatch.build();
+            const second = dispatch.build();
+
+            first.searchParams.set('a', '2');
+            first.searchParams.set('b', '3');
+
+            expect(second.searchParams.get('a')).toBe('1');
+            expect(second.searchParams.has('b')).toBe(false);
+        });
+
+        it('should expose empty searchParams without a query string', () => {
+            const routup = new DispatcherEvent(createTestRequest('http://localhost/foo')).build();
+
+            expect([...routup.searchParams]).toEqual([]);
+        });
+
+        it('should use searchParams handed to the AppEvent constructor', () => {
+            const dispatch = new DispatcherEvent(createTestRequest('/'));
+            const searchParams = new URLSearchParams('x=1');
+            const routup = new AppEvent({
+                request: dispatch.request,
+                params: {},
+                path: '/',
+                method: 'GET',
+                mountPath: '/',
+                headers: dispatch.request.headers,
+                searchParams,
+                response: dispatch.response,
+                store: {},
+                signal: dispatch.signal,
+                appOptions: {},
+                next: async () => undefined,
+            });
+
+            expect(routup.searchParams).toBe(searchParams);
+        });
+
+        it('should take path and query from the URL the adapter already parsed', () => {
+            const request = createTestRequest('http://localhost/ignored?z=0');
+
+            request._url = new URL('http://localhost/from-adapter?a=1');
+
+            const dispatch = new DispatcherEvent(request);
+
+            expect(dispatch.path).toBe('/from-adapter');
+            expect(dispatch.build().searchParams.get('a')).toBe('1');
+        });
+
         it('should have an isolated store per event', () => {
             const dispatch1 = new DispatcherEvent(createTestRequest('/'));
             const dispatch2 = new DispatcherEvent(createTestRequest('/'));
