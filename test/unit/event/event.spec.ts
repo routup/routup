@@ -7,7 +7,7 @@ import {
 import { PipelineStep } from '../../../src/app/pipeline';
 import { PipelineState } from '../../../src/app/pipeline-state';
 import { AppEvent } from '../../../src/event/module';
-import type { AppEventCreateContext } from '../../../src/event/module';
+import type { AppEventContext } from '../../../src/event/module';
 import { createTestRequest } from '../../helpers';
 
 function buildEvent(state: PipelineState): AppEvent {
@@ -15,8 +15,8 @@ function buildEvent(state: PipelineState): AppEvent {
 }
 
 function createContext(
-    next: AppEventCreateContext['next'],
-): AppEventCreateContext {
+    next: AppEventContext['next'],
+): AppEventContext {
     const request = createTestRequest('/');
 
     return {
@@ -323,7 +323,7 @@ describe('src/event/module (AppEvent)', () => {
 
     it('should return a promise when the continuation returns a plain value', async () => {
         const response = new Response('plain');
-        const next = (() => response) as unknown as AppEventCreateContext['next'];
+        const next = (() => response) as unknown as AppEventContext['next'];
         const routup = new AppEvent(createContext(next));
 
         const result = routup.next();
