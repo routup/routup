@@ -15,9 +15,8 @@
  * dist), ROUNDS (6), WARMUP (2), DURATION (6), CONNECTIONS (100),
  * PIPELINING (10), RESOLVER, CACHE, URL_PATH (default /).
  */
-import { spawn } from 'node:child_process';
-import { setTimeout as wait } from 'node:timers/promises';
 import autocannon from 'autocannon';
+import { getFreePort, startServer } from './server-process.mjs';
 
 function readPositiveNumber(name, fallback) {
     const raw = process.env[name];
@@ -42,19 +41,20 @@ const WARMUP = readPositiveNumber('WARMUP', 2);
 const DURATION = readPositiveNumber('DURATION', 6);
 const CONNECTIONS = readPositiveNumber('CONNECTIONS', 100);
 const PIPELINING = readPositiveNumber('PIPELINING', 10);
-const URL = `http://127.0.0.1:3000${process.env.URL_PATH ?? '/'}`;
+const URL_PATH = process.env.URL_PATH ?? '/';
 
 async function runOne(dist) {
-    const server = spawn('node', ['benchmark/server.mjs'], {
-        stdio: ['ignore', 'ignore', 'ignore'],
-        env: { ...process.env, DIST: dist },
+    const port = await getFreePort();
+    const url = `http://127.0.0.1:${port}${URL_PATH}`;
+    const server = await startServer({
+        port,
+        url,
+        env: { DIST: dist },
     });
 
     try {
-        await wait(800);
-
         const options = {
-            url: URL,
+            url,
             connections: CONNECTIONS,
             pipelining: PIPELINING,
         };
@@ -63,14 +63,15 @@ async function runOne(dist) {
 
         const result = await autocannon({ ...options, duration: DURATION });
 
+        server.assertAlive();
+
         if (result.non2xx > 0 || result.errors > 0) {
             throw new Error(`${dist}: ${result.non2xx} non-2xx responses, ${result.errors} errors`);
         }
 
         return result.requests.average;
     } finally {
-        server.kill('SIGKILL');
-        await wait(300);
+        await server.stop();
     }
 }
 
@@ -81,7 +82,7 @@ const median = (xs) => {
     return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 };
 
-console.log(`base=${BASE}  head=${HEAD}  url=${URL}  resolver=${process.env.RESOLVER ?? 'linear'}  rounds=${ROUNDS} warmup=${WARMUP}s duration=${DURATION}s`);
+console.log(`base=${BASE}  head=${HEAD}  path=${URL_PATH}  resolver=${process.env.RESOLVER ?? 'linear'}  rounds=${ROUNDS} warmup=${WARMUP}s duration=${DURATION}s`);
 
 const base = [];
 const head = [];

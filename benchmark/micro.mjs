@@ -242,8 +242,13 @@ if (process.env.MICRO_CHILD) {
         const head = [];
 
         for (let r = 0; r < ROUNDS; r++) {
-            base.push(measureInChild(name, BASE));
-            head.push(measureInChild(name, DIST));
+            if (r % 2 === 0) {
+                base.push(measureInChild(name, BASE));
+                head.push(measureInChild(name, DIST));
+            } else {
+                head.push(measureInChild(name, DIST));
+                base.push(measureInChild(name, BASE));
+            }
         }
 
         const b = median(base);
