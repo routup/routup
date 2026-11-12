@@ -5,7 +5,13 @@ import { createError, isError } from '../error/index.ts';
 import type { IAppEvent } from '../event/index.ts';
 import { toResponse } from '../response/index.ts';
 import type { AppOptions } from '../app/types.ts';
-import { isPromise, toMethodName, withLeadingSlash } from '../utils/index.ts';
+import {
+    Deadline,
+    createTimeoutError,
+    isPromise,
+    toMethodName,
+    withLeadingSlash,
+} from '../utils/index.ts';
 import { HandlerSymbol, HandlerType } from './constants.ts';
 import type { HandlerOptions } from './types.ts';
 
@@ -43,12 +49,10 @@ export class Handler implements IDispatcher {
     async dispatch(event: IDispatcherEvent): Promise<Response | undefined> {
         let response: Response | undefined;
         // Hoisted so the outer catch can forward it to `onError` and
-        // so the outer finally can release the parent-signal abort
-        // listener even when `onBefore` / `event.build()` throws —
-        // the inner try/finally that used to own this cleanup was
-        // unreachable from those throw sites.
+        // so the outer finally can release the deadline even when
+        // `onBefore` / `event.build()` throws before `deadline.run()`.
         let handlerEvent: IAppEvent | undefined;
-        let cleanupParentListener: (() => void) | undefined;
+        let deadline: Deadline | undefined;
 
         try {
             // Read router options directly from the dispatcher event so we
@@ -57,30 +61,18 @@ export class Handler implements IDispatcher {
             // common no-timeout path.
             const effectiveTimeout = this.resolveTimeout(event.appOptions);
 
-            // When a per-handler timeout is active, create a child AbortController
-            // linked to the parent signal so the handler's signal aborts on timeout
-            let childController: AbortController | undefined;
-
+            // When a per-handler timeout is active, the handler's signal
+            // is the deadline's: it aborts on timeout and follows the
+            // parent signal.
             if (effectiveTimeout) {
-                const parentSignal = event.signal;
-
-                childController = new AbortController();
-
-                if (parentSignal.aborted) {
-                    childController.abort(parentSignal.reason);
-                } else {
-                    const onAbort = () => childController!.abort(parentSignal.reason);
-
-                    parentSignal.addEventListener('abort', onAbort, { once: true });
-                    cleanupParentListener = () => parentSignal.removeEventListener('abort', onAbort);
-                }
+                deadline = new Deadline(effectiveTimeout, event.signal);
             }
 
-            // Build the handler event exactly once — with the child signal
-            // when a timeout is configured, otherwise inheriting the
-            // dispatcher's own signal.
-            handlerEvent = childController ?
-                event.build(childController.signal) :
+            // Build the handler event exactly once — with the deadline
+            // signal when a timeout is configured, otherwise inheriting
+            // the dispatcher's own signal.
+            handlerEvent = deadline ?
+                event.build(deadline.signal) :
                 event.build();
 
             // ERROR handlers with no pending error are a no-op — and
@@ -110,13 +102,9 @@ export class Handler implements IDispatcher {
 
             if (skipFn) {
                 // no-op
-            } else if (effectiveTimeout) {
+            } else if (deadline) {
                 // Race the (possibly-async) invocation against the timeout.
-                result = await this.executeWithTimeout(
-                    () => this.resolveHandlerResult(invocation, handlerEvent!),
-                    effectiveTimeout,
-                    childController,
-                );
+                result = await deadline.run(() => this.resolveHandlerResult(invocation, handlerEvent!));
             } else if (isPromise(invocation)) {
                 // Async handler return — await once. If it resolves
                 // to undefined, fall back to the async resolver
@@ -173,8 +161,8 @@ export class Handler implements IDispatcher {
 
             throw event.error;
         } finally {
-            if (cleanupParentListener) {
-                cleanupParentListener();
+            if (deadline) {
+                deadline.release();
             }
         }
 
@@ -211,16 +199,13 @@ export class Handler implements IDispatcher {
         const { signal } = handlerEvent;
 
         if (signal.aborted) {
-            throw createError({ status: 408, message: 'Request Timeout' });
+            throw createTimeoutError();
         }
 
         return new Promise<unknown>((resolve, reject) => {
             const onAbort = () => {
                 signal.removeEventListener('abort', onAbort);
-                reject(createError({
-                    status: 408,
-                    message: 'Request Timeout',
-                }));
+                reject(createTimeoutError());
             };
 
             signal.addEventListener('abort', onAbort, { once: true });
@@ -230,38 +215,6 @@ export class Handler implements IDispatcher {
                 resolve(handlerEvent.nextResult);
             });
         });
-    }
-
-    protected async executeWithTimeout(
-        fn: () => unknown | Promise<unknown>,
-        effectiveTimeout: number | undefined,
-        controller?: AbortController,
-    ): Promise<unknown> {
-        if (!effectiveTimeout) {
-            return fn();
-        }
-
-        let timerId: ReturnType<typeof setTimeout> | undefined;
-
-        try {
-            return await Promise.race([
-                fn(),
-                new Promise<never>((_, reject) => {
-                    timerId = setTimeout(() => {
-                        if (controller) {
-                            controller.abort();
-                        }
-
-                        reject(createError({
-                            status: 408,
-                            message: 'Request Timeout',
-                        }));
-                    }, effectiveTimeout);
-                }),
-            ]);
-        } finally {
-            clearTimeout(timerId);
-        }
     }
 
     protected resolveTimeout(appOptions: AppOptions): number | undefined {

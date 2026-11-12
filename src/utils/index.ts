@@ -1,5 +1,6 @@
 export * from './accepts-json.ts';
 export * from './cookie.ts';
+export * from './deadline.ts';
 export * from './header.ts';
 export * from './etag/index.ts';
 export * from './trust-proxy/index.ts';

@@ -19,6 +19,7 @@ import type { Plugin, PluginInstallContext } from '../plugin/index.ts';
 import { isPlugin } from '../plugin/index.ts';
 import { normalizeAppOptions } from './options.ts';
 import {
+    Deadline,
     acceptsJson,
     joinPaths,
     withLeadingSlash,
@@ -236,28 +237,13 @@ export class App implements IApp {
             const timeoutMs = this._options.timeout;
 
             if (timeoutMs) {
-                const controller = new AbortController();
+                // The `signal` setter merges the deadline signal with
+                // the request signal, so no parent is linked here.
+                const deadline = new Deadline(timeoutMs);
 
-                event.signal = controller.signal;
+                event.signal = deadline.signal;
 
-                let timerId: ReturnType<typeof setTimeout> | undefined;
-
-                try {
-                    response = await Promise.race([
-                        this.dispatch(event),
-                        new Promise<never>((_, reject) => {
-                            timerId = setTimeout(() => {
-                                controller.abort();
-                                reject(createError({
-                                    status: 408,
-                                    message: 'Request Timeout',
-                                }));
-                            }, timeoutMs);
-                        }),
-                    ]);
-                } finally {
-                    clearTimeout(timerId);
-                }
+                response = await deadline.run(() => this.dispatch(event));
             } else {
                 response = await this.dispatch(event);
             }
