@@ -1,4 +1,3 @@
-import type { IDispatcher } from '../dispatcher/index.ts';
 import type { AppRequest } from '../event/index.ts';
 import type {
     Handler,
@@ -157,7 +156,7 @@ export type AppContext = {
 
 // --------------------------------------------------
 
-export interface IApp extends IDispatcher {
+export interface IApp {
     /**
      * Optional label for the router instance.
      */

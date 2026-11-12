@@ -191,7 +191,7 @@ function pushIntoBucket<T extends ObjectLiteral>(
  *
  * Per-leaf storage is bucketed by HTTP method (T4) so lookup
  * narrows to the request method's bucket(s) instead of emitting
- * every entry at the leaf and letting the dispatcher's filter
+ * every entry at the leaf and letting the App's match walk
  * discard mismatches.
  *
  * Param extraction is `paramsIndexMap`-driven (T3): a pre-built

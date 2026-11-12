@@ -24,6 +24,7 @@ Routup v6 also removes the lifecycle-hook surface (`app.on(...)`, `HookName`, pe
 | `RouterOptions.path` (runtime path-strip) | `AppContext.path` (registration-time **prefix**) |
 | `event.routerPath` | _removed_ — option resolution moved to mount time; the per-request stack walk is gone |
 | `event.routerOptions` | `event.appOptions` |
+| `IDispatcher` / `IDispatcherEvent` / `DispatcherEvent`, `router.dispatch(event)` | _removed_ — `app.fetch(request)` is the only entry point; handlers receive an `AppEvent` |
 | `Router.clone()` | _removed_ — sub-apps flatten on mount, so an App can be re-mounted under multiple paths without cloning (#914) |
 | `sendCreated(event, data)` / `sendAccepted(event, data)` | _removed_ — inline the two lines (`event.response.status = 201` / `202`; `return data`) |
 
@@ -67,7 +68,7 @@ defineCoreHandler((event) => event.params.id!.toUpperCase()); // ! when route gu
 defineCoreHandler((event) => event.params.id?.toUpperCase()); // ? when it may be absent
 ```
 
-The same narrowing applies to `IDispatcherEvent.method` / `params`, `AppEventCreateContext.method` / `params`, `RouteMatch.params`, and the trie helpers `extractTrieParams` / `assignParams`.
+The same narrowing applies to `AppEventCreateContext.method` / `params`, `RouteMatch.params`, and the trie helpers `extractTrieParams` / `assignParams`.
 
 ## Sub-apps are flattened at mount time
 

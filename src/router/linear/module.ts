@@ -44,8 +44,8 @@ export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IR
     }
 
     lookup(path: string, _method?: MethodNameLike): readonly RouteMatch<T>[] {
-        // LinearRouter ignores `method`: the dispatcher's own
-        // `matchHandlerMethod` check runs on every returned candidate
+        // LinearRouter ignores `method`: the App's match walk runs its
+        // `matchHandlerMethod` check on every returned candidate
         // anyway, so we simply emit every path-matching route and let
         // the call site discriminate. Method-aware routers (TrieRouter)
         // narrow at lookup time for the per-request perf win.

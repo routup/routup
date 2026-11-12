@@ -1,6 +1,5 @@
 export * from './cache/index.ts';
 export * from './constants.ts';
-export * from './dispatcher/index.ts';
 export * from './error/index.ts';
 export * from './event/index.ts';
 export * from './handler/index.ts';

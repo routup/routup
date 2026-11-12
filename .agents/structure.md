@@ -14,7 +14,6 @@ routup/
 │   │   └── service-worker.ts # Service Worker entry
 │   ├── app/                # App class (central module) and options
 │   ├── cache/              # ICache and LruCache for router lookups
-│   ├── dispatcher/         # IDispatcher, DispatcherEvent
 │   ├── event/              # AppEvent class and IAppEvent interface
 │   ├── error/              # AppError (extends @ebec/http), createError, isError
 │   ├── handler/            # Handler definitions
@@ -52,13 +51,12 @@ routup/
 | Module | Purpose |
 |--------|---------|
 | `_entries/` | Runtime-specific entry points — each re-exports core API plus runtime adapter (`serve`, `toNodeHandler`, etc.) via srvx |
-| `app/` | Core `App` class — registers handlers, mounts apps, installs plugins, dispatches requests, exposes `fetch()` |
+| `app/` | Core `App` class — registers handlers, mounts apps, installs plugins, exposes `fetch()`. `pipeline-state.ts` and `pipeline.ts` (both internal) hold the request-scoped state and the match walk behind `event.next()` |
 | `router/` | `IRouter` route-table family: `LinearRouter` (default), `TrieRouter`, `SmartRouter` |
 | `cache/` | `ICache` contract and the `LruCache` default used by routers |
 | `handler/core/` | `defineCoreHandler()` factory — creates typed request handlers with shorthand and verbose syntax |
 | `handler/error/` | `defineErrorHandler()` factory — creates error handlers that receive `(error, event)` |
 | `handler/adapters/` | `fromNodeHandler()`, `fromNodeMiddleware()`, `fromWebHandler()` — wrap foreign handlers for use in routup |
-| `dispatcher/` | `IDispatcher` interface and the `DispatcherEvent` carried through the pipeline |
 | `event/` | `AppEvent` class and `IAppEvent` interface — the event object handed to each handler |
 | `plugin/` | Plugin contract — objects with `name` and `install(app)`; internal `PluginRegistry` holds an App's install/singleton rules |
 | `path/` | `PathMatcher` — wraps `path-to-regexp` for URL pattern matching |

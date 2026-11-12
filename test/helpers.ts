@@ -1,5 +1,6 @@
 import type { AppRequest } from '../src/index';
-import { DispatcherEvent } from '../src/dispatcher/module';
+import { PipelineStep } from '../src/app/pipeline';
+import { PipelineState } from '../src/app/pipeline-state';
 import type { AppEvent } from '../src/event/module';
 
 /**
@@ -22,11 +23,14 @@ export function createTestRequest(
 
 /**
  * Create a AppEvent for testing helpers.
- * Shorthand for creating a DispatcherEvent and building the public event.
+ * Builds the event of a standalone pipeline step: no match is left,
+ * so `event.next()` resolves with `undefined`.
  */
 export function createTestEvent(
     url: string,
     options?: RequestInit & { ip?: string },
 ): AppEvent {
-    return new DispatcherEvent(createTestRequest(url, options)).build();
+    const state = new PipelineState(createTestRequest(url, options));
+
+    return new PipelineStep(state, [], 0).createEvent();
 }
