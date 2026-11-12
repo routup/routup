@@ -312,7 +312,8 @@ The `EventStreamHandle` type:
 
 ```typescript
 type EventStreamHandle = {
-    write(message: string | EventStreamMessage): void;
+    write(message: string | EventStreamMessage): boolean;
+    writeComment(comment: string): boolean;
     end(): void;
     response: Response;
 };
@@ -324,6 +325,8 @@ type EventStreamMessage = {
     event?: string;
 };
 ```
+
+`write()` and `writeComment()` return `false` when the stream is closed or the serialized chunk exceeds `maxMessageSize`. `writeComment()` writes a comment line (`: ping`), which clients ignore; use it as a keep-alive so proxies do not close an idle connection. An `id` of `''` resets the client's last event ID.
 
 ```typescript
 import { defineCoreHandler, createEventStream } from 'routup';

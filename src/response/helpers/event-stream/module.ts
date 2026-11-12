@@ -2,7 +2,7 @@ import { HeaderName } from '../../../constants.ts';
 import type { IAppEvent } from '../../../event/index.ts';
 import { AppError } from '../../../error/module.ts';
 import type { EventStreamMessage } from './types.ts';
-import { serializeEventStreamMessage } from './utils.ts';
+import { serializeEventStreamComment, serializeEventStreamMessage } from './utils.ts';
 
 export type EventStreamOptions = {
     maxMessageSize?: number,
@@ -10,6 +10,11 @@ export type EventStreamOptions = {
 
 export type EventStreamHandle = {
     write(message: string | EventStreamMessage): boolean;
+    /**
+     * Write a comment line. Clients ignore it, so it can be used
+     * as a keep-alive ping.
+     */
+    writeComment(comment: string): boolean;
     end(): void;
     response: Response;
 };
@@ -49,29 +54,36 @@ export function createEventStream(
         headers,
     });
 
+    const enqueue = (serialized: string): boolean => {
+        if (closed) {
+            return false;
+        }
+
+        const chunk = encoder.encode(serialized);
+
+        if (
+            options?.maxMessageSize !== undefined &&
+            chunk.byteLength > options.maxMessageSize
+        ) {
+            return false;
+        }
+
+        controller.enqueue(chunk);
+
+        return true;
+    };
+
     const handle: EventStreamHandle = {
         write(message: string | EventStreamMessage): boolean {
-            if (closed) {
-                return false;
-            }
-
             if (typeof message === 'string') {
-                return handle.write({ data: message });
+                return enqueue(serializeEventStreamMessage({ data: message }));
             }
 
-            const serialized = serializeEventStreamMessage(message);
+            return enqueue(serializeEventStreamMessage(message));
+        },
 
-            if (options?.maxMessageSize !== undefined) {
-                const serializedSize = encoder.encode(serialized).byteLength;
-
-                if (serializedSize > options.maxMessageSize) {
-                    return false;
-                }
-            }
-
-            controller.enqueue(encoder.encode(serialized));
-
-            return true;
+        writeComment(comment: string): boolean {
+            return enqueue(serializeEventStreamComment(comment));
         },
 
         end(): void {

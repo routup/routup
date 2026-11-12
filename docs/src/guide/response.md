@@ -136,3 +136,13 @@ app.get('/events', defineCoreHandler((event) => {
     return stream.response;
 }));
 ```
+
+Idle connections are often closed by proxies. Send a comment as a keep-alive; clients ignore it:
+
+```typescript
+const ping = setInterval(() => {
+    if (!stream.writeComment('ping')) {
+        clearInterval(ping);
+    }
+}, 15_000);
+```
