@@ -32,7 +32,7 @@ type HeroFrontmatter = {
     install: string;
     meta: string;
     code: string;
-    request: { label: string };
+    request: { label: string; placeholder: string };
 };
 
 const { frontmatter } = useData();
@@ -216,6 +216,7 @@ const bodyClass = computed(() => (valid.value ? 'home-hero__body' : 'home-hero__
                             v-model="line"
                             class="home-hero__input"
                             type="text"
+                            :placeholder="hero.request.placeholder"
                             spellcheck="false"
                             autocomplete="off"
                             autocapitalize="off"
@@ -417,6 +418,11 @@ const bodyClass = computed(() => (valid.value ? 'home-hero__body' : 'home-hero__
     background: transparent;
     color: var(--rt-on-dark);
     font: inherit;
+}
+
+.home-hero__input::placeholder {
+    color: var(--rt-on-dark-faint);
+    opacity: 1;
 }
 
 .home-hero__input:hover {

@@ -31,6 +31,7 @@ hero:
         serve(app, { port: 3000 });
     request:
         label: 'Request to the sample app (method and path)'
+        placeholder: 'GET /users/42'
 pipeline:
     title: 'Pipeline'
     steps:
@@ -130,12 +131,12 @@ quickstart:
     active: 1
     tabs:
         - label: 'Install'
-          code: 'npm install routup'
+          code: '$ npm install routup'
         - label: 'Define'
           code: *hero-code
         - label: 'Serve'
           code: |
-              $ node app.ts
+              $ node app.ts   # Node.js 22.18+
               $ curl localhost:3000/users/42
               {"id":42}
     link:

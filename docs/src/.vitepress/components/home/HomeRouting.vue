@@ -151,12 +151,12 @@ const routes = ROUTES.map((route) => {
                             gradientUnits="userSpaceOnUse"
                         >
                             <stop
+                                class="home-routing__stop-start"
                                 offset="0"
-                                stop-color="#8b5cf6"
                             />
                             <stop
+                                class="home-routing__stop-end"
                                 offset="1"
-                                stop-color="#06b6d4"
                             />
                         </linearGradient>
                     </defs>
@@ -481,8 +481,17 @@ const routes = ROUTES.map((route) => {
     font-weight: 500;
 }
 
+.home-routing__stop-start {
+    stop-color: var(--rt-color-primary-500);
+}
+
+.home-routing__stop-end {
+    stop-color: var(--rt-color-accent-500);
+}
+
+/* Dark text: white on the GET and POST colours stays under 4.5:1. */
 .home-routing__badge-text {
-    fill: #fff;
+    fill: var(--rt-surface-dark);
     font-size: 10px;
     font-weight: 600;
     letter-spacing: 0.06em;

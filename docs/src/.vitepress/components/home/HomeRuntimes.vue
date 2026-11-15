@@ -18,8 +18,15 @@ type RuntimesFrontmatter = {
     items: RuntimeItem[];
 };
 
-// Dot colours, one per chip in order; decorative.
-const DOT_COLORS = ['#10b981', '#f59e0b', '#22d3ee', '#f97316', '#3b82f6', '#a78bfa'];
+// Dot colours, one per chip in order; decorative. The theme has no orange token.
+const DOT_COLORS = [
+    'var(--rt-color-success-500)',
+    'var(--rt-color-warning-500)',
+    'var(--rt-color-accent-400)',
+    '#f97316',
+    'var(--rt-color-info-500)',
+    'var(--rt-color-primary-400)',
+];
 
 const { frontmatter } = useData();
 
@@ -47,13 +54,12 @@ const items = computed(() => {
         surface="aurora"
         class="home-runtimes"
     >
-        <!-- RtHeading renders a plain title; this one carries the gradient highlight. -->
-        <div class="rt-heading rt-heading--center">
-            <span class="rt-heading__eyebrow">{{ runtimes.eyebrow }}</span>
-            <h2 class="rt-heading__title rt-heading__title--h2">
-                {{ runtimes.title }} <span class="home-runtimes__highlight">{{ runtimes.highlight }}</span>
-            </h2>
-        </div>
+        <RtHeading
+            :eyebrow="runtimes.eyebrow"
+            :title="runtimes.title"
+            :highlight="runtimes.highlight"
+            align="center"
+        />
         <p class="home-runtimes__lede">
             <InlineCode :text="runtimes.lede" />
         </p>
@@ -115,13 +121,6 @@ const items = computed(() => {
 </template>
 
 <style scoped>
-.home-runtimes__highlight {
-    background: var(--rt-gradient-brand);
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-}
-
 .home-runtimes__lede {
     max-width: 720px;
     margin: 14px auto 0;
