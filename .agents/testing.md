@@ -22,6 +22,7 @@ test/
 ├── unit/
 │   ├── app/            # App options, mounting (flatten), plugins, timeouts
 │   ├── cache/          # LruCache
+│   ├── docs/           # Logic of the docs site's landing page components
 │   ├── error/          # Error creation and chaining
 │   ├── event/          # AppEvent
 │   ├── handler/        # Handler definitions, adapters, lifecycle callbacks
