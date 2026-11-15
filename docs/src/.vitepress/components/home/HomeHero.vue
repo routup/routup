@@ -85,7 +85,17 @@ async function evaluate(value: string) {
 
     app ??= createDemoApp();
 
-    const next = await runRequestLine(app, parsed);
+    let next: RequestLineResult;
+
+    try {
+        next = await runRequestLine(app, parsed);
+    } catch {
+        if (id === runId) {
+            valid.value = false;
+        }
+
+        return;
+    }
 
     if (id === runId) {
         result.value = next;

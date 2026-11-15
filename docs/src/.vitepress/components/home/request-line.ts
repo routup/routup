@@ -12,7 +12,8 @@ export type RequestLineResult = {
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
-const LINE_PATTERN = /^(?:(\S+)\s+)?(\/\S*)$/;
+// The path starts with one slash: `//host` would read as a host.
+const LINE_PATTERN = /^(?:(\S+)\s+)?(\/(?!\/)\S*)$/;
 
 export const DEFAULT_REQUEST = '/users/42';
 
@@ -20,7 +21,7 @@ export const DEFAULT_RESULT: RequestLineResult = { status: 200, body: '{ "id": 4
 
 /**
  * Parse `METHOD /path` or `/path` (method defaults to GET).
- * Returns undefined for anything else.
+ * Returns undefined for anything else, including a path starting with `//`.
  */
 export function parseRequestLine(input: string): RequestLine | undefined {
     const match = LINE_PATTERN.exec(input.trim());
@@ -63,7 +64,8 @@ function formatBody(text: string, contentType: string | null): string {
 }
 
 export async function runRequestLine(app: App, line: RequestLine): Promise<RequestLineResult> {
-    const response = await app.fetch(new Request(new URL(line.path, 'http://localhost'), { method: line.method }));
+    // Appended to the origin, the path can never become the host.
+    const response = await app.fetch(new Request(`http://localhost${line.path}`, { method: line.method }));
     const text = await response.text();
 
     return {

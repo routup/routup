@@ -1,4 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import {
+    describe,
+    expect,
+    it,
+    vi,
+} from 'vitest';
 import {
     DEFAULT_REQUEST,
     DEFAULT_RESULT,
@@ -32,6 +37,10 @@ describe('docs/request-line', () => {
         it.each(['', ' '.repeat(3), 'GET users', 'FETCH /x', 'GET /a /b'])('should reject %j', (input) => {
             expect(parseRequestLine(input)).toBeUndefined();
         });
+
+        it.each(['//', '///', '//x:y', 'GET //evil.com/x'])('should reject the protocol-relative path %j', (input) => {
+            expect(parseRequestLine(input)).toBeUndefined();
+        });
     });
 
     describe('runRequestLine', () => {
@@ -45,6 +54,17 @@ describe('docs/request-line', () => {
             const result = await runRequestLine(createDemoApp(), { method: 'GET', path: '/users/42?x=1' });
 
             expect(result.status).toBe(200);
+        });
+
+        it('should keep a path that starts with // on the local host', async () => {
+            const app = createDemoApp();
+            const fetch = vi.spyOn(app, 'fetch');
+
+            await runRequestLine(app, { method: 'GET', path: '//evil.com/x' });
+
+            const request = fetch.mock.calls[0]?.[0] as Request;
+
+            expect(new URL(request.url).host).toBe('localhost');
         });
 
         it('should return 404 for an unknown path', async () => {
