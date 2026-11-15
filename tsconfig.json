@@ -6,7 +6,10 @@
         "moduleResolution": "bundler",
         "noEmit": true,
         "allowImportingTsExtensions": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "paths": {
+            "routup": ["./src/index.ts"]
+        }
     },
     "include": [
         "src/**/*",

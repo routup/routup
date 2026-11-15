@@ -14,7 +14,7 @@ const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
 const LINE_PATTERN = /^(?:(\S+)\s+)?(\/\S*)$/;
 
-export const DEFAULT_REQUEST = 'GET /users/42';
+export const DEFAULT_REQUEST = '/users/42';
 
 export const DEFAULT_RESULT: RequestLineResult = { status: 200, body: '{ "id": 42 }' };
 

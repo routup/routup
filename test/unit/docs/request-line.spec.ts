@@ -25,7 +25,7 @@ describe('docs/request-line', () => {
             expect(parseRequestLine('  POST /users  ')).toEqual({ method: 'POST', path: '/users' });
         });
 
-        it('should parse the default request', () => {
+        it('should parse the default request as a bare GET path', () => {
             expect(parseRequestLine(DEFAULT_REQUEST)).toEqual({ method: 'GET', path: '/users/42' });
         });
 

@@ -62,7 +62,8 @@ async function copyInstall() {
 // ---------- live request row ----------
 
 const line = ref(DEFAULT_REQUEST);
-const method = ref('GET');
+// The badge shows the method of the last parsed line (GET for a bare path).
+const method = ref(parseRequestLine(DEFAULT_REQUEST)?.method ?? 'GET');
 const result = ref<RequestLineResult>(DEFAULT_RESULT);
 const valid = ref(true);
 
@@ -445,7 +446,7 @@ const bodyClass = computed(() => (valid.value ? 'home-hero__body' : 'home-hero__
 }
 
 .home-hero__status--error {
-    color: var(--rt-method-post);
+    color: var(--rt-color-warning-500);
 }
 
 .home-hero__body {

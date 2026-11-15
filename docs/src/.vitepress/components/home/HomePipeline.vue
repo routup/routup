@@ -2,7 +2,7 @@
 import { useData } from 'vitepress';
 import { computed } from 'vue';
 
-import { DEFAULT_REQUEST, DEFAULT_RESULT } from './request-line';
+import { DEFAULT_REQUEST, DEFAULT_RESULT, parseRequestLine } from './request-line';
 
 type PipelineStep = {
     name: string;
@@ -17,6 +17,8 @@ type PipelineFrontmatter = {
 const { frontmatter } = useData();
 
 const pipeline = computed(() => frontmatter.value.pipeline as PipelineFrontmatter);
+const defaultLine = parseRequestLine(DEFAULT_REQUEST);
+const trace = `${defaultLine?.method} ${defaultLine?.path} → ${DEFAULT_RESULT.status}`;
 const label = computed(() => `${pipeline.value.title}: ${pipeline.value.steps.map((step) => step.name).join(', ')}`);
 
 // One node lights up every 0.7s of the 7s cycle.
@@ -39,7 +41,7 @@ function nodeStyle(index: number) {
                 aria-hidden="true"
             >
                 <span>{{ pipeline.title }}</span>
-                <span class="home-pipeline__trace">{{ DEFAULT_REQUEST }} → {{ DEFAULT_RESULT.status }}</span>
+                <span class="home-pipeline__trace">{{ trace }}</span>
             </div>
             <div
                 class="home-pipeline__pipe"

@@ -28,7 +28,10 @@ const items = computed(() => features.value.items.map((item, index) => ({
 </script>
 
 <template>
-    <RtSection class="home-features">
+    <RtSection
+        surface="tinted"
+        class="home-features"
+    >
         <RtHeading
             :eyebrow="features.eyebrow"
             :title="features.title"
