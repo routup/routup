@@ -71,6 +71,55 @@ features:
         - title: 'Tree-shakeable helpers'
           text: '`getRequestIP`, `sendRedirect`, … import only what you use.'
           code: "import { getRequestIP } from 'routup'"
+routing:
+    eyebrow: '// routing'
+    title: 'Every request finds its route.'
+    lede: 'Patterns from path-to-regexp. Params land on `event.params`.'
+    map:
+        title: 'Route table'
+        result: 'lookup → 1 match'
+    columns:
+        pattern: 'Pattern'
+        label: 'Kind'
+        matches: 'Matches'
+    syntax:
+        - pattern: '/users/:id'
+          label: 'Named parameter'
+          matches: '/users/42'
+        - pattern: '/files/{*path}'
+          label: 'Wildcard'
+          matches: '/files/a/b.png'
+        - pattern: '/users{/:id}'
+          label: 'Optional segment'
+          matches: '/users, /users/7'
+    routers:
+        text: 'The router is pluggable: pass one with `new App({ router })`.'
+        items:
+            - name: 'LinearRouter'
+              note: 'default'
+            - name: 'TrieRouter'
+            - name: 'SmartRouter'
+    link:
+        text: 'Paths guide'
+        link: '/guide/paths'
+runtimes:
+    eyebrow: '// runtimes'
+    title: 'One app. Every runtime.'
+    lede: 'Always import from `routup`; the right entry is resolved for you.'
+    core: 'app.fetch(request)'
+    items:
+        - name: 'Node.js'
+          entry: 'routup/node'
+        - name: 'Bun'
+          entry: 'routup/bun'
+        - name: 'Deno'
+          entry: 'routup/deno'
+        - name: 'Cloudflare'
+          entry: 'routup/cloudflare'
+        - name: 'Service Worker'
+          entry: 'routup/service-worker'
+        - name: 'Generic'
+          entry: 'routup/generic'
 ---
 
 <script setup>
