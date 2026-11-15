@@ -53,10 +53,12 @@ features:
           text: '`app.fetch()` takes a Web `Request`; handlers return anything `toResponse()` converts.'
           code: 'await app.fetch(new Request(url))'
         - title: 'Runtime agnostic'
-          text: 'Conditional exports pick the adapter for the runtime you are on.'
+          text: 'One import, `routup`, runs on Node.js, Bun, Deno and Cloudflare Workers; `routup/<runtime>` selects a specific adapter.'
           code: |-
-              import { serve } from 'routup'
-              // Bun resolves routup/bun
+              // default entry
+              import { serve } from 'routup';
+              // Bun's native server, Bun.serve
+              import { serve } from 'routup/bun';
         - title: 'Return-based handlers'
           text: 'Return a value; content type, ETag and 304 are handled.'
           code: '(event) => ({ id: 1 })'
@@ -106,7 +108,7 @@ runtimes:
     eyebrow: '// runtimes'
     title: 'One app.'
     highlight: 'Every runtime.'
-    lede: 'Import from `routup`: Node.js, Bun, Deno and Cloudflare get their own entry, any other runtime the generic one. Service Workers import `routup/service-worker`.'
+    lede: 'Import from `routup`, or pick an adapter explicitly with `routup/<runtime>`.'
     core: 'app.fetch(request)'
     items:
         - name: 'Node.js'
