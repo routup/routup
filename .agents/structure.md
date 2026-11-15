@@ -37,9 +37,10 @@ routup/
 │   ├── data/               # Test fixtures
 │   ├── helpers.ts          # createTestRequest and event helpers
 │   └── vitest.config.ts    # Vitest configuration
-├── docs/                   # VitePress documentation site
-│   ├── src/                # Documentation source (guide, API reference)
-│   └── package.json        # VitePress dependencies
+├── docs/                   # VitePress site on the shared @routup/docs-theme
+│   ├── src/                # Pages (guide, API reference); landing copy in index.md frontmatter
+│   │   └── .vitepress/     # Config, theme entry, landing sections (components/home/)
+│   └── package.json        # VitePress and theme dependencies
 ├── dist/                   # Build output (generated, multi-entry)
 ├── tsdown.config.ts        # tsdown build configuration
 ├── tsconfig.json           # TypeScript compiler config

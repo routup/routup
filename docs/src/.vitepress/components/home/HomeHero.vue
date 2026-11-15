@@ -8,7 +8,7 @@ import {
     watch,
 } from 'vue';
 
-import { splitInlineCode } from './inline-code';
+import InlineCode from './InlineCode.vue';
 import type { RequestLineResult } from './request-line';
 import {
     DEFAULT_REQUEST,
@@ -38,7 +38,6 @@ type HeroFrontmatter = {
 const { frontmatter } = useData();
 
 const hero = computed(() => frontmatter.value.hero as HeroFrontmatter);
-const description = computed(() => splitInlineCode(hero.value.description));
 const meta = computed(() => hero.value.meta.split('·').map((item) => item.trim()));
 
 // ---------- install pill ----------
@@ -129,12 +128,7 @@ const bodyClass = computed(() => (valid.value ? 'home-hero__body' : 'home-hero__
                     {{ hero.title }}<br><span class="home-hero__highlight">{{ hero.highlight }}</span>
                 </h1>
                 <p class="home-hero__lede">
-                    <template
-                        v-for="(segment, index) in description"
-                        :key="index"
-                    >
-                        <code v-if="segment.code">{{ segment.text }}</code><span v-else>{{ segment.text }}</span>
-                    </template>
+                    <InlineCode :text="hero.description" />
                 </p>
                 <div class="home-hero__actions">
                     <RtButton
@@ -310,7 +304,7 @@ const bodyClass = computed(() => (valid.value ? 'home-hero__body' : 'home-hero__
     line-height: 1.6;
 }
 
-.home-hero__lede code {
+.home-hero__lede :deep(code) {
     color: var(--rt-on-dark);
     font-family: var(--rt-font-mono);
     font-size: 0.92em;

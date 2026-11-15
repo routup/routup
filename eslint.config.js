@@ -26,7 +26,6 @@ export default [
         // `WebHandler*` are public API; the docs components are not library code.
         files: [
             'src/handler/adapters/web/types.ts',
-            'docs/src/.vitepress/theme/**/*.vue',
             'docs/src/.vitepress/components/**/*.vue',
         ],
         rules: { '@typescript-eslint/naming-convention': 'off' },

@@ -2,7 +2,7 @@
 import { useData } from 'vitepress';
 import { computed } from 'vue';
 
-import { splitInlineCode } from './inline-code';
+import InlineCode from './InlineCode.vue';
 
 type RoutingSyntax = {
     pattern: string;
@@ -40,8 +40,6 @@ type MapRoute = {
 const { frontmatter } = useData();
 
 const routing = computed(() => frontmatter.value.routing as RoutingFrontmatter);
-const lede = computed(() => splitInlineCode(routing.value.lede));
-const routersText = computed(() => splitInlineCode(routing.value.routers.text));
 
 // The parameter part of a pattern (`:id`, `{*path}`, `{/:id}`) is highlighted.
 const PARAM_PATTERN = /(\{[^}]*\}|:\w+)/;
@@ -126,12 +124,7 @@ const routes = ROUTES.map((route) => {
             :title="routing.title"
         />
         <p class="home-routing__lede">
-            <template
-                v-for="(segment, index) in lede"
-                :key="index"
-            >
-                <code v-if="segment.code">{{ segment.text }}</code><span v-else>{{ segment.text }}</span>
-            </template>
+            <InlineCode :text="routing.lede" />
         </p>
 
         <div class="home-routing__grid">
@@ -368,12 +361,7 @@ const routes = ROUTES.map((route) => {
 
                 <div class="home-routing__routers">
                     <p>
-                        <template
-                            v-for="(segment, index) in routersText"
-                            :key="index"
-                        >
-                            <code v-if="segment.code">{{ segment.text }}</code><span v-else>{{ segment.text }}</span>
-                        </template>
+                        <InlineCode :text="routing.routers.text" />
                     </p>
                     <ul class="home-routing__pills">
                         <li
@@ -408,14 +396,13 @@ const routes = ROUTES.map((route) => {
     line-height: 1.6;
 }
 
-.home-routing__lede code,
-.home-routing__routers code {
+.home-routing__lede :deep(code),
+.home-routing__routers :deep(code) {
     padding: 0;
     background: none;
     color: var(--rt-section-fg);
     font-family: var(--rt-font-mono);
     font-size: 0.9em;
-    white-space: nowrap;
 }
 
 .home-routing__grid {

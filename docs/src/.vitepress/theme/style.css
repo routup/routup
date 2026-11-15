@@ -1,8 +1,0 @@
-/*
- * Site-specific overrides on top of @routup/docs-theme, which defines
- * the --rt-* design tokens and bridges them to VitePress's tokens.
- */
-:root {
-    --vp-home-hero-name-color: transparent;
-    --vp-home-hero-name-background: linear-gradient(120deg, var(--rt-color-primary-500), var(--rt-color-accent-500));
-}

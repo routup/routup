@@ -19,7 +19,7 @@ hero:
           link: 'https://github.com/routup/routup'
     install: 'npm install routup'
     meta: 'MIT licensed · Node 22+ · ESM-only · TypeScript-first'
-    code: |
+    code: &hero-code |
         import { App, defineCoreHandler, serve } from 'routup';
 
         const app = new App();
@@ -104,8 +104,9 @@ routing:
         link: '/guide/paths'
 runtimes:
     eyebrow: '// runtimes'
-    title: 'One app. Every runtime.'
-    lede: 'Always import from `routup`; the right entry is resolved for you.'
+    title: 'One app.'
+    highlight: 'Every runtime.'
+    lede: 'Import from `routup`: Node.js, Bun, Deno and Cloudflare get their own entry, any other runtime the generic one. Service Workers import `routup/service-worker`.'
     core: 'app.fetch(request)'
     items:
         - name: 'Node.js'
@@ -120,6 +121,91 @@ runtimes:
           entry: 'routup/service-worker'
         - name: 'Generic'
           entry: 'routup/generic'
+quickstart:
+    eyebrow: '// quickstart'
+    title: 'From zero to first request'
+    lede: 'Install the package, define a handler, serve the app.'
+    active: 1
+    tabs:
+        - label: 'Install'
+          code: 'npm install routup'
+        - label: 'Define'
+          code: *hero-code
+        - label: 'Serve'
+          code: |
+              $ node app.ts
+              $ curl localhost:3000/users/42
+              {"id":42}
+    link:
+        text: 'Installation guide'
+        link: '/guide/installation'
+express:
+    eyebrow: 'routup/node'
+    title: 'Drop in alongside Express.'
+    text: 'Wrap Node middleware with `fromNodeMiddleware()`, or turn the app into a `(req, res)` handler with `toNodeHandler()`.'
+    file: 'server.ts'
+    code: |
+        import cors from 'cors';
+        import express from 'express';
+        import { App, fromNodeMiddleware, toNodeHandler } from 'routup/node';
+
+        const app = new App();
+
+        app.use(fromNodeMiddleware(cors()));       // reuse Express middleware
+
+        express()
+            .use('/v2', toNodeHandler(app))        // or mount routup inside Express
+            .listen(3000);
+    link:
+        text: 'Express compatibility'
+        link: '/guide/express-compatibility'
+plugins:
+    eyebrow: '// ecosystem'
+    title: 'Batteries, one install away.'
+    lede: 'Install from npm, register with `app.use()`.'
+    link:
+        text: 'All plugins'
+        link: 'https://plugins.routup.dev/'
+    items:
+        - package: '@routup/basic'
+          summary: 'Body, cookie and query in one.'
+          link: 'https://plugins.routup.dev/basic/'
+        - package: '@routup/body'
+          summary: 'Parse JSON, form and raw bodies.'
+          link: 'https://plugins.routup.dev/body/'
+        - package: '@routup/cookie'
+          summary: 'Read and set cookies.'
+          link: 'https://plugins.routup.dev/cookie/'
+        - package: '@routup/query'
+          summary: 'Parse the query string.'
+          link: 'https://plugins.routup.dev/query/'
+        - package: '@routup/assets'
+          summary: 'Serve static files.'
+          link: 'https://plugins.routup.dev/assets/'
+        - package: '@routup/decorators'
+          summary: 'Class controllers with decorators.'
+          link: 'https://plugins.routup.dev/decorators/'
+        - package: '@routup/swagger-ui'
+          summary: 'Serve Swagger UI.'
+          link: 'https://plugins.routup.dev/swagger-ui/'
+        - package: '@routup/cors'
+          summary: 'Preflight and CORS headers.'
+          link: 'https://plugins.routup.dev/cors/'
+        - package: '@routup/logger'
+          summary: 'Log requests.'
+          link: 'https://plugins.routup.dev/logger/'
+        - package: '@routup/rate-limit'
+          summary: 'Limit requests per client.'
+          link: 'https://plugins.routup.dev/rate-limit/'
+        - package: '@routup/rate-limit-redis'
+          summary: 'Redis store for rate-limit.'
+          link: 'https://plugins.routup.dev/rate-limit-redis/'
+        - package: '@routup/prometheus'
+          summary: 'Expose Prometheus metrics.'
+          link: 'https://plugins.routup.dev/prometheus/'
+        - package: '@routup/i18n'
+          summary: 'Per-request translations.'
+          link: 'https://plugins.routup.dev/i18n/'
 ---
 
 <script setup>

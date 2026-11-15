@@ -2,7 +2,7 @@
 import { useData } from 'vitepress';
 import { computed } from 'vue';
 
-import { splitInlineCode } from './inline-code';
+import InlineCode from './InlineCode.vue';
 
 type FeatureItem = {
     title: string;
@@ -23,7 +23,6 @@ const features = computed(() => frontmatter.value.features as FeaturesFrontmatte
 const items = computed(() => features.value.items.map((item, index) => ({
     ...item,
     index: String(index + 1).padStart(2, '0'),
-    segments: splitInlineCode(item.text),
 })));
 </script>
 
@@ -46,12 +45,7 @@ const items = computed(() => features.value.items.map((item, index) => ({
                     <span class="home-features__index">{{ item.index }}</span>
                     <h3>{{ item.title }}</h3>
                     <p>
-                        <template
-                            v-for="(segment, index) in item.segments"
-                            :key="index"
-                        >
-                            <code v-if="segment.code">{{ segment.text }}</code><span v-else>{{ segment.text }}</span>
-                        </template>
+                        <InlineCode :text="item.text" />
                     </p>
                     <pre class="home-features__snippet"><code>{{ item.code }}</code></pre>
                 </RtCard>

@@ -2,7 +2,7 @@
 import { useData } from 'vitepress';
 import { computed } from 'vue';
 
-import { splitInlineCode } from './inline-code';
+import InlineCode from './InlineCode.vue';
 
 type RuntimeItem = {
     name: string;
@@ -12,6 +12,7 @@ type RuntimeItem = {
 type RuntimesFrontmatter = {
     eyebrow: string;
     title: string;
+    highlight: string;
     lede: string;
     core: string;
     items: RuntimeItem[];
@@ -23,7 +24,6 @@ const DOT_COLORS = ['#10b981', '#f59e0b', '#22d3ee', '#f97316', '#3b82f6', '#a78
 const { frontmatter } = useData();
 
 const runtimes = computed(() => frontmatter.value.runtimes as RuntimesFrontmatter);
-const lede = computed(() => splitInlineCode(runtimes.value.lede));
 
 // From 640px the chips sit on a circle, the first one at the top; a
 // packet leaves the core along each spoke 0.6s after the previous one.
@@ -47,18 +47,15 @@ const items = computed(() => {
         surface="aurora"
         class="home-runtimes"
     >
-        <RtHeading
-            align="center"
-            :eyebrow="runtimes.eyebrow"
-            :title="runtimes.title"
-        />
+        <!-- RtHeading renders a plain title; this one carries the gradient highlight. -->
+        <div class="rt-heading rt-heading--center">
+            <span class="rt-heading__eyebrow">{{ runtimes.eyebrow }}</span>
+            <h2 class="rt-heading__title rt-heading__title--h2">
+                {{ runtimes.title }} <span class="home-runtimes__highlight">{{ runtimes.highlight }}</span>
+            </h2>
+        </div>
         <p class="home-runtimes__lede">
-            <template
-                v-for="(segment, index) in lede"
-                :key="index"
-            >
-                <code v-if="segment.code">{{ segment.text }}</code><span v-else>{{ segment.text }}</span>
-            </template>
+            <InlineCode :text="runtimes.lede" />
         </p>
 
         <div class="home-runtimes__orbit">
@@ -118,6 +115,13 @@ const items = computed(() => {
 </template>
 
 <style scoped>
+.home-runtimes__highlight {
+    background: var(--rt-gradient-brand);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
 .home-runtimes__lede {
     max-width: 720px;
     margin: 14px auto 0;
@@ -127,7 +131,7 @@ const items = computed(() => {
     text-align: center;
 }
 
-.home-runtimes__lede code {
+.home-runtimes__lede :deep(code) {
     padding: 0;
     background: none;
     color: var(--rt-section-fg);
