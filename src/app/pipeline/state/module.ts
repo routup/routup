@@ -44,8 +44,6 @@ export class PipelineState implements IPipelineState {
 
     protected declare _routeOf?: Route<Handler>;
 
-    protected declare _readRoute?: () => AppEventRoute | undefined;
-
     // ------------------------------------------------------------------------
 
     constructor(request: AppRequest, appOptions: Readonly<AppOptions> = {}) {
@@ -84,14 +82,6 @@ export class PipelineState implements IPipelineState {
         }
 
         return this._store;
-    }
-
-    get readRoute(): () => AppEventRoute | undefined {
-        if (!this._readRoute) {
-            this._readRoute = () => this.route;
-        }
-
-        return this._readRoute;
     }
 
     get route(): AppEventRoute | undefined {

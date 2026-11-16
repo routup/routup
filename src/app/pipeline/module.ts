@@ -67,7 +67,7 @@ export class PipelineStep implements IPipelineStep {
             store: state.store,
             appOptions: state.appOptions,
             signal: this.signal,
-            route: state.readRoute,
+            route: () => state.route,
             next: (_event, error) => this.next(error),
         });
 

@@ -58,13 +58,6 @@ export interface IPipelineState {
     readonly route: AppEventRoute | undefined;
 
     /**
-     * Reads `route`. Created on the first event of the request and
-     * handed to every event by reference (`AppEventContext.route`): a
-     * request that builds no event allocates nothing for it.
-     */
-    readonly readRoute: () => AppEventRoute | undefined;
-
-    /**
      * Whether a handler produced a response. Stops every walk of this
      * request.
      */

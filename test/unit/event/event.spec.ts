@@ -73,12 +73,10 @@ describe('src/app/pipeline/state (PipelineState)', () => {
         expect(buildEvent(state).signal).toBe(controller.signal);
     });
 
-    it('should hand every event of a request the same route reader', () => {
+    it('should read no route from a state that dispatched none', () => {
         const state = new PipelineState(createTestRequest('/'));
-        const reader = state.readRoute;
 
-        expect(state.readRoute).toBe(reader);
-        expect(reader()).toBeUndefined();
+        expect(state.route).toBeUndefined();
         expect(buildEvent(state).route).toBeUndefined();
     });
 
