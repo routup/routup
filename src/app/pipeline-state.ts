@@ -2,8 +2,37 @@ import { FastURL } from 'srvx';
 import { MethodName } from '../constants.ts';
 import type { MethodNameLike } from '../constants.ts';
 import type { AppError } from '../error/module.ts';
-import type { AppRequest, AppResponse } from '../event/types.ts';
+import type { AppEventRoute, AppRequest, AppResponse } from '../event/types.ts';
+import type { Handler } from '../handler/module.ts';
+import type { Route } from '../types.ts';
 import type { AppOptions } from './types.ts';
+
+/**
+ * The `event.route` value of each route, built on the first read and
+ * shared by every later request, so the walk only assigns the route.
+ */
+const EVENT_ROUTES = new WeakMap<Route, AppEventRoute>();
+
+/**
+ * The frozen `event.route` value of a method-bound route.
+ */
+export function toEventRoute(route: Route): AppEventRoute {
+    let output = EVENT_ROUTES.get(route);
+
+    if (!output) {
+        const pathPrefix = route.pathPrefix ?? '/';
+
+        output = Object.freeze({
+            path: route.path ?? pathPrefix,
+            pathPrefix,
+            method: route.method!,
+        });
+
+        EVENT_ROUTES.set(route, output);
+    }
+
+    return output;
+}
 
 /**
  * Request-scoped state of one `App.fetch()` call: what the match walk
@@ -45,6 +74,17 @@ export interface IPipelineState {
     error?: AppError;
 
     /**
+     * The last method-bound route the walk dispatched. Set by the walk
+     * and never reset during the request.
+     */
+    dispatchedRoute?: Route<Handler>;
+
+    /**
+     * `event.route`: the value of `dispatchedRoute`, or `undefined`.
+     */
+    readonly route: AppEventRoute | undefined;
+
+    /**
      * Whether a handler produced a response. Stops every walk of this
      * request.
      */
@@ -83,6 +123,8 @@ export class PipelineState implements IPipelineState {
     mountPath: string;
 
     error?: AppError;
+
+    dispatchedRoute?: Route<Handler>;
 
     dispatched: boolean;
 
@@ -132,6 +174,14 @@ export class PipelineState implements IPipelineState {
         }
 
         return this._store;
+    }
+
+    get route(): AppEventRoute | undefined {
+        if (!this.dispatchedRoute) {
+            return undefined;
+        }
+
+        return toEventRoute(this.dispatchedRoute);
     }
 
     get signal(): AbortSignal {

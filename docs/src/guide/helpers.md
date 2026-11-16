@@ -44,7 +44,8 @@ These are accessed directly on the event object, not through helper functions:
 | `event.params` | Route parameters |
 | `event.headers` | Request headers (Headers object) |
 | `event.searchParams` | URL search parameters (URLSearchParams) |
-| `event.mountPath` | Mount path prefix |
+| `event.mountPath` | Path prefix the running handler's route consumed |
+| `event.route` | The dispatched method-bound route (`path`, `pathPrefix`, `method`), or `undefined` |
 | `event.response` | Response accumulator (status, headers, statusText) |
 | `event.dispatched` | Whether a response has been produced |
 | `event.store` | Per-request state store for data sharing |

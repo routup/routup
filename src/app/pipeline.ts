@@ -97,6 +97,7 @@ export class PipelineStep implements IPipelineStep {
             store: state.store,
             appOptions: state.appOptions,
             signal: this.signal,
+            routeSource: state,
             next: (_event, error) => this.next(error),
         });
 
@@ -199,6 +200,12 @@ export async function walkMatches(
         }
 
         mergeMatchParams(state, match.params);
+
+        // `event.route`: the last method-bound route dispatched. An
+        // assignment only; the event's value is built on read.
+        if (method) {
+            state.dispatchedRoute = match.route;
+        }
 
         // Surface the matched prefix as `event.mountPath` for the
         // duration of this handler so static-asset / mount-aware

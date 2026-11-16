@@ -1,6 +1,7 @@
 import type { AppOptions } from '../app/types.ts';
 import type { MethodNameLike } from '../constants.ts';
 import type {
+    AppEventRoute,
     AppRequest,
     AppResponse,
     IAppEvent,
@@ -27,6 +28,13 @@ export type AppEventContext = {
     store: Record<string | symbol, unknown>;
     signal: AbortSignal;
     appOptions: Readonly<AppOptions>;
+    /**
+     * Request-wide holder `event.route` reads on every access (the
+     * pipeline state of the request), so every event of the request
+     * sees the current value. Omit it and `event.route` is
+     * `undefined`.
+     */
+    routeSource?: { readonly route?: AppEventRoute };
     next: (event: IAppEvent, error?: Error) => Promise<Response | undefined>;
 };
 
@@ -95,6 +103,10 @@ export class AppEvent implements IAppEvent {
         }
 
         return this._searchParams;
+    }
+
+    get route(): AppEventRoute | undefined {
+        return this._context.routeSource?.route;
     }
 
     get nextCalled(): boolean {

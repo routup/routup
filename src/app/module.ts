@@ -379,6 +379,7 @@ export class App implements IApp {
             this.register({
                 path: joinPaths(this._path, path, handler.path),
                 method,
+                pathPrefix: joinPaths(this._path) ?? '/',
                 data: handler,
             });
         }
@@ -420,6 +421,7 @@ export class App implements IApp {
                 this.register({
                     path: joinPaths(this._path, path, item.path),
                     method: item.method,
+                    pathPrefix: joinPaths(this._path, path) ?? '/',
                     data: item,
                 });
 
@@ -432,6 +434,7 @@ export class App implements IApp {
                 this.register({
                     path: joinPaths(this._path, path, handler.path),
                     method: handler.method,
+                    pathPrefix: joinPaths(this._path, path) ?? '/',
                     data: handler,
                 });
 
@@ -454,8 +457,8 @@ export class App implements IApp {
      * Snapshot a child App's routes and plugin registry into this
      * one. Each route's path is prefixed with `this._path`, the
      * supplied mount `path`, and the route's own path (in that
-     * order); the resulting entry is registered on this App's
-     * router. The child app is not retained — late mutations on it
+     * order), its `pathPrefix` (for `event.route`) with the first two;
+     * the resulting entry is registered on this App's router. The child app is not retained — late mutations on it
      * after this call do not propagate.
      *
      * @protected
@@ -468,6 +471,7 @@ export class App implements IApp {
             this.register({
                 path: joinPaths(this._path, path, route.path),
                 method: route.method,
+                pathPrefix: joinPaths(this._path, path, route.pathPrefix) ?? '/',
                 data: route.data,
             });
         }

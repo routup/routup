@@ -14,11 +14,42 @@ defineCoreHandler((event) => {
     event.params;       // Route parameters (e.g. { id: "123" })
     event.headers;      // Request headers (Headers object)
     event.searchParams; // URL search parameters (URLSearchParams)
-    event.mountPath;    // Path prefix where this router is mounted
+    event.mountPath;    // Path prefix the running handler's route consumed
+    event.route;        // Route that answered: { path, pathPrefix, method }, or undefined
     event.dispatched;   // Whether a response has been produced
     event.store;        // Per-request state store
 });
 ```
+
+## Dispatched Route
+
+`event.route` names the last method-bound route (registered with `get()`, `post()`, ...) dispatched in the request:
+
+- `path`: the route's full pattern over every mount (`/api/users/:id`)
+- `pathPrefix`: the pattern prefix the route was mounted under (the App's `path` option and every mount path above it, `'/'` without any)
+- `method`: the method the route is bound to (`GET` also for a `HEAD` request it serves)
+
+It is request-wide, so a middleware reads the route that answered after `await event.next()`. It is `undefined` until a method-bound route ran: before `event.next()`, for a request only middleware or method-less mounts handled, and for an `OPTIONS` request answered without a route. When a route throws and an error handler answers, it is the route that threw.
+
+```typescript
+const users = new App();
+users.get('/:id', defineCoreHandler((event) => ({ id: event.params.id })));
+
+const app = new App();
+
+app.use(defineCoreHandler(async (event) => {
+    const response = await event.next();
+
+    // GET /api/users/42 -> { path: '/api/users/:id', pathPrefix: '/api/users', method: 'GET' }
+    console.log(event.route?.path ?? 'unmatched');
+
+    return response;
+}));
+
+app.use('/api/users', users);
+```
+
+Unlike `event.mountPath`, the concrete prefix of the request path the running handler's route consumed (per handler), `event.route.pathPrefix` is a pattern and belongs to the endpoint's route (per request).
 
 ## Reading the Body
 

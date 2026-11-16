@@ -123,9 +123,10 @@ The `AppEvent` (implementing `IAppEvent`) is the central object passed to every 
 |----------|------|-------------|
 | `request` | `AppRequest` | The srvx-normalized request object |
 | `params` | `Record<string, string \| undefined>` | Route parameters extracted from path |
-| `path` | `string` | Current request path (relative to mount point) |
+| `path` | `string` | Request path (the full pathname, also inside a mounted App) |
 | `method` | `MethodNameLike` | HTTP method |
-| `mountPath` | `string` | Path prefix where the handler is mounted |
+| `mountPath` | `string` | Concrete path prefix the running handler's route consumed (per handler) |
+| `route` | `AppEventRoute \| undefined` | Last method-bound route dispatched (`path`, `pathPrefix`, `method`), request-wide; `pathPrefix` is stored on `Route` at registration and composed in `flatten()` |
 | `headers` | `Headers` | Request headers |
 | `searchParams` | `URLSearchParams` | Query string parameters |
 | `response` | `AppResponse` | Response accumulator for status and headers |
