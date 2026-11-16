@@ -1,42 +1,12 @@
-import type { MethodName } from '../constants.ts';
-import { createError } from '../error/create.ts';
-import { AppEvent } from '../event/module.ts';
-import { HandlerType } from '../handler/constants.ts';
-import type { Handler } from '../handler/module.ts';
-import { matchHandlerMethod } from '../handler/utils.ts';
-import type { RouteMatch } from '../types.ts';
-import type { IPipelineState } from './pipeline-state.ts';
-
-/**
- * One handler invocation of the walk, as `Handler.dispatch` and the
- * walk see it. It says nothing about how the handler's event is
- * built.
- */
-export interface IPipelineStep {
-    readonly state: IPipelineState;
-
-    /**
-     * The event handed to the handler, once `createEvent()` built it.
-     * The walk reads `event.nextCalled` to learn whether the handler
-     * consumed its continuation.
-     */
-    readonly event?: AppEvent;
-
-    /**
-     * Set by `Handler.dispatch` when the handler settled with a
-     * failure (a throw, or its deadline). The walk has moved on from
-     * this step by then, so its continuation is inert.
-     */
-    failed: boolean;
-
-    /**
-     * Build the handler's event.
-     *
-     * @param signal - Handler-scoped signal (per-handler deadline).
-     *                 Defaults to the signal of the request.
-     */
-    createEvent(signal?: AbortSignal): AppEvent;
-}
+import type { MethodName } from '../../constants.ts';
+import { createError } from '../../error/create.ts';
+import { AppEvent } from '../../event/module.ts';
+import { HandlerType } from '../../handler/constants.ts';
+import type { Handler } from '../../handler/module.ts';
+import { matchHandlerMethod } from '../../handler/utils.ts';
+import type { RouteMatch } from '../../types.ts';
+import type { IPipelineState } from './state/index.ts';
+import type { IPipelineStep } from './types.ts';
 
 /**
  * The step of the walk. `params` and `mountPath` are copied when the
@@ -97,6 +67,7 @@ export class PipelineStep implements IPipelineStep {
             store: state.store,
             appOptions: state.appOptions,
             signal: this.signal,
+            route: () => state.route,
             next: (_event, error) => this.next(error),
         });
 
@@ -199,6 +170,12 @@ export async function walkMatches(
         }
 
         mergeMatchParams(state, match.params);
+
+        // `event.route`: the last method-bound route dispatched. An
+        // assignment only; the state builds the event's value on read.
+        if (method) {
+            state.dispatchedRoute = match.route;
+        }
 
         // Surface the matched prefix as `event.mountPath` for the
         // duration of this handler so static-asset / mount-aware

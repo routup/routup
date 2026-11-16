@@ -51,7 +51,7 @@ routup/
 | Module | Purpose |
 |--------|---------|
 | `_entries/` | Runtime-specific entry points — each re-exports core API plus runtime adapter (`serve`, `toNodeHandler`, etc.) via srvx |
-| `app/` | Core `App` class — registers handlers, mounts apps, installs plugins, exposes `fetch()`. `pipeline-state.ts` and `pipeline.ts` (both internal) hold the request-scoped state and the match walk behind `event.next()` |
+| `app/` | Core `App` class — registers handlers, mounts apps, installs plugins, exposes `fetch()`. `pipeline/` and its `state/` subfolder (both internal, `module.ts` + `types.ts` each) hold the match walk and the request-scoped state behind `event.next()` |
 | `router/` | `IRouter` route-table family: `LinearRouter` (default), `TrieRouter`, `SmartRouter` |
 | `cache/` | `ICache` contract and the `LruCache` default used by routers |
 | `handler/core/` | `defineCoreHandler()` factory — creates typed request handlers with shorthand and verbose syntax |

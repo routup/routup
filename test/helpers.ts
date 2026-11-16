@@ -1,6 +1,6 @@
 import type { AppRequest } from '../src/index';
 import { PipelineStep } from '../src/app/pipeline';
-import { PipelineState } from '../src/app/pipeline-state';
+import { PipelineState } from '../src/app/pipeline/state';
 import type { AppEvent } from '../src/event/module';
 
 /**

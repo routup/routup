@@ -1,6 +1,7 @@
 import type { AppOptions } from '../app/types.ts';
 import type { MethodNameLike } from '../constants.ts';
 import type {
+    AppEventRoute,
     AppRequest,
     AppResponse,
     IAppEvent,
@@ -27,6 +28,13 @@ export type AppEventContext = {
     store: Record<string | symbol, unknown>;
     signal: AbortSignal;
     appOptions: Readonly<AppOptions>;
+    /**
+     * Reads the value of `event.route`. A function, so every event of
+     * the request reads the current request-wide value on each access:
+     * a middleware reads the endpoint's route after
+     * `await event.next()`. Omit it and `event.route` is `undefined`.
+     */
+    route?: () => AppEventRoute | undefined;
     next: (event: IAppEvent, error?: Error) => Promise<Response | undefined>;
 };
 
@@ -95,6 +103,10 @@ export class AppEvent implements IAppEvent {
         }
 
         return this._searchParams;
+    }
+
+    get route(): AppEventRoute | undefined {
+        return this._context.route?.();
     }
 
     get nextCalled(): boolean {

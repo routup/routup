@@ -11,6 +11,33 @@ export type AppRequest = ServerRequest;
 
 export type NextFn = (error?: Error) => unknown | Promise<unknown>;
 
+/**
+ * A method-bound route as `event.route` names it. Built per request on
+ * the first read; not shared between requests.
+ */
+export type AppEventRoute = {
+    /**
+     * The route's full pattern as the router holds it, composed over
+     * every mount (e.g. `/api/notes/:id`).
+     */
+    readonly path: string;
+
+    /**
+     * Pattern prefix the route was mounted under: the part of `path`
+     * that did not come from the route's own registration (the App's
+     * `path` option and every mount path above it), `'/'` without any.
+     * `path` is `pathPrefix` joined with the path given to `get()`,
+     * `post()`, ... A pattern: a mount path may carry parameters.
+     */
+    readonly pathPrefix: string;
+
+    /**
+     * The method the route is bound to, as registered (`GET` also when
+     * the route serves a `HEAD` request).
+     */
+    readonly method: string;
+};
+
 export interface IAppEvent {
     /**
      * The srvx ServerRequest (extends Web Standard Request).
@@ -27,7 +54,9 @@ export interface IAppEvent {
     readonly params: Record<string, string | undefined>;
 
     /**
-     * Current request path, adjusted relative to the mount point during router nesting.
+     * Path of the request URL (its pathname, without the query
+     * string). The full path at every handler, also inside a mounted
+     * App; strip `mountPath` off it for a mount-relative path.
      */
     readonly path: string;
 
@@ -44,9 +73,31 @@ export interface IAppEvent {
      * request path the matcher consumed). Set per dispatched handler
      * and restored when the handler returns; useful for static-asset
      * / mount-aware helpers that need to strip this off `path` to
-     * recover a mount-relative path.
+     * recover a mount-relative path. Concrete and per handler, unlike
+     * `route.pathPrefix`, the pattern prefix of the endpoint's route,
+     * per request.
      */
     readonly mountPath: string;
+
+    /**
+     * The last method-bound route dispatched in this request (its
+     * pattern, mount prefix and method). Request-wide: every event
+     * of the request reads the current value, so a middleware sees
+     * the endpoint's route after `await event.next()`.
+     *
+     * "Dispatched" means the route's handler ran, not that it
+     * answered: a method-bound handler that passes on with
+     * `event.next()` (a guard) is still named when nothing after it
+     * answers, e.g. on a 404 below it.
+     *
+     * `undefined` until a method-bound route ran: before
+     * `event.next()` in a middleware, for a request only middleware
+     * or method-less mounts handled (a 404), and for an `OPTIONS`
+     * request answered without a route. Never reset during the
+     * request: when a route throws and an error handler answers, it
+     * names the route that threw.
+     */
+    readonly route?: AppEventRoute;
 
     /**
      * Web Standard Headers from the request.

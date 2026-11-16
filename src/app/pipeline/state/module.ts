@@ -1,71 +1,12 @@
 import { FastURL } from 'srvx';
-import { MethodName } from '../constants.ts';
-import type { MethodNameLike } from '../constants.ts';
-import type { AppError } from '../error/module.ts';
-import type { AppRequest, AppResponse } from '../event/types.ts';
-import type { AppOptions } from './types.ts';
-
-/**
- * Request-scoped state of one `App.fetch()` call: what the match walk
- * and the handlers share while a request moves through the pipeline.
- */
-export interface IPipelineState {
-    readonly request: AppRequest;
-
-    readonly method: MethodNameLike;
-
-    /**
-     * Request path. Fixed for the whole request: the match list is
-     * looked up from it once.
-     */
-    readonly path: string;
-
-    /**
-     * Raw query string (`?a=1`, or empty); each handler event parses
-     * it on its first `searchParams` read.
-     */
-    readonly search: string;
-
-    readonly appOptions: Readonly<AppOptions>;
-
-    /**
-     * Route parameters accumulated over the matches walked so far.
-     */
-    params: Record<string, string | undefined>;
-
-    /**
-     * Prefix the running handler's route matched on. The walk sets it
-     * per match and restores it when the handler returns.
-     */
-    mountPath: string;
-
-    /**
-     * Pending error. While set, the walk runs ERROR handlers only.
-     */
-    error?: AppError;
-
-    /**
-     * Whether a handler produced a response. Stops every walk of this
-     * request.
-     */
-    dispatched: boolean;
-
-    /**
-     * Methods of the routes matching the path, for the synthesized
-     * `Allow` response. Collected for `OPTIONS` requests only.
-     */
-    readonly methodsAllowed: Set<string> | undefined;
-
-    readonly response: AppResponse;
-
-    readonly store: Record<string | symbol, unknown>;
-
-    /**
-     * Signal handlers inherit: the request's own, unless a
-     * request-wide deadline replaced it.
-     */
-    signal: AbortSignal;
-}
+import { MethodName } from '../../../constants.ts';
+import type { MethodNameLike } from '../../../constants.ts';
+import type { AppError } from '../../../error/module.ts';
+import type { AppEventRoute, AppRequest, AppResponse } from '../../../event/types.ts';
+import type { Handler } from '../../../handler/module.ts';
+import type { Route } from '../../../types.ts';
+import type { AppOptions } from '../../types.ts';
+import type { IPipelineState } from './types.ts';
 
 export class PipelineState implements IPipelineState {
     readonly request: AppRequest;
@@ -84,6 +25,11 @@ export class PipelineState implements IPipelineState {
 
     error?: AppError;
 
+    // The `event.route` fields are declared only: they emit no
+    // initialiser, so a request pays nothing for them until a
+    // method-bound route is dispatched or `event.route` is read.
+    declare dispatchedRoute?: Route<Handler>;
+
     dispatched: boolean;
 
     readonly methodsAllowed: Set<string> | undefined;
@@ -93,6 +39,10 @@ export class PipelineState implements IPipelineState {
     protected _store?: Record<string | symbol, unknown>;
 
     protected _signal?: AbortSignal;
+
+    protected declare _route?: AppEventRoute;
+
+    protected declare _routeOf?: Route<Handler>;
 
     // ------------------------------------------------------------------------
 
@@ -132,6 +82,34 @@ export class PipelineState implements IPipelineState {
         }
 
         return this._store;
+    }
+
+    get route(): AppEventRoute | undefined {
+        const route = this.dispatchedRoute;
+
+        if (!route) {
+            return undefined;
+        }
+
+        if (this._routeOf !== route) {
+            this._route = this.buildRoute(route);
+            this._routeOf = route;
+        }
+
+        return this._route;
+    }
+
+    /**
+     * Build the `event.route` value of a dispatched method-bound route.
+     */
+    protected buildRoute(route: Route<Handler>): AppEventRoute {
+        const pathPrefix = route.pathPrefix ?? '/';
+
+        return {
+            path: route.path ?? pathPrefix,
+            pathPrefix,
+            method: route.method!,
+        };
     }
 
     get signal(): AbortSignal {

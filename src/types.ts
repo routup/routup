@@ -40,6 +40,15 @@ export type Route<T extends ObjectLiteral = ObjectLiteral> = {
      */
     method?: MethodName;
     /**
+     * Pattern prefix the route was mounted under: the part of `path`
+     * that did not come from the route's own registration (the App's
+     * `path` option and every mount path above it), `'/'` without
+     * any. Bookkeeping of `App` for `event.route.pathPrefix`; routers
+     * ignore it. Not to be confused with `event.mountPath`, the
+     * concrete prefix of the request path a handler's route consumed.
+     */
+    pathPrefix?: Path;
+    /**
      * Opaque to the router. Returned via `RouteMatch.route.data` on
      * match; consumers (typically `App`) decide what's inside.
      */

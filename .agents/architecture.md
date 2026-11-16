@@ -11,9 +11,9 @@ HTTP Request → srvx → ServerRequest (AppRequest) → App.fetch() → IRouter
 ```
 
 1. **srvx** receives the raw HTTP request and normalizes it into a `ServerRequest`
-2. **`App.fetch()`**, the only entry point, creates the request-scoped `PipelineState` (internal, `src/app/pipeline-state.ts`) and asks the active `IRouter` for the matches of the path and method
+2. **`App.fetch()`**, the only entry point, creates the request-scoped `PipelineState` (internal, `src/app/pipeline/state/`) and asks the active `IRouter` for the matches of the path and method
 3. It applies the global timeout around the walk
-4. **`walkMatches()`** (internal, `src/app/pipeline.ts`) walks the matches in order; matched **Handlers** run, returning response values or calling `event.next()`
+4. **`walkMatches()`** (internal, `src/app/pipeline/`) walks the matches in order; matched **Handlers** run, returning response values or calling `event.next()`
 5. Return values are converted to a Web `Response` via `toResponse()`
 6. With no response, `App.fetch()` builds a fallback: the pending error's status (default 500), or 404. The body is JSON when the request accepts JSON, plain text otherwise
 
@@ -123,9 +123,10 @@ The `AppEvent` (implementing `IAppEvent`) is the central object passed to every 
 |----------|------|-------------|
 | `request` | `AppRequest` | The srvx-normalized request object |
 | `params` | `Record<string, string \| undefined>` | Route parameters extracted from path |
-| `path` | `string` | Current request path (relative to mount point) |
+| `path` | `string` | Request path (the full pathname, also inside a mounted App) |
 | `method` | `MethodNameLike` | HTTP method |
-| `mountPath` | `string` | Path prefix where the handler is mounted |
+| `mountPath` | `string` | Concrete path prefix the running handler's route consumed (per handler) |
+| `route` | `AppEventRoute \| undefined` | Last method-bound route dispatched (`path`, `pathPrefix`, `method`), request-wide; `pathPrefix` is stored on `Route` at registration and composed in `flatten()` |
 | `headers` | `Headers` | Request headers |
 | `searchParams` | `URLSearchParams` | Query string parameters |
 | `response` | `AppResponse` | Response accumulator for status and headers |

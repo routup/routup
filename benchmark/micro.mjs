@@ -85,8 +85,21 @@ function buildApp({
     router, 
     middleware = 0, 
     etag = false, 
+    readRoute = false,
 } = {}) {
     const app = new App({ options: { etag }, router });
+
+    if (readRoute) {
+        // A metrics-style middleware: labels the request by the route
+        // that answered, read after the endpoint ran.
+        app.use(defineCoreHandler(async (event) => {
+            const response = await event.next();
+
+            event.store.label = event.route?.path ?? 'unmatched';
+
+            return response;
+        }));
+    }
 
     for (let i = 0; i < middleware; i++) {
         app.use(defineCoreHandler((event) => event.next()));
@@ -147,6 +160,11 @@ const scenarios = [
         name: '3 middleware + json GET /', 
         app: buildApp({ middleware: 3 }), 
         request: request('/'),
+    },
+    {
+        name: 'event.route read GET /users/:id', 
+        app: buildApp({ readRoute: true }), 
+        request: request('/users/42'),
     },
     {
         name: 'trie static json GET /', 

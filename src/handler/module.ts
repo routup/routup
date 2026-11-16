@@ -3,7 +3,7 @@ import type { MethodName } from '../constants.ts';
 import { createError } from '../error/index.ts';
 import type { IAppEvent } from '../event/index.ts';
 import { toResponse } from '../response/index.ts';
-import type { IPipelineStep } from '../app/pipeline.ts';
+import type { IPipelineStep } from '../app/pipeline/index.ts';
 import type { AppOptions } from '../app/types.ts';
 import {
     Deadline,
