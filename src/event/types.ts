@@ -83,7 +83,12 @@ export interface IAppEvent {
      * The last method-bound route dispatched in this request (its
      * pattern, mount prefix and method). Request-wide: every event
      * of the request reads the current value, so a middleware sees
-     * the route that answered after `await event.next()`.
+     * the endpoint's route after `await event.next()`.
+     *
+     * "Dispatched" means the route's handler ran, not that it
+     * answered: a method-bound handler that passes on with
+     * `event.next()` (a guard) is still named when nothing after it
+     * answers, e.g. on a 404 below it.
      *
      * `undefined` until a method-bound route ran: before
      * `event.next()` in a middleware, for a request only middleware
