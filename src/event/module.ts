@@ -29,12 +29,12 @@ export type AppEventContext = {
     signal: AbortSignal;
     appOptions: Readonly<AppOptions>;
     /**
-     * Request-wide holder `event.route` reads on every access (the
-     * pipeline state of the request), so every event of the request
-     * sees the current value. Omit it and `event.route` is
-     * `undefined`.
+     * Reads the value of `event.route`. A function, so every event of
+     * the request reads the current request-wide value on each access:
+     * a middleware reads the endpoint's route after
+     * `await event.next()`. Omit it and `event.route` is `undefined`.
      */
-    routeSource?: { readonly route?: AppEventRoute };
+    route?: () => AppEventRoute | undefined;
     next: (event: IAppEvent, error?: Error) => Promise<Response | undefined>;
 };
 
@@ -106,7 +106,7 @@ export class AppEvent implements IAppEvent {
     }
 
     get route(): AppEventRoute | undefined {
-        return this._context.routeSource?.route;
+        return this._context.route?.();
     }
 
     get nextCalled(): boolean {

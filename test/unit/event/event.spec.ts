@@ -8,6 +8,7 @@ import { PipelineStep } from '../../../src/app/pipeline';
 import { PipelineState } from '../../../src/app/pipeline-state';
 import { AppEvent } from '../../../src/event/module';
 import type { AppEventContext } from '../../../src/event/module';
+import type { AppEventRoute } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
 function buildEvent(state: PipelineState): AppEvent {
@@ -70,6 +71,15 @@ describe('src/app/pipeline-state (PipelineState)', () => {
 
         expect(state.signal).toBe(controller.signal);
         expect(buildEvent(state).signal).toBe(controller.signal);
+    });
+
+    it('should hand every event of a request the same route reader', () => {
+        const state = new PipelineState(createTestRequest('/'));
+        const reader = state.readRoute;
+
+        expect(state.readRoute).toBe(reader);
+        expect(reader()).toBeUndefined();
+        expect(buildEvent(state).route).toBeUndefined();
     });
 
     it('should collect allowed methods only for OPTIONS requests', () => {
@@ -243,6 +253,30 @@ describe('src/app/pipeline-state (PipelineState)', () => {
 });
 
 describe('src/event/module (AppEvent)', () => {
+    it('should read an undefined route from a context without one', () => {
+        const routup = new AppEvent(createContext(async () => undefined));
+
+        expect(routup.route).toBeUndefined();
+    });
+
+    it('should read the route of its context on every access', () => {
+        let current: AppEventRoute | undefined;
+        const routup = new AppEvent({
+            ...createContext(async () => undefined),
+            route: () => current,
+        });
+
+        expect(routup.route).toBeUndefined();
+
+        current = {
+            path: '/notes/:id',
+            pathPrefix: '/',
+            method: 'GET',
+        };
+
+        expect(routup.route).toBe(current);
+    });
+
     it('should use searchParams handed to the constructor', () => {
         const searchParams = new URLSearchParams('x=1');
         const routup = new AppEvent({

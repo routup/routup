@@ -60,6 +60,13 @@ export interface IPipelineState {
     readonly route: AppEventRoute | undefined;
 
     /**
+     * Reads `route`. Created on the first event of the request and
+     * handed to every event by reference (`AppEventContext.route`): a
+     * request that builds no event allocates nothing for it.
+     */
+    readonly readRoute: () => AppEventRoute | undefined;
+
+    /**
      * Whether a handler produced a response. Stops every walk of this
      * request.
      */
@@ -99,7 +106,10 @@ export class PipelineState implements IPipelineState {
 
     error?: AppError;
 
-    dispatchedRoute?: Route<Handler>;
+    // The `event.route` fields are declared only: they emit no
+    // initialiser, so a request pays nothing for them until a
+    // method-bound route is dispatched or `event.route` is read.
+    declare dispatchedRoute?: Route<Handler>;
 
     dispatched: boolean;
 
@@ -111,9 +121,11 @@ export class PipelineState implements IPipelineState {
 
     protected _signal?: AbortSignal;
 
-    protected _route?: AppEventRoute;
+    protected declare _route?: AppEventRoute;
 
-    protected _routeOf?: Route<Handler>;
+    protected declare _routeOf?: Route<Handler>;
+
+    protected declare _readRoute?: () => AppEventRoute | undefined;
 
     // ------------------------------------------------------------------------
 
@@ -153,6 +165,14 @@ export class PipelineState implements IPipelineState {
         }
 
         return this._store;
+    }
+
+    get readRoute(): () => AppEventRoute | undefined {
+        if (!this._readRoute) {
+            this._readRoute = () => this.route;
+        }
+
+        return this._readRoute;
     }
 
     get route(): AppEventRoute | undefined {
