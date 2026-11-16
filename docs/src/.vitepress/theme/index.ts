@@ -1,6 +1,3 @@
-import type { Theme } from 'vitepress';
-import DefaultTheme from 'vitepress/theme';
+import Theme from '@routup/docs-theme';
 
-import './style.css';
-
-export default { extends: DefaultTheme } satisfies Theme;
+export default Theme;

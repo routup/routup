@@ -7,12 +7,9 @@
         "build": "vitepress build src --temp .temp"
     },
     "dependencies": {
+        "@routup/docs-theme": "^0.1.0",
         "routup": "file:..",
-        "vitepress": "^1.2.3",
+        "vitepress": "^1.6.4",
         "vue": "^3.5.45"
-    },
-    "devDependencies": {
-        "flexsearch": "^0.8.212",
-        "vitepress-plugin-search": "^1.0.4-alpha.22"
     }
 }

@@ -1,6 +1,6 @@
-import { defineConfig } from 'vitepress';
+import { defineRoutupConfig } from '@routup/docs-theme/config';
 
-export default defineConfig({
+export default defineRoutupConfig({
     vite: { ssr: { noExternal: ['routup'] } },
     title: 'Routup',
     description: 'A minimalistic, runtime-agnostic HTTP routing framework built on srvx and Web Standards. Runs on Node.js, Bun, Deno, and Cloudflare Workers.',
@@ -15,7 +15,6 @@ export default defineConfig({
             type: 'image/svg+xml',
             href: '/logo.svg',
         }],
-        ['meta', { name: 'theme-color', content: '#7c3aed' }],
         ['meta', { property: 'og:type', content: 'website' }],
         ['meta', { property: 'og:title', content: 'Routup — runtime-agnostic HTTP routing' }],
         ['meta', {
@@ -31,15 +30,10 @@ export default defineConfig({
             { icon: 'github', link: 'https://github.com/routup/routup' },
         ],
         editLink: {
-            pattern: 'https://github.com/routup/routup/edit/develop/docs/:path',
+            pattern: 'https://github.com/routup/routup/edit/master/docs/src/:path',
             text: 'Edit this page on GitHub',
         },
         nav: [
-            {
-                text: 'Home',
-                link: '/',
-                activeMatch: '/',
-            },
             {
                 text: 'Guide',
                 link: '/guide/',
@@ -55,6 +49,36 @@ export default defineConfig({
                 link: 'https://plugins.routup.dev',
             },
         ],
+        rtFooter: {
+            tagline: 'Minimal HTTP routing on Web standards.',
+            columns: [
+                {
+                    title: 'Docs',
+                    links: [
+                        { text: 'Guide', link: '/guide/' },
+                        { text: 'API', link: '/api/' },
+                        { text: 'Migrating to v6', link: '/guide/migration-v6' },
+                    ],
+                },
+                {
+                    title: 'Ecosystem',
+                    links: [
+                        { text: 'Plugins', link: 'https://plugins.routup.dev' },
+                        { text: 'Templates', link: 'https://github.com/routup/templates' },
+                        { text: 'GitHub', link: 'https://github.com/routup/routup' },
+                    ],
+                },
+                {
+                    title: 'Project',
+                    links: [
+                        { text: 'Releases', link: 'https://github.com/routup/routup/releases' },
+                        { text: 'Issues', link: 'https://github.com/routup/routup/issues' },
+                        { text: 'License', link: 'https://github.com/routup/routup/blob/master/LICENSE' },
+                    ],
+                },
+            ],
+            note: 'MIT licensed',
+        },
         sidebar: {
             '/guide/': [
                 {
