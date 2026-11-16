@@ -12,8 +12,8 @@ export type AppRequest = ServerRequest;
 export type NextFn = (error?: Error) => unknown | Promise<unknown>;
 
 /**
- * A method-bound route as `event.route` names it. One frozen value per
- * registered route, shared by every request the route serves.
+ * A method-bound route as `event.route` names it. Built per request on
+ * the first read; not shared between requests.
  */
 export type AppEventRoute = {
     /**

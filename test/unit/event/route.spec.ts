@@ -325,21 +325,70 @@ describe.each([
         expect(observed[1]!.before).toEqual(memos);
     });
 
-    it('should share one read-only value between requests of a route', async () => {
-        const seen: (AppEventRoute | undefined)[] = [];
+    it('should keep one value per request and share none between requests', async () => {
+        const seen: (AppEventRoute | undefined)[][] = [];
         const app = new App({ router: createRouter() });
 
-        app.get('/notes', defineCoreHandler((event) => {
-            seen.push(event.route);
+        app.use(defineCoreHandler(async (event) => {
+            const reads: (AppEventRoute | undefined)[] = [];
 
-            return 'ok';
+            seen.push(reads);
+
+            const response = await event.next();
+
+            reads.push(event.route, event.route);
+
+            return response;
         }));
+        app.get('/notes', defineCoreHandler(() => 'ok'));
 
         await app.fetch(createTestRequest('/notes'));
         await app.fetch(createTestRequest('/notes'));
 
-        expect(seen[0]).toBeDefined();
-        expect(seen[1]).toBe(seen[0]);
-        expect(Object.isFrozen(seen[0])).toBe(true);
+        expect(seen[0]![0]).toBeDefined();
+        expect(seen[0]![1]).toBe(seen[0]![0]);
+        expect(seen[1]![0]).toEqual(seen[0]![0]);
+        expect(seen[1]![0]).not.toBe(seen[0]![0]);
+    });
+
+    it('should give independent Apps their own values', async () => {
+        const createChild = () => {
+            const child = new App({ router: createRouter() });
+
+            child.get('/notes', defineCoreHandler(respondWithRoute));
+
+            return child;
+        };
+
+        const a = createChild();
+        const b = createChild();
+        const parent = new App({ router: createRouter() });
+
+        parent.use('/api', a);
+
+        const own = {
+            path: '/notes',
+            pathPrefix: '/',
+            method: 'GET',
+        };
+
+        let response = await parent.fetch(createTestRequest('/api/notes'));
+
+        expect(await response.json()).toEqual({
+            path: '/api/notes',
+            pathPrefix: '/api',
+            method: 'GET',
+        });
+
+        // The mounted child, used standalone, keeps its own value, as
+        // does an independent App with the same routes.
+        response = await a.fetch(createTestRequest('/notes'));
+        expect(await response.json()).toEqual(own);
+
+        response = await b.fetch(createTestRequest('/notes'));
+        expect(await response.json()).toEqual(own);
+
+        expect(a.routes[0]!.pathPrefix).toBe('/');
+        expect(parent.routes[0]!.pathPrefix).toBe('/api');
     });
 });

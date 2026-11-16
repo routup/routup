@@ -8,33 +8,6 @@ import type { Route } from '../types.ts';
 import type { AppOptions } from './types.ts';
 
 /**
- * The `event.route` value of each route, built on the first read and
- * shared by every later request, so the walk only assigns the route.
- */
-const EVENT_ROUTES = new WeakMap<Route, AppEventRoute>();
-
-/**
- * The frozen `event.route` value of a method-bound route.
- */
-export function toEventRoute(route: Route): AppEventRoute {
-    let output = EVENT_ROUTES.get(route);
-
-    if (!output) {
-        const pathPrefix = route.pathPrefix ?? '/';
-
-        output = Object.freeze({
-            path: route.path ?? pathPrefix,
-            pathPrefix,
-            method: route.method!,
-        });
-
-        EVENT_ROUTES.set(route, output);
-    }
-
-    return output;
-}
-
-/**
  * Request-scoped state of one `App.fetch()` call: what the match walk
  * and the handlers share while a request moves through the pipeline.
  */
@@ -80,7 +53,9 @@ export interface IPipelineState {
     dispatchedRoute?: Route<Handler>;
 
     /**
-     * `event.route`: the value of `dispatchedRoute`, or `undefined`.
+     * `event.route`: the value of `dispatchedRoute`, built on the
+     * first read and kept until a later route is dispatched, or
+     * `undefined`.
      */
     readonly route: AppEventRoute | undefined;
 
@@ -136,6 +111,10 @@ export class PipelineState implements IPipelineState {
 
     protected _signal?: AbortSignal;
 
+    protected _route?: AppEventRoute;
+
+    protected _routeOf?: Route<Handler>;
+
     // ------------------------------------------------------------------------
 
     constructor(request: AppRequest, appOptions: Readonly<AppOptions> = {}) {
@@ -177,11 +156,31 @@ export class PipelineState implements IPipelineState {
     }
 
     get route(): AppEventRoute | undefined {
-        if (!this.dispatchedRoute) {
+        const route = this.dispatchedRoute;
+
+        if (!route) {
             return undefined;
         }
 
-        return toEventRoute(this.dispatchedRoute);
+        if (this._routeOf !== route) {
+            this._route = this.buildRoute(route);
+            this._routeOf = route;
+        }
+
+        return this._route;
+    }
+
+    /**
+     * Build the `event.route` value of a dispatched method-bound route.
+     */
+    protected buildRoute(route: Route<Handler>): AppEventRoute {
+        const pathPrefix = route.pathPrefix ?? '/';
+
+        return {
+            path: route.path ?? pathPrefix,
+            pathPrefix,
+            method: route.method!,
+        };
     }
 
     get signal(): AbortSignal {

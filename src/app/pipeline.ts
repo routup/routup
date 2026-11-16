@@ -202,7 +202,7 @@ export async function walkMatches(
         mergeMatchParams(state, match.params);
 
         // `event.route`: the last method-bound route dispatched. An
-        // assignment only; the event's value is built on read.
+        // assignment only; the state builds the event's value on read.
         if (method) {
             state.dispatchedRoute = match.route;
         }
