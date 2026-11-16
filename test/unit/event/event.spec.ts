@@ -5,7 +5,7 @@ import {
     defineErrorHandler,
 } from '../../../src';
 import { PipelineStep } from '../../../src/app/pipeline';
-import { PipelineState } from '../../../src/app/pipeline-state';
+import { PipelineState } from '../../../src/app/pipeline/state';
 import { AppEvent } from '../../../src/event/module';
 import type { AppEventContext } from '../../../src/event/module';
 import type { AppEventRoute } from '../../../src';
@@ -35,7 +35,7 @@ function createContext(
     };
 }
 
-describe('src/app/pipeline-state (PipelineState)', () => {
+describe('src/app/pipeline/state (PipelineState)', () => {
     it('should initialize with correct properties', () => {
         const state = new PipelineState(createTestRequest('http://localhost/foo?bar=baz'));
 

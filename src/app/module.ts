@@ -14,9 +14,8 @@ import type { Plugin, PluginInstallContext } from '../plugin/index.ts';
 import { isPlugin } from '../plugin/index.ts';
 import { PluginRegistry, buildPluginMountKey } from '../plugin/registry.ts';
 import { normalizeAppOptions } from './options.ts';
-import { walkMatches } from './pipeline.ts';
-import { PipelineState } from './pipeline-state.ts';
-import type { IPipelineState } from './pipeline-state.ts';
+import { PipelineState, walkMatches } from './pipeline/index.ts';
+import type { IPipelineState } from './pipeline/index.ts';
 import {
     Deadline,
     acceptsJson,

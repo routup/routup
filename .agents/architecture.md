@@ -11,9 +11,9 @@ HTTP Request → srvx → ServerRequest (AppRequest) → App.fetch() → IRouter
 ```
 
 1. **srvx** receives the raw HTTP request and normalizes it into a `ServerRequest`
-2. **`App.fetch()`**, the only entry point, creates the request-scoped `PipelineState` (internal, `src/app/pipeline-state.ts`) and asks the active `IRouter` for the matches of the path and method
+2. **`App.fetch()`**, the only entry point, creates the request-scoped `PipelineState` (internal, `src/app/pipeline/state/`) and asks the active `IRouter` for the matches of the path and method
 3. It applies the global timeout around the walk
-4. **`walkMatches()`** (internal, `src/app/pipeline.ts`) walks the matches in order; matched **Handlers** run, returning response values or calling `event.next()`
+4. **`walkMatches()`** (internal, `src/app/pipeline/`) walks the matches in order; matched **Handlers** run, returning response values or calling `event.next()`
 5. Return values are converted to a Web `Response` via `toResponse()`
 6. With no response, `App.fetch()` builds a fallback: the pending error's status (default 500), or 404. The body is JSON when the request accepts JSON, plain text otherwise
 
