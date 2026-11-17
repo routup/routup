@@ -67,4 +67,4 @@ A handler that returns `undefined`, or a promise of `undefined`, without having 
 
 Routup does not read `undefined` as "not handled", so a forgotten `return` shows up as a hanging request instead of a wrong 404. Return `null` for an empty response.
 
-The options are in the [`AppOptions` reference](/api/app#appoptions).
+The timeout options are in the [`AppOptions` reference](/api/app#appoptions).
