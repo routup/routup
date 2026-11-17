@@ -8,7 +8,8 @@
         "allowImportingTsExtensions": true,
         "skipLibCheck": true,
         "paths": {
-            "routup": ["./src/index.ts"]
+            "routup": ["./src/index.ts"],
+            "routup/cloudflare": ["./src/_entries/cloudflare.ts"]
         }
     },
     "include": [

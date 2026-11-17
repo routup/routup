@@ -5,7 +5,10 @@ export default defineConfig({
     resolve: {
         // Docs modules import `routup` by name; run them against the source,
         // not `dist/`, which CI's test job does not build.
-        alias: [{ find: /^routup$/, replacement: fileURLToPath(new URL('../src/index.ts', import.meta.url)) }],
+        alias: [
+            { find: /^routup$/, replacement: fileURLToPath(new URL('../src/index.ts', import.meta.url)) },
+            { find: /^routup\/cloudflare$/, replacement: fileURLToPath(new URL('../src/_entries/cloudflare.ts', import.meta.url)) },
+        ],
     },
     test: {
         include: ['test/unit/**/*.{test,spec}.{js,ts}'],

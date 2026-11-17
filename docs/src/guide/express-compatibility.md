@@ -40,7 +40,9 @@ app.use(fromNodeHandler((req, res) => {
 
 ## How it Works
 
-Both `fromNodeHandler()` and `fromNodeMiddleware()` access the underlying Node.js `IncomingMessage` and `ServerResponse` from the runtime context. This means they only work when running on the Node.js runtime (i.e., when imported from `routup/node`).
+Both `fromNodeHandler()` and `fromNodeMiddleware()` access the underlying Node.js `IncomingMessage` and `ServerResponse` from the runtime context. They need a Node.js server that sets `event.request.runtime.node`: `serve()` on Node.js, or `toNodeHandler()` from `routup/node` passed to `createServer()` of `node:http`.
+
+Called through `app.fetch()` with a plain `Request`, the wrapper throws an `AppError` and the request answers 500. To test an app that uses them, start a `node:http` server with `toNodeHandler(app)` and send requests to it.
 
 The wrapper:
 
@@ -53,5 +55,5 @@ This makes it straightforward to migrate from Express incrementally or reuse the
 
 ## Limitations
 
-- Only works on Node.js (requires the runtime to expose `event.request.runtime.node`)
+- Needs a Node.js server that sets `event.request.runtime.node`; under `app.fetch()` with a plain `Request` the request answers 500
 - Middleware that depends on Express-specific extensions (e.g., `req.app`, `req.baseUrl`) may not work without modification

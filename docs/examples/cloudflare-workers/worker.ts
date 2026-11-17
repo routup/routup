@@ -1,3 +1,4 @@
+import { serve } from 'routup/cloudflare';
 import { app } from './app.ts';
 
-export default { fetch: (request: Request) => app.fetch(request) };
+export default serve(app, { manual: true });

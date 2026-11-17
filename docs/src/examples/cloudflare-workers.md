@@ -27,6 +27,6 @@ curl http://localhost:8787/
 
 ## How it works
 
-- A module worker's default export is an object with a `fetch(request, env, ctx)` method. `app.fetch()` takes the Web `Request` and returns the `Response`. See [app.fetch()](/guide/app#app-fetch).
-- `serve()` from `routup/cloudflare` registers a `fetch` event listener with `addEventListener()`, the Service Worker format. A module worker uses the default export instead.
-- `env` and `ctx` are not passed on, and `event.request.ip` is not set, so `getRequestIP()` returns `undefined`.
+- A module worker's default export is an object with a `fetch(request, env, ctx)` method. `serve(app, { manual: true })` from `routup/cloudflare` returns a server whose `fetch` has that signature and passes the request to `app.fetch()`.
+- `manual: true` keeps `serve()` from registering a `fetch` event listener with `addEventListener()`, the Service Worker format.
+- A handler reaches the bindings (KV, D1, secrets) as `event.request.runtime?.cloudflare?.env` and the execution context as `event.request.runtime?.cloudflare?.context`. With the default `trustProxy`, `getRequestIP(event)` returns the `cf-connecting-ip` header.
