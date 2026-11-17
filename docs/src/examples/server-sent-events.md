@@ -6,7 +6,7 @@ A route that streams three events with `createEventStream` and closes the stream
 
 ## Try it
 
-Install `routup`, serve the app from a second file and start it with your [runtime](/guide/runtime-environments):
+Install `routup`, serve the app from a second file and start it with your runtime as on the [Quickstart](/guide/quickstart#run-it):
 
 ```typescript
 import { serve } from 'routup';
@@ -33,7 +33,7 @@ curl -N http://localhost:3000/events
 
 ## How it works
 
-- `createEventStream(event)` returns a handle whose `response` the handler returns. The response has `content-type: text/event-stream`, `cache-control` that forbids caching, `x-accel-buffering: no` and `connection: keep-alive`, plus the status and headers set on `event.response`.
+- The stream's `response` has `content-type: text/event-stream`, `cache-control` that forbids caching, `x-accel-buffering: no` and `connection: keep-alive`, plus the status and headers set on `event.response`.
 - `write()` serializes a message as `id:`, `event:`, `retry:` and one `data:` line per line of `data`, followed by a blank line. A string argument is sent as `data` alone.
 - Messages written before the handler returns wait in the stream until the client reads them. `end()` closes the stream; after that, `write()` returns `false`.
 - See [createEventStream](/guide/response#createeventstream) for writing over time and keep-alive comments.

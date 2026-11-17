@@ -6,7 +6,7 @@ A middleware that checks a bearer token, hands the user to the handlers after it
 
 ## Try it
 
-Install `routup`, serve the app from a second file and start it with your [runtime](/guide/runtime-environments):
+Install `routup`, serve the app from a second file and start it with your runtime as on the [Quickstart](/guide/quickstart#run-it):
 
 ```typescript
 import { serve } from 'routup';
@@ -32,6 +32,7 @@ curl http://localhost:3000/me -H 'authorization: Bearer secret-token'
 ## How it works
 
 - Handlers run in registration order. `/health` answers before the middleware is reached, so it needs no token. See [Registration order](/guide/custom-router#registration-order).
-- `app.use(handler)` without a path runs the middleware for every request that gets to it; `event.next()` continues with the handlers after it. See [Global](/guide/app#global).
+- `app.use(handler)` without a path runs the middleware for every request that gets to it; `event.next()` continues with the handlers after it. An unknown path without a valid token therefore answers 401, not 404. See [Global](/guide/app#global).
+- The token is a constant to keep the example short. A real app verifies it with its auth library, or compares it in constant time.
 - `event.store` lives for one request and is shared by all its handlers. A `Symbol` key cannot collide with keys of other middleware or plugins. See [Data Sharing](/guide/request#data-sharing).
 - An `AppError` that no error handler answers becomes the fallback response with its `status`. Its body is `{ status, message }` as JSON when the request accepts JSON (`curl` sends `Accept: */*`), plain text otherwise. See [Error Handling](/guide/error-handling).

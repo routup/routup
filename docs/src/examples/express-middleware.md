@@ -29,6 +29,6 @@ The id is a new UUID on every request.
 
 ## How it works
 
-- `fromNodeMiddleware` calls the middleware with the Node.js `req` and `res` of the server. When the middleware calls `next()` without ending the response, the pipeline continues with the next handler; `next(error)` hands the error to the error handlers.
+- `fromNodeMiddleware` calls the middleware with the Node.js `req` and `res` of the server and bridges its `next()` callback into the pipeline. See [Express Compatibility](/guide/express-compatibility).
 - A header set with `res.setHeader()` is sent together with the response that the routup handler returns.
 - The wrapper needs a Node.js server, so the app answers 500 under `app.fetch()` with a plain `Request`. See [How it Works](/guide/express-compatibility#how-it-works) for the requirement and how to test such an app, and [Limitations](/guide/express-compatibility#limitations) for the limits of the bridge.

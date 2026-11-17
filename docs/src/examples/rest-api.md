@@ -6,7 +6,7 @@ CRUD routes for todos over an in-memory store. Request bodies are read with [`@r
 
 ## Try it
 
-Install `routup` and `@routup/body`, serve the app from a second file and start it with your [runtime](/guide/runtime-environments):
+Install `routup` and `@routup/body` (the plugin needs Node.js 24 or later), serve the app from a second file and start it with your runtime as on the [Quickstart](/guide/quickstart#run-it):
 
 ```typescript
 import { serve } from 'routup';
