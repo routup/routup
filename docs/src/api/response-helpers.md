@@ -271,24 +271,6 @@ declare function appendResponseHeaderDirective(
 appendResponseHeaderDirective(event, 'Cache-Control', 'no-cache');
 ```
 
-## Status Helpers
-
-### `isResponseGone`
-
-Check whether the response has already been dispatched (i.e., `event.dispatched` is `true`).
-
-```typescript
-declare function isResponseGone(event: IAppEvent): boolean;
-```
-
-### `setResponseGone`
-
-Mark the response as dispatched.
-
-```typescript
-declare function setResponseGone(event: IAppEvent): void;
-```
-
 ## Event Stream (SSE)
 
 ### `createEventStream`

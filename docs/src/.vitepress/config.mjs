@@ -166,6 +166,15 @@ export default defineRoutupConfig({
                     ],
                 },
                 {
+                    text: 'Core',
+                    items: [
+                        { text: 'App', link: '/api/app' },
+                        { text: 'Handlers', link: '/api/handlers' },
+                        { text: 'Event', link: '/api/event' },
+                        { text: 'Errors', link: '/api/errors' },
+                    ],
+                },
+                {
                     text: 'Helpers',
                     items: [
                         { text: 'Request', link: '/api/request-helpers' },
