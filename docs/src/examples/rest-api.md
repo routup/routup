@@ -35,4 +35,4 @@ curl http://localhost:3000/todos/99
 - `body()` turns on the JSON and URL-encoded parsers; `readRequestBody(event)` returns `{}` when the request's `content-type` matches neither, so the `curl` calls set it. See [Reading the Body](/guide/request#reading-the-body).
 - `event.response.status` sets the status of the response built from the return value. See [Status and Headers](/guide/response#status-and-headers).
 - Returning `null` sends an empty body with the status set on `event.response`. See [Return Values](/guide/response#return-values).
-- The 404 `AppError` of `findTodo()` reaches no error handler, so it becomes the [fallback response](/guide/error-handling#fallback-response) with status 404.
+- The `AppError` of `findTodo()` (404) and of `readTitle()` and `readDone()` (400) reaches no error handler, so it becomes the [fallback response](/guide/error-handling#fallback-response) with its status.
