@@ -143,6 +143,10 @@ export default defineRoutupConfig({
                     text: 'Examples',
                     items: [
                         { text: 'REST API', link: '/examples/rest-api' },
+                        { text: 'Auth Middleware', link: '/examples/auth-middleware' },
+                        { text: 'JSON Errors', link: '/examples/json-errors' },
+                        { text: 'Server-Sent Events', link: '/examples/server-sent-events' },
+                        { text: 'Modular Apps', link: '/examples/modular-apps' },
                     ],
                 },
             ],
