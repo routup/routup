@@ -8,6 +8,7 @@ on:
             - 'docs/**'
             - 'src/**'
             - 'package-lock.json'
+            - 'test/unit/docs/examples/testing-guide.spec.ts'
             - '.github/workflows/docs.yml'
     pull_request:
         branches:
@@ -16,6 +17,7 @@ on:
             - 'docs/**'
             - 'src/**'
             - 'package-lock.json'
+            - 'test/unit/docs/examples/testing-guide.spec.ts'
             - '.github/workflows/docs.yml'
 
 jobs:
