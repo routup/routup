@@ -12,6 +12,20 @@ describe('docs/examples/static-files', () => {
 
         expect(response.status).toBe(200);
         expect(response.headers.get('content-type')).toBe('text/javascript; charset=utf-8');
+        expect(response.headers.get('cache-control')).toBe('public,max-age=0,must-revalidate');
+    });
+
+    it('should answer 404 for a missing file instead of the fallback', async () => {
+        const response = await get('/assets/missing.js');
+
+        expect(response.status).toBe(404);
+    });
+
+    it('should serve index.html for a path that only starts with /api', async () => {
+        const response = await get('/apiary');
+
+        expect(response.status).toBe(200);
+        expect(response.headers.get('content-type')).toBe('text/html; charset=utf-8');
     });
 
     it('should serve index.html for a client-side route', async () => {

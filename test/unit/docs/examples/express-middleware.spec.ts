@@ -13,6 +13,7 @@ import { toNodeHandler } from '../../../../src/_entries/node.ts';
 // The Node adapters read `req` and `res` of a Node server from the request,
 // so the app runs behind `node:http` instead of `app.fetch()`.
 const server = createServer(toNodeHandler(app));
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 let baseURL: string;
 
 beforeAll(async () => {
@@ -36,8 +37,16 @@ describe('docs/examples/express-middleware', () => {
         const response = await fetch(`${baseURL}/`);
 
         expect(response.status).toBe(200);
-        expect(response.headers.get('x-request-id')).toMatch(/^[0-9a-f-]{36}$/);
+        expect(response.headers.get('x-request-id')).toMatch(UUID);
         expect(await response.text()).toBe('Hello');
+    });
+
+    it('should set a new id on every request', async () => {
+        const first = await fetch(`${baseURL}/`);
+        const second = await fetch(`${baseURL}/`);
+
+        expect(second.headers.get('x-request-id')).toMatch(UUID);
+        expect(second.headers.get('x-request-id')).not.toBe(first.headers.get('x-request-id'));
     });
 
     it('should not run without a Node.js server', async () => {

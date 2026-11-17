@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defineCoreHandler } from '../../../../src';
+import { defineCoreHandler } from 'routup';
 import { app, users } from '../../../../docs/examples/modular-apps/app.ts';
 
 function get(path: string): Promise<Response> {

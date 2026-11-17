@@ -27,6 +27,12 @@ describe('docs/examples/auth-middleware', () => {
         expect(await response.json()).toEqual({ status: 401, message: 'Unauthorized' });
     });
 
+    it('should reject an unknown path without a header', async () => {
+        const response = await get('/unknown');
+
+        expect(response.status).toBe(401);
+    });
+
     it('should pass the user to the downstream handler', async () => {
         const response = await get('/me', { authorization: 'Bearer secret-token' });
 
