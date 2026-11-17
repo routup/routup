@@ -28,9 +28,11 @@ throw new AppError('Something failed'); // status 500
 | `redirectURL` | `string` | none | A URL to redirect to |
 | `errors` | `readonly Error[]` | none | Errors of a batch |
 | `issues` | `readonly Issue[]` | `[]` | Validation failures |
+| `messageData` | `Record<string, unknown>` | none | Values for `{name}` placeholders in `message`; not stored on the error |
+| `stack` | `string` | the generated trace | Stack trace |
 
 - A `status` outside 400 to 599, or one that is not a number, becomes `500`.
-- The options become properties of the same name, with the defaults above. `statusCode` is a deprecated alias of `status`.
+- The options other than `messageData` become properties of the same name, with the defaults above. `statusCode` is a deprecated alias of `status`.
 - `toJSON()` returns `name`, `message`, `code`, `status` and an `@instanceof` marker list, plus `cause`, `errors` and `issues` when set.
 
 ## `createError`

@@ -172,6 +172,7 @@ export default defineRoutupConfig({
                         { text: 'Handlers', link: '/api/handlers' },
                         { text: 'Event', link: '/api/event' },
                         { text: 'Errors', link: '/api/errors' },
+                        { text: 'Routers', link: '/api/routers' },
                     ],
                 },
                 {
@@ -179,6 +180,12 @@ export default defineRoutupConfig({
                     items: [
                         { text: 'Request', link: '/api/request-helpers' },
                         { text: 'Response', link: '/api/response-helpers' },
+                    ],
+                },
+                {
+                    text: 'Advanced',
+                    items: [
+                        { text: 'Advanced', link: '/api/advanced' },
                     ],
                 },
             ],

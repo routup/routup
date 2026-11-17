@@ -102,15 +102,17 @@ Registers every existing route on `router` and makes it the active route table. 
 
 ### Plugin queries
 
-`hasPluginAt()`, `getPluginVersionAt()` read `path` relative to this App, the way `app.use(path, plugin)` takes it. Plugins of a mounted App count as installed on the App it was mounted into, under the mount path.
+`hasPluginAt()` and `getPluginVersionAt()` read `path` relative to this App, the way `app.use(path, plugin)` takes it. `getPluginMountPaths()` returns full paths, which start with the App's own `path`. Plugins of a mounted App count as installed on the App it was mounted into, under the mount path.
 
 ```typescript
+const app = new App({ path: '/api' });
+
 app.use('/admin', authPlugin);
 
 app.hasPlugin('auth');               // true
 app.hasPluginAt('auth', '/admin');   // true
 app.hasPluginAt('auth');             // false
-app.getPluginMountPaths('auth');     // ['/admin']
+app.getPluginMountPaths('auth');     // ['/api/admin']
 ```
 
 ## `AppContext`
@@ -178,3 +180,23 @@ const app = new App({
     },
 });
 ```
+
+## Serving
+
+`serve()` and `toNodeHandler()` connect an App to a server. They are exported by the runtime entries, not by `src/index.ts`; [Serving](/guide/dispatchers) explains their options and use.
+
+### `serve`
+
+```typescript
+declare function serve(app: IApp, options?: Omit<ServerOptions, 'fetch'>): Server;
+```
+
+Starts a server of the current runtime with srvx that answers every request with `app.fetch()`. Every entry exports it; on `routup/cloudflare` it returns `Server<CloudflareFetchHandler>`.
+
+### `toNodeHandler`
+
+```typescript
+declare function toNodeHandler(app: IApp): NodeHttp1Handler & NodeHttp2Handler & AdapterMeta;
+```
+
+Converts an App into a Node.js `(req, res)` handler for `node:http` and `node:http2` servers. Only the Node.js entry exports it; import it from `routup/node`.
