@@ -11,5 +11,9 @@
         "routup": "file:..",
         "vitepress": "^1.6.4",
         "vue": "^3.5.45"
+    },
+    "devDependencies": {
+        "@routup/assets": "^6.0.0",
+        "@routup/body": "^4.1.0"
     }
 }

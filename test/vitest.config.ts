@@ -9,6 +9,14 @@ export default defineConfig({
     },
     test: {
         include: ['test/unit/**/*.{test,spec}.{js,ts}'],
+        server: {
+            deps: {
+                // Plugins used by docs examples import `routup` as well;
+                // inline them so the alias above applies to them too.
+                // A RegExp is tested against the resolved file path.
+                inline: [/\/node_modules\/@routup\//],
+            },
+        },
         coverage: {
             provider: 'v8',
             include: ['src/**/*.{ts,tsx,js,jsx}'],

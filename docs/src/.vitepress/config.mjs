@@ -40,6 +40,11 @@ export default defineRoutupConfig({
                 activeMatch: '/guide/',
             },
             {
+                text: 'Examples',
+                link: '/examples/',
+                activeMatch: '/examples/',
+            },
+            {
                 text: 'API',
                 link: '/api/',
                 activeMatch: '/api/',
@@ -56,6 +61,7 @@ export default defineRoutupConfig({
                     title: 'Docs',
                     links: [
                         { text: 'Guide', link: '/guide/' },
+                        { text: 'Examples', link: '/examples/' },
                         { text: 'API', link: '/api/' },
                         { text: 'Migrating to v6', link: '/guide/migration-v6' },
                     ],
@@ -123,6 +129,20 @@ export default defineRoutupConfig({
                         { text: 'Express Compatibility', link: '/guide/express-compatibility' },
                         { text: 'Migrating to v5', link: '/guide/migration-v5' },
                         { text: 'Migrating to v6', link: '/guide/migration-v6' },
+                    ],
+                },
+            ],
+            '/examples/': [
+                {
+                    text: 'Overview',
+                    items: [
+                        { text: 'All examples', link: '/examples/' },
+                    ],
+                },
+                {
+                    text: 'Examples',
+                    items: [
+                        { text: 'REST API', link: '/examples/rest-api' },
                     ],
                 },
             ],
