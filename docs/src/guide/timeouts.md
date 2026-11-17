@@ -29,7 +29,7 @@ app.get('/search', defineCoreHandler({
 | `timeout` | `new App({ options })` | none | Milliseconds for the whole request, until a handler returns its response |
 | `handlerTimeout` | `new App({ options })` | none | Milliseconds for each handler's `fn` |
 | `handlerTimeoutOverridable` | `new App({ options })` | `false` | Whether a handler's own `timeout` may be longer than `handlerTimeout` |
-| `timeout` | handler options | none | Milliseconds for this handler's `fn`; replaces `handlerTimeout` |
+| `timeout` | handler options | none | Milliseconds for this handler's `fn`; narrows `handlerTimeout`, or replaces it when `handlerTimeoutOverridable` is `true` |
 
 - An App `timeout` or `handlerTimeout` that is not a positive finite number is ignored.
 - With `handlerTimeoutOverridable: false`, a handler gets the shorter of its `timeout` and `handlerTimeout`. With `true`, its `timeout` applies even when longer. A handler `timeout` without an App `handlerTimeout` applies as set.
@@ -39,7 +39,7 @@ app.get('/search', defineCoreHandler({
 
 Both timeouts end in an `AppError` with status 408 and the message `Request Timeout`. When no error handler answers it, the request gets the [fallback response](/guide/error-handling#fallback-response) with that status.
 
-- An App `timeout` ends the request: no error handler runs, and the fallback answers.
+- An App `timeout` answers with the fallback at once, and no error handler can answer it. Handlers still running continue; when one fails on the aborted `event.signal`, the error handlers after it run, and their result is discarded.
 - A handler timeout is a failure of that handler, like a throw: the error handlers registered after it can answer it.
 - A timeout does not stop running code. It aborts `event.signal`; code that ignores the signal runs on, and its result is discarded.
 - The App `timeout` ends when a handler returns its `Response`. A streamed body keeps streaming after that.
@@ -60,6 +60,7 @@ Pass it to `fetch()`, database drivers or any API that takes a `signal` to cance
 
 A handler that returns `undefined`, or a promise of `undefined`, without having called `event.next()` is not finished. Routup waits until the handler calls `event.next()`, for example from a callback, or until `event.signal` aborts.
 
+- Returning `undefined` after calling `event.next()` returns the downstream result; `event.next()` and `return event.next()` are equivalent.
 - `event.next()` called later continues the pipeline, and its result becomes the handler's response.
 - An abort, from a timeout or from the request's signal, ends the wait with a 408.
 - With no timeout configured and no later `event.next()` call, the request never answers.
