@@ -91,6 +91,7 @@ export default defineRoutupConfig({
                     text: 'Introduction',
                     items: [
                         { text: 'What is it?', link: '/guide/' },
+                        { text: 'Quickstart', link: '/guide/quickstart' },
                         { text: 'Installation', link: '/guide/installation' },
                     ],
                 },

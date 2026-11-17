@@ -22,6 +22,8 @@ app.get('/users/:id', defineCoreHandler((event) => {
 serve(app, { port: 3000 });
 ```
 
+The [Quickstart](/guide/quickstart) installs and runs an app like this one on each runtime.
+
 ## Features
 
 - Built on Web standard APIs (Request/Response)

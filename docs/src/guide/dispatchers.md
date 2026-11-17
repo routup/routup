@@ -4,7 +4,7 @@ Routup provides multiple ways to serve your application, all built on Web standa
 
 ## serve()
 
-The primary way to start a server. Import from a runtime-specific entry point:
+The primary way to start a server. Every entry exports it, the bare `routup` import included; what it starts on each runtime is on [Runtime environments](/guide/runtime-environments).
 
 ```typescript
 import { App, defineCoreHandler, serve } from 'routup';
@@ -15,7 +15,7 @@ app.get('/', defineCoreHandler(() => 'Hello, World!'));
 serve(app, { port: 3000 });
 ```
 
-The `serve()` function accepts standard server options (port, hostname, etc.).
+The `serve()` function accepts the srvx server options (`port`, `hostname`, and so on). Without `port` it listens on the `PORT` environment variable, or 3000; without `hostname`, on the `HOST` environment variable when it is set.
 
 ## app.fetch()
 

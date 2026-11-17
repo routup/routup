@@ -9,7 +9,7 @@ Routup v5 is a major rewrite built on Web Standard APIs. Handlers now receive a 
 | `(req, res, next) => { send(res, data) }` | `(event) => data` |
 | `createNodeDispatcher(router)` | `serve(router)` or `toNodeHandler(router)` |
 | `createWebDispatcher(router)` | `router.fetch(request)` |
-| `import { ... } from 'routup'` | `import { ... } from 'routup'` (runtime auto-detected via conditional exports) |
+| `import { ... } from 'routup'` | `import { ... } from 'routup'` (works on every runtime; see [the bare import](/guide/runtime-environments#the-bare-routup-import)) |
 
 ## Handler signatures
 

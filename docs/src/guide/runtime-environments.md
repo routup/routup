@@ -1,27 +1,91 @@
-# Runtime Environments
+# Runtime environments
 
-Routup runs on any JavaScript runtime that supports Web standard `Request` and `Response`. Import from `routup` — the correct runtime entry is selected automatically via conditional exports.
+An app only handles Web `Request` and `Response` objects, so the same `app.ts` runs on every runtime. What differs is the file that starts it and the command that runs that file.
+
+## The bare `routup` import
+
+`import { serve } from 'routup'` works on every runtime. It picks an [entry](/guide/installation#entry-points) through the conditions of `exports["."]` in routup's `package.json`: a runtime takes the first listed condition it matches. The order is `node`, `bun`, `deno`, `workerd`, `default`, which gives today:
+
+| Runtime | Entry the bare import loads |
+|---------|-----------------------------|
+| Node.js | `routup/node` |
+| Bun | `routup/node` (Bun also matches `node`, which is listed before `bun`) |
+| Deno | `routup/node` (Deno also matches `node`, which is listed before `deno`) |
+| Cloudflare Workers (Wrangler) | `routup/cloudflare` |
+| A runtime that matches none of these | `routup/generic` |
+
+Import from a runtime's own entry to get its native server, or when code relies on what one entry exports, such as `toNodeHandler` from `routup/node`.
+
+## Node.js
 
 ```typescript
-import { App, defineCoreHandler, serve } from 'routup';
+import { serve } from 'routup';
+import { app } from './app.ts';
 
-const app = new App();
-app.get('/', defineCoreHandler(() => 'Hello'));
-
-serve(app, { port: 3000 });
+serve(app);
 ```
 
-This works on Node.js, Bun, Deno, and any runtime that supports conditional exports.
+```bash
+node server.ts
+```
 
-## Explicit Entry Points
+- The Node.js versions that run `.ts` files without a build are on the [Quickstart](/guide/quickstart#run-it).
+- `toNodeHandler(app)` turns the app into a `(req, res)` listener for an existing Node.js server; see [Serving](/guide/dispatchers#tonodehandler).
 
-For runtimes without conditional export support, explicit entry points are available:
+## Bun
 
-| Import | Runtime |
-|--------|---------|
-| `routup/node` | Node.js |
-| `routup/bun` | Bun |
-| `routup/deno` | Deno |
-| `routup/cloudflare` | Cloudflare Workers |
-| `routup/service-worker` | Service Workers |
-| `routup/generic` | Generic Web API |
+```typescript
+import { serve } from 'routup/bun';
+import { app } from './app.ts';
+
+serve(app);
+```
+
+```bash
+bun server.ts
+```
+
+- The bare import loads the Node entry, whose `serve()` runs on Bun's `node:http` compatibility. `routup/bun` serves with `Bun.serve()`, as listed under [entry points](/guide/installation#entry-points).
+
+## Deno
+
+```bash
+deno add npm:routup
+```
+
+```typescript
+import { serve } from 'routup/deno';
+import { app } from './app.ts';
+
+serve(app);
+```
+
+```bash
+deno run --allow-net --allow-env server.ts
+```
+
+- The bare import loads the Node entry, whose `serve()` runs on Deno's `node:http` compatibility. `routup/deno` serves with `Deno.serve()`.
+- `--allow-net` lets the server listen. `--allow-env` lets it read `PORT` and `HOST` (see [serve options](/guide/dispatchers#serve)).
+
+## Cloudflare Workers
+
+```bash
+npx wrangler dev
+```
+
+- A Worker exports the server instead of starting it: `export default serve(app, { manual: true })` with `serve` from `routup/cloudflare`. The [Cloudflare Workers example](/examples/cloudflare-workers) has the worker file, the `wrangler.jsonc` and how a handler reaches bindings.
+
+## Service Workers
+
+```typescript
+import { serve } from 'routup/service-worker';
+import { app } from './app.ts';
+
+serve(app);
+```
+
+- Inside a service worker, `serve()` answers `fetch` events with the app. A request the app answers with 404 is passed on to the network.
+
+## Other runtimes
+
+Hand the `fetch` method of the server that `serve()` from `routup/generic` returns to the runtime. [`app.fetch()`](/guide/dispatchers#app-fetch) does the same without a server object.
