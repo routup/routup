@@ -26,7 +26,7 @@ HTTP Request → srvx → ServerRequest (AppRequest) → App.fetch() → IRouter
 
 ## Entry Files Pattern
 
-Routup uses conditional exports in `package.json` to auto-select the correct runtime adapter. Always import from `routup`:
+The bare `routup` import works on every runtime through the conditions of `exports["."]` in `package.json`:
 
 ```typescript
 import { App, defineCoreHandler, serve } from 'routup';
@@ -36,12 +36,12 @@ app.get('/', defineCoreHandler((event) => 'Hello'));
 serve(app);
 ```
 
-This works on Node.js, Bun, Deno, and Cloudflare Workers. Under the hood, each runtime resolves to a dedicated entry file (`src/_entries/*.ts`) that bundles:
+A runtime takes the first condition it matches, and `node` is listed first, which Bun and Deno match too. Docs therefore say the bare import "works on every runtime", never that it resolves to a runtime's own entry; `docs/src/guide/runtime-environments.md` owns that wording and the entry table. `routup/node`, `routup/bun`, `routup/deno`, `routup/cloudflare`, `routup/generic` and `routup/service-worker` select an entry explicitly.
+
+Each entry file (`src/_entries/*.ts`) bundles:
 - All core exports (App, handlers, helpers, etc.)
 - Runtime-specific `serve()` function from srvx
 - `toNodeHandler()` where applicable (Node.js entry)
-
-Runtime-specific imports (`routup/node`, `routup/bun`, etc.) are still available but rarely needed.
 
 ## Handler System
 

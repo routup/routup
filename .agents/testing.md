@@ -4,7 +4,7 @@
 
 - **Framework**: Vitest
 - **Environment**: Node.js
-- **Config**: `test/vitest.config.ts`
+- **Config**: `test/vitest.config.ts`. It aliases `routup` and `routup/cloudflare` to the source and inlines the `@routup/*` plugins, so docs examples run against `src/` without a build
 
 ## Running Tests
 
@@ -22,7 +22,7 @@ test/
 ├── unit/
 │   ├── app/            # App options, mounting (flatten), plugins, timeouts
 │   ├── cache/          # LruCache
-│   ├── docs/           # Logic of the docs site's landing page components
+│   ├── docs/           # Landing page component logic, docs example apps (examples/), API page headings vs. exports (api-names.spec.ts)
 │   ├── error/          # Error creation and chaining
 │   ├── event/          # AppEvent
 │   ├── handler/        # Handler definitions, adapters, lifecycle callbacks

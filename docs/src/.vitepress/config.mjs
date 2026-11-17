@@ -60,6 +60,7 @@ export default defineRoutupConfig({
                 {
                     title: 'Docs',
                     links: [
+                        { text: 'Quickstart', link: '/guide/quickstart' },
                         { text: 'Guide', link: '/guide/' },
                         { text: 'Examples', link: '/examples/' },
                         { text: 'API', link: '/api/' },

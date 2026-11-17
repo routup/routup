@@ -75,8 +75,8 @@ npm run build:types    # tsc --noEmit (type-check only)
 - **Config**: `release-please-config.json`, `.release-please-manifest.json`
 
 ### Docs (`.github/workflows/docs.yml`)
-- **Triggers**: Push to `master` touching `docs/**`
-- **Process**: Deploys the VitePress site
+- **Triggers**: Pushes and PRs to `master` touching `docs/**`, `src/**`, `package-lock.json` or the workflow file
+- **Process**: Builds routup (`build:js`) and the VitePress site; a push also deploys it
 
 ## Branching
 

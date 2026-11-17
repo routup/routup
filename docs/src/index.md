@@ -14,7 +14,7 @@ hero:
     description: 'A minimalistic HTTP framework built on Web-standard `Request` and `Response`. Handlers return values, middleware awaits `event.next()`, and the same app runs on Node.js, Bun, Deno and Cloudflare Workers.'
     actions:
         - text: 'Get Started'
-          link: '/guide/'
+          link: '/guide/quickstart'
         - text: 'View on GitHub'
           link: 'https://github.com/routup/routup'
     install: 'npm install routup'
@@ -140,8 +140,8 @@ quickstart:
               $ curl localhost:3000/users/42
               {"id":42}
     link:
-        text: 'Installation guide'
-        link: '/guide/installation'
+        text: 'Quickstart'
+        link: '/guide/quickstart'
 express:
     eyebrow: 'routup/node'
     title: 'Drop in alongside Express.'

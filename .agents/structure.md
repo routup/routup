@@ -38,12 +38,13 @@ routup/
 │   ├── helpers.ts          # createTestRequest and event helpers
 │   └── vitest.config.ts    # Vitest configuration
 ├── docs/                   # VitePress site on the shared @routup/docs-theme
-│   ├── src/                # Pages (guide, API reference); landing copy in index.md frontmatter
+│   ├── examples/           # Example apps (<name>/app.ts) that pages include and test/unit/docs/examples/ runs
+│   ├── src/                # Pages (guide, examples, API reference); landing copy in index.md frontmatter
 │   │   └── .vitepress/     # Config, theme entry, landing sections (components/home/)
 │   └── package.json        # VitePress and theme dependencies
 ├── dist/                   # Build output (generated, multi-entry)
 ├── tsdown.config.ts        # tsdown build configuration
-├── tsconfig.json           # TypeScript compiler config
+├── tsconfig.json           # TypeScript compiler config (also type-checks docs/examples/**)
 └── package.json            # Project manifest
 ```
 
