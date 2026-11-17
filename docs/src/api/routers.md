@@ -21,11 +21,7 @@ interface IRouter<T extends ObjectLiteral = ObjectLiteral> {
 
 The contract every router implements. Pass one as `router` to [`new App()`](/api/app#appcontext) or to `app.setRouter()`.
 
-| Method | Returns | Meaning |
-|---|---|---|
-| `add(route)` | `void` | Store a route |
-| `lookup(path, method?)` | `readonly RouteMatch<T>[]` | The routes matching `path`, in the order they were added |
-
+- `lookup()` returns the matching routes in the order they were added.
 - A route with a `method` matches its path exactly. A route without one matches every path that starts with its path.
 - The App checks the method of every returned match itself, so a router may ignore `method` and return more matches.
 - The [contract section of Custom Router](/guide/custom-router#the-irouter-t-contract) explains `Route` and `RouteMatch`.
@@ -85,7 +81,7 @@ The options of the built-in routers.
 
 | Name | Type | Default | Meaning |
 |---|---|---|---|
-| `cache` | `ICache<readonly RouteMatch<T>[]>` | none: no caching | Stores lookup results by request path |
+| `cache` | `ICache<readonly RouteMatch<T>[]>` | none: no caching | Stores lookup results; each router picks the key (`LinearRouter`: the path, `TrieRouter`: the method and the path) |
 
 The built-in routers clear the cache on every `add()`.
 
@@ -114,11 +110,8 @@ interface ICache<V> {
 
 The contract of a router's lookup cache. See [Custom Cache](/guide/custom-cache#the-icache-v-contract).
 
-| Method | Returns | Meaning |
-|---|---|---|
-| `get(key)` | `V \| undefined` | The stored value, `undefined` when there is none |
-| `set(key, value)` | `void` | Store a value; a bounded cache evicts here |
-| `clear()` | `void` | Remove every entry |
+- `get()` returns `undefined` for a missing entry, so `undefined` cannot be stored. Other falsy values can.
+- A bounded cache evicts in `set()`.
 
 ## `LruCache`
 

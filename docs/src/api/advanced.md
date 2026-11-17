@@ -1,4 +1,4 @@
-# Advanced
+# Building blocks
 
 The building blocks routup uses internally, exported for plugin authors and integrations: type guards, plugin errors, the classes behind handlers and events, path matching, response conversion and constants. An application built from the [Guide](/guide/) does not need them. [Plugin Authoring](/guide/plugin-authoring/) shows how plugins use them.
 

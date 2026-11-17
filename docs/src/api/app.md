@@ -183,7 +183,7 @@ const app = new App({
 
 ## Serving
 
-`serve()` and `toNodeHandler()` connect an App to a server. They are exported by the runtime entries, not by `src/index.ts`; [Serving](/guide/dispatchers) explains their options and use.
+`serve()` and `toNodeHandler()` connect an App to a server. [Serving](/guide/dispatchers) explains their options and use.
 
 ### `serve`
 
@@ -191,7 +191,7 @@ const app = new App({
 declare function serve(app: IApp, options?: Omit<ServerOptions, 'fetch'>): Server;
 ```
 
-Starts a server of the current runtime with srvx that answers every request with `app.fetch()`. Every entry exports it; on `routup/cloudflare` it returns `Server<CloudflareFetchHandler>`.
+Starts a server of the current runtime with srvx that answers every request with `app.fetch()`. Every entry point exports it, the bare `routup` import included. It returns the `Server` type of its entry: `Server<CloudflareFetchHandler>` on `routup/cloudflare`, `Server<ServiceWorkerHandler>` on `routup/service-worker`.
 
 ### `toNodeHandler`
 

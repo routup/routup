@@ -185,7 +185,7 @@ export default defineRoutupConfig({
                 {
                     text: 'Advanced',
                     items: [
-                        { text: 'Advanced', link: '/api/advanced' },
+                        { text: 'Building blocks', link: '/api/advanced' },
                     ],
                 },
             ],
