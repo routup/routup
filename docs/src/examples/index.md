@@ -23,6 +23,18 @@ Complete apps for common tasks. Each page shows the full `app.ts`, which a test 
 <h3>Modular Apps</h3>
 <p>One App per resource, mounted on a root App under a path prefix.</p>
 </RtCard>
+<RtCard href="/examples/static-files">
+<h3>Static Files</h3>
+<p>A single-page app served with <code>@routup/assets</code>, <code>index.html</code> as fallback, <code>/api</code> left to the routes.</p>
+</RtCard>
+<RtCard href="/examples/express-middleware">
+<h3>Express Middleware</h3>
+<p>A Node.js <code>(req, res, next)</code> middleware wrapped with <code>fromNodeMiddleware</code>.</p>
+</RtCard>
+<RtCard href="/examples/cloudflare-workers">
+<h3>Cloudflare Workers</h3>
+<p>The app as a module worker, with its <code>wrangler.jsonc</code>.</p>
+</RtCard>
 </div>
 
 <style>
