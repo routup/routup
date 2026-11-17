@@ -1,10 +1,6 @@
+import { readdirSync } from 'node:fs';
+import path from 'node:path';
 import ts from 'typescript';
-
-/**
- * Names documented on an API page that are not exports of `src/index.ts`
- * but of every runtime entry (`src/_entries/*.ts`).
- */
-export const ENTRY_ONLY: string[] = ['serve', 'toNodeHandler'];
 
 /**
  * Runtime exports that need no API entry, mapped to a one-line reason.
@@ -16,6 +12,16 @@ export const EXEMPT: Record<string, string> = {
     isWebHandler: 'Guard that is the same as typeof input === "function"; routup does not call it.',
     matchHandlerMethod: 'Method check of the match walk; routers and plugins do not need it.',
     normalizeAppOptions: 'Option normalization the App constructor runs.',
+};
+
+/**
+ * Type exports that need no API entry and no mention on an API page,
+ * mapped to a one-line reason.
+ */
+export const TYPE_EXEMPT: Record<string, string> = {
+    EventStreamListener: 'No routup signature uses it.',
+    NextFn: 'No routup signature uses it; IAppEvent documents next().',
+    PluginInstallContext: 'Argument of the protected App.install(); no public signature uses it.',
 };
 
 const HEADING = /^ {0,3}(#{2,3})\s+`([A-Za-z_$][\w$]*)(?:\(\))?`\s*$/;
@@ -86,13 +92,66 @@ export function readHiddenNames(markdown: string): string[] {
         .filter((line) => HEADING_START.test(line) && !HEADING.test(line));
 }
 
+const MENTION = /(?<!`)`([A-Za-z_$][\w$]*)(?:\(\)|<[^`]*>)?`(?!`)/g;
+
 /**
- * Read the exports of a module with the TypeScript compiler API.
- * A symbol that resolves to a value (class, function, variable, enum)
- * is a value, everything else is a type.
+ * Read the identifiers that appear as a backticked span outside fenced
+ * code blocks, optionally followed by `()` or a generic argument list.
+ * Each name is listed once, in order of first appearance.
  */
-export function readExports(entryFile: string): { values: Set<string>; types: Set<string> } {
-    const program = ts.createProgram([entryFile], {
+export function readMentionedNames(markdown: string): string[] {
+    const names = new Set<string>();
+
+    for (const line of readLinesOutsideFences(markdown)) {
+        for (const match of line.matchAll(MENTION)) {
+            names.add(match[1]!);
+        }
+    }
+
+    return [...names];
+}
+
+const DECLARATION = /^\s*(?:export\s+)?(?:declare\s+)?(?:abstract\s+)?(?:type|interface|class|enum)\s+([A-Za-z_$][\w$]*)/;
+
+/**
+ * Read the names that a fenced code block declares as a type, an
+ * interface, a class or an enum, so the block shows their shape.
+ */
+export function readDeclaredNames(markdown: string): string[] {
+    const names = new Set<string>();
+    let fence: string | undefined;
+
+    for (const line of markdown.split(/\r?\n/)) {
+        if (typeof fence === 'undefined') {
+            const open = FENCE_OPEN.exec(line);
+
+            if (open) {
+                fence = open[1]!;
+            }
+
+            continue;
+        }
+
+        const close = FENCE_CLOSE.exec(line);
+
+        if (close && close[1]![0] === fence[0] && close[1]!.length >= fence.length) {
+            fence = undefined;
+
+            continue;
+        }
+
+        const match = DECLARATION.exec(line);
+
+        if (match) {
+            names.add(match[1]!);
+        }
+    }
+
+    return [...names];
+}
+
+function createProgram(rootNames: string[]): ts.Program {
+    return ts.createProgram(rootNames, {
         target: ts.ScriptTarget.ES2022,
         module: ts.ModuleKind.ESNext,
         moduleResolution: ts.ModuleResolutionKind.Bundler,
@@ -101,6 +160,45 @@ export function readExports(entryFile: string): { values: Set<string>; types: Se
         skipLibCheck: true,
         types: [],
     });
+}
+
+/**
+ * Read the exports of a module with the TypeScript compiler API.
+ * A symbol that resolves to a value (class, function, variable, enum)
+ * is a value, everything else is a type.
+ */
+export function readExports(entryFile: string): { values: Set<string>; types: Set<string> } {
+    return readProgramExports(createProgram([entryFile]), entryFile);
+}
+
+/**
+ * Read the runtime exports that a runtime entry (`entriesDir/*.ts`) adds
+ * to `indexFile`, sorted. One program holds all files, so the shared
+ * modules are checked once.
+ */
+export function readEntryOnlyExports(entriesDir: string, indexFile: string): string[] {
+    const entries = readdirSync(entriesDir)
+        .filter((file) => file.endsWith('.ts'))
+        .map((file) => path.join(entriesDir, file));
+    const program = createProgram([indexFile, ...entries]);
+    const base = readProgramExports(program, indexFile).values;
+    const names = new Set<string>();
+
+    for (const entry of entries) {
+        for (const name of readProgramExports(program, entry).values) {
+            if (!base.has(name)) {
+                names.add(name);
+            }
+        }
+    }
+
+    return [...names].sort();
+}
+
+function readProgramExports(
+    program: ts.Program,
+    entryFile: string,
+): { values: Set<string>; types: Set<string> } {
     const checker = program.getTypeChecker();
     const source = program.getSourceFile(entryFile);
 

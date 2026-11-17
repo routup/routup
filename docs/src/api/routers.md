@@ -19,7 +19,7 @@ interface IRouter<T extends ObjectLiteral = ObjectLiteral> {
 }
 ```
 
-The contract every router implements. Pass one as `router` to [`new App()`](/api/app#appcontext) or to `app.setRouter()`.
+The contract every router implements; `T` is the type of each route's `data`, an `ObjectLiteral` (`Record<string, any>`). Pass one as `router` to [`new App()`](/api/app#appcontext) or to `app.setRouter()`.
 
 - `lookup()` returns the matching routes in the order they were added.
 - A route with a `method` matches its path exactly. A route without one matches every path that starts with its path.

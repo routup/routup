@@ -69,9 +69,9 @@ The options both factories accept next to `fn`.
 | `method` | `MethodName`, upper or lower case | none: every method | Method the handler answers; `GET` also answers `HEAD` |
 | `path` | `Path` | none | Path appended to the path the handler is registered under; see [Paths](/guide/paths) |
 | `timeout` | `number` | the App's `handlerTimeout` | Milliseconds for `fn`; see [Timeouts](/guide/timeouts) |
-| `onBefore` | `(event) => unknown` | none | Runs before `fn` |
-| `onAfter` | `(event, response) => unknown` | none | Runs after the return value of `fn` became a `Response` |
-| `onError` | `(error, event) => unknown` | none | Runs when `fn`, `onBefore` or `onAfter` throws |
+| `onBefore` | `HandlerBeforeListener`: `(event) => unknown` | none | Runs before `fn` |
+| `onAfter` | `HandlerAfterListener`: `(event, response) => unknown` | none | Runs after the return value of `fn` became a `Response` |
+| `onError` | `HandlerErrorListener`: `(error, event) => unknown` | none | Runs when `fn`, `onBefore` or `onAfter` throws |
 
 - A method shortcut (`app.get()`, ...) replaces `method`.
 - With a `method`, the handler matches its path exactly. Without one, it matches every path that starts with its path, as middleware does.

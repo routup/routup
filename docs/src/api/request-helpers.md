@@ -129,6 +129,8 @@ declare function getRequestAcceptableLanguage(
 
 ## Network
 
+The options of these helpers (`RequestHostNameOptions`, `RequestIpOptions`, `RequestProtocolOptions`) have a `trustProxy` field that takes the values of the App's [`trustProxy`](/api/app#appoptions) option and replaces it for the call. `RequestProtocolOptions` also has `default`, the protocol returned when the request URL cannot be parsed.
+
 ### `getRequestHostName`
 
 Get the hostname from the request, respecting proxy headers when configured.

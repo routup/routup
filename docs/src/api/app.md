@@ -181,6 +181,26 @@ const app = new App({
 });
 ```
 
+## `IApp`
+
+The interface `App` implements, with the methods and properties listed under [`App`](#app). `serve()`, `toNodeHandler()` and `app.use()` take an `IApp`, and a plugin's `install` receives one.
+
+## `Plugin`
+
+```typescript
+type Plugin = {
+    name: string,
+    version?: string,
+    singleton?: boolean,
+    singletonByPath?: boolean,
+    install: PluginInstallFn,
+};
+
+type PluginInstallFn = (router: IApp) => any;
+```
+
+The object [`app.use()`](#app-use) installs. [Plugin Authoring](/guide/plugin-authoring/#the-plugin-interface) explains the fields.
+
 ## Serving
 
 `serve()` and `toNodeHandler()` connect an App to a server. [Serving](/guide/dispatchers) explains their options and use.

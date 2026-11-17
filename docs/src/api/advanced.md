@@ -112,7 +112,7 @@ declare class Handler {
 }
 ```
 
-The object the [handler factories](/api/handlers) return and `app.use()` registers. The factories set `type`; the constructor adds a leading `/` to `path` and converts `method` to upper case.
+The object the [handler factories](/api/handlers) return and `app.use()` registers. Its constructor takes `HandlerOptions`, which is `CoreHandlerOptions | ErrorHandlerOptions`. The factories set `type`; the constructor adds a leading `/` to `path` and converts `method` to upper case.
 
 ### `HandlerType`
 
@@ -133,7 +133,7 @@ declare class AppEvent implements IAppEvent {
 }
 ```
 
-The class of the [event](/api/event) every handler receives. Routup creates one for each handler; constructing one yourself lets a helper run outside a request.
+The class of the [event](/api/event) every handler receives. Routup creates one for each handler; constructing one yourself lets a helper run outside a request. The table lists the fields of `AppEventContext`; `AppEventCreateContext` is a deprecated alias of it.
 
 | Name | Type | Meaning |
 |---|---|---|
@@ -170,7 +170,7 @@ type PathMatcherExecResult = {
 };
 ```
 
-Matches request paths against a route path with [`path-to-regexp`](https://github.com/pillarjs/path-to-regexp); the syntax is on [Paths](/guide/paths). The options are those of `path-to-regexp` (`end`, `trailing`, `sensitive`, `delimiter`, `encodePath`); `end: false` matches a prefix.
+Matches request paths against a route path with [`path-to-regexp`](https://github.com/pillarjs/path-to-regexp); the syntax is on [Paths](/guide/paths). The options, `PathMatcherOptions`, are those of `path-to-regexp` (`end`, `trailing`, `sensitive`, `delimiter`, `encodePath`); `end: false` matches a prefix.
 
 ```typescript
 import { PathMatcher } from 'routup';
@@ -180,6 +180,8 @@ const matcher = new PathMatcher('/users/:id');
 matcher.exec('/users/a%20b'); // { path: '/users/a%20b', params: { id: 'a b' } }
 matcher.exec('/users');       // undefined
 ```
+
+`IPathMatcher` is the interface of its `exec()` method, the type [`buildRoutePathMatcher()`](/api/routers#buildroutepathmatcher) returns.
 
 ## Responses
 

@@ -10,7 +10,7 @@ declare class AppError extends HTTPError {
 }
 ```
 
-An error with an HTTP status, based on `HTTPError` of `@ebec/http`. It takes a message string or an options object.
+An error with an HTTP status, based on `HTTPError` of `@ebec/http`. Its argument, `HTTPErrorInput` of `@ebec/http`, is a message string or an options object.
 
 ```typescript
 import { AppError } from 'routup';

@@ -22,7 +22,7 @@ test/
 ├── unit/
 │   ├── app/            # App options, mounting (flatten), plugins, timeouts
 │   ├── cache/          # LruCache
-│   ├── docs/           # Landing page component logic, docs example apps (examples/), API page headings vs. exports (api-names.spec.ts)
+│   ├── docs/           # Landing page component logic, docs example apps (examples/), API page coverage of the exports (api-names.spec.ts)
 │   ├── error/          # Error creation and chaining
 │   ├── event/          # AppEvent
 │   ├── handler/        # Handler definitions, adapters, lifecycle callbacks

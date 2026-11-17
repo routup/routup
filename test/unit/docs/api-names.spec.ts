@@ -10,18 +10,23 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
-    ENTRY_ONLY,
     EXEMPT,
+    TYPE_EXEMPT,
+    readDeclaredNames,
     readDocumentedNames,
+    readEntryOnlyExports,
     readExports,
     readHiddenNames,
+    readMentionedNames,
 } from './api-names';
 
 const rootDir = fileURLToPath(new URL('../../../', import.meta.url));
 const apiDir = path.join(rootDir, 'docs', 'src', 'api');
 
-// Building the TypeScript program takes a few seconds; do it once per file.
-const exports = readExports(path.join(rootDir, 'src', 'index.ts'));
+// Building a TypeScript program takes a few seconds; build each once per file.
+const indexFile = path.join(rootDir, 'src', 'index.ts');
+const exports = readExports(indexFile);
+const entryOnly = readEntryOnlyExports(path.join(rootDir, 'src', '_entries'), indexFile);
 
 describe('docs/api-names: readDocumentedNames', () => {
     it('should pick a level 3 heading with one backticked identifier', () => {
@@ -139,6 +144,64 @@ describe('docs/api-names: readHiddenNames', () => {
     });
 });
 
+describe('docs/api-names: readMentionedNames', () => {
+    it('should pick backticked identifiers in text, headings and tables', () => {
+        const markdown = [
+            '## `App`',
+            '',
+            'Pass a `Plugin` to `app.use()`.',
+            '',
+            '| `PluginInstallFn` | `(app: IApp) => void` |',
+        ].join('\n');
+
+        expect(readMentionedNames(markdown)).toEqual(['App', 'Plugin', 'PluginInstallFn']);
+    });
+
+    it('should accept a call suffix or a generic argument list', () => {
+        expect(readMentionedNames('`createError()` and `IRouter<T>`')).toEqual(['createError', 'IRouter']);
+    });
+
+    it('should list a name once', () => {
+        expect(readMentionedNames('`App` and `App`')).toEqual(['App']);
+    });
+
+    it('should ignore spans that are not one identifier', () => {
+        expect(readMentionedNames('`app.use()` `a | b` `x = 1` ``App``')).toEqual([]);
+    });
+
+    it('should ignore names inside code fences', () => {
+        expect(readMentionedNames('```ts\n`App`\n```\n\n`Plugin`')).toEqual(['Plugin']);
+    });
+});
+
+describe('docs/api-names: readDeclaredNames', () => {
+    it('should pick types, interfaces, classes and enums declared in a fence', () => {
+        const markdown = [
+            '```ts',
+            'type CoreHandler = (event: IAppEvent) => unknown;',
+            'interface WebHandler {',
+            '    fetch(request: Request): Response;',
+            '}',
+            'declare class App implements IApp {}',
+            'export enum HandlerType {}',
+            'declare function defineCoreHandler(input: CoreHandler): Handler;',
+            '```',
+        ].join('\n');
+
+        expect(readDeclaredNames(markdown)).toEqual(['CoreHandler', 'WebHandler', 'App', 'HandlerType']);
+    });
+
+    it('should ignore declarations outside fences', () => {
+        expect(readDeclaredNames('type Outside = string;\n\n```ts\ntype Inside = string;\n```')).toEqual(['Inside']);
+    });
+});
+
+describe('docs/api-names: readEntryOnlyExports', () => {
+    it('should list the runtime exports the entries add to the index', () => {
+        expect(entryOnly).toEqual(['serve', 'toNodeHandler']);
+    });
+});
+
 describe('docs/api-names: readExports', () => {
     it('should classify classes, functions and const objects as values', () => {
         expect(exports.values.has('App')).toBe(true);
@@ -201,6 +264,10 @@ const pages = readdirSync(apiDir)
     });
 
 const documented = new Set(pages.flatMap((page) => page.names));
+const mentioned = new Set(pages.flatMap((page) => [
+    ...readMentionedNames(page.markdown),
+    ...readDeclaredNames(page.markdown),
+]));
 
 describe('docs/api-names: API pages', () => {
     it('should read names from the API pages', () => {
@@ -223,7 +290,7 @@ describe('docs/api-names: API pages', () => {
                 if (
                     !exports.values.has(name) &&
                     !exports.types.has(name) &&
-                    !ENTRY_ONLY.includes(name)
+                    !entryOnly.includes(name)
                 ) {
                     unknown.push(`${file}: ${name}`);
                 }
@@ -234,7 +301,7 @@ describe('docs/api-names: API pages', () => {
     });
 
     it('every runtime export is documented or exempt', () => {
-        const missing = [...exports.values, ...ENTRY_ONLY]
+        const missing = [...exports.values, ...entryOnly]
             .filter((name) => !documented.has(name) && !(name in EXEMPT))
             .sort();
 
@@ -244,6 +311,22 @@ describe('docs/api-names: API pages', () => {
     it('no exemption is stale', () => {
         const stale = Object.keys(EXEMPT)
             .filter((name) => !exports.values.has(name) || documented.has(name))
+            .sort();
+
+        expect(stale, stale.join('\n')).toEqual([]);
+    });
+
+    it('every type export is documented, mentioned, declared or exempt', () => {
+        const missing = [...exports.types]
+            .filter((name) => !documented.has(name) && !mentioned.has(name) && !(name in TYPE_EXEMPT))
+            .sort();
+
+        expect(missing, missing.join('\n')).toEqual([]);
+    });
+
+    it('no type exemption is stale', () => {
+        const stale = Object.keys(TYPE_EXEMPT)
+            .filter((name) => !exports.types.has(name) || documented.has(name) || mentioned.has(name))
             .sort();
 
         expect(stale, stale.join('\n')).toEqual([]);

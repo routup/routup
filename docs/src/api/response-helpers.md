@@ -37,15 +37,28 @@ The `SendFileOptions` type:
 
 ```typescript
 type SendFileOptions = {
-    stats: () => Promise<SendFileStats> | SendFileStats;
-    content: (
-        options: SendFileContentOptions,
-    ) => Promise<ReadableStream | ArrayBuffer | Uint8Array> | ReadableStream | ArrayBuffer | Uint8Array;
-    disposition?: 'attachment' | 'inline';
+    stats: (() => Promise<SendFileStats> | SendFileStats) | SendFileStats;
+    content: (options: SendFileContentOptions) => Promise<SendFileContent> | SendFileContent;
+    disposition?: SendFileDisposition;
     /** @deprecated Use `disposition: 'attachment'` instead. */
     attachment?: boolean;
     name?: string;
 };
+
+type SendFileStats = {
+    size?: number;
+    mtime?: Date | number | string;
+    name?: string;
+};
+
+type SendFileContentOptions = {
+    start?: number;
+    end?: number;
+};
+
+type SendFileContent = ReadableStream | ArrayBuffer | Uint8Array;
+
+type SendFileDisposition = 'attachment' | 'inline';
 ```
 
 ```typescript
@@ -144,9 +157,11 @@ declare function createContentDisposition(
 ): string;
 
 type ContentDispositionCreateOptions = {
-    type?: 'attachment' | 'inline'; // default: 'attachment'
-    fallback?: string | boolean;    // default: true
+    type?: ContentDispositionType; // default: 'attachment'
+    fallback?: string | boolean;   // default: true
 };
+
+type ContentDispositionType = 'attachment' | 'inline' | (string & {});
 ```
 
 ```typescript
