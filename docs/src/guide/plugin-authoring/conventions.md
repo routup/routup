@@ -94,13 +94,18 @@ Even when your plugin has no options today, the factory shape lets you add them 
 
 ## Failing loudly when a dep helper is called too early
 
-Tree-shakeable helpers shouldn't return undefined just because the plugin isn't installed — that masks the problem far from the cause. Throw `PluginNotInstalledError`:
+Tree-shakeable helpers shouldn't return undefined just because the plugin isn't installed, since that masks the problem far from the cause. A handler's event does not see which plugins its App installed, so let the plugin's middleware mark each request in `event.store`, and throw `PluginNotInstalledError` when the mark is missing:
 
 ```typescript
 import { PluginNotInstalledError } from 'routup';
+import type { IAppEvent } from 'routup';
 
+const STORE_KEY = Symbol.for('@example/cookie');
+
+// The plugin's install() registers a middleware that sets
+// event.store[STORE_KEY] before calling event.next().
 export function useRequestCookie(event: IAppEvent, name: string): string | undefined {
-    if (!event.appOptions.plugins?.has('cookie')) {
+    if (!(STORE_KEY in event.store)) {
         throw new PluginNotInstalledError('cookie', 'useRequestCookie');
     }
     return readCookieFromStore(event, name);

@@ -16,7 +16,7 @@ defineCoreHandler((event) => {
     event.searchParams; // URL search parameters (URLSearchParams)
     event.mountPath;    // Path prefix the running handler's route consumed
     event.route;        // Last method-bound route that ran: { path, pathPrefix, method }, or undefined
-    event.dispatched;   // Whether a response has been produced
+    event.nextCalled;   // Whether event.next() has been called
     event.store;        // Per-request state store
 });
 ```

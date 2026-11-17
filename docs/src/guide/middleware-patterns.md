@@ -12,7 +12,7 @@ Handler-scoped instrumentation (`onBefore` / `onAfter` / `onError` on `HandlerOp
 
 The benefit: **one composition primitive** that can be path-scoped (`app.use('/api', mw)`), method-scoped (via a verb shortcut), and composed in either direction.
 
-The cost worth knowing: middleware is **in** the onion. A v5 hook was a side-effect outside dispatch: a buggy listener couldn't hang the request. A middleware that returns `undefined` *and* never calls `event.next()` (or produces a response) hangs the request until a timeout aborts it ([Returning `undefined`](/guide/timeouts#returning-undefined)). (Forgetting the leading `return` on `event.next()` is harmless: the captured downstream result is forwarded automatically when the handler returns `undefined`.)
+The cost worth knowing: middleware is **in** the onion. A v5 hook was a side-effect outside dispatch: a buggy listener couldn't hang the request. A middleware that returns `undefined` *and* never calls `event.next()` (or produces a response) hangs the request until a timeout aborts it ([Returning `undefined`](/guide/timeouts#returning-undefined)).
 
 ## Request logging (was `'start'` + `'end'`)
 
@@ -41,10 +41,10 @@ app.use(defineErrorHandler((error, event) => {
 To both observe and recover, return a response instead of re-throwing:
 
 ```typescript
-app.use(defineErrorHandler((error) => ({
-    status: error.status ?? 500,
-    message: error.message,
-})));
+app.use(defineErrorHandler((error, event) => {
+    event.response.status = error.status;
+    return { status: error.status, message: error.message };
+}));
 ```
 
 An error handler runs only while an error is pending and catches errors of the handlers registered before it. See [Error Handling](/guide/error-handling).
@@ -66,7 +66,7 @@ This runs for every `/api/*` request and no others — the equivalent of attachi
 
 ## Conditional short-circuit (was `'start'` returning a response)
 
-A middleware that returns a value directly (instead of calling `event.next()`) short-circuits the chain — equivalent to a hook that set `event.dispatched = true`:
+A middleware that returns a value directly (instead of calling `event.next()`) short-circuits the chain:
 
 ```typescript
 app.use(defineCoreHandler((event) => {
@@ -77,6 +77,8 @@ app.use(defineCoreHandler((event) => {
     return event.next();
 }));
 ```
+
+See also the [Auth Middleware example](/examples/auth-middleware).
 
 ## Why no hooks?
 

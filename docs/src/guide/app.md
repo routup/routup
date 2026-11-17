@@ -75,21 +75,7 @@ app.use('/api', api);
 // GET /api/users, GET /api/users/:id
 ```
 
-## app.mount() <Badge type="warning" text="experimental" />
-
-Mount an external fetch handler at a given path. The handler receives requests with the mount prefix stripped from the URL.
-
-```typescript
-// Mount an object with a fetch method
-app.mount('/api', externalApp);
-
-// Mount a plain fetch function
-app.mount('/proxy', (request) => {
-    return fetch(request);
-});
-```
-
-This is useful for integrating other frameworks or services that expose a Fetch-compatible interface.
+`use()` copies the child's routes and plugins into the parent when it runs. Routes added to the child afterwards do not reach the parent, so register them before mounting.
 
 ## Timeout
 

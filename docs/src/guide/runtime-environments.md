@@ -82,7 +82,7 @@ import { app } from './app.ts';
 serve(app);
 ```
 
-- The worker script imports `./app.ts`, so it goes through a bundler. Inside a service worker, `serve()` answers `fetch` events with the app. A request the app answers with 404 is passed on to the network.
+- The worker script imports TypeScript and bare package specifiers, so bundle it first. Inside a service worker, `serve()` answers `fetch` events with the app. A request the app answers with 404 is passed on to the network.
 
 ## Other runtimes
 
