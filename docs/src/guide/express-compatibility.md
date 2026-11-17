@@ -57,3 +57,5 @@ This makes it straightforward to migrate from Express incrementally or reuse the
 
 - Needs a Node.js server that sets `event.request.runtime.node`; under `app.fetch()` with a plain `Request` the request answers 500
 - Middleware that depends on Express-specific extensions (e.g., `req.app`, `req.baseUrl`) may not work without modification
+
+The [Express Middleware example](/examples/express-middleware) wraps a Node.js middleware with `fromNodeMiddleware()`.

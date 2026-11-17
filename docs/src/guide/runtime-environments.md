@@ -1,8 +1,8 @@
-# Runtime environments
+# Runtime Environments
 
 An app only handles Web `Request` and `Response` objects, so the same `app.ts` runs on every runtime. What differs is the file that starts it and the command that runs that file.
 
-## The bare `routup` import
+## The Bare `routup` Import
 
 `import { serve } from 'routup'` works on every runtime. It picks an [entry](/guide/installation#entry-points) through the conditions of `exports["."]` in routup's `package.json`: a runtime takes the first listed condition it matches. The order is `node`, `bun`, `deno`, `workerd`, `default`, which gives today:
 
@@ -45,8 +45,6 @@ serve(app);
 bun server.ts
 ```
 
-- `routup/bun` gives Bun's native server; the bare import gives the entry in [the table above](#the-bare-routup-import). What each entry's `serve()` uses is on [Installation](/guide/installation#entry-points).
-
 ## Deno
 
 Add routup with Deno's command from [Installation](/guide/installation).
@@ -62,7 +60,6 @@ serve(app);
 deno run --allow-net --allow-env server.ts
 ```
 
-- `routup/deno` gives Deno's native server; the bare import gives the entry in [the table above](#the-bare-routup-import).
 - `--allow-net` lets the server listen. `--allow-env` lets it read `PORT` and `HOST` (see [serve options](/guide/dispatchers#serve)).
 
 ## Cloudflare Workers
@@ -84,6 +81,6 @@ serve(app);
 
 - The worker script imports TypeScript and bare package specifiers, so bundle it first. Inside a service worker, `serve()` answers `fetch` events with the app. A request the app answers with 404 is passed on to the network.
 
-## Other runtimes
+## Other Runtimes
 
 Hand the `fetch` method of the server that `serve()` from `routup/generic` returns to the runtime. [`app.fetch()`](/guide/dispatchers#app-fetch) does the same without a server object.

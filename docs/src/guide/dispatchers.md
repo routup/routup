@@ -4,7 +4,7 @@ Routup provides multiple ways to serve your application, all built on Web standa
 
 ## serve()
 
-The primary way to start a server. Every entry exports it, the bare `routup` import included; what it starts on each runtime is on [Runtime environments](/guide/runtime-environments).
+The primary way to start a server. Every entry exports it, the bare `routup` import included; what it starts on each runtime is on [Runtime Environments](/guide/runtime-environments).
 
 ```typescript
 import { App, defineCoreHandler, serve } from 'routup';

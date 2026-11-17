@@ -31,7 +31,7 @@ deno add npm:routup
 - Node.js 22 or later (`engines.node` is `>=22.0.0`).
 - ESM only: the package ships `.mjs` files and has no `require` export condition. Load it with `import`.
 
-## Entry points
+## Entry Points
 
 Every entry exports the full core API (`App`, `defineCoreHandler`, `defineErrorHandler`, the routers, the request and response helpers) and adds a `serve(app, options?)` built on the matching srvx adapter.
 
@@ -44,7 +44,7 @@ Every entry exports the full core API (`App`, `defineCoreHandler`, `defineErrorH
 | `routup/service-worker` | a Service Worker `fetch` listener | |
 | `routup/generic` | no listener; the returned server has a `fetch()` method | |
 
-The bare `routup` import picks one of these through export conditions. Which one each runtime gets is on [Runtime environments](/guide/runtime-environments#the-bare-routup-import).
+The bare `routup` import picks one of these through export conditions. Which one each runtime gets is on [Runtime Environments](/guide/runtime-environments#the-bare-routup-import).
 
 ## TypeScript
 

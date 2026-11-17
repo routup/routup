@@ -144,3 +144,5 @@ const ping = setInterval(() => {
     }
 }, 15_000);
 ```
+
+The [Server-Sent Events example](/examples/server-sent-events) streams events to a client.

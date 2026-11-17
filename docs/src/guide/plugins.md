@@ -24,7 +24,7 @@ For the full plugin authoring contract — interface, mounting semantics, and co
 
 ## Ecosystem
 
-Official plugins are available at [GitHub](https://github.com/routup/plugins).
+Official plugins are available at [GitHub](https://github.com/routup/plugins). The [Static Files example](/examples/static-files) uses the `assets` plugin.
 
 | Name | Description |
 |------|-------------|

@@ -4,7 +4,7 @@ A Node.js `(req, res, next)` middleware that sets an `X-Request-Id` header, wrap
 
 <<< @/../examples/express-middleware/app.ts
 
-## Try it
+## Try It
 
 Install `routup`, serve the app from a second file and start it with Node.js:
 
@@ -27,7 +27,7 @@ curl -i http://localhost:3000/
 
 The id is a new UUID on every request.
 
-## How it works
+## How It Works
 
 - `fromNodeMiddleware` calls the middleware with the Node.js `req` and `res` of the server and bridges its `next()` callback into the pipeline. See [Express Compatibility](/guide/express-compatibility).
 - A header set with `res.setHeader()` is sent together with the response that the routup handler returns.

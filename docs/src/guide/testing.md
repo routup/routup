@@ -29,3 +29,4 @@ The middleware sets its header on `event.response`, so the header is also on the
 
 - [Error Handling](/guide/error-handling): the fallback response a test sees when no handler answers
 - [Plugin Conventions](/guide/plugin-authoring/conventions#test-skeleton): testing a plugin the same way
+- [App reference](/api/app): `app.fetch()` and the App's options

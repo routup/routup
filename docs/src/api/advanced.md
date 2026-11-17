@@ -1,8 +1,8 @@
-# Building blocks
+# Building Blocks
 
 The building blocks routup uses internally, exported for plugin authors and integrations: type guards, plugin errors, the classes behind handlers and events, path matching, response conversion and constants. An application built from the [Guide](/guide/) does not need them. [Plugin Authoring](/guide/plugin-authoring/) shows how plugins use them.
 
-## Type guards
+## Type Guards
 
 ### `isHandler`
 
@@ -44,7 +44,7 @@ declare function isWebHandlerProvider(input: unknown): input is WebHandlerProvid
 
 Checks whether a value is an object with a `fetch` function, which [`fromWebHandler()`](/api/handlers#fromwebhandler) calls. An `App` counts.
 
-## Plugin errors
+## Plugin Errors
 
 ### `PluginError`
 
@@ -98,7 +98,7 @@ const PluginErrorCode = {
 
 The `code` values of the plugin errors.
 
-## Handlers and events
+## Handlers and Events
 
 ### `Handler`
 

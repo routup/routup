@@ -47,3 +47,5 @@ On failure:
 ## No App-Level Hooks
 
 `App` has no hook registry and no `on()` method. Code that should wrap every handler, or every handler under a path, is a middleware: see [Middleware Patterns](/guide/middleware-patterns).
+
+The callback types are in the [`HandlerBaseOptions` reference](/api/handlers#handlerbaseoptions).

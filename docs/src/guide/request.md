@@ -65,6 +65,8 @@ defineCoreHandler(async (event) => {
 });
 ```
 
+The [REST API example](/examples/rest-api) reads JSON bodies with `@routup/body`.
+
 ## Request Helpers
 
 Helpers are standalone functions that take the event as their first argument:

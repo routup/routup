@@ -79,6 +79,8 @@ app.use('/api', api);
 
 `use()` copies the child's routes and plugins into the parent when it runs. Routes added to the child afterwards do not reach the parent, so register them before mounting.
 
+The [Modular Apps example](/examples/modular-apps) builds an application from mounted Apps.
+
 ## Timeout
 
 The `timeout`, `handlerTimeout` and `handlerTimeoutOverridable` options bound how long a request and each handler may take. See [Timeouts and Cancellation](/guide/timeouts).

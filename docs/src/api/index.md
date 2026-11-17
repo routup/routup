@@ -11,4 +11,4 @@ The reference documents the functions, classes and constants of `routup` and the
 | [Routers](/api/routers) | `IRouter`, `LinearRouter`, `TrieRouter`, `SmartRouter` and the lookup cache |
 | [Request Helpers](/api/request-helpers) | Headers, content negotiation, client address, host and protocol |
 | [Response Helpers](/api/response-helpers) | Redirects, files, streams, headers, caching and server-sent events |
-| [Building blocks](/api/advanced) | Type guards, plugin errors, the `Handler` and `AppEvent` classes, path matching, response conversion and constants |
+| [Building Blocks](/api/advanced) | Type guards, plugin errors, the `Handler` and `AppEvent` classes, path matching, response conversion and constants |

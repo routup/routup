@@ -69,7 +69,7 @@ app.use(defineCoreHandler(async (event) => {
 ```
 
 - Only the first call runs the handlers. Every later call returns the same promise.
-- A handler that returns `undefined` after calling `next()` forwards its result. One that returns `undefined` without calling it waits until it does or `event.signal` aborts; see [Handlers](/guide/handlers#returning-undefined).
+- A handler that returns `undefined` after calling `next()` forwards its result. One that returns `undefined` without calling it waits until it does or `event.signal` aborts; see [Timeouts](/guide/timeouts#returning-undefined).
 - `next(error)` makes `error` the pending error, so only error handlers run after it; see [Error Handling](/guide/error-handling#forwarding-with-event-next-error).
 - It does not reject when a later handler throws. It resolves with the response of the error handler that answered, or `undefined`.
 

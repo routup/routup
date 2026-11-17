@@ -233,4 +233,3 @@ The `App*` brand on `AppError` / `AppEvent` / `AppRequest` preserves collision-s
 
 - `Handler.dispatch`'s await chain was collapsed for sync-handler + no-timeout common path — measured ~5% req/s improvement under autocannon. No code change required to opt in.
 - `TrieRouter` (the new radix-trie router) ships with a static-path fast-path map; consider swapping it in for apps with many static routes.
-- The full performance arc and remaining levers are tracked in [`.agents/plans/010-trie-roadmap.md`](https://github.com/routup/routup/blob/master/.agents/plans/010-trie-roadmap.md) and [`012-hot-path-slim-down.md`](https://github.com/routup/routup/blob/master/.agents/plans/012-hot-path-slim-down.md).

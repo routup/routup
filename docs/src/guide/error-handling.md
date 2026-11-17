@@ -53,7 +53,7 @@ The message of a thrown `Error` reaches the client through the [fallback respons
 - Calling `event.next()` passes the same error on to the next error handler.
 - A path that matches no handler raises no error, so error handlers do not run for it. The App answers with the 404 fallback.
 
-The [JSON errors example](/examples/json-errors) shapes every error of an app into one JSON body.
+The [JSON Errors example](/examples/json-errors) shapes every error of an app into one JSON body.
 
 ## Forwarding with `event.next(error)`
 
@@ -105,3 +105,5 @@ defineCoreHandler(async (event) => {
     }
 });
 ```
+
+The [Errors reference](/api/errors) lists the signatures of `AppError`, `createError()` and `isError()`.

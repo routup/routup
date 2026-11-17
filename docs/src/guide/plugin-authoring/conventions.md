@@ -94,7 +94,7 @@ Even when your plugin has no options today, the factory shape lets you add them 
 
 ## Failing loudly when a dep helper is called too early
 
-Tree-shakeable helpers shouldn't return undefined just because the plugin isn't installed, since that masks the problem far from the cause. A handler's event does not see which plugins its App installed, so let the plugin's middleware mark each request in `event.store`, and throw `PluginNotInstalledError` when the mark is missing:
+Tree-shakeable helpers shouldn't return undefined when the plugin isn't installed, since that masks the problem far from the cause. A handler's event does not see which plugins its App installed, so let the plugin's middleware mark each request in `event.store`, and throw `PluginNotInstalledError` when the mark is missing:
 
 ```typescript
 import { PluginNotInstalledError } from 'routup';

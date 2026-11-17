@@ -46,7 +46,7 @@ These are accessed directly on the event object, not through helper functions:
 | `event.searchParams` | URL search parameters (URLSearchParams) |
 | `event.mountPath` | Path prefix the running handler's route consumed |
 | `event.route` | The dispatched method-bound route (`path`, `pathPrefix`, `method`), or `undefined` |
-| `event.response` | Response accumulator (status, headers, statusText) |
+| `event.response` | Response accumulator (status, headers) |
 | `event.nextCalled` | Whether `event.next()` has been called |
 | `event.store` | Per-request state store for data sharing |
 | `event.next()` | Continue to the next handler (cached) |

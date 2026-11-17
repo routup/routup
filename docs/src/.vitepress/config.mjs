@@ -142,7 +142,7 @@ export default defineRoutupConfig({
                 {
                     text: 'Overview',
                     items: [
-                        { text: 'All examples', link: '/examples/' },
+                        { text: 'All Examples', link: '/examples/' },
                     ],
                 },
                 {
@@ -186,7 +186,7 @@ export default defineRoutupConfig({
                 {
                     text: 'Advanced',
                     items: [
-                        { text: 'Building blocks', link: '/api/advanced' },
+                        { text: 'Building Blocks', link: '/api/advanced' },
                     ],
                 },
             ],

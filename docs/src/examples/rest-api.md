@@ -4,7 +4,7 @@ CRUD routes for todos over an in-memory store. Request bodies are read with [`@r
 
 <<< @/../examples/rest-api/app.ts
 
-## Try it
+## Try It
 
 Install `routup` and `@routup/body` (the plugin needs Node.js 24 or later), serve the app from a second file and start it with your runtime as on the [Quickstart](/guide/quickstart#run-it):
 
@@ -30,9 +30,9 @@ curl http://localhost:3000/todos/99
 # {"status":404,"message":"Todo 99 not found"}
 ```
 
-## How it works
+## How It Works
 
 - `body()` turns on the JSON and URL-encoded parsers; `readRequestBody(event)` returns `{}` when the request's `content-type` matches neither, so the `curl` calls set it. See [Reading the Body](/guide/request#reading-the-body).
 - `event.response.status` sets the status of the response built from the return value. See [Status and Headers](/guide/response#status-and-headers).
 - Returning `null` sends an empty body with the status set on `event.response`. See [Return Values](/guide/response#return-values).
-- An `AppError` that no error handler answers becomes the fallback response with its `status`. Its body is `{ status, message }` as JSON when the request accepts JSON (`curl` sends `Accept: */*`), plain text otherwise. See [Error Handling](/guide/error-handling).
+- The 404 `AppError` of `findTodo()` reaches no error handler, so it becomes the [fallback response](/guide/error-handling#fallback-response) with status 404.

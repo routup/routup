@@ -84,7 +84,7 @@ api.get('/users', defineCoreHandler(() => []));
 app.use('/api', api); // GET /api/users
 ```
 
-### Method shortcuts
+### Method Shortcuts
 
 `get()`, `post()`, `put()`, `patch()`, `delete()`, `head()` and `options()` take an optional path and one or more handlers, which run in order.
 
@@ -100,7 +100,7 @@ setRouter(router: IRouter<Handler>): void;
 
 Registers every existing route on `router` and makes it the active route table. The cache of the previous router is dropped with it. See [Custom Router](/guide/custom-router).
 
-### Plugin queries
+### Plugin Queries
 
 `hasPluginAt()` and `getPluginVersionAt()` read `path` relative to this App, the way `app.use(path, plugin)` takes it. `getPluginMountPaths()` returns full paths, which start with the App's own `path`. Plugins of a mounted App count as installed on the App it was mounted into, under the mount path.
 
