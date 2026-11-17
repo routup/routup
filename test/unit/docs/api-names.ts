@@ -18,8 +18,8 @@ export const EXEMPT: Record<string, string> = {
     normalizeAppOptions: 'Option normalization the App constructor runs.',
 };
 
-const HEADING = /^(#{2,3})\s+`([A-Za-z_$][\w$]*)(?:\(\))?`\s*$/;
-const HEADING_START = /^#{2,3}\s+`[A-Za-z_$][\w$]*(?:\(\))?`/;
+const HEADING = /^ {0,3}(#{2,3})\s+`([A-Za-z_$][\w$]*)(?:\(\))?`\s*$/;
+const HEADING_START = /^ {0,3}#{2,3}\s+`/;
 const FENCE_OPEN = /^\s*(`{3,}|~{3,})/;
 const FENCE_CLOSE = /^\s*(`{3,}|~{3,})\s*$/;
 
@@ -56,8 +56,9 @@ function readLinesOutsideFences(markdown: string): string[] {
 }
 
 /**
- * Read the names of headings of level 2 or 3 whose text is exactly one
- * backticked identifier, optionally followed by `()`.
+ * Read the names of headings of level 2 or 3, indented by up to three
+ * spaces, whose text is exactly one backticked identifier, optionally
+ * followed by `()`.
  * Headings inside fenced code blocks are ignored.
  */
 export function readDocumentedNames(markdown: string): string[] {
@@ -75,9 +76,10 @@ export function readDocumentedNames(markdown: string): string[] {
 }
 
 /**
- * Read the headings of level 2 or 3 that start with a backticked
- * identifier but have other text after it (a badge, an anchor, words).
- * Such a heading would hide its name from `readDocumentedNames`.
+ * Read the headings of level 2 or 3 that start with a backticked span
+ * but are not exactly one backticked identifier: a badge, an anchor,
+ * other words or a generic after it. Such a heading would hide its
+ * name from `readDocumentedNames`.
  */
 export function readHiddenNames(markdown: string): string[] {
     return readLinesOutsideFences(markdown)
@@ -125,17 +127,31 @@ export function readExports(entryFile: string): { values: Set<string>; types: Se
 
     const values = new Set<string>();
     const types = new Set<string>();
+    const unresolved: string[] = [];
 
     for (const symbol of checker.getExportsOfModule(moduleSymbol)) {
         const target = symbol.flags & ts.SymbolFlags.Alias ?
             checker.getAliasedSymbol(symbol) :
             symbol;
 
+        // The checker's unknown symbol has no declarations. It stands for
+        // a re-export that did not resolve, also inside a nested barrel
+        // whose diagnostics the entry check above does not see.
+        if (!target.declarations || target.declarations.length === 0) {
+            unresolved.push(symbol.name);
+
+            continue;
+        }
+
         if (target.flags & ts.SymbolFlags.Value) {
             values.add(symbol.name);
         } else {
             types.add(symbol.name);
         }
+    }
+
+    if (unresolved.length > 0) {
+        throw new Error(`${entryFile} re-exports unresolved names: ${unresolved.join(', ')}`);
     }
 
     return { values, types };

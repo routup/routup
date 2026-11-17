@@ -32,6 +32,10 @@ describe('docs/api-names: readDocumentedNames', () => {
         expect(readDocumentedNames('### `createError()`')).toEqual(['createError']);
     });
 
+    it('should pick a heading indented by up to three spaces', () => {
+        expect(readDocumentedNames('   ### `App`\n\n    ### `Indented`')).toEqual(['App']);
+    });
+
     it('should pick a level 2 heading', () => {
         expect(readDocumentedNames('## `App`')).toEqual(['App']);
     });
@@ -100,13 +104,31 @@ describe('docs/api-names: readHiddenNames', () => {
         ]);
     });
 
+    it('should report a heading that starts with any backticked span', () => {
+        const markdown = [
+            '### `IRouter<T>` x',
+            '### `IRouter<T>`',
+            '### `app.get()` shortcut',
+            '   ### `App` {#app}',
+        ].join('\n');
+
+        expect(readHiddenNames(markdown)).toEqual([
+            '### `IRouter<T>` x',
+            '### `IRouter<T>`',
+            '### `app.get()` shortcut',
+            '   ### `App` {#app}',
+        ]);
+    });
+
     it('should accept exact headings, plain headings and other levels', () => {
         const markdown = [
             '### `isPlugin`',
             '### `createError()`',
+            '  ## `App`',
             '### The `App` class',
-            '### `app.get()` shortcut',
+            '### app.get()',
             '#### `App` extra',
+            '    ### `App` x',
         ].join('\n');
 
         expect(readHiddenNames(markdown)).toEqual([]);
@@ -143,6 +165,20 @@ describe('docs/api-names: readExports', () => {
 
         try {
             writeFileSync(entry, "export { missing } from './missing.ts';\n");
+
+            expect(() => readExports(entry)).toThrow(/missing/);
+        } finally {
+            rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('should reject an unresolved re-export in a nested barrel', () => {
+        const dir = mkdtempSync(path.join(tmpdir(), 'routup-api-names-'));
+        const entry = path.join(dir, 'index.ts');
+
+        try {
+            writeFileSync(entry, "export * from './mid.ts';\n");
+            writeFileSync(path.join(dir, 'mid.ts'), "export { missing } from './missing.ts';\nexport const ok = 1;\n");
 
             expect(() => readExports(entry)).toThrow(/missing/);
         } finally {
