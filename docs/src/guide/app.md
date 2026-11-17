@@ -93,48 +93,7 @@ This is useful for integrating other frameworks or services that expose a Fetch-
 
 ## Timeout
 
-### Global Timeout
-
-Set a global request timeout that applies to the entire dispatch pipeline. When exceeded, a `408 Request Timeout` response is returned and `event.signal` is aborted:
-
-```typescript
-const app = new App({ options: { timeout: 5000 } }); // 5 seconds
-```
-
-### Per-Handler Timeout
-
-Set a default timeout for individual handler execution. Each handler's `fn()` is independently timed. When the timeout fires, `event.signal` inside the handler is aborted for cooperative cancellation:
-
-```typescript
-const app = new App({
-    options: {
-        handlerTimeout: 2000,              // 2s default per handler
-        handlerTimeoutOverridable: false,  // handlers can only narrow, not extend (default)
-    },
-});
-```
-
-Handlers can override the default via the verbose syntax:
-
-```typescript
-app.get('/slow', defineCoreHandler({
-    timeout: 10000, // 10s for this handler only
-    fn: async (event) => fetchSlowData(),
-}));
-```
-
-When `handlerTimeoutOverridable` is `false`, the effective timeout is `Math.min(handlerTimeout, handler.timeout)`. Set it to `true` to let handlers extend beyond the default.
-
-### Cooperative Cancellation
-
-Both timeout levels abort `event.signal` when the deadline fires. Handlers can pass it to signal-aware APIs:
-
-```typescript
-defineCoreHandler(async (event) => {
-    const res = await fetch('https://api.example.com', { signal: event.signal });
-    return res.json();
-});
-```
+The `timeout`, `handlerTimeout` and `handlerTimeoutOverridable` options bound how long a request and each handler may take. See [Timeouts and Cancellation](/guide/timeouts).
 
 ## app.fetch()
 
@@ -150,4 +109,4 @@ const response = await app.fetch(
 console.log(await response.text()); // "Hello"
 ```
 
-This is useful for testing, serverless environments, and any runtime that supports the Fetch API.
+This is useful for testing, serverless environments, and any runtime that supports the Fetch API. See [Testing](/guide/testing).

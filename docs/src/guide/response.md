@@ -29,9 +29,7 @@ defineCoreHandler(() => null);
 
 ### Returning `undefined`
 
-`undefined` is **not** an implicit pass-through. A handler that returns `undefined` must have either called `event.next()` (forwarding the downstream result) or intend `event.next()` to be invoked later from an async callback.
-
-If `event.next()` is never invoked, the pipeline waits on `event.signal`: a global or per-handler `timeout` surfaces as `408 Request Timeout`; with no timeout configured the request hangs by design. See [Handlers → Returning `undefined`](./handlers.md#returning-undefined) for details.
+`undefined` is not an empty response; return `null` for one. See [Returning `undefined`](/guide/timeouts#returning-undefined).
 
 ## Status and Headers
 

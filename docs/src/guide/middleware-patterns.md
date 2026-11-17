@@ -8,11 +8,11 @@ Routup v6 has no `app.on(...)` / hook API. Middleware — built from `defineCore
 | `app.on('end', fn)` | `defineCoreHandler(async (event) => { const r = await event.next(); fn(event, r); return r; })` registered first |
 | `app.on('error', fn)` | `defineErrorHandler((err, event) => { fn(err, event); throw err; })` (or shape a response and return it) |
 
-Handler-scoped instrumentation — `onBefore` / `onAfter` / `onError` on `HandlerOptions` — is still available as plain optional callbacks on the handler config and is the preferred shape for single-handler observability (see the [Handlers guide](./handlers)). Reach for middleware when the instrumentation should span more than one handler.
+Handler-scoped instrumentation (`onBefore` / `onAfter` / `onError` on `HandlerOptions`) is still available as plain optional callbacks on the handler config and is the preferred shape for single-handler observability (see [Lifecycle Callbacks](/guide/lifecycle-callbacks)). Reach for middleware when the instrumentation should span more than one handler.
 
 The benefit: **one composition primitive** that can be path-scoped (`app.use('/api', mw)`), method-scoped (via a verb shortcut), and composed in either direction.
 
-The cost worth knowing: middleware is **in** the onion. A v5 hook was a side-effect outside dispatch — a buggy listener couldn't hang the request. A middleware that returns `undefined` *and* never calls `event.next()` (or produces a response) hangs the request until a timeout aborts it — by design, so bugs become loud rather than silent. (Forgetting the leading `return` on `event.next()` is harmless: the captured downstream result is forwarded automatically when the handler returns `undefined`.)
+The cost worth knowing: middleware is **in** the onion. A v5 hook was a side-effect outside dispatch: a buggy listener couldn't hang the request. A middleware that returns `undefined` *and* never calls `event.next()` (or produces a response) hangs the request until a timeout aborts it ([Returning `undefined`](/guide/timeouts#returning-undefined)). (Forgetting the leading `return` on `event.next()` is harmless: the captured downstream result is forwarded automatically when the handler returns `undefined`.)
 
 ## Request logging (was `'start'` + `'end'`)
 
@@ -47,7 +47,7 @@ app.use(defineErrorHandler((error) => ({
 })));
 ```
 
-Error handlers run only when `event.error` is set. They sit in the same match list as core handlers — order them at the position you want them to catch.
+An error handler runs only while an error is pending and catches errors of the handlers registered before it. See [Error Handling](/guide/error-handling).
 
 ## Path-scoped instrumentation
 

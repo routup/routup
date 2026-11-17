@@ -34,4 +34,4 @@ curl http://localhost:3000/me -H 'authorization: Bearer secret-token'
 - Handlers run in registration order. `/health` answers before the middleware is reached, so it needs no token. See [Registration order](/guide/custom-router#registration-order).
 - `app.use(handler)` without a path runs the middleware for every request that gets to it; `event.next()` continues with the handlers after it. See [Global](/guide/app#global).
 - `event.store` lives for one request and is shared by all its handlers. A `Symbol` key cannot collide with keys of other middleware or plugins. See [Data Sharing](/guide/request#data-sharing).
-- An `AppError` that no error handler answers becomes the fallback response with its `status`. Its body is `{ status, message }` as JSON when the request accepts JSON (`curl` sends `Accept: */*`), plain text otherwise. See [Error Handlers](/guide/handlers#error-handlers).
+- An `AppError` that no error handler answers becomes the fallback response with its `status`. Its body is `{ status, message }` as JSON when the request accepts JSON (`curl` sends `Accept: */*`), plain text otherwise. See [Error Handling](/guide/error-handling).

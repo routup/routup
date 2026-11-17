@@ -35,4 +35,4 @@ curl http://localhost:3000/todos/99
 - `body()` turns on the JSON and URL-encoded parsers; `readRequestBody(event)` returns `{}` when the request's `content-type` matches neither, so the `curl` calls set it. See [Reading the Body](/guide/request#reading-the-body).
 - `event.response.status` sets the status of the response built from the return value. See [Status and Headers](/guide/response#status-and-headers).
 - Returning `null` sends an empty body with the status set on `event.response`. See [Return Values](/guide/response#return-values).
-- An `AppError` that no error handler answers becomes the fallback response with its `status`. Its body is `{ status, message }` as JSON when the request accepts JSON (`curl` sends `Accept: */*`), plain text otherwise. See [Error Handlers](/guide/handlers#error-handlers).
+- An `AppError` that no error handler answers becomes the fallback response with its `status`. Its body is `{ status, message }` as JSON when the request accepts JSON (`curl` sends `Accept: */*`), plain text otherwise. See [Error Handling](/guide/error-handling).

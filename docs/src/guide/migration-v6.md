@@ -118,7 +118,7 @@ app.use(defineErrorHandler((error) => {
 
 See the [Middleware Patterns guide](./middleware-patterns) for the full set of equivalents (request logging, error observability, conditional short-circuit, path-scoped instrumentation).
 
-One behavioural difference to know: a v5 hook was a side-effect outside the onion — a buggy listener couldn't deadlock the request. Middleware is **in** the onion. A middleware that returns `undefined` *and* never calls `event.next()` (or produces a response) hangs the request until a timeout aborts it, by design — see the `undefined` contract in the [Architecture guide](./app#returning-undefined). Forgetting the leading `return` on `event.next()` is harmless: the captured downstream result is forwarded automatically when the handler returns `undefined`.
+One behavioural difference to know: a v5 hook was a side-effect outside the onion: a buggy listener couldn't deadlock the request. Middleware is **in** the onion. A middleware that returns `undefined` *and* never calls `event.next()` (or produces a response) hangs the request until a timeout aborts it, by design; see [Returning `undefined`](/guide/timeouts#returning-undefined). Forgetting the leading `return` on `event.next()` is harmless: the captured downstream result is forwarded automatically when the handler returns `undefined`.
 
 ## Note for plugin authors
 

@@ -16,16 +16,18 @@ const handler = defineCoreHandler((event) => {
 
 ## Error Handlers
 
-An error handler is called when an error occurs in a previous handler. It receives the error as the first argument and the event as the second:
+An error handler receives the pending error as the first argument and the event as the second:
 
 ```typescript
 import { defineErrorHandler } from 'routup';
 
 const handler = defineErrorHandler((error, event) => {
-    event.response.status = 500;
+    event.response.status = error.status;
     return { error: error.message };
 });
 ```
+
+When it runs and where to register it is described in [Error Handling](/guide/error-handling).
 
 ## Return Values
 
@@ -50,10 +52,7 @@ defineCoreHandler(() => null);
 
 ### Returning `undefined`
 
-`undefined` is **not** an implicit pass-through. A handler that returns `undefined` is making a contract: it must have either called `event.next()` (forwarding the downstream result) or it must intend `event.next()` to be invoked later from an async callback.
-
-- Returning `undefined` after calling `event.next()` forwards the downstream result — `event.next()` and `return event.next()` are equivalent in outcome.
-- Returning `undefined` without ever calling `event.next()` leaves the handler unresolved. The pipeline waits until either `event.next()` is invoked or `event.signal` aborts. With a global or per-handler `timeout`, this surfaces as `408 Request Timeout`. With no timeout configured, the request hangs by design — bugs become loud (deadlock) rather than silent (404 / wrong body).
+A handler that returns `undefined` must call `event.next()`, now or from a later callback; otherwise the request waits. See [Returning `undefined`](/guide/timeouts#returning-undefined).
 
 ## Middleware
 
@@ -104,37 +103,11 @@ const handler = defineCoreHandler({
 });
 ```
 
-The verbose form supports a per-handler `timeout` (in milliseconds) that overrides the router's `handlerTimeout` default:
-
-```typescript
-const handler = defineCoreHandler({
-    timeout: 5000, // 5 seconds for this handler
-    fn: async (event) => {
-        return fetchSlowData();
-    }
-});
-```
+The verbose form also takes a per-handler `timeout` (see [Timeouts and Cancellation](/guide/timeouts)) and the callbacks below.
 
 ### Instrumentation callbacks
 
-The verbose form also accepts `onBefore` / `onAfter` / `onError` — plain optional callbacks invoked around the handler's `fn`. They are intended for single-handler instrumentation (logging, metrics, per-handler auth checks); for instrumentation that should span multiple handlers, use middleware.
-
-```typescript
-const handler = defineCoreHandler({
-    fn: (event) => fetchUser(event.params.id!),
-    onBefore: (event) => log.debug('user.fetch.start', { path: event.path }),
-    onAfter:  (event, response) => log.debug('user.fetch.done', { status: response?.status }),
-    onError:  (error, event) => metrics.increment('user.fetch.error', { code: error.status }),
-});
-```
-
-Semantics:
-
-- `onBefore` fires before `fn`. Throwing here is treated like the handler throwing — `onError` (if set) fires next and the error propagates.
-- `onAfter` fires after the response is built (or the handler resolved without one). Receives `(event, response)`. Throwing here is also treated like the handler throwing — `onError` fires next and the already-built response is dropped in favour of the error path.
-- `onError` fires when `fn`, `onBefore`, or `onAfter` throws. Receives `(error, event)`. Re-throwing replaces `event.error` with the new error; returning normally lets the original propagate.
-
-All three are skipped when an `ErrorHandler` is invoked with no pending `event.error` (no `fn` runs, so there is nothing to bracket).
+`onBefore`, `onAfter` and `onError` in the verbose form run around the handler's `fn`. See [Lifecycle Callbacks](/guide/lifecycle-callbacks).
 
 ## Mounting
 

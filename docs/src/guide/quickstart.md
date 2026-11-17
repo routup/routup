@@ -68,8 +68,12 @@ The string became a `text/plain` response and the object a JSON response. Every 
 
 ## Next steps
 
-- [App](/guide/app): HTTP methods, mounting and nesting, timeouts
+- [App](/guide/app): HTTP methods, mounting and nesting
 - [Handlers](/guide/handlers): middleware with `event.next()` and error handlers
 - [Paths](/guide/paths): parameters and wildcards
+- [Error Handling](/guide/error-handling): `AppError`, error handlers and the fallback response
+- [Lifecycle Callbacks](/guide/lifecycle-callbacks): `onBefore`, `onAfter` and `onError` around one handler
+- [Timeouts and Cancellation](/guide/timeouts): request and handler timeouts, `event.signal`
+- [Testing](/guide/testing): calling `app.fetch()` from a test
 - [Runtime environments](/guide/runtime-environments): the entry each runtime loads
 - [Examples](/examples/): complete apps with tests

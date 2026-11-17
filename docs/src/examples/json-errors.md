@@ -28,7 +28,7 @@ curl http://localhost:3000/unknown
 
 ## How it works
 
-- An error handler runs only while an error is pending, and only if it comes after the handler that threw. Registering it after the routes puts it there. See [Error Handlers](/guide/handlers#error-handlers).
+- An error handler runs only while an error is pending, and only if it comes after the handler that threw. Registering it after the routes puts it there. See [Error Handling](/guide/error-handling).
 - The `error` argument is always an `AppError`. A thrown `Error` is wrapped with status 500 and its `message`, so the message reaches the client.
 - `event.response.status` sets the status of the response built from the return value. See [Status and Headers](/guide/response#status-and-headers).
 - An unknown path raises no error, so the error handler does not run. The App answers with its 404 fallback: `{ status, message }` as JSON when the request accepts JSON, plain text `Not Found` otherwise.

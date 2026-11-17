@@ -105,12 +105,16 @@ export default defineRoutupConfig({
                         { text: 'Helpers', link: '/guide/helpers' },
                         { text: 'Paths', link: '/guide/paths' },
                         { text: 'Plugins', link: '/guide/plugins' },
+                        { text: 'Error Handling', link: '/guide/error-handling' },
                     ],
                 },
                 {
                     text: 'Advanced',
                     items: [
                         { text: 'Middleware Patterns', link: '/guide/middleware-patterns' },
+                        { text: 'Lifecycle Callbacks', link: '/guide/lifecycle-callbacks' },
+                        { text: 'Timeouts and Cancellation', link: '/guide/timeouts' },
+                        { text: 'Testing', link: '/guide/testing' },
                         { text: 'Serving', link: '/guide/dispatchers' },
                         { text: 'Runtime Environments', link: '/guide/runtime-environments' },
                         { text: 'Custom Router', link: '/guide/custom-router' },
