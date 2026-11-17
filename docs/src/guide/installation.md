@@ -1,6 +1,6 @@
 # Installation
 
-Routup is one npm package. It contains the adapter for every supported runtime, so there is nothing else to install to serve an app.
+Routup is one npm package. Its server adapters come from its `srvx` dependency, so there is nothing else to install to serve an app.
 
 ::: code-group
 
@@ -28,7 +28,7 @@ deno add npm:routup
 
 ## Requirements
 
-- Node.js 22 or later (`engines.node` is `>=22.0.0`). Bun, Deno and Cloudflare Workers each have an entry, listed below.
+- Node.js 22 or later (`engines.node` is `>=22.0.0`).
 - ESM only: the package ships `.mjs` files and has no `require` export condition. Load it with `import`.
 
 ## Entry points

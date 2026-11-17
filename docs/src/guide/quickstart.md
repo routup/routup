@@ -6,9 +6,10 @@ A first app with two routes, started on your runtime. It takes a few minutes and
 
 ```bash
 npm install routup
+npm pkg set type=module
 ```
 
-Other package managers and the requirements are on [Installation](/guide/installation).
+The second line marks the project as ESM, so Node.js loads `server.ts` without a module type warning. Other package managers and the requirements are on [Installation](/guide/installation).
 
 ## Write the app
 
@@ -47,7 +48,7 @@ npx wrangler dev
 
 :::
 
-- **Node.js** runs `.ts` files directly from 22.18 (and 23.6 on the 23 line). On an older 22 release, run `npx tsx server.ts` or compile with `tsc` first. Node needs the `.ts` extension in relative imports.
+- **Node.js** runs `.ts` files directly from 22.18 (and 23.6 on the 23 line). On an older 22 release, run `npx tsx server.ts`. Node needs the `.ts` extension in relative imports.
 - **Deno**: the permission flags are explained on [Runtime environments](/guide/runtime-environments#deno).
 - **Cloudflare Workers** use a different `server.ts`: a module worker exports the server instead of starting it. The [Cloudflare Workers example](/examples/cloudflare-workers) has the worker file and the `wrangler.jsonc`; `wrangler dev` listens on port 8787.
 

@@ -15,7 +15,7 @@ app.get('/', defineCoreHandler(() => 'Hello, World!'));
 serve(app, { port: 3000 });
 ```
 
-The `serve()` function accepts the srvx server options (`port`, `hostname`, and so on). Without `port` it listens on the `PORT` environment variable, or 3000; without `hostname`, on the `HOST` environment variable when it is set.
+The `serve()` function accepts the srvx server options (`port`, `hostname`, and so on). Without `port` it listens on the `PORT` environment variable, or 3000; without `hostname`, on the `HOST` environment variable, or on all interfaces when `HOST` is unset.
 
 ## app.fetch()
 

@@ -45,13 +45,11 @@ serve(app);
 bun server.ts
 ```
 
-- The bare import loads the Node entry, whose `serve()` runs on Bun's `node:http` compatibility. `routup/bun` serves with `Bun.serve()`, as listed under [entry points](/guide/installation#entry-points).
+- `routup/bun` gives Bun's native server; the bare import gives the entry in [the table above](#the-bare-routup-import). What each entry's `serve()` uses is on [Installation](/guide/installation#entry-points).
 
 ## Deno
 
-```bash
-deno add npm:routup
-```
+Add routup with Deno's command from [Installation](/guide/installation).
 
 ```typescript
 import { serve } from 'routup/deno';
@@ -64,7 +62,7 @@ serve(app);
 deno run --allow-net --allow-env server.ts
 ```
 
-- The bare import loads the Node entry, whose `serve()` runs on Deno's `node:http` compatibility. `routup/deno` serves with `Deno.serve()`.
+- `routup/deno` gives Deno's native server; the bare import gives the entry in [the table above](#the-bare-routup-import).
 - `--allow-net` lets the server listen. `--allow-env` lets it read `PORT` and `HOST` (see [serve options](/guide/dispatchers#serve)).
 
 ## Cloudflare Workers
@@ -84,7 +82,7 @@ import { app } from './app.ts';
 serve(app);
 ```
 
-- Inside a service worker, `serve()` answers `fetch` events with the app. A request the app answers with 404 is passed on to the network.
+- The worker script imports `./app.ts`, so it goes through a bundler. Inside a service worker, `serve()` answers `fetch` events with the app. A request the app answers with 404 is passed on to the network.
 
 ## Other runtimes
 
