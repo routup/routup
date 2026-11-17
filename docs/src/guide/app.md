@@ -54,6 +54,8 @@ const apiApp = new App({ path: '/api' });
 app.use(apiApp);
 ```
 
+A handler of another framework that answers a Fetch API `Request` is mounted the same way after wrapping it with [`fromWebHandler()`](/api/handlers#fromwebhandler).
+
 ## Nesting
 
 Apps can be nested for modular route organization:
