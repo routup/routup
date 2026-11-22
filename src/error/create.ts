@@ -50,12 +50,9 @@ export function createError(input: HTTPErrorInput | unknown) : AppError {
         return new AppError();
     }
 
-    const options = { ...input as Record<string, unknown> };
-
-    if (options.cause === undefined) {
-        options.cause = input;
-    }
-
-    return new AppError(options as HTTPErrorInput);
+    // The options bag is input, not a cause: `cause` is set only when
+    // the caller passes one, so error handlers unwrapping `error.cause`
+    // reach a wrapped error and never the options object (#1005).
+    return new AppError(input as HTTPErrorInput);
 }
 

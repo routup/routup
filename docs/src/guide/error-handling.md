@@ -35,7 +35,7 @@ Any other thrown value is converted with `createError()`, which is exported for 
 | string | status 500, the string as message |
 | `HTTPError` from `@ebec/http` | its status and message |
 | `Error` | status 500, its message, the original as `cause` |
-| any other object | its `status` and `message`; a missing `status` becomes 500 and a missing `message` the status's reason phrase; its own `cause`, or the object itself as `cause` |
+| any other object | its `status` and `message`; a missing `status` becomes 500 and a missing `message` the status's reason phrase; its own `cause` if it has one |
 | any other value | status 500, message `Internal Server Error` |
 
 The message of a thrown `Error` reaches the client through the [fallback response](#fallback-response). An error handler that returns its own body decides what the client sees instead.

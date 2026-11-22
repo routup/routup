@@ -43,4 +43,23 @@ describe('src/error/create', () => {
         expect(error.status).toEqual(internalServerError.status);
         expect(error.message).toEqual(internalServerError.message);
     });
+
+    it('should not store an options object as cause', () => {
+        const error = createError({ status: 413, message: 'request entity too large' });
+
+        expect(error.status).toEqual(413);
+        expect(error.message).toEqual('request entity too large');
+        expect(error.cause).toBeUndefined();
+    });
+
+    it('should keep an explicit cause of an options object', () => {
+        const cause = new Error('boom');
+        const error = createError({
+            status: 400,
+            message: 'bad',
+            cause,
+        });
+
+        expect(error.cause).toBe(cause);
+    });
 });
