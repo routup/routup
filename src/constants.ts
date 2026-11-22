@@ -45,6 +45,7 @@ export const HeaderName = {
     RATE_LIMIT_LIMIT: 'ratelimit-limit',
     RATE_LIMIT_REMAINING: 'ratelimit-remaining',
     RATE_LIMIT_RESET: 'ratelimit-reset',
+    REFERER: 'referer',
     RETRY_AFTER: 'retry-after',
     SET_COOKIE: 'set-cookie',
     TRANSFER_ENCODING: 'transfer-encoding',

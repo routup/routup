@@ -20,6 +20,35 @@ declare function sendRedirect(
 return sendRedirect(event, '/login', 302);
 ```
 
+### `sendRedirectBack`
+
+Redirect the client back to the page it came from. The `Referer` is used only when its origin equals the request origin (protocol and host with port, taking `X-Forwarded-Proto` and `X-Forwarded-Host` into account only for a trusted proxy). Only its path is used, never the absolute URL, and leading slashes collapse so a path cannot become a protocol-relative URL. Otherwise the client goes to `fallback`.
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `fallback` | `'/'` | Location without a same-origin referer. Must be a trusted value, never user input |
+| `status` | `302` | Redirect status code |
+| `allowQuery` | `false` | Keep the query string of the referer |
+
+```typescript
+declare function sendRedirectBack(
+    event: IAppEvent,
+    options?: SendRedirectBackOptions,
+): Response;
+```
+
+```typescript
+type SendRedirectBackOptions = {
+    fallback?: string,
+    status?: number,
+    allowQuery?: boolean,
+};
+```
+
+```typescript
+return sendRedirectBack(event, { fallback: '/login' });
+```
+
 ### `sendFile`
 
 Send a file with support for range requests, ETag generation, and automatic content-type detection.

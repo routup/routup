@@ -8,5 +8,6 @@ export * from './send-format.ts';
 export { sendIterable } from './send-iterable.ts';
 export type { IterableSerializer, IterableSource, SendIterableOptions } from './send-iterable.ts';
 export * from './send-redirect.ts';
+export * from './send-redirect-back.ts';
 export * from './send-stream.ts';
 export * from './utils.ts';

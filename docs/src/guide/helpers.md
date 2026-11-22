@@ -21,6 +21,7 @@ Helpers are standalone, tree-shakeable functions for interacting with requests a
 |--------|-------------|
 | `sendFile(event, opts)` | Send a file with range request support |
 | `sendRedirect(event, url, statusCode?)` | Redirect the client |
+| `sendRedirectBack(event, options?)` | Redirect to the same-origin referer path |
 | `sendStream(event, stream)` | Stream data to the client |
 | `sendIterable(event, source, options?)` | Stream an iterable or async generator |
 | `sendFormat(event, formats)` | Content-negotiate and send |
