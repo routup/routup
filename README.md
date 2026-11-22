@@ -14,6 +14,16 @@
 
 Handlers return values, middleware awaits `event.next()`, and the same app runs on Node.js, Bun, Deno and Cloudflare Workers.
 
+```typescript
+import { App, defineCoreHandler, serve } from 'routup';
+
+const app = new App();
+
+app.get('/users/:id', defineCoreHandler((event) => ({ id: event.params.id })));
+
+serve(app, { port: 3000 });
+```
+
 [Why routup?](#why-routup) · [Installation](#installation) · [Usage](#usage) · [Plugins](#plugins) · [Notes](#notes) · [Documentation](https://routup.dev)
 
 ---
@@ -32,35 +42,6 @@ A Web `fetch(request)` handler runs everywhere, but it gives you nothing beyond 
 | **Timeouts** | `setTimeout` plus an `AbortController` per request | `timeout` and `handlerTimeout` abort `event.signal` and answer `408` |
 | **Route table** | One algorithm, whatever the app size | `LinearRouter`, `TrieRouter` or `SmartRouter`, with an optional lookup cache |
 | **Existing middleware** | Rewrite Express middleware | `fromNodeMiddleware(cors())` on a Node.js server |
-
-The same endpoint as a bare fetch handler and as a routup app:
-
-```typescript
-// Bare Web fetch handler
-export default {
-    async fetch(request: Request) {
-        const url = new URL(request.url);
-        const match = url.pathname.match(/^\/users\/([^/]+)$/);
-        if (request.method === 'GET' && match) {
-            return new Response(JSON.stringify({ id: match[1] }), {
-                headers: { 'content-type': 'application/json' },
-            });
-        }
-        return new Response('Not Found', { status: 404 });
-    },
-};
-```
-
-```typescript
-// routup
-import { App, defineCoreHandler, serve } from 'routup';
-
-const app = new App();
-
-app.get('/users/:id', defineCoreHandler((event) => ({ id: event.params.id })));
-
-serve(app, { port: 3000 });
-```
 
 **Table of Contents**
 
