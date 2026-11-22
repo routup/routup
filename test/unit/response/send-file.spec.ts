@@ -477,4 +477,64 @@ describe('src/helpers/response/send-file', () => {
             expect(new Uint8Array(await since.arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
         });
     });
+
+    describe('content type', () => {
+        const pngOptions = (disposition?: SendFileDisposition, type?: string): SendFileOptions => ({
+            stats: { size: 3, name: 'report.html' },
+            content: () => new Uint8Array([1, 2, 3]),
+            disposition,
+            type,
+        });
+
+        it.each([undefined, 'inline', 'attachment'] as const)(
+            'should keep a content-type set before sendFile (disposition: %s)',
+            async (disposition) => {
+                const event = createTestEvent('/');
+
+                event.response.headers.set(HeaderName.CONTENT_TYPE, 'image/png');
+
+                const response = await sendFile(event, pngOptions(disposition));
+
+                expect(response.headers.get(HeaderName.CONTENT_TYPE)).toEqual('image/png');
+            },
+        );
+
+        it('should derive the content-type from the name when none is set', async () => {
+            const event = createTestEvent('/');
+            const response = await sendFile(event, pngOptions('inline'));
+
+            expect(response.headers.get(HeaderName.CONTENT_TYPE)).toEqual('text/html; charset=utf-8');
+            expect(response.headers.get(HeaderName.CONTENT_DISPOSITION)).toEqual('inline; filename=report.html');
+        });
+
+        it.each([undefined, 'inline', 'attachment'] as const)(
+            'should prefer the type option over the name and a set header (disposition: %s)',
+            async (disposition) => {
+                const event = createTestEvent('/');
+
+                event.response.headers.set(HeaderName.CONTENT_TYPE, 'text/plain');
+
+                const response = await sendFile(event, pngOptions(disposition, 'image/png'));
+
+                expect(response.headers.get(HeaderName.CONTENT_TYPE)).toEqual('image/png');
+            },
+        );
+    });
+
+    it('should drop representation headers from a 416', async () => {
+        const event = createTestEvent('/', { headers: { range: 'bytes=100-' } });
+
+        event.response.headers.set(HeaderName.CONTENT_TYPE, 'image/png');
+
+        const response = await sendFile(event, {
+            stats: { size: 3, name: 'a.png' },
+            content: () => new Uint8Array([1, 2, 3]),
+            disposition: 'attachment',
+        });
+
+        expect(response.status).toEqual(416);
+        expect(response.headers.get(HeaderName.CONTENT_RANGE)).toEqual('bytes */3');
+        expect(response.headers.get(HeaderName.CONTENT_TYPE)).toBeNull();
+        expect(response.headers.get(HeaderName.CONTENT_DISPOSITION)).toBeNull();
+    });
 });

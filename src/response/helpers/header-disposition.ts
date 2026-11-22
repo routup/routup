@@ -85,7 +85,11 @@ function setContentDisposition(
     type: ContentDispositionType,
     filename?: string,
 ) {
-    if (typeof filename === 'string') {
+    // A content-type the handler set wins over the name's extension (#1007).
+    if (
+        typeof filename === 'string' &&
+        !event.response.headers.has(HeaderName.CONTENT_TYPE)
+    ) {
         setResponseContentTypeByFileName(event, filename);
     }
 

@@ -205,4 +205,29 @@ describe('src/helpers/response/header-disposition (jshttp/content-disposition pa
                 .toEqual('inline; filename="? rates.pdf"; filename*=UTF-8\'\'%E2%82%AC%20rates.pdf');
         });
     });
+
+    describe('content type', () => {
+        it.each([
+            ['attachment', setResponseHeaderAttachment],
+            ['inline', setResponseHeaderInline],
+        ] as const)('should keep a content-type already set (%s)', (_label, fn) => {
+            const event = createTestEvent('/');
+
+            event.response.headers.set(HeaderName.CONTENT_TYPE, 'image/png');
+            fn(event, 'report.html');
+
+            expect(event.response.headers.get(HeaderName.CONTENT_TYPE)).toEqual('image/png');
+        });
+
+        it.each([
+            ['attachment', setResponseHeaderAttachment],
+            ['inline', setResponseHeaderInline],
+        ] as const)('should derive a content-type from the name when none is set (%s)', (_label, fn) => {
+            const event = createTestEvent('/');
+
+            fn(event, 'report.html');
+
+            expect(event.response.headers.get(HeaderName.CONTENT_TYPE)).toEqual('text/html; charset=utf-8');
+        });
+    });
 });
