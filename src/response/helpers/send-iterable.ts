@@ -17,13 +17,17 @@ export type SendIterableOptions = {
 };
 
 /**
- * Whether a handler return value streams as an iterable: an async
- * iterable, or a generator-like iterator. Arrays, strings, typed arrays,
- * `Map` and `Set` are iterable but have no `next()`, so they stay JSON.
+ * Whether a handler return value streams as an iterable: an object or
+ * function with a callable `Symbol.asyncIterator`, or a generator-like
+ * iterator (callable `Symbol.iterator` and `next()`). Arrays, strings,
+ * typed arrays, `Map` and `Set` are iterable but have no `next()`, so
+ * they stay JSON.
  */
 export function isStreamableIterable(value: unknown): value is object {
+    const t = typeof value;
+
     if (
-        typeof value !== 'object' ||
+        (t !== 'object' && t !== 'function') ||
         value === null ||
         Array.isArray(value) ||
         value instanceof Response ||
@@ -32,8 +36,14 @@ export function isStreamableIterable(value: unknown): value is object {
         return false;
     }
 
-    return Symbol.asyncIterator in value ||
-        (Symbol.iterator in value && typeof (value as { next?: unknown }).next === 'function');
+    const candidate = value as {
+        [Symbol.asyncIterator]?: unknown,
+        [Symbol.iterator]?: unknown,
+        next?: unknown,
+    };
+
+    return typeof candidate[Symbol.asyncIterator] === 'function' ||
+        (typeof candidate[Symbol.iterator] === 'function' && typeof candidate.next === 'function');
 }
 
 /**

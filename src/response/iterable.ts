@@ -38,16 +38,43 @@ function defaultSerializer(value: unknown): Uint8Array | string | undefined {
     }
 }
 
-function toIterator(source: IterableSource): Iterator<unknown> | AsyncIterator<unknown> {
-    // Object() lets a primitive string stream as its characters
-    const src = Object(typeof source === 'function' ? source() : source) as object;
+type IterableCandidate = {
+    [Symbol.asyncIterator]?: unknown,
+    [Symbol.iterator]?: unknown,
+};
 
-    if (Symbol.asyncIterator in src) {
-        return (src as AsyncIterable<unknown>)[Symbol.asyncIterator]();
+function getIteratorMethod(value: object): (() => Iterator<unknown> | AsyncIterator<unknown>) | undefined {
+    const candidate = value as IterableCandidate;
+    const asyncMethod = candidate[Symbol.asyncIterator];
+
+    if (typeof asyncMethod === 'function') {
+        return asyncMethod as () => AsyncIterator<unknown>;
     }
 
-    if (Symbol.iterator in src) {
-        return (src as Iterable<unknown>)[Symbol.iterator]();
+    const syncMethod = candidate[Symbol.iterator];
+
+    if (typeof syncMethod === 'function') {
+        return syncMethod as () => Iterator<unknown>;
+    }
+
+    return undefined;
+}
+
+function toIterator(source: IterableSource): Iterator<unknown> | AsyncIterator<unknown> {
+    let src: object;
+
+    if (typeof source === 'function' && !getIteratorMethod(source)) {
+        // a plain function is a factory
+        src = Object(source());
+    } else {
+        // Object() lets a primitive string stream as its characters
+        src = Object(source);
+    }
+
+    const method = getIteratorMethod(src);
+
+    if (method) {
+        return method.call(src);
     }
 
     return src as Iterator<unknown> | AsyncIterator<unknown>;

@@ -5,7 +5,7 @@ import {
     vi, 
 } from 'vitest';
 import { App, defineCoreHandler, defineErrorHandler } from '../../../src';
-import { sendIterable } from '../../../src/response/helpers/send-iterable';
+import { isStreamableIterable, sendIterable } from '../../../src/response/helpers/send-iterable';
 import { createTestEvent, createTestRequest } from '../../helpers';
 
 describe('src/response/helpers/send-iterable', () => {
@@ -533,6 +533,124 @@ describe('src/response/helpers/send-iterable', () => {
             controller.abort();
 
             expect(signal!.aborted).toBe(false);
+        });
+    });
+
+    describe('iterator protocols', () => {
+        it('should stream a sync generator whose Symbol.asyncIterator is undefined', async () => {
+            const app = new App();
+
+            app.get('/', defineCoreHandler(() => {
+                const gen = (function* gen() {
+                    yield 'x';
+                    yield 'y';
+                }());
+
+                Object.defineProperty(gen, Symbol.asyncIterator, { value: undefined });
+
+                return gen;
+            }));
+
+            const response = await app.fetch(createTestRequest('/'));
+
+            expect(await response.text()).toBe('xy');
+        });
+
+        it('should fall back to Symbol.iterator in sendIterable when Symbol.asyncIterator is null', async () => {
+            const event = createTestEvent('/');
+
+            const response = await sendIterable(event, {
+                [Symbol.asyncIterator]: null,
+                * [Symbol.iterator]() {
+                    yield 'a';
+                },
+            } as unknown as Iterable<unknown>);
+
+            expect(await response.text()).toBe('a');
+        });
+
+        it('should report the protocols through isStreamableIterable', () => {
+            const fnAsync = Object.assign(() => 'factory', {
+                async* [Symbol.asyncIterator]() {
+                    yield 'a';
+                },
+            });
+
+            expect(isStreamableIterable(fnAsync)).toBe(true);
+            expect(isStreamableIterable({ [Symbol.asyncIterator]: undefined })).toBe(false);
+            expect(isStreamableIterable(() => 'plain')).toBe(false);
+        });
+
+        it('should stream a function implementing Symbol.asyncIterator', async () => {
+            const factory = vi.fn();
+            const source = Object.assign(factory, {
+                async* [Symbol.asyncIterator]() {
+                    yield 'a';
+                    yield 'b';
+                },
+            });
+            const app = new App();
+
+            app.get('/', defineCoreHandler(() => source));
+
+            const response = await app.fetch(createTestRequest('/'));
+
+            expect(await response.text()).toBe('ab');
+            expect(factory).not.toHaveBeenCalled();
+        });
+
+        it('should stream a function implementing Symbol.iterator and next()', async () => {
+            const values = ['a', 'b'];
+            const source = Object.assign(() => 'factory', {
+                next: () => (values.length > 0 ?
+                    { done: false, value: values.shift() } :
+                    { done: true, value: undefined }),
+                [Symbol.iterator]() {
+                    return this;
+                },
+            });
+            const app = new App();
+
+            app.get('/', defineCoreHandler(() => source));
+
+            const response = await app.fetch(createTestRequest('/'));
+
+            expect(await response.text()).toBe('ab');
+        });
+
+        it('should use the protocol of a function source in sendIterable instead of calling it', async () => {
+            const factory = vi.fn();
+            const source = Object.assign(factory, {
+                * [Symbol.iterator]() {
+                    yield 'a';
+                },
+            });
+
+            const response = await sendIterable(createTestEvent('/'), source as unknown as Iterable<unknown>);
+
+            expect(await response.text()).toBe('a');
+            expect(factory).not.toHaveBeenCalled();
+        });
+
+        it('should still call a plain function source in sendIterable as a factory', async () => {
+            const response = await sendIterable(createTestEvent('/'), () => (function* gen() {
+                yield 'a';
+            }()));
+
+            expect(await response.text()).toBe('a');
+        });
+
+        it('should not stream a plain function returned by a handler', async () => {
+            const fn = vi.fn();
+            const app = new App();
+
+            app.get('/', defineCoreHandler(() => fn));
+
+            const response = await app.fetch(createTestRequest('/'));
+
+            // not iterable: takes the JSON path, which cannot serialize a function
+            expect(response.status).toBe(500);
+            expect(fn).not.toHaveBeenCalled();
         });
     });
 });

@@ -200,6 +200,11 @@ export function toResponse(
         }
     }
 
+    // A function streams only when it implements an iterator protocol.
+    if (t === 'function' && isStreamableIterable(value)) {
+        return createIterableResponse(event, value as IterableSource);
+    }
+
     const { status, headers } = event.response;
 
     if (!headers.has('content-type')) {
