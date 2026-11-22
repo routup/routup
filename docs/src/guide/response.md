@@ -18,7 +18,8 @@ defineCoreHandler(() => new Response('Created', { status: 201 }));
 defineCoreHandler(() => someReadableStream);
 
 // Generator / async generator / async iterable — streamed, one chunk per yielded value
-// (no default Content-Type; arrays, Set, Map and plain objects stay JSON)
+// (no default Content-Type; arrays, Set, Map and plain objects stay JSON, unless an
+// object has a callable Symbol.asyncIterator, or Symbol.iterator plus a next() method)
 defineCoreHandler(async function* () {
     yield 'chunk 1';
     yield 'chunk 2';

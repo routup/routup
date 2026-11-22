@@ -78,7 +78,7 @@ Handlers return values directly instead of calling `send()`. The `toResponse()` 
 - **object/array/number/boolean** → JSON `Response`
 - **ArrayBuffer/Uint8Array** → binary `Response` with `application/octet-stream`
 - **ReadableStream** → streamed `Response`
-- **Generator / async iterable** → streamed `Response` (first chunk awaited, so a throw before the first `yield` is a normal error; no default `Content-Type`); arrays, `Set`, `Map` stay JSON
+- **Generator / async iterable** → streamed `Response` (first chunk awaited, so a throw before the first `yield` is a normal error; no default `Content-Type`); any object or function with a callable `Symbol.asyncIterator`, or `Symbol.iterator` plus `next()`, streams (`isStreamableIterable`); arrays, `Set`, `Map` stay JSON
 - **Blob** → `Response` with blob's content type
 - **Response** → passed through as-is
 - **null** → empty `Response` (status from `event.response`)
