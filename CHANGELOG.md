@@ -6,6 +6,28 @@
 * **deps:** bump negotiator from 0.6.3 to 1.0.0 ([#700](https://github.com/routup/routup/issues/700)) ([84edd77](https://github.com/routup/routup/commit/84edd778b87d8baa9072319909385324f265e8a7))
 * **deps:** bump the minorandpatch group with 3 updates ([#758](https://github.com/routup/routup/issues/758)) ([c0117b3](https://github.com/routup/routup/commit/c0117b34c81f3be26f5c60a5ce71e7e81b6ed4ed))
 
+## [6.5.0](https://github.com/routup/routup/compare/v6.4.0...v6.5.0) (2026-11-22)
+
+
+### Features
+
+* **docs:** redesign the landing page on the shared docs theme ([#1001](https://github.com/routup/routup/issues/1001)) ([8c2951e](https://github.com/routup/routup/commit/8c2951efc63c1c9f3d760ab10d9943b46756faf5))
+* **request:** add assertRequestContentType ([c993577](https://github.com/routup/routup/commit/c9935773c9a048be36cc9d7236aed1305e6660e6))
+* **response:** add sendRedirectBack for same-origin referer redirects ([c993577](https://github.com/routup/routup/commit/c9935773c9a048be36cc9d7236aed1305e6660e6))
+* **response:** add Server-Timing helpers ([c993577](https://github.com/routup/routup/commit/c9935773c9a048be36cc9d7236aed1305e6660e6))
+* **response:** stream iterables and async generators returned by handlers ([c993577](https://github.com/routup/routup/commit/c9935773c9a048be36cc9d7236aed1305e6660e6))
+
+
+### Bug Fixes
+
+* answer 304 and set an etag only for a 2xx GET or HEAD ([5844dc3](https://github.com/routup/routup/commit/5844dc35f7f2dbb364661256d79c268beb1efd14)), closes [#1004](https://github.com/routup/routup/issues/1004)
+* keep an explicit content-type when sendFile or the disposition helpers get a file name ([b7fed29](https://github.com/routup/routup/commit/b7fed291984d7fde0b14f794dec9ef335977a73a)), closes [#1007](https://github.com/routup/routup/issues/1007)
+* **router:** match static path segments case-sensitively in every router ([c993577](https://github.com/routup/routup/commit/c9935773c9a048be36cc9d7236aed1305e6660e6))
+* **router:** match wildcards and trailing slashes in TrieRouter like LinearRouter ([c993577](https://github.com/routup/routup/commit/c9935773c9a048be36cc9d7236aed1305e6660e6))
+* **router:** reject empty path segments in TrieRouter like LinearRouter ([c993577](https://github.com/routup/routup/commit/c9935773c9a048be36cc9d7236aed1305e6660e6))
+* **router:** reject unsupported path syntax at registration on every router ([c993577](https://github.com/routup/routup/commit/c9935773c9a048be36cc9d7236aed1305e6660e6))
+* stop createError storing its options bag as cause ([2b1e0c3](https://github.com/routup/routup/commit/2b1e0c34e4fe930f9e11f759a3e5a2969ff5d6b8)), closes [#1005](https://github.com/routup/routup/issues/1005)
+
 ## [6.4.0](https://github.com/routup/routup/compare/v6.3.0...v6.4.0) (2026-11-16)
 
 
