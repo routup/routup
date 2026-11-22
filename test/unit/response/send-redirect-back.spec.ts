@@ -128,4 +128,18 @@ describe('src/response/helpers/send-redirect-back', () => {
 
         expect(real.headers.get('location')).toBe('/x');
     });
+
+    it('should use the request URL host when there is no Host header', async () => {
+        const app = new App();
+
+        app.get('/action', defineCoreHandler((event) => sendRedirectBack(event)));
+
+        const same = await app.fetch(new Request('https://example.com/action', { headers: { referer: 'https://example.com/dashboard' } }));
+
+        expect(same.headers.get('location')).toBe('/dashboard');
+
+        const cross = await app.fetch(new Request('https://example.com/action', { headers: { referer: 'https://evil.com/dashboard' } }));
+
+        expect(cross.headers.get('location')).toBe('/');
+    });
 });

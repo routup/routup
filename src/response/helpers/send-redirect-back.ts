@@ -44,6 +44,11 @@ function getRequestOrigin(event: IAppEvent) : string | undefined {
         host = event.headers.get(HeaderName.HOST);
     }
 
+    // a standard Web Request exposes no Host header
+    if (!host && URL.canParse(event.request.url)) {
+        host = new URL(event.request.url).host;
+    }
+
     if (!host) {
         return undefined;
     }
