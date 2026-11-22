@@ -84,7 +84,11 @@ export function sendRedirectBack(event: IAppEvent, options: SendRedirectBackOpti
     if (referer && origin) {
         const url = new URL(referer);
 
-        if (url.origin === origin) {
+        // a blob: URL carries the origin of its inner URL, and its pathname is that whole URL
+        if (
+            (url.protocol === 'http:' || url.protocol === 'https:') &&
+            url.origin === origin
+        ) {
             // browsers treat `\` like `/`; collapse leading slashes against protocol-relative URLs
             location = url.pathname.replace(/^[/\\]+/, '/');
 

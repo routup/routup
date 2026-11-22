@@ -142,4 +142,15 @@ describe('src/response/helpers/send-redirect-back', () => {
 
         expect(cross.headers.get('location')).toBe('/');
     });
+
+    it.each([
+        'blob:http://localhost/dashboard',
+        'data:text/html,<p>x</p>',
+        // eslint-disable-next-line no-script-url
+        'javascript:alert(1)',
+    ])('should use the fallback for the non-http(s) referer %s', async (referer) => {
+        const res = await run({ host: 'localhost', referer });
+
+        expect(res.headers.get('location')).toBe('/');
+    });
 });
