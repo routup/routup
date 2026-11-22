@@ -6,7 +6,7 @@ import {
     TrieRouter,
     defineCoreHandler,
 } from '../../../src';
-import type { Handler, IRouter  } from '../../../src';
+import type { Handler, IAppEvent, IRouter  } from '../../../src';
 import { createTestRequest } from '../../helpers';
 
 type ResolverFactory = () => IRouter<Handler>;
@@ -308,6 +308,114 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
 
             expect(await (await router.fetch(createTestRequest('/files//a'))).text()).toBe('/a');
             expect(await (await router.fetch(createTestRequest('/files/a//b'))).text()).toBe('a//b');
+        });
+    });
+
+    describe('wildcards and trailing slashes (#1013)', () => {
+        // the params the handler sees, and the prefix its route consumed
+        const describeEvent = (event: IAppEvent) => `${JSON.stringify({ ...event.params })} ${event.mountPath}`;
+
+        const setups: Record<string, (app: App) => void> = {
+            'get /files/*path': (app) => {
+                app.get('/files/*path', defineCoreHandler(describeEvent));
+            },
+            'get /files{/*path}': (app) => {
+                app.get('/files{/*path}', defineCoreHandler(describeEvent));
+            },
+            'use /files/*path': (app) => {
+                app.use('/files/*path', defineCoreHandler(describeEvent));
+            },
+            'get /a/:b/*c': (app) => {
+                app.get('/a/:b/*c', defineCoreHandler(describeEvent));
+            },
+            'use /api/admin': (app) => {
+                app.use('/api/admin', defineCoreHandler(describeEvent));
+            },
+            'use /users/:id': (app) => {
+                app.use('/users/:id', defineCoreHandler(describeEvent));
+            },
+            'get /users/:id': (app) => {
+                app.get('/users/:id', defineCoreHandler(describeEvent));
+            },
+            'get /users{/:id}': (app) => {
+                app.get('/users{/:id}', defineCoreHandler(describeEvent));
+            },
+            'get /users': (app) => {
+                app.get('/users', defineCoreHandler(describeEvent));
+            },
+            'child App at /x with use()': (app) => {
+                const child = new App();
+
+                child.use(defineCoreHandler(describeEvent));
+                app.use('/x', child);
+            },
+            'child App at /x with get /files/*path': (app) => {
+                const child = new App();
+
+                child.get('/files/*path', defineCoreHandler(describeEvent));
+                app.use('/x', child);
+            },
+            'child App at /x with use /files': (app) => {
+                const child = new App();
+
+                child.use('/files', defineCoreHandler(describeEvent));
+                app.use('/x', child);
+            },
+        };
+
+        it.each([
+            ['get /files/*path', '/files', 404],
+            ['get /files/*path', '/files/', 404],
+            ['get /files/*path', '/files/a', '{"path":"a"} /files/a'],
+            ['get /files/*path', '/files/a/', '{"path":"a/"} /files/a/'],
+            ['get /files/*path', '/files/a/b/', '{"path":"a/b/"} /files/a/b/'],
+            ['get /files/*path', '/files//a', '{"path":"/a"} /files//a'],
+            ['get /files/*path', '/files//', '{"path":"/"} /files//'],
+            ['get /files/*path', '/files/a//', '{"path":"a//"} /files/a//'],
+            ['get /files/*path', '/files///', '{"path":"//"} /files///'],
+            ['get /files{/*path}', '/files', '{} /files'],
+            ['get /files{/*path}', '/files/', '{} /files/'],
+            ['get /files{/*path}', '/files/a', '{"path":"a"} /files/a'],
+            ['get /files{/*path}', '/files/a/', '{"path":"a/"} /files/a/'],
+            ['get /files{/*path}', '/files//', '{"path":"/"} /files//'],
+            ['use /files/*path', '/files', 404],
+            ['use /files/*path', '/files/', 404],
+            ['use /files/*path', '/files/a/', '{"path":"a/"} /files/a/'],
+            ['get /a/:b/*c', '/a/1', 404],
+            ['get /a/:b/*c', '/a/1/', 404],
+            ['get /a/:b/*c', '/a/1/x/', '{"b":"1","c":"x/"} /a/1/x/'],
+            ['use /api/admin', '/api/admin', '{} /api/admin'],
+            ['use /api/admin', '/api/admin/', '{} /api/admin/'],
+            ['use /api/admin', '/api/admin//', '{} /api/admin'],
+            ['use /api/admin', '/api/admin/x/', '{} /api/admin'],
+            ['use /users/:id', '/users/1/', '{"id":"1"} /users/1/'],
+            ['use /users/:id', '/users/1//', '{"id":"1"} /users/1'],
+            ['get /users/:id', '/users/1/', '{"id":"1"} /users/1/'],
+            ['get /users{/:id}', '/users', '{} /users'],
+            ['get /users{/:id}', '/users/', '{} /users/'],
+            ['get /users{/:id}', '/users/1/', '{"id":"1"} /users/1/'],
+            ['get /users{/:id}', '/users//', 404],
+            ['get /users', '/users/', '{} /users/'],
+            ['child App at /x with use()', '/x/', '{} /x/'],
+            ['child App at /x with use()', '/x//', '{} /x'],
+            ['child App at /x with get /files/*path', '/x/files', 404],
+            ['child App at /x with get /files/*path', '/x/files/', 404],
+            ['child App at /x with get /files/*path', '/x/files/a/', '{"path":"a/"} /x/files/a/'],
+            ['child App at /x with use /files', '/x/files/', '{} /x/files/'],
+            ['child App at /x with use /files', '/x/files/a/', '{} /x/files'],
+        ] as const)('%s answers %s with %s', async (setup, path, expected) => {
+            const router = new App({ router: factory() });
+
+            setups[setup]!(router);
+
+            const res = await router.fetch(createTestRequest(path));
+
+            if (typeof expected === 'number') {
+                expect(res.status).toBe(expected);
+            } else {
+                expect(res.status).toBe(200);
+                expect(await res.text()).toBe(expected);
+            }
         });
     });
 });

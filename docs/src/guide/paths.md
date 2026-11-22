@@ -41,10 +41,20 @@ app.get('/:file.:ext', defineCoreHandler((event) => event.params));
 Match any path suffix with a named wildcard:
 
 ```typescript
-app.get('/files/{*path}', defineCoreHandler((event) => {
+app.get('/files/*path', defineCoreHandler((event) => {
     return { path: event.params.path };
 }));
 ```
+
+A named wildcard needs at least one segment, and it keeps a trailing slash:
+
+| Request | `event.params.path` |
+|---|---|
+| `/files`, `/files/` | no match (404) |
+| `/files/a` | `a` |
+| `/files/a/b/` | `a/b/` |
+
+To also match the bare prefix, make the wildcard optional with `/files{/*path}`. It matches zero or more segments: `/files` and `/files/` run the handler without a `path` param. This applies on every router.
 
 ## Optional Parameters
 

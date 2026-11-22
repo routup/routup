@@ -248,14 +248,14 @@ describe('TrieRouter — Phase 2 syntax', () => {
     });
 
     describe('T6 — trie-native parser', () => {
-        it('ignores one trailing slash (parseRequestPath drops it)', async () => {
+        it('matches an exact route with one trailing slash', async () => {
             const a = app();
 
             a.get('/users', defineCoreHandler(() => 'matched'));
 
-            // `parseRequestPath` drops one trailing slash, so `/users`
-            // and `/users/` both look up `['users']`, as LinearRouter
-            // matches them. Other empty segments are kept (#1012).
+            // `/users/` splits to `['users', '']`; the walk treats a
+            // trailing empty segment as the end of the path, as
+            // LinearRouter matches it (#1012, #1013).
             expect((await a.fetch(createTestRequest('/users'))).status).toBe(200);
             expect((await a.fetch(createTestRequest('/users/'))).status).toBe(200);
         });

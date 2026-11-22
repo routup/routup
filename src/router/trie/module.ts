@@ -46,29 +46,35 @@ function extractTrieParams(
 
 /**
  * Compute `match.path` (the matched-prefix string) from the request's
- * segments and the variant's recorded depth.
+ * segments and the variant's recorded depth, as `LinearRouter`'s
+ * path-to-regexp match reports it.
  *
- * - Non-splat variants: prefix = `segments[0..matchDepth].join('/')` —
- *   exactly what the variant consumed (request length = variant
- *   length for exact, request length ≥ variant length for prefix).
  * - Splat variants: the splat absorbed every remaining segment, so
- *   the matched prefix is the entire request path. This mirrors what
- *   `path-to-regexp`'s `output.path` would have returned pre-Phase-2
- *   for `/files/*rest` matching `/files/a/b` (`/files/a/b`, not
- *   `/files`).
+ *   the matched prefix is the entire request path (`/files/a/` for
+ *   `/files/*rest`).
+ * - Other variants: `segments[0..matchDepth]`, plus the trailing
+ *   slash when the variant consumed the whole path up to it
+ *   (`use('/api')` on `/api/` reports `/api/`, on `/api/x` `/api`).
+ *
+ * `end` is the segment count without a trailing empty segment.
  */
 function trieMatchedPath(
     segments: string[],
+    end: number,
     matchDepth: number,
     splatTerminated: boolean,
 ): string {
-    const upTo = splatTerminated ? segments.length : matchDepth;
+    if (splatTerminated) {
+        return `/${segments.join('/')}`;
+    }
 
-    if (upTo === 0) {
+    if (matchDepth === 0) {
         return '/';
     }
 
-    return `/${segments.slice(0, upTo).join('/')}`;
+    const prefix = `/${segments.slice(0, matchDepth).join('/')}`;
+
+    return matchDepth === end && end < segments.length ? `${prefix}/` : prefix;
 }
 
 /**
@@ -307,14 +313,19 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         }
 
         const segments = this.parseRequestPath(path);
-        const shortCircuit = this.shortCircuit(segments, method);
+        // A trailing slash leaves one empty last segment; it is matched
+        // as the end of the path, and only a splat captures it.
+        const end = segments.length > 0 && segments[segments.length - 1] === '' ?
+            segments.length - 1 :
+            segments.length;
+        const shortCircuit = this.shortCircuit(segments, end, method);
 
         if (shortCircuit !== null) {
             for (const c of shortCircuit) {
                 candidates.push(c);
             }
         } else {
-            this.walk(this.root, segments, 0, candidates, method);
+            this.walk(this.root, segments, end, 0, candidates, method);
         }
 
         // Sort primarily by registration `index` (preserves dispatch
@@ -362,7 +373,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
                     route,
                     index,
                     params: extractTrieParams(segments, paramsIndexMap),
-                    path: trieMatchedPath(segments, matchDepth, candidate.splatTerminated === true),
+                    path: trieMatchedPath(segments, end, matchDepth, candidate.splatTerminated === true),
                 });
                 lastIndex = index;
 
@@ -399,10 +410,16 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
      * encountered, returns `null` and the caller falls through to
      * the regular `walk`.
      */
-    protected shortCircuit(segments: string[], method: MethodNameLike | undefined): IndexedRoute<T>[] | null {
+    protected shortCircuit(
+        segments: string[],
+        end: number,
+        method: MethodNameLike | undefined,
+    ): IndexedRoute<T>[] | null {
         let node = this.root;
 
-        for (const segment of segments) {
+        for (let i = 0; i < end; i++) {
+            const segment = segments[i];
+
             // Any branch at this node disqualifies the fast path: a
             // param-child might match the current segment, a splat
             // would fire, and prefix routes would belong in the
@@ -435,23 +452,18 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
 
     /**
      * Split the request path into segments, keeping empty ones so
-     * `/api//admin` matches no static or param segment (#1012), as in
-     * `LinearRouter`. One trailing slash is insignificant there, so
-     * it is dropped here; `//` still yields one empty segment.
+     * `/api//admin` matches no static or param segment (#1012) and a
+     * trailing slash stays visible to splats and `match.path` (#1013),
+     * as in `LinearRouter`. `/` yields no segment.
      */
     protected parseRequestPath(path: string): string[] {
         const start = path.charCodeAt(0) === 47 ? 1 : 0;
-        let end = path.length;
 
-        if (end === start) {
+        if (path.length === start) {
             return [];
         }
 
-        if (path.charCodeAt(end - 1) === 47) {
-            end--;
-        }
-
-        return path.slice(start, end).split('/');
+        return path.slice(start).split('/');
     }
 
     protected insertIntoTrie(segments: Segment[], route: Route<T>, index: number): void {
@@ -520,42 +532,39 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
     protected walk(
         node: TrieNode<T>,
         segments: string[],
+        end: number,
         depth: number,
         collected: IndexedRoute<T>[],
         method: MethodNameLike | undefined,
     ): void {
-        // Splats at this depth match any request path that reaches here.
-        emitBucket(node.splatRoutes, method, collected);
+        // Prefix routes at this node match the rest of the path,
+        // whatever it is (middleware / nested apps).
+        for (const p of node.prefixRoutes) {
+            collected.push(p);
+        }
 
-        if (depth === segments.length) {
-            // Request path is fully consumed at this node: collect
-            // both exact-match and prefix-match routes that ended here.
+        if (depth >= end) {
+            // Path consumed, up to an optional trailing slash. A splat
+            // needs at least one more character, so none fires here.
             emitBucket(node.exactRoutes, method, collected);
-
-            for (const p of node.prefixRoutes) {
-                collected.push(p);
-            }
 
             return;
         }
 
-        // Going deeper — prefix routes at this node match any
-        // continuation (middleware / nested apps).
-        for (const p of node.prefixRoutes) {
-            collected.push(p);
-        }
+        // Splats at this depth capture the non-empty rest of the path.
+        emitBucket(node.splatRoutes, method, collected);
 
         const seg = segments[depth]!;
 
         const staticChild = node.staticChildren.get(seg);
 
         if (staticChild) {
-            this.walk(staticChild, segments, depth + 1, collected, method);
+            this.walk(staticChild, segments, end, depth + 1, collected, method);
         }
 
         // a param never captures an empty segment
         if (node.paramChild && seg !== '') {
-            this.walk(node.paramChild, segments, depth + 1, collected, method);
+            this.walk(node.paramChild, segments, end, depth + 1, collected, method);
         }
     }
 
