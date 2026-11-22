@@ -1,3 +1,4 @@
+import { MethodName } from '../constants.ts';
 import { createError } from '../error/create.ts';
 import type { IAppEvent } from '../event/index.ts';
 import { matchesETagList } from '../utils/conditional.ts';
@@ -46,6 +47,24 @@ function effectiveEtagFn(event: IAppEvent): EtagFn | null {
     }
 
     return opt;
+}
+
+/**
+ * Whether the response takes an ETag: the etag option is not disabled
+ * and the request is a GET/HEAD answered 2xx. A 304 applies only to a
+ * 2xx GET/HEAD (RFC 9110 section 13.1.2); for any other method the
+ * handler already ran, so a 304 (or 412) would hide its result (#1004).
+ */
+function shouldApplyEtag(event: IAppEvent): boolean {
+    if (event.appOptions.etag === null) {
+        return false;
+    }
+
+    const { status } = event.response;
+
+    return status >= 200 &&
+        status < 300 &&
+        (event.method === MethodName.GET || event.method === MethodName.HEAD);
 }
 
 /**
@@ -120,9 +139,7 @@ export function toResponse(
             headers.set('content-type', 'text/plain; charset=utf-8');
         }
 
-        // null is "explicitly disabled"; undefined falls back to the
-        // default fn. Either truthy fn or undefined → run applyEtag.
-        if (event.appOptions.etag !== null) {
+        if (shouldApplyEtag(event)) {
             return applyEtag(value as string, event, headers)
                 .then((cached) => cached ?? createResponse(value as string, status, headers));
         }
@@ -192,7 +209,7 @@ export function toResponse(
         });
     }
 
-    if (event.appOptions.etag !== null) {
+    if (shouldApplyEtag(event)) {
         return applyEtag(json, event, headers)
             .then((cached) => cached ?? createResponse(json, status, headers));
     }
