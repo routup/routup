@@ -10,6 +10,8 @@ app.get('/users', defineCoreHandler((event) => {
 }));
 ```
 
+Static segments match case-sensitively on every router: `/Users` does not match a route registered as `/users`.
+
 ## Parameters
 
 Named parameters capture values from the URL:

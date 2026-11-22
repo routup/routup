@@ -170,7 +170,7 @@ type PathMatcherExecResult = {
 };
 ```
 
-Matches request paths against a route path with [`path-to-regexp`](https://github.com/pillarjs/path-to-regexp); the syntax is on [Paths](/guide/paths). The options, `PathMatcherOptions`, are those of `path-to-regexp` (`end`, `trailing`, `sensitive`, `delimiter`, `encodePath`); `end: false` matches a prefix.
+Matches request paths against a route path with [`path-to-regexp`](https://github.com/pillarjs/path-to-regexp); the syntax is on [Paths](/guide/paths). The options, `PathMatcherOptions`, are those of `path-to-regexp` (`end`, `trailing`, `sensitive`, `delimiter`, `encodePath`); `end: false` matches a prefix. `sensitive` defaults to `true`, so static segments match case-sensitively; pass `sensitive: false` to opt out.
 
 ```typescript
 import { PathMatcher } from 'routup';

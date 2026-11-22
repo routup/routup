@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     App,
     LinearRouter,
+    SmartRouter,
     TrieRouter,
     defineCoreHandler,
 } from '../../../src';
@@ -13,6 +14,8 @@ type ResolverFactory = () => IRouter<Handler>;
 const resolvers: Record<string, ResolverFactory> = {
     linear: () => new LinearRouter<Handler>(),
     trie: () => new TrieRouter<Handler>(),
+    'smart (linear delegate)': () => new SmartRouter<Handler>(),
+    'smart (trie delegate)': () => new SmartRouter<Handler>({ threshold: 0 }),
 };
 
 describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, factory) => {
@@ -38,6 +41,40 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
         const res = await router.fetch(createTestRequest('/users/42'));
 
         expect(await res.text()).toBe('user-42');
+    });
+
+    it('matches static segments case-sensitively', async () => {
+        const router = new App({ router: factory() });
+
+        router.get('/admin/:id', defineCoreHandler(() => 'admin'));
+
+        expect((await router.fetch(createTestRequest('/ADMIN/1'))).status).toBe(404);
+        expect((await router.fetch(createTestRequest('/admin/1'))).status).toBe(200);
+    });
+
+    it('does not run a prefix middleware for a differently cased path', async () => {
+        const router = new App({ router: factory() });
+        let ran = false;
+
+        router.use('/admin', defineCoreHandler((event) => {
+            ran = true;
+
+            return event.next();
+        }));
+
+        await router.fetch(createTestRequest('/Admin'));
+
+        expect(ran).toBe(false);
+    });
+
+    it('keeps the case of param values', async () => {
+        const router = new App({ router: factory() });
+
+        router.get('/users/:id', defineCoreHandler((event) => event.params.id));
+
+        const res = await router.fetch(createTestRequest('/users/AbC'));
+
+        expect(await res.text()).toBe('AbC');
     });
 
     it('falls through middleware to a handler', async () => {
