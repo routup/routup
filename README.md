@@ -62,8 +62,6 @@ app.get('/users/:id', defineCoreHandler((event) => ({ id: event.params.id })));
 serve(app, { port: 3000 });
 ```
 
-The routup version also answers `404` for other paths, sets an ETag and answers `304` when `If-None-Match` matches, and synthesizes an `Allow` header for `OPTIONS`.
-
 **Table of Contents**
 
 - [Installation](#installation)
