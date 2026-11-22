@@ -328,7 +328,7 @@ setResponseCacheHeaders(event, {
 
 Append a metric to the `Server-Timing` response header. Each call appends, so several metrics accumulate in order. Only a response built from `event.response` carries the header; a handler that returns its own `Response` does not.
 
-`name` must be a valid header token and `dur` a finite number of milliseconds `>= 0`, otherwise a `TypeError` is thrown. `desc` is quoted and its `\` and `"` are escaped.
+`name` must be a valid header token and `dur` a finite number of milliseconds `>= 0`, otherwise a `TypeError` is thrown. `desc` is quoted and its `\` and `"` are escaped; a `desc` with a control character (other than tab) or a code point above `0xFF` throws a `TypeError`.
 
 ```typescript
 declare function setResponseServerTiming(
@@ -352,7 +352,7 @@ setResponseServerTiming(event, 'db', { dur: 53.2, desc: 'query' });
 
 ### `withResponseServerTiming`
 
-Run a callback, measure it with `performance.now()` and record it as a metric. A throwing callback is still recorded and the error re-thrown. Resolves with the callback's value.
+Run a callback, measure it with `performance.now()` and record it as a metric. `name` and `desc` are validated before the callback runs. A throwing callback is still recorded and the error re-thrown. Resolves with the callback's value.
 
 ```typescript
 declare function withResponseServerTiming<T>(

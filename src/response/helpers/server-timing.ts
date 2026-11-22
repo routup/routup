@@ -20,6 +20,32 @@ function validateName(name: string) : void {
     }
 }
 
+// HTAB, SP-~ and obs-text: the characters a header field value may hold
+const FIELD_VALUE = /^[\t\x20-\x7E\x80-\xFF]*$/;
+
+/**
+ * Build `name;desc="..."`, rejecting a description no header value can hold.
+ */
+function formatMetric(name: string, desc?: string) : string {
+    validateName(name);
+
+    if (!desc) {
+        return name;
+    }
+
+    if (!FIELD_VALUE.test(desc)) {
+        throw new TypeError(`The Server-Timing description ${JSON.stringify(desc)} contains characters not allowed in a header value.`);
+    }
+
+    return `${name};desc="${desc.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+}
+
+function validateDuration(dur?: number) : void {
+    if (dur !== undefined && (!Number.isFinite(dur) || dur < 0)) {
+        throw new TypeError('The Server-Timing duration must be a finite number >= 0.');
+    }
+}
+
 /**
  * Append a metric to the Server-Timing response header.
  *
@@ -30,19 +56,11 @@ export function setResponseServerTiming(
     name: string,
     options: ResponseServerTimingOptions = {},
 ) : void {
-    validateName(name);
-
     const { dur, desc } = options;
 
-    if (dur !== undefined && (!Number.isFinite(dur) || dur < 0)) {
-        throw new TypeError('The Server-Timing duration must be a finite number >= 0.');
-    }
+    let value = formatMetric(name, desc);
 
-    let value = name;
-
-    if (desc) {
-        value += `;desc="${desc.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
-    }
+    validateDuration(dur);
 
     if (dur !== undefined) {
         value += `;dur=${dur}`;
@@ -61,16 +79,16 @@ export async function withResponseServerTiming<T>(
     fn: () => T | Promise<T>,
     options: Pick<ResponseServerTimingOptions, 'desc'> = {},
 ) : Promise<T> {
-    validateName(name);
-
+    // built before `fn` runs, so a bad name or description never replaces its result
+    const metric = formatMetric(name, options.desc);
     const start = performance.now();
 
     try {
         return await fn();
     } finally {
-        setResponseServerTiming(event, name, {
-            desc: options.desc,
-            dur: performance.now() - start,
-        });
+        event.response.headers.append(
+            HeaderName.SERVER_TIMING,
+            `${metric};dur=${performance.now() - start}`,
+        );
     }
 }

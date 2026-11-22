@@ -104,4 +104,36 @@ describe('src/response/helpers/server-timing', () => {
 
         expect(fn).not.toHaveBeenCalled();
     });
+
+    it.each([
+        ['a newline', 'query\nplan'],
+        ['a carriage return', 'query\rplan'],
+        ['a NUL', 'query\0plan'],
+        ['a code point above 0xFF', 'query \u2014 plan'],
+    ])('should reject a description with %s', (_, desc) => {
+        const event = createTestEvent('/');
+
+        expect(() => setResponseServerTiming(event, 'db', { desc })).toThrow(TypeError);
+        expect(event.response.headers.get(HeaderName.SERVER_TIMING)).toBeNull();
+    });
+
+    it('should allow tabs and Latin-1 characters in a description', () => {
+        const event = createTestEvent('/');
+
+        setResponseServerTiming(event, 'db', { desc: 'caf\u00e9\tquery' });
+
+        expect(event.response.headers.get(HeaderName.SERVER_TIMING))
+            .toEqual('db;desc="caf\u00e9\tquery"');
+    });
+
+    it.each([
+        ['a newline', 'query\nplan'],
+        ['a code point above 0xFF', 'query \u2014 plan'],
+    ])('should reject a description with %s before running the callback', async (_, desc) => {
+        const event = createTestEvent('/');
+        const fn = vi.fn();
+
+        await expect(withResponseServerTiming(event, 'db', fn, { desc })).rejects.toThrow(TypeError);
+        expect(fn).not.toHaveBeenCalled();
+    });
 });
