@@ -1,6 +1,8 @@
 <div align="center">
 
-<a href="https://routup.dev"><img src=".github/assets/wordmark.svg" width="320" alt="Routup"></a>
+<a href="https://routup.dev"><img src="docs/src/public/logo.svg" width="128" height="128" alt="Routup logo: a stylised letter R in a violet-to-cyan gradient"></a>
+
+<h1>Routup</h1>
 
 </div>
 
