@@ -346,7 +346,14 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
             const ad = a.matchDepth ?? -1;
             const bd = b.matchDepth ?? -1;
 
-            return bd - ad;
+            if (ad !== bd) {
+                return bd - ad;
+            }
+
+            // Same depth: a splat variant consumed the rest of the
+            // path, so it is more specific than the prefix variant at
+            // its node (`use('/files{/*path}')` on `/files/a`).
+            return Number(b.splatTerminated === true) - Number(a.splatTerminated === true);
         });
 
         const matches: RouteMatch<T>[] = [];

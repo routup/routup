@@ -355,6 +355,40 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
                 child.get('/files/*path', defineCoreHandler(describeEvent));
                 app.use('/x', child);
             },
+            'use /files{/*path}': (app) => {
+                app.use('/files{/*path}', defineCoreHandler(describeEvent));
+            },
+            'child App at /files{/*path} with use()': (app) => {
+                const child = new App();
+
+                child.use(defineCoreHandler(describeEvent));
+                app.use('/files{/*path}', child);
+            },
+            'child App at /files{/*path} with get /meta': (app) => {
+                const child = new App();
+
+                child.get('/meta', defineCoreHandler(describeEvent));
+                app.use('/files{/*path}', child);
+            },
+            'use /api{/:v}': (app) => {
+                app.use('/api{/:v}', defineCoreHandler(describeEvent));
+            },
+            'child App at /api{/:v} with get /items': (app) => {
+                const child = new App();
+
+                child.get('/items', defineCoreHandler(describeEvent));
+                app.use('/api{/:v}', child);
+            },
+            'nested child Apps at /x and /files{/*path}': (app) => {
+                const inner = new App();
+
+                inner.use(defineCoreHandler(describeEvent));
+
+                const middle = new App();
+
+                middle.use('/files{/*path}', inner);
+                app.use('/x', middle);
+            },
             'child App at /x with use /files': (app) => {
                 const child = new App();
 
@@ -403,6 +437,23 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
             ['child App at /x with get /files/*path', '/x/files/a/', '{"path":"a/"} /x/files/a/'],
             ['child App at /x with use /files', '/x/files/', '{} /x/files/'],
             ['child App at /x with use /files', '/x/files/a/', '{} /x/files'],
+            ['use /files{/*path}', '/files', '{} /files'],
+            ['use /files{/*path}', '/files/', '{} /files/'],
+            ['use /files{/*path}', '/files/a', '{"path":"a"} /files/a'],
+            ['use /files{/*path}', '/files/a/', '{"path":"a/"} /files/a/'],
+            ['use /files{/*path}', '/files/a/b', '{"path":"a/b"} /files/a/b'],
+            ['child App at /files{/*path} with use()', '/files', '{} /files'],
+            ['child App at /files{/*path} with use()', '/files/a/b', '{"path":"a/b"} /files/a/b'],
+            ['child App at /files{/*path} with get /meta', '/files/meta', '{} /files/meta'],
+            ['child App at /files{/*path} with get /meta', '/files/a/meta', '{"path":"a"} /files/a/meta'],
+            ['get /files{/*path}', '/files/a/b', '{"path":"a/b"} /files/a/b'],
+            ['use /api{/:v}', '/api', '{} /api'],
+            ['use /api{/:v}', '/api/v1', '{"v":"v1"} /api/v1'],
+            ['use /api{/:v}', '/api/v1/x', '{"v":"v1"} /api/v1'],
+            ['child App at /api{/:v} with get /items', '/api/items', '{} /api/items'],
+            ['child App at /api{/:v} with get /items', '/api/v1/items', '{"v":"v1"} /api/v1/items'],
+            ['nested child Apps at /x and /files{/*path}', '/x/files', '{} /x/files'],
+            ['nested child Apps at /x and /files{/*path}', '/x/files/a/', '{"path":"a/"} /x/files/a/'],
         ] as const)('%s answers %s with %s', async (setup, path, expected) => {
             const router = new App({ router: factory() });
 
