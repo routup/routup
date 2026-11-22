@@ -198,6 +198,7 @@ Converts a handler's return value into a `Response` with the status and headers 
 
 - `undefined` gives `undefined`.
 - It returns a promise when it computes an [ETag](/api/app#appoptions), which it does for string and JSON bodies of a 2xx `GET` or `HEAD` unless `etag` is off.
+- It also returns a promise for a generator or async iterable, which it streams (see [`sendIterable`](/api/response-helpers#senditerable)).
 
 ### `serializeEventStreamMessage`
 

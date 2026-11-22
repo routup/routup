@@ -94,6 +94,35 @@ const stream = new ReadableStream({ /* ... */ });
 return sendStream(event, stream);
 ```
 
+### `sendIterable`
+
+Stream an iterable, async iterable, iterator or generator. The first chunk is pulled before the `Response` is built, so a throw before the first `yield` is a normal handler error. Cancelling the response calls the iterator's `return()`. No default `Content-Type` is set. Handlers returning a generator or async iterable are streamed the same way.
+
+Default serialization: strings become UTF-8, `Uint8Array` and other buffers are sent as bytes, `number`/`boolean`/`bigint` use `String()`, other objects use `JSON.stringify`, and `undefined`, functions and symbols are skipped.
+
+```typescript
+declare function sendIterable(
+    event: IAppEvent,
+    source: Iterable<unknown> | AsyncIterable<unknown> | Iterator<unknown> | AsyncIterator<unknown> | (() => Iterator<unknown> | AsyncIterator<unknown>),
+    options?: { serializer?: (value: unknown) => Uint8Array | string | undefined },
+): Promise<Response>;
+```
+
+```typescript
+type IterableSerializer = (value: unknown) => Uint8Array | string | undefined;
+
+type IterableSource =
+    Iterable<unknown> |
+    AsyncIterable<unknown> |
+    Iterator<unknown> |
+    AsyncIterator<unknown> |
+    (() => Iterator<unknown> | AsyncIterator<unknown>);
+
+type SendIterableOptions = {
+    serializer?: IterableSerializer,
+};
+```
+
 ### `sendFormat`
 
 Perform content negotiation and send the response in the format the client prefers. Falls back to the `default` handler if no format matches.
