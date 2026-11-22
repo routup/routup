@@ -197,7 +197,7 @@ declare function toResponse(
 Converts a handler's return value into a `Response` with the status and headers of `event.response`, following the [return value rules](/guide/response#return-values). Routup calls it for every handler.
 
 - `undefined` gives `undefined`.
-- It returns a promise when it computes an [ETag](/api/app#appoptions), which it does for string and JSON bodies unless `etag` is off.
+- It returns a promise when it computes an [ETag](/api/app#appoptions), which it does for string and JSON bodies of a 2xx `GET` or `HEAD` unless `etag` is off.
 
 ### `serializeEventStreamMessage`
 

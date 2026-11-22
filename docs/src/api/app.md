@@ -162,13 +162,13 @@ The runtime options of an App, read by handlers as `event.appOptions`. The const
 | `timeout` | `number` | none | Milliseconds for the whole request; see [Timeouts](/guide/timeouts) |
 | `handlerTimeout` | `number` | none | Milliseconds for each handler's `fn`; see [Timeouts](/guide/timeouts) |
 | `handlerTimeoutOverridable` | `boolean` | `false` | Whether a handler's `timeout` may be longer than `handlerTimeout` |
-| `etag` | `boolean \| null \| EtagOptions \| EtagFn` | weak ETags | ETag of string and JSON bodies; `false` or `null` turns it off |
+| `etag` | `boolean \| null \| EtagOptions \| EtagFn` | weak ETags | ETag of string and JSON bodies of a 2xx `GET` or `HEAD`; `false` or `null` turns it off |
 | `trustProxy` | `boolean \| number \| string \| string[] \| TrustProxyFn` | no proxy is trusted | Which addresses may set `X-Forwarded-*` headers |
 | `subdomainOffset` | `number` | none | Read by no routup helper; available to plugins in `event.appOptions` |
 | `proxyIpMax` | `number` | none | Read by no routup helper; available to plugins in `event.appOptions` |
 
 - A `timeout` or `handlerTimeout` that is not a positive finite number is ignored.
-- With `etag`, a request whose `If-None-Match` matches the computed ETag gets `304 Not Modified`. `EtagOptions` is `{ weak?: boolean, threshold?: number }`: `weak` defaults to `true`, and bodies of `threshold` bytes or fewer get no ETag. An `EtagFn` is `(body: string, size?: number) => Promise<string | undefined>`.
+- With `etag`, a `GET` or `HEAD` request answered 2xx whose `If-None-Match` matches the computed ETag gets `304 Not Modified`. Other methods and statuses get no ETag and never a 304: their handler already ran. `EtagOptions` is `{ weak?: boolean, threshold?: number }`: `weak` defaults to `true`, and bodies of `threshold` bytes or fewer get no ETag. An `EtagFn` is `(body: string, size?: number) => Promise<string | undefined>`.
 - `trustProxy` is the default of `getRequestIP()`, `getRequestHostName()` and `getRequestProtocol()` when the call passes none. `true` trusts every address, a number trusts that many hops, a string (comma separated) or array lists addresses and CIDR ranges, and a `TrustProxyFn` is `(address: string, hop: number) => boolean`.
 - The options are frozen when the App is created.
 
