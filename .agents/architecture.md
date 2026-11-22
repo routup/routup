@@ -250,7 +250,7 @@ app.get('/fast', defineCoreHandler({
 // With handlerTimeoutOverridable: true, handlers can extend beyond the default
 ```
 
-The child signal is linked to the parent signal (from the global timeout or request lifecycle), so a parent abort propagates to the handler. After handler execution, the parent→child listener is cleaned up.
+The child signal is linked to the parent signal (from the global timeout or request lifecycle), so a parent abort propagates to the handler. After handler execution, the parent→child listener is cleaned up; for a streamed iterable response the timer bounds only the first chunk and the listener stays until the stream completes, errors or is cancelled, so the source still sees the client going away (PR #1011). Rejected: releasing in `dispatch`'s `finally` for every response, which cuts a generator off from the request signal after its first chunk.
 
 ### Cooperative cancellation
 

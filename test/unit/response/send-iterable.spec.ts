@@ -373,4 +373,166 @@ describe('src/response/helpers/send-iterable', () => {
         await expect(res.text()).rejects.toThrow('late boom');
         expect(finalized).toHaveBeenCalledTimes(1);
     });
+
+    describe('signal after the first chunk under a handler timeout', () => {
+        const waitForAbort = (signal: AbortSignal) => new Promise<never>((_, reject) => {
+            if (signal.aborted) {
+                reject(signal.reason);
+
+                return;
+            }
+
+            signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+        });
+
+        it('should abort the generator signal when the request aborts after the first chunk', async () => {
+            const controller = new AbortController();
+            const aborted = vi.fn();
+            const finalized = vi.fn();
+            const app = new App({ options: { handlerTimeout: 1000 } });
+
+            app.get('/', defineCoreHandler(async function* handler(event) {
+                try {
+                    yield 'a';
+
+                    try {
+                        await waitForAbort(event.signal);
+                    } catch {
+                        aborted();
+                    }
+                } finally {
+                    finalized();
+                }
+            }));
+
+            const response = await app.fetch(createTestRequest('/', { signal: controller.signal }));
+            const reader = response.body!.getReader();
+
+            expect(new TextDecoder().decode((await reader.read()).value)).toBe('a');
+
+            const done = reader.read();
+
+            controller.abort();
+
+            expect((await done).done).toBe(true);
+            expect(aborted).toHaveBeenCalledTimes(1);
+            expect(finalized).toHaveBeenCalledTimes(1);
+        });
+
+        it('should abort the signal of a sendIterable source when the request aborts after the first chunk', async () => {
+            const controller = new AbortController();
+            const aborted = vi.fn();
+            const app = new App({ options: { handlerTimeout: 1000 } });
+
+            app.get('/', defineCoreHandler((event) => sendIterable(event, (async function* gen() {
+                yield 'a';
+
+                try {
+                    await waitForAbort(event.signal);
+                } catch {
+                    aborted();
+                }
+            }()))));
+
+            const response = await app.fetch(createTestRequest('/', { signal: controller.signal }));
+            const reader = response.body!.getReader();
+
+            await reader.read();
+
+            const done = reader.read();
+
+            controller.abort();
+
+            expect((await done).done).toBe(true);
+            expect(aborted).toHaveBeenCalledTimes(1);
+        });
+
+        it('should unlink the signal from the request once the stream completes', async () => {
+            const controller = new AbortController();
+            let signal: AbortSignal | undefined;
+            const app = new App({ options: { handlerTimeout: 1000 } });
+
+            app.get('/', defineCoreHandler(async function* handler(event) {
+                signal = event.signal;
+                yield 'a';
+                yield 'b';
+            }));
+
+            const response = await app.fetch(createTestRequest('/', { signal: controller.signal }));
+
+            expect(await response.text()).toBe('ab');
+
+            expect(() => controller.abort()).not.toThrow();
+            expect(signal!.aborted).toBe(false);
+        });
+
+        it('should unlink the signal from the request once the stream is cancelled', async () => {
+            const controller = new AbortController();
+            let signal: AbortSignal | undefined;
+            const app = new App({ options: { handlerTimeout: 1000 } });
+
+            app.get('/', defineCoreHandler(async function* handler(event) {
+                signal = event.signal;
+
+                for (;;) {
+                    yield 'a';
+                }
+            }));
+
+            const response = await app.fetch(createTestRequest('/', { signal: controller.signal }));
+            const reader = response.body!.getReader();
+
+            await reader.read();
+            await reader.cancel();
+
+            controller.abort();
+
+            expect(signal!.aborted).toBe(false);
+        });
+
+        it('should unlink the signal from the request once the stream errors', async () => {
+            const controller = new AbortController();
+            let signal: AbortSignal | undefined;
+            const app = new App({ options: { handlerTimeout: 1000 } });
+
+            app.get('/', defineCoreHandler(async function* handler(event) {
+                signal = event.signal;
+                yield 'a';
+
+                throw new Error('boom');
+            }));
+
+            const response = await app.fetch(createTestRequest('/', { signal: controller.signal }));
+
+            await expect(response.text()).rejects.toThrow('boom');
+
+            controller.abort();
+
+            expect(signal!.aborted).toBe(false);
+        });
+
+        it('should unlink the signal from the request when onAfter throws', async () => {
+            const controller = new AbortController();
+            let signal: AbortSignal | undefined;
+            const app = new App({ options: { handlerTimeout: 1000 } });
+
+            app.get('/', defineCoreHandler({
+                onAfter: () => {
+                    throw new Error('after');
+                },
+                fn: async function* handler(event) {
+                    signal = event.signal;
+                    yield 'a';
+                },
+            }));
+
+            const response = await app.fetch(createTestRequest('/', { signal: controller.signal }));
+
+            expect(response.status).toBe(500);
+
+            controller.abort();
+
+            expect(signal!.aborted).toBe(false);
+        });
+    });
 });

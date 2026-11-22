@@ -4,6 +4,8 @@ import type { IterableSerializer, IterableSource } from './helpers/send-iterable
 
 const encoder = new TextEncoder();
 
+const settledResponses = new WeakMap<Response, Promise<void>>();
+
 function defaultSerializer(value: unknown): Uint8Array | string | undefined {
     switch (typeof value) {
         case 'string':
@@ -119,14 +121,28 @@ export async function createIterableResponse(
         signal.removeEventListener('abort', close);
     }
 
+    let settle!: () => void;
+    const settled = new Promise<void>((resolve) => {
+        settle = resolve;
+    });
+
     const stream = new ReadableStream<Uint8Array>({
         async pull(controller) {
-            const chunk = pending ?? await nextChunk();
+            let chunk: Uint8Array | undefined;
+
+            try {
+                chunk = pending ?? await nextChunk();
+            } catch (e) {
+                settle();
+
+                throw e;
+            }
 
             pending = undefined;
 
             if (typeof chunk === 'undefined') {
                 controller.close();
+                settle();
 
                 return;
             }
@@ -134,11 +150,27 @@ export async function createIterableResponse(
             controller.enqueue(chunk);
         },
         async cancel() {
-            await iterator.return?.();
+            try {
+                await iterator.return?.();
+            } finally {
+                settle();
+            }
         },
     });
 
     const { status, headers } = event.response;
+    const response = createFastResponse(stream, status, [...headers]);
 
-    return createFastResponse(stream, status, [...headers]);
+    settledResponses.set(response, settled);
+
+    return response;
+}
+
+/**
+ * The promise that resolves once the stream of a response built by
+ * `createIterableResponse()` completed, errored or was cancelled;
+ * `undefined` for any other response.
+ */
+export function whenIterableResponseSettled(response: Response): Promise<void> | undefined {
+    return settledResponses.get(response);
 }
