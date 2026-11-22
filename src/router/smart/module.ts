@@ -3,6 +3,7 @@ import type { ObjectLiteral, Route, RouteMatch } from '../../types.ts';
 import { LinearRouter } from '../linear/index.ts';
 import { TrieRouter } from '../trie/index.ts';
 import type { BaseRouterOptions, IRouter } from '../types.ts';
+import { buildRoutePathMatcher } from '../utils.ts';
 
 /**
  * Default crossover. Empirically `LinearRouter` wins for small route
@@ -64,17 +65,24 @@ export class SmartRouter<T extends ObjectLiteral = ObjectLiteral> implements IRo
             return;
         }
 
+        // Validate now, as the inner routers do, so a rejected path
+        // throws at registration instead of on the first request.
+        buildRoutePathMatcher(route);
+
         this.pending.push(route);
     }
 
     lookup(path: string, method?: string): readonly RouteMatch<T>[] {
         if (!this.inner) {
-            this.inner = this.choose();
+            // Assigned only once every pending route is in, so a
+            // throwing replay leaves the router unchanged.
+            const inner = this.choose();
 
             for (const r of this.pending) {
-                this.inner.add(r);
+                inner.add(r);
             }
 
+            this.inner = inner;
             this.pending = [];
         }
 

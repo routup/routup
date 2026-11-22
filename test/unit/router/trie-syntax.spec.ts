@@ -10,7 +10,7 @@ import { createTestRequest } from '../../helpers';
 /**
  * Phase 2 — TrieRouter owns its syntax surface end-to-end. The
  * trie's own parser handles the routup vocabulary (static, `:name`,
- * `:name?`, `{...}`, `*`, `*name`); param extraction comes from a
+ * `{...}`, `*name`); param extraction comes from a
  * pre-built `paramsIndexMap` walked against the request's segments
  * (no `matcher.exec` per match, no path-to-regexp dependency).
  *
@@ -24,11 +24,17 @@ describe('TrieRouter — Phase 2 syntax', () => {
         return new App({ router: new TrieRouter<Handler>() });
     }
 
-    describe('T2 — optional params (`:name?`)', () => {
-        it('matches with and without the optional param', async () => {
+    describe('T2 — optional params', () => {
+        it('rejects `:name?` at registration, as LinearRouter does', () => {
             const a = app();
 
-            a.get('/users/:id?', defineCoreHandler((event) => `id=${event.params.id ?? 'none'}`));
+            expect(() => a.get('/users/:id?', defineCoreHandler(() => 'x'))).toThrow(TypeError);
+        });
+
+        it('matches with and without an optional param group (`{/:name}`)', async () => {
+            const a = app();
+
+            a.get('/users{/:id}', defineCoreHandler((event) => `id=${event.params.id ?? 'none'}`));
 
             expect(await (await a.fetch(createTestRequest('/users'))).text()).toBe('id=none');
             expect(await (await a.fetch(createTestRequest('/users/42'))).text()).toBe('id=42');
@@ -86,13 +92,10 @@ describe('TrieRouter — Phase 2 syntax', () => {
                 .toBe('css/main.css');
         });
 
-        it('captures bare splat as `*`', async () => {
+        it('rejects a bare splat at registration, as LinearRouter does', () => {
             const a = app();
 
-            a.get('/proxy/*', defineCoreHandler((event) => String(event.params['*'])));
-
-            expect(await (await a.fetch(createTestRequest('/proxy/api/users'))).text())
-                .toBe('api/users');
+            expect(() => a.get('/proxy/*', defineCoreHandler(() => 'x'))).toThrow(TypeError);
         });
 
         it('decodes URL-encoded param values', async () => {
@@ -129,7 +132,7 @@ describe('TrieRouter — Phase 2 syntax', () => {
 
     describe('audit — review-round 2', () => {
         it('expanded prefix variants prefer the most specific match (greatest matchDepth)', async () => {
-            // `use('/api/:version?', child)` expands to `/api` and
+            // `use('/api{/:version}', child)` expands to `/api` and
             // `/api/:version`. For request `/api/v1`, both match
             // structurally — the dedup must keep the *longer* one
             // so `params.version === 'v1'` and `event.mountPath ===
@@ -141,7 +144,7 @@ describe('TrieRouter — Phase 2 syntax', () => {
 
             const outer = new App({ router: new TrieRouter<Handler>() });
 
-            outer.use('/api/:version?', inner);
+            outer.use('/api{/:version}', inner);
 
             expect(await (await outer.fetch(createTestRequest('/api/v1'))).text())
                 .toBe('version=v1');
@@ -248,17 +251,14 @@ describe('TrieRouter — Phase 2 syntax', () => {
     });
 
     describe('T6 — trie-native parser', () => {
-        it('collapses trailing slash (parseRequestPath drops empty trailing segments)', async () => {
+        it('matches an exact route with one trailing slash', async () => {
             const a = app();
 
             a.get('/users', defineCoreHandler(() => 'matched'));
 
-            // `parseRequestPath` splits on `/` and drops empty
-            // segments, so `/users` and `/users/` collapse to the
-            // same `['users']` lookup. Trailing slashes are NOT
-            // significant — both match. (LinearRouter shows the
-            // same behaviour; documented divergence from path-to-
-            // regexp's strict mode.)
+            // `/users/` splits to `['users', '']`; the walk treats a
+            // trailing empty segment as the end of the path, as
+            // LinearRouter matches it (#1012, #1013).
             expect((await a.fetch(createTestRequest('/users'))).status).toBe(200);
             expect((await a.fetch(createTestRequest('/users/'))).status).toBe(200);
         });

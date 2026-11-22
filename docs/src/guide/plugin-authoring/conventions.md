@@ -16,6 +16,8 @@ Tree-shakeable helpers always take `event` as the first argument. The function-n
 | `is*` | Boolean check | No | No | `isRequestCacheable` |
 | `match*` | Pattern match check | No | No | `matchRequestContentType` |
 | `append*` | Add to existing value | No | No | `appendResponseHeader` |
+| `assert*` | Check the request, throw `AppError` on failure, return the checked value | No | No | `assertRequestContentType` |
+| `with*` | Run a callback and record around it | No | Yes | `withResponseServerTiming` |
 | `create*` | Factory, returns a new object | No | No | `createEventStream` |
 
 If your plugin caches state per request, `use*` and `read*` are the right prefixes. Reserve `get*` for pure reads that always recompute.

@@ -20,9 +20,9 @@ export class PathMatcher implements IPathMatcher {
     constructor(path: Path, options?: PathMatcherOptions) {
         this.path = path;
 
-        this.regexpOptions = options || {};
+        this.regexpOptions = { sensitive: true, ...options };
 
-        const regexp = pathToRegexp(path, options);
+        const regexp = pathToRegexp(path, this.regexpOptions);
 
         this.regexp = regexp.regexp;
         this.regexpKeys = regexp.keys;

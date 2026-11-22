@@ -20,6 +20,35 @@ declare function sendRedirect(
 return sendRedirect(event, '/login', 302);
 ```
 
+### `sendRedirectBack`
+
+Redirect the client back to the page it came from. The `Referer` is used only when its origin equals the request origin (protocol and host with port, taking `X-Forwarded-Proto` and `X-Forwarded-Host` into account only for a trusted proxy). Only its path is used, never the absolute URL, and leading slashes collapse so a path cannot become a protocol-relative URL. Otherwise the client goes to `fallback`.
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `fallback` | `'/'` | Location without a same-origin referer. Must be a trusted value, never user input |
+| `status` | `302` | Redirect status code |
+| `allowQuery` | `false` | Keep the query string of the referer |
+
+```typescript
+declare function sendRedirectBack(
+    event: IAppEvent,
+    options?: SendRedirectBackOptions,
+): Response;
+```
+
+```typescript
+type SendRedirectBackOptions = {
+    fallback?: string,
+    status?: number,
+    allowQuery?: boolean,
+};
+```
+
+```typescript
+return sendRedirectBack(event, { fallback: '/login' });
+```
+
 ### `sendFile`
 
 Send a file with support for range requests, ETag generation, and automatic content-type detection.
@@ -92,6 +121,43 @@ declare function sendStream(
 ```typescript
 const stream = new ReadableStream({ /* ... */ });
 return sendStream(event, stream);
+```
+
+### `sendIterable`
+
+Stream an iterable, async iterable, iterator or generator. The first chunk is pulled before the `Response` is built, so a throw before the first `yield` is a normal handler error. Cancelling the response calls the iterator's `return()`. No default `Content-Type` is set. Handlers returning a generator or async iterable are streamed the same way.
+
+Default serialization: strings become UTF-8, `Uint8Array` and other buffers are sent as bytes, `number`/`boolean`/`bigint` use `String()`, other objects use `JSON.stringify`, and `undefined`, functions and symbols are skipped.
+
+```typescript
+declare function sendIterable(
+    event: IAppEvent,
+    source: Iterable<unknown> | AsyncIterable<unknown> | Iterator<unknown> | AsyncIterator<unknown> | (() => Iterator<unknown> | AsyncIterator<unknown>),
+    options?: { serializer?: (value: unknown) => Uint8Array | string | undefined },
+): Promise<Response>;
+```
+
+```typescript
+type IterableSerializer = (value: unknown) => Uint8Array | string | undefined;
+
+type IterableSource =
+    Iterable<unknown> |
+    AsyncIterable<unknown> |
+    Iterator<unknown> |
+    AsyncIterator<unknown> |
+    (() => Iterator<unknown> | AsyncIterator<unknown>);
+
+type SendIterableOptions = {
+    serializer?: IterableSerializer,
+};
+```
+
+### `isStreamableIterable`
+
+Whether a handler return value is streamed like `sendIterable` instead of serialized as JSON: an object or function with a callable `Symbol.asyncIterator`, or one with a callable `Symbol.iterator` and a `next()` method (a generator). Arrays, strings, typed arrays, `Map` and `Set` are iterable but have no `next()`, so they return `false`, as do `Response` and `ReadableStream`.
+
+```typescript
+declare function isStreamableIterable(value: unknown): value is object;
 ```
 
 ### `sendFormat`
@@ -256,6 +322,49 @@ setResponseCacheHeaders(event, {
     maxAge: 3600,
     modifiedTime: stats.mtime,
 });
+```
+
+### `setResponseServerTiming`
+
+Append a metric to the `Server-Timing` response header. Each call appends, so several metrics accumulate in order. Only a response built from `event.response` carries the header; a handler that returns its own `Response` does not.
+
+`name` must be a valid header token and `dur` a finite number of milliseconds `>= 0`, otherwise a `TypeError` is thrown. `desc` is quoted and its `\` and `"` are escaped; a `desc` with a control character (other than tab) or a code point above `0xFF` throws a `TypeError`.
+
+```typescript
+declare function setResponseServerTiming(
+    event: IAppEvent,
+    name: string,
+    options?: ResponseServerTimingOptions,
+): void;
+```
+
+```typescript
+type ResponseServerTimingOptions = {
+    dur?: number,
+    desc?: string,
+};
+```
+
+```typescript
+setResponseServerTiming(event, 'db', { dur: 53.2, desc: 'query' });
+// Server-Timing: db;desc="query";dur=53.2
+```
+
+### `withResponseServerTiming`
+
+Run a callback, measure it with `performance.now()` and record it as a metric. `name` and `desc` are validated before the callback runs. A throwing callback is still recorded and the error re-thrown. Resolves with the callback's value.
+
+```typescript
+declare function withResponseServerTiming<T>(
+    event: IAppEvent,
+    name: string,
+    fn: () => T | Promise<T>,
+    options?: Pick<ResponseServerTimingOptions, 'desc'>,
+): Promise<T>;
+```
+
+```typescript
+const user = await withResponseServerTiming(event, 'db', () => loadUser(id));
 ```
 
 ### `appendResponseHeader`

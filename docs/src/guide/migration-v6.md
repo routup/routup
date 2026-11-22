@@ -57,7 +57,7 @@ serve(app);
 Both fields became more specific in v6 without any runtime change. The point is to surface bugs at compile time that previously type-checked silently as `any` / `string`.
 
 - `event.method` was `string`, now `MethodNameLike` — the canonical `MethodName` union (`'GET' | 'POST' | …`) intersected with a `(string & {})` open-enum escape hatch. Standard verbs autocomplete; non-standard verbs (`PROPFIND`, custom) still type-check.
-- `event.params` was `Record<string, any>`, now `Record<string, string | undefined>`. Both routers only ever produce string values; the `undefined` accommodates optional params (`/users/:id?`) that did not match.
+- `event.params` was `Record<string, any>`, now `Record<string, string | undefined>`. Both routers only ever produce string values; the `undefined` accommodates optional params (`/users{/:id}`) that did not match.
 
 ```typescript
 // v5 — params.id was any, this compiled even if id was missing

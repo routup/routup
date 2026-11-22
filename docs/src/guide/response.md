@@ -17,6 +17,14 @@ defineCoreHandler(() => new Response('Created', { status: 201 }));
 // ReadableStream — streamed to client
 defineCoreHandler(() => someReadableStream);
 
+// Generator / async generator / async iterable — streamed, one chunk per yielded value
+// (no default Content-Type; arrays, Set, Map and plain objects stay JSON, unless an
+// object has a callable Symbol.asyncIterator, or Symbol.iterator plus a next() method)
+defineCoreHandler(async function* () {
+    yield 'chunk 1';
+    yield 'chunk 2';
+});
+
 // Blob — sent with appropriate content type
 defineCoreHandler(() => new Blob(['data'], { type: 'text/plain' }));
 
@@ -91,6 +99,18 @@ import { defineCoreHandler, sendStream } from 'routup';
 
 app.get('/stream', defineCoreHandler((event) => {
     return sendStream(event, readableStream);
+}));
+```
+
+### sendIterable
+
+Stream an iterable, async iterable or generator. A generator returned from a handler streams the same way; use `sendIterable` for a custom serializer. A throw before the first `yield` is handled as a normal error:
+
+```typescript
+import { defineCoreHandler, sendIterable } from 'routup';
+
+app.get('/events', defineCoreHandler((event) => {
+    return sendIterable(event, source(), { serializer: (value) => `${JSON.stringify(value)}\n` });
 }));
 ```
 

@@ -46,7 +46,7 @@ declare class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRo
 
 A router that stores routes in a tree of path segments, grouped by method, instead of testing each route in turn.
 
-- The tree holds static segments, `:name` parameters, optional parameters and groups, and `*` or `*name` wildcards.
+- The tree holds static segments, `:name` parameters, optional groups (`{/:id}`, `{/edit}`) and named `*name` wildcards. A bare `*` and `:name?` are rejected at registration, as on `LinearRouter`.
 - Routes without a path or with the path `/`, and routes with syntax the tree does not hold (`/files/:name.ext`, escapes), are kept in a list that every lookup checks, as `LinearRouter` does.
 - Its cache key is the method and the path.
 

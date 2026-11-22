@@ -35,5 +35,5 @@ export function buildRoutePathMatcher<T extends ObjectLiteral = ObjectLiteral>(
         return undefined;
     }
 
-    return new PathMatcher(route.path, { end });
+    return new PathMatcher(route.path, { end, sensitive: true });
 }

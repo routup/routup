@@ -170,7 +170,7 @@ type PathMatcherExecResult = {
 };
 ```
 
-Matches request paths against a route path with [`path-to-regexp`](https://github.com/pillarjs/path-to-regexp); the syntax is on [Paths](/guide/paths). The options, `PathMatcherOptions`, are those of `path-to-regexp` (`end`, `trailing`, `sensitive`, `delimiter`, `encodePath`); `end: false` matches a prefix.
+Matches request paths against a route path with [`path-to-regexp`](https://github.com/pillarjs/path-to-regexp); the syntax is on [Paths](/guide/paths). The options, `PathMatcherOptions`, are those of `path-to-regexp` (`end`, `trailing`, `sensitive`, `delimiter`, `encodePath`); `end: false` matches a prefix. `sensitive` defaults to `true`, so static segments match case-sensitively; pass `sensitive: false` to opt out.
 
 ```typescript
 import { PathMatcher } from 'routup';
@@ -198,6 +198,7 @@ Converts a handler's return value into a `Response` with the status and headers 
 
 - `undefined` gives `undefined`.
 - It returns a promise when it computes an [ETag](/api/app#appoptions), which it does for string and JSON bodies of a 2xx `GET` or `HEAD` unless `etag` is off.
+- It also returns a promise for a generator or async iterable, which it streams (see [`sendIterable`](/api/response-helpers#senditerable)).
 
 ### `serializeEventStreamMessage`
 

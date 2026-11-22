@@ -36,6 +36,21 @@ if (matchRequestContentType(event, 'application/json')) {
 }
 ```
 
+### `assertRequestContentType`
+
+Assert that the request's `Content-Type` is one of the given types and return the request media type (lowercased, without parameters). Throws an `AppError` with status `415` when the header is missing or the type is not listed, and `400` when the header is malformed. Parameters are ignored on both sides, matching is case-insensitive, and `type/*` and `type/*+suffix` patterns are supported.
+
+```typescript
+declare function assertRequestContentType(
+    event: IAppEvent,
+    types: string | string[],
+): string;
+```
+
+```typescript
+const type = assertRequestContentType(event, ['application/json', 'application/*+json']);
+```
+
 ### `getRequestAcceptableContentTypes`
 
 Return all content types the client accepts, from the `Accept` header.

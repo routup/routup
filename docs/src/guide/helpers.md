@@ -14,6 +14,7 @@ Helpers are standalone, tree-shakeable functions for interacting with requests a
 | `getRequestAcceptableContentType(event, input?)` | Get best matching content type |
 | `isRequestCacheable(event, modifiedTime)` | Check if the client cache is still valid |
 | `matchRequestContentType(event, type)` | Check request Content-Type |
+| `assertRequestContentType(event, types)` | Require a Content-Type, throw 415/400 otherwise |
 
 ## Response Helpers
 
@@ -21,9 +22,13 @@ Helpers are standalone, tree-shakeable functions for interacting with requests a
 |--------|-------------|
 | `sendFile(event, opts)` | Send a file with range request support |
 | `sendRedirect(event, url, statusCode?)` | Redirect the client |
+| `sendRedirectBack(event, options?)` | Redirect to the same-origin referer path |
 | `sendStream(event, stream)` | Stream data to the client |
+| `sendIterable(event, source, options?)` | Stream an iterable or async generator |
 | `sendFormat(event, formats)` | Content-negotiate and send |
 | `createEventStream(event, options?)` | Create a Server-Sent Events stream |
+| `setResponseServerTiming(event, name, options?)` | Append a Server-Timing metric |
+| `withResponseServerTiming(event, name, fn, options?)` | Time a callback and record it as a Server-Timing metric |
 | `setResponseCacheHeaders(event, options?)` | Set cache-related headers |
 | `setResponseHeaderAttachment(event, filename?)` | Set Content-Disposition attachment |
 | `setResponseHeaderInline(event, filename?)` | Set Content-Disposition inline |

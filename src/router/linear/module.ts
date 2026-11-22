@@ -35,8 +35,12 @@ export class LinearRouter<T extends ObjectLiteral = ObjectLiteral> implements IR
     }
 
     add(route: Route<T>): void {
+        // Built first: a path the matcher rejects throws before the
+        // route is stored, so it cannot match every later request.
+        const matcher = buildRoutePathMatcher(route);
+
         this._routes.push(route);
-        this._matchers.push(buildRoutePathMatcher(route));
+        this._matchers.push(matcher);
         // A new route can change the match set for any cached path —
         // drop the whole cache. Conservative; per-path invalidation
         // would require knowing which paths the new route can match.

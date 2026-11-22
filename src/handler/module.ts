@@ -3,6 +3,9 @@ import type { MethodName } from '../constants.ts';
 import { createError } from '../error/index.ts';
 import type { IAppEvent } from '../event/index.ts';
 import { toResponse } from '../response/index.ts';
+import type { IterableSource } from '../response/helpers/send-iterable.ts';
+import { isStreamableIterable } from '../response/helpers/send-iterable.ts';
+import { createIterableResponse, whenIterableResponseSettled } from '../response/iterable.ts';
 import type { IPipelineStep } from '../app/pipeline/index.ts';
 import type { AppOptions } from '../app/types.ts';
 import {
@@ -100,7 +103,17 @@ export class Handler {
 
             if (deadline) {
                 // Race the (possibly-async) invocation against the timeout.
-                result = await deadline.run(() => this.resolveHandlerResult(invocation, handlerEvent!));
+                result = await deadline.run(async () => {
+                    const resolved = await this.resolveHandlerResult(invocation, handlerEvent!);
+
+                    // A generator's body runs when its first chunk is
+                    // pulled, so that pull belongs under the deadline.
+                    if (isStreamableIterable(resolved)) {
+                        return createIterableResponse(handlerEvent!, resolved as IterableSource);
+                    }
+
+                    return resolved;
+                });
             } else if (isPromise(invocation)) {
                 // Async handler return — await once. If it resolves
                 // to undefined, fall back to the async resolver
@@ -139,6 +152,19 @@ export class Handler {
 
             if (this.config.onAfter) {
                 await this.config.onAfter(handlerEvent, response);
+            }
+
+            // A streamed iterable keeps running after its first chunk:
+            // its timer is cleared, but its signal follows the request
+            // until the stream settles, so abort-aware I/O still sees
+            // the client going away.
+            const settled = response && whenIterableResponseSettled(response);
+
+            if (deadline && settled) {
+                const streaming = deadline;
+
+                deadline = undefined;
+                settled.then(() => streaming.release());
             }
         } catch (e) {
             // From here on a late `event.next()` of this handler must

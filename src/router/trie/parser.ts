@@ -8,9 +8,7 @@ import type { Segment } from './types.ts';
  *
  *   - Static segments: `users`, `v1`
  *   - Named params:    `:id`, `:slug`
- *   - Optional params: `:id?`            (T2 — expanded to two variants)
  *   - Optional groups: `{...}`           (T2 — expanded to two variants)
- *   - Bare splat:      `*`               (matches the rest of the path)
  *   - Named splat:     `*rest`
  *
  * Returns a list of `Segment[]` *variants* — one path string can
@@ -22,6 +20,8 @@ import type { Segment } from './types.ts';
  * (compound segments `/files/:n.ext`, escape sequences `\:`, regex
  * constraints, splat-not-last, …). The caller falls back to the
  * universal bucket so correctness is preserved via path-to-regexp.
+ * Syntax path-to-regexp rejects (a bare `*`, `:id?`) also returns
+ * `null`, so its matcher throws at registration as in `LinearRouter`.
  *
  * Variant cap: nested optional groups expand combinatorially. The
  * parser caps the variant count at `MAX_VARIANTS` and falls back to
@@ -33,14 +33,8 @@ const MAX_VARIANTS = 16;
 
 const PARAM_NAME = /^[a-zA-Z_]\w*$/;
 
-type ParamToken = {
-    kind: 'param';
-    name: string;
-    optional: boolean;
-};
-
 type Token = { kind: 'literal'; value: string } |
-    ParamToken |
+    { kind: 'param'; name: string } |
     { kind: 'splat'; name: string } |
     { kind: 'groupOpen' } |
     { kind: 'groupClose' };
@@ -58,10 +52,6 @@ function tokenizeSegment(segment: string): Token | null {
         return null;
     }
 
-    if (segment === '*') {
-        return { kind: 'splat', name: '*' };
-    }
-
     if (segment.charAt(0) === '*') {
         const rest = segment.slice(1);
 
@@ -73,15 +63,10 @@ function tokenizeSegment(segment: string): Token | null {
     }
 
     if (segment.charAt(0) === ':') {
-        const optional = segment.charAt(segment.length - 1) === '?';
-        const nameRaw = optional ? segment.slice(1, -1) : segment.slice(1);
+        const name = segment.slice(1);
 
-        if (PARAM_NAME.test(nameRaw)) {
-            return {
-                kind: 'param',
-                name: nameRaw,
-                optional,
-            };
+        if (PARAM_NAME.test(name)) {
+            return { kind: 'param', name };
         }
 
         return null;
@@ -214,11 +199,9 @@ function tokenizePath(path: string): Token[] | null {
 
 /**
  * Expand the token stream into one or more concrete `Token[]`
- * variants by:
- *   1. Splitting `groupOpen` … `groupClose` runs into a "with run"
- *      and a "without run" choice (one optional group → ×2 variants).
- *   2. Splitting `param.optional = true` into a "with" and "without"
- *      choice (one `:id?` → ×2 variants).
+ * variants by splitting `groupOpen` … `groupClose` runs into a
+ * "with run" and a "without run" choice (one optional group → ×2
+ * variants).
  *
  * Caps at `MAX_VARIANTS` — beyond that, returns `null` so the path
  * falls back to the universal bucket.
@@ -294,33 +277,6 @@ function expand(tokens: Token[]): Token[][] | null {
             continue;
         }
 
-        if (token.kind === 'param' && token.optional) {
-            const stripped: Token = {
-                kind: 'param',
-                name: token.name,
-                optional: false,
-            };
-            const next: Token[][] = [];
-
-            for (const v of variants) {
-                if (next.length >= MAX_VARIANTS) {
-                    return null;
-                }
-
-                next.push(v.slice());
-
-                if (next.length >= MAX_VARIANTS) {
-                    return null;
-                }
-
-                next.push(v.concat([stripped]));
-            }
-
-            variants = next;
-
-            continue;
-        }
-
         for (const v of variants) {
             v.push(token);
         }
@@ -349,9 +305,8 @@ function tokenToSegment(t: Token): Segment | null {
 
 /**
  * Stable, structural identity for a variant — used to drop duplicate
- * expansions like `/users{/:id?}` (which produces the bare-`/users`
- * variant twice: once from the "without group" branch and once from
- * the "with group, without optional param" branch).
+ * expansions, e.g. `/a{/b}{/b}`, whose two one-group variants are both
+ * `/a/b`.
  */
 function variantKey(segs: Segment[]): string {
     let out = '';
