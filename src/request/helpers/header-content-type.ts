@@ -14,6 +14,9 @@ export function matchRequestContentType(event: IAppEvent, contentType: string) :
     return header.split(';')[0]!.trim() === getMimeType(contentType);
 }
 
+// RFC 9110 token
+const TOKEN = /^[!#$%&'*+.^_`|~0-9a-z-]+$/;
+
 function normalizeMediaType(input: string) : string {
     return input.split(';')[0]!.trim().toLowerCase();
 }
@@ -57,7 +60,7 @@ export function assertRequestContentType(event: IAppEvent, types: string | strin
     const mediaType = normalizeMediaType(header);
     const parts = mediaType.split('/');
 
-    if (parts.length !== 2 || !parts[0] || !parts[1]) {
+    if (parts.length !== 2 || !TOKEN.test(parts[0]!) || !TOKEN.test(parts[1]!)) {
         throw new AppError({ status: 400, message: 'The Content-Type header is malformed.' });
     }
 

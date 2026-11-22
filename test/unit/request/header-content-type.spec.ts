@@ -101,4 +101,11 @@ describe('assertRequestContentType', () => {
         expect(ok.status).toBe(200);
         expect(await ok.text()).toBe('application/json');
     });
+
+    it('should reject media types with invalid token characters', () => {
+        expect(statusOf(run('image/png garbage', 'image/png'))).toBe(400);
+        expect(statusOf(run('image/png garbage', 'image/*'))).toBe(400);
+        expect(statusOf(run('text/ plain', 'text/plain'))).toBe(400);
+        expect(run('text/plain;charset=utf-8', 'text/plain')()).toBe('text/plain');
+    });
 });
