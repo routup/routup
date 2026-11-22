@@ -10,4 +10,5 @@ export type { IterableSerializer, IterableSource, SendIterableOptions } from './
 export * from './send-redirect.ts';
 export * from './send-redirect-back.ts';
 export * from './send-stream.ts';
+export * from './server-timing.ts';
 export * from './utils.ts';

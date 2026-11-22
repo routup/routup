@@ -26,6 +26,8 @@ Helpers are standalone, tree-shakeable functions for interacting with requests a
 | `sendIterable(event, source, options?)` | Stream an iterable or async generator |
 | `sendFormat(event, formats)` | Content-negotiate and send |
 | `createEventStream(event, options?)` | Create a Server-Sent Events stream |
+| `setResponseServerTiming(event, name, options?)` | Append a Server-Timing metric |
+| `withResponseServerTiming(event, name, fn, options?)` | Time a callback and record it as a Server-Timing metric |
 | `setResponseCacheHeaders(event, options?)` | Set cache-related headers |
 | `setResponseHeaderAttachment(event, filename?)` | Set Content-Disposition attachment |
 | `setResponseHeaderInline(event, filename?)` | Set Content-Disposition inline |

@@ -316,6 +316,49 @@ setResponseCacheHeaders(event, {
 });
 ```
 
+### `setResponseServerTiming`
+
+Append a metric to the `Server-Timing` response header. Each call appends, so several metrics accumulate in order. Only a response built from `event.response` carries the header; a handler that returns its own `Response` does not.
+
+`name` must be a valid header token and `dur` a finite number of milliseconds `>= 0`, otherwise a `TypeError` is thrown. `desc` is quoted and its `\` and `"` are escaped.
+
+```typescript
+declare function setResponseServerTiming(
+    event: IAppEvent,
+    name: string,
+    options?: ResponseServerTimingOptions,
+): void;
+```
+
+```typescript
+type ResponseServerTimingOptions = {
+    dur?: number,
+    desc?: string,
+};
+```
+
+```typescript
+setResponseServerTiming(event, 'db', { dur: 53.2, desc: 'query' });
+// Server-Timing: db;desc="query";dur=53.2
+```
+
+### `withResponseServerTiming`
+
+Run a callback, measure it with `performance.now()` and record it as a metric. A throwing callback is still recorded and the error re-thrown. Resolves with the callback's value.
+
+```typescript
+declare function withResponseServerTiming<T>(
+    event: IAppEvent,
+    name: string,
+    fn: () => T | Promise<T>,
+    options?: Pick<ResponseServerTimingOptions, 'desc'>,
+): Promise<T>;
+```
+
+```typescript
+const user = await withResponseServerTiming(event, 'db', () => loadUser(id));
+```
+
 ### `appendResponseHeader`
 
 Append a value to an existing response header (or create it).

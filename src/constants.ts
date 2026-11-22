@@ -47,6 +47,7 @@ export const HeaderName = {
     RATE_LIMIT_RESET: 'ratelimit-reset',
     REFERER: 'referer',
     RETRY_AFTER: 'retry-after',
+    SERVER_TIMING: 'server-timing',
     SET_COOKIE: 'set-cookie',
     TRANSFER_ENCODING: 'transfer-encoding',
     X_ACCEL_BUFFERING: 'x-accel-buffering',

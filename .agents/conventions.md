@@ -47,6 +47,7 @@ All helpers are standalone, tree-shakeable functions that take `event: IAppEvent
 | `match*` | Pattern match check | No | No | `matchRequestContentType` |
 | `append*` | Add to existing value | No | No | `appendResponseHeader`, `appendResponseHeaderDirective` |
 | `create*` | Factory, returns a new object | No | No | `createEventStream` |
+| `with*` | Run a callback and record around it | No | Yes | `withResponseServerTiming` |
 
 ## Build System
 
