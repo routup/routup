@@ -2,7 +2,7 @@
     "name": "routup",
     "version": "6.4.0",
     "type": "module",
-    "description": "Routup is a minimalistic http based routing framework.",
+    "description": "A minimalistic, runtime-agnostic HTTP routing framework built on Web-standard Request and Response.",
     "exports": {
         "./package.json": "./package.json",
         ".": {
