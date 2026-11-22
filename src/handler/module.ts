@@ -4,7 +4,8 @@ import { createError } from '../error/index.ts';
 import type { IAppEvent } from '../event/index.ts';
 import { toResponse } from '../response/index.ts';
 import type { IterableSource } from '../response/helpers/send-iterable.ts';
-import { createIterableResponse, isStreamableIterable } from '../response/helpers/send-iterable.ts';
+import { isStreamableIterable } from '../response/helpers/send-iterable.ts';
+import { createIterableResponse } from '../response/iterable.ts';
 import type { IPipelineStep } from '../app/pipeline/index.ts';
 import type { AppOptions } from '../app/types.ts';
 import {

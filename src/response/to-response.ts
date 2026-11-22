@@ -6,7 +6,8 @@ import { DEFAULT_ETAG_FN } from '../utils/etag/utils.ts';
 import type { EtagFn } from '../utils/etag/types.ts';
 import { createFastResponse } from '../utils/response.ts';
 import type { IterableSource } from './helpers/send-iterable.ts';
-import { createIterableResponse, isStreamableIterable } from './helpers/send-iterable.ts';
+import { isStreamableIterable } from './helpers/send-iterable.ts';
+import { createIterableResponse } from './iterable.ts';
 
 /**
  * Build the final `Response` from the accumulated status and headers.

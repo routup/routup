@@ -152,6 +152,14 @@ type SendIterableOptions = {
 };
 ```
 
+### `isStreamableIterable`
+
+Whether a handler return value is streamed like `sendIterable` instead of serialized as JSON: an async iterable, or an iterator with a `next()` method (a generator). Arrays, strings, typed arrays, `Map` and `Set` are iterable but have no `next()`, so they return `false`, as do `Response` and `ReadableStream`.
+
+```typescript
+declare function isStreamableIterable(value: unknown): value is object;
+```
+
 ### `sendFormat`
 
 Perform content negotiation and send the response in the format the client prefers. Falls back to the `default` handler if no format matches.
