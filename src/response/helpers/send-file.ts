@@ -41,7 +41,13 @@ export type SendFileOptions = {
      */
     attachment?: boolean,
     disposition?: SendFileDisposition,
-    name?: string
+    name?: string,
+    /**
+     * Content type of the file. Wins over a `content-type` already set and
+     * over the type derived from the name. Without it, the name's
+     * extension sets `content-type` only when none is set.
+     */
+    type?: string
 };
 
 /**
@@ -101,6 +107,10 @@ export async function sendFile(
     const name = options.name || stats.name;
     const { headers } = event.response;
 
+    if (options.type) {
+        headers.set(HeaderName.CONTENT_TYPE, options.type);
+    }
+
     const disposition = options.disposition ?? (options.attachment ? 'attachment' : undefined);
 
     if (name) {
@@ -116,7 +126,7 @@ export async function sendFile(
                     setResponseHeaderAttachment(event, fileName);
                 }
             }
-        } else {
+        } else if (!headers.has(HeaderName.CONTENT_TYPE)) {
             setResponseContentTypeByFileName(event, fileName);
         }
     }
@@ -177,6 +187,9 @@ export async function sendFile(
             ) {
                 const rangeHeaders = new Headers(headers);
 
+                // The 416 carries no representation of the file.
+                rangeHeaders.delete(HeaderName.CONTENT_TYPE);
+                rangeHeaders.delete(HeaderName.CONTENT_DISPOSITION);
                 rangeHeaders.set(HeaderName.CONTENT_RANGE, `bytes */${stats.size}`);
 
                 return new Response(null, {

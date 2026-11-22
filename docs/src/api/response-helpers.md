@@ -24,6 +24,8 @@ return sendRedirect(event, '/login', 302);
 
 Send a file with support for range requests, ETag generation, and automatic content-type detection.
 
+`Content-Type` comes from `type` when given. Otherwise the extension of the file name sets it only when no `content-type` is set yet, so a type the handler set (for example a sniffed one) is kept. A `416 Range Not Satisfiable` answer carries no `Content-Type` or `Content-Disposition`.
+
 It sets `ETag` and `Last-Modified` from the file stats and answers a conditional `GET` or `HEAD` request (`If-None-Match`, or `If-Modified-Since` without `If-None-Match`) whose cached copy is still fresh with `304 Not Modified`, without reading the file content. This applies only while `event.response.status` is a 2xx; a file sent as an error or redirect body keeps that status.
 
 ```typescript
@@ -43,6 +45,8 @@ type SendFileOptions = {
     /** @deprecated Use `disposition: 'attachment'` instead. */
     attachment?: boolean;
     name?: string;
+    /** Content type; wins over a set `content-type` and over the name. */
+    type?: string;
 };
 
 type SendFileStats = {
@@ -116,7 +120,7 @@ return sendFormat(event, {
 
 ### `setResponseHeaderAttachment`
 
-Set the `Content-Disposition` header to `attachment`. When a filename is provided, adds the `filename` (and, for non-ASCII names, `filename*=UTF-8''…`) directive per RFC 6266 and sets `Content-Type` based on the file extension.
+Set the `Content-Disposition` header to `attachment`. When a filename is provided, adds the `filename` (and, for non-ASCII names, `filename*=UTF-8''…`) directive per RFC 6266 and, when no `content-type` is set yet, sets `Content-Type` based on the file extension.
 
 ```typescript
 declare function setResponseHeaderAttachment(
@@ -132,7 +136,7 @@ setResponseHeaderAttachment(event, 'data.csv');
 
 ### `setResponseHeaderInline`
 
-Set the `Content-Disposition` header to `inline`. When a filename is provided, adds the `filename` (and, for non-ASCII names, `filename*=UTF-8''…`) directive per RFC 6266 and sets `Content-Type` based on the file extension, following the same encoding rules as `setResponseHeaderAttachment`. Use this when you want the browser to render the response natively (PDF viewer, image, video) but still suggest a filename if the user later saves it.
+Set the `Content-Disposition` header to `inline`. When a filename is provided, adds the `filename` (and, for non-ASCII names, `filename*=UTF-8''…`) directive per RFC 6266 and, when no `content-type` is set yet, sets `Content-Type` based on the file extension, following the same encoding rules as `setResponseHeaderAttachment`. Use this when you want the browser to render the response natively (PDF viewer, image, video) but still suggest a filename if the user later saves it.
 
 ```typescript
 declare function setResponseHeaderInline(
