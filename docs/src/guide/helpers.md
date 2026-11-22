@@ -14,6 +14,7 @@ Helpers are standalone, tree-shakeable functions for interacting with requests a
 | `getRequestAcceptableContentType(event, input?)` | Get best matching content type |
 | `isRequestCacheable(event, modifiedTime)` | Check if the client cache is still valid |
 | `matchRequestContentType(event, type)` | Check request Content-Type |
+| `assertRequestContentType(event, types)` | Require a Content-Type, throw 415/400 otherwise |
 
 ## Response Helpers
 

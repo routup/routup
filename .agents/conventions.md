@@ -48,6 +48,7 @@ All helpers are standalone, tree-shakeable functions that take `event: IAppEvent
 | `append*` | Add to existing value | No | No | `appendResponseHeader`, `appendResponseHeaderDirective` |
 | `create*` | Factory, returns a new object | No | No | `createEventStream` |
 | `with*` | Run a callback and record around it | No | Yes | `withResponseServerTiming` |
+| `assert*` | Check the request, throw `AppError` on failure, return the checked value | No | No | `assertRequestContentType` |
 
 ## Build System
 
