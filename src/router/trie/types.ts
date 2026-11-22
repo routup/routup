@@ -9,7 +9,6 @@ import type { ObjectLiteral, Route } from '../../types.ts';
  *
  * - `segment`: capture `segments[depth]` as `name`.
  * - `splat`: capture `segments[depth..]` joined with `/` as `name`.
- *   `name` is `'*'` for the unnamed bare splat (`/files/*`).
  */
 export type ParamCapture = {
     kind: 'segment';

@@ -190,10 +190,9 @@ function pushIntoBucket<T extends ObjectLiteral>(
  *
  *   - Static segments (`/users`)
  *   - Named params (`:id`)
- *   - Optional params (`:id?`) — expanded to two route variants at
- *     registration (T2)
- *   - Optional groups (`/users{/edit}`) — same expansion strategy
- *   - Bare and named splats (`/files/*`, `/files/*rest`)
+ *   - Optional groups (`/users{/edit}`, `/users{/:id}`) — expanded
+ *     to two route variants at registration (T2)
+ *   - Named splats (`/files/*rest`)
  *
  * Per-leaf storage is bucketed by HTTP method (T4) so lookup
  * narrows to the request method's bucket(s) instead of emitting
@@ -331,7 +330,7 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         // Sort primarily by registration `index` (preserves dispatch
         // order across the candidate list). When multiple variants
         // of one route match the same request — e.g. a prefix
-        // `use('/api/:version?', child)` whose `/api` and
+        // `use('/api{/:version}', child)` whose `/api` and
         // `/api/:version` variants both fire for `/api/v1/...` —
         // we pick the *most specific* one (greatest `matchDepth`),
         // so the more-derived variant's `params` and `match.path`

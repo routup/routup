@@ -418,4 +418,33 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
             }
         });
     });
+
+    describe('unsupported path syntax', () => {
+        it.each([
+            ['a bare wildcard', '/files/*'],
+            ['an optional param with ?', '/users/:id?'],
+        ])('throws at registration for %s (%s)', (_, path) => {
+            const router = new App({ router: factory() });
+
+            expect(() => router.get(path, defineCoreHandler(() => 'x'))).toThrow(TypeError);
+        });
+
+        it('keeps the routes registered before and after a rejected one', async () => {
+            const router = new App({ router: factory() });
+
+            router.get('/a', defineCoreHandler(() => 'a'));
+
+            try {
+                router.get('/files/*', defineCoreHandler(() => 'files'));
+            } catch {
+                // rejected
+            }
+
+            router.get('/b', defineCoreHandler(() => 'b'));
+
+            expect(await (await router.fetch(createTestRequest('/a'))).text()).toBe('a');
+            expect(await (await router.fetch(createTestRequest('/b'))).text()).toBe('b');
+            expect((await router.fetch(createTestRequest('/files/x'))).status).toBe(404);
+        });
+    });
 });
