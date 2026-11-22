@@ -433,23 +433,25 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
         return out;
     }
 
+    /**
+     * Split the request path into segments, keeping empty ones so
+     * `/api//admin` matches no static or param segment (#1012), as in
+     * `LinearRouter`. One trailing slash is insignificant there, so
+     * it is dropped here; `//` still yields one empty segment.
+     */
     protected parseRequestPath(path: string): string[] {
-        const trimmed = path.charAt(0) === '/' ? path.slice(1) : path;
+        const start = path.charCodeAt(0) === 47 ? 1 : 0;
+        let end = path.length;
 
-        if (trimmed === '') {
+        if (end === start) {
             return [];
         }
 
-        const parts = trimmed.split('/');
-        const result: string[] = [];
-
-        for (const part of parts) {
-            if (part !== '') {
-                result.push(part);
-            }
+        if (path.charCodeAt(end - 1) === 47) {
+            end--;
         }
 
-        return result;
+        return path.slice(start, end).split('/');
     }
 
     protected insertIntoTrie(segments: Segment[], route: Route<T>, index: number): void {
@@ -551,7 +553,8 @@ export class TrieRouter<T extends ObjectLiteral = ObjectLiteral> implements IRou
             this.walk(staticChild, segments, depth + 1, collected, method);
         }
 
-        if (node.paramChild) {
+        // a param never captures an empty segment
+        if (node.paramChild && seg !== '') {
             this.walk(node.paramChild, segments, depth + 1, collected, method);
         }
     }

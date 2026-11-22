@@ -225,4 +225,89 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
 
         expect(await res.text()).toBe('user-42');
     });
+
+    describe('empty path segments (#1012)', () => {
+        const guarded = () => {
+            const router = new App({ router: factory() });
+            const guard: string[] = [];
+
+            router.use('/api/admin', defineCoreHandler((event) => {
+                guard.push(event.path);
+
+                return event.next();
+            }));
+            router.get('/api/admin', defineCoreHandler(() => 'admin'));
+
+            return { router, guard };
+        };
+
+        it.each([
+            ['/api//admin', 404, false],
+            ['//api/admin', 404, false],
+            ['/api/admin/', 200, true],
+            ['/api/admin//', 404, true],
+        ])('answers %s with %i for a guarded route', async (path, status, guardRan) => {
+            const { router, guard } = guarded();
+
+            const res = await router.fetch(createTestRequest(path));
+
+            expect(res.status).toBe(status);
+            expect(guard.length > 0).toBe(guardRan);
+        });
+
+        it.each([
+            ['/api//admin', 404],
+            ['//api/admin', 404],
+            ['/api/admin/', 200],
+            ['/api/admin//', 200],
+        ])('answers %s with %i for a prefix mount alone', async (path, status) => {
+            const router = new App({ router: factory() });
+
+            router.use('/api/admin', defineCoreHandler(() => 'guard'));
+
+            expect((await router.fetch(createTestRequest(path))).status).toBe(status);
+        });
+
+        it('answers an empty segment inside a mounted child App with 404', async () => {
+            const router = new App({ router: factory() });
+            const child = new App();
+
+            child.get('/admin', defineCoreHandler(() => 'x-admin'));
+            router.use('/x', child);
+
+            expect((await router.fetch(createTestRequest('/x//admin'))).status).toBe(404);
+            expect((await router.fetch(createTestRequest('/x/admin'))).status).toBe(200);
+        });
+
+        it.each([
+            ['/users//1', 404],
+            ['/users/1//', 404],
+            ['/users//', 404],
+            ['/users/1/', 200],
+        ])('answers %s with %i for a param route', async (path, status) => {
+            const router = new App({ router: factory() });
+
+            router.get('/users/:id', defineCoreHandler((event) => `user-${event.params.id}`));
+
+            expect((await router.fetch(createTestRequest(path))).status).toBe(status);
+        });
+
+        it('answers // with 404 for the root route', async () => {
+            const router = new App({ router: factory() });
+
+            router.get('/', defineCoreHandler(() => 'root'));
+
+            expect((await router.fetch(createTestRequest('//'))).status).toBe(404);
+            expect((await router.fetch(createTestRequest('/'))).status).toBe(200);
+        });
+
+        it('keeps an empty segment inside a splat value', async () => {
+            const router = new App({ router: factory() });
+
+            router.get('/files/*path', defineCoreHandler((event) => String(event.params.path)));
+
+            expect(await (await router.fetch(createTestRequest('/files//a'))).text()).toBe('/a');
+            expect(await (await router.fetch(createTestRequest('/files/a//b'))).text()).toBe('a//b');
+        });
+    });
 });

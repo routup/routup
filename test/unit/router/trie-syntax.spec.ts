@@ -248,17 +248,14 @@ describe('TrieRouter — Phase 2 syntax', () => {
     });
 
     describe('T6 — trie-native parser', () => {
-        it('collapses trailing slash (parseRequestPath drops empty trailing segments)', async () => {
+        it('ignores one trailing slash (parseRequestPath drops it)', async () => {
             const a = app();
 
             a.get('/users', defineCoreHandler(() => 'matched'));
 
-            // `parseRequestPath` splits on `/` and drops empty
-            // segments, so `/users` and `/users/` collapse to the
-            // same `['users']` lookup. Trailing slashes are NOT
-            // significant — both match. (LinearRouter shows the
-            // same behaviour; documented divergence from path-to-
-            // regexp's strict mode.)
+            // `parseRequestPath` drops one trailing slash, so `/users`
+            // and `/users/` both look up `['users']`, as LinearRouter
+            // matches them. Other empty segments are kept (#1012).
             expect((await a.fetch(createTestRequest('/users'))).status).toBe(200);
             expect((await a.fetch(createTestRequest('/users/'))).status).toBe(200);
         });
