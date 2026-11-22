@@ -296,4 +296,81 @@ describe('src/response/helpers/send-iterable', () => {
         expect(response.headers.get('content-type')).toContain('application/json');
         expect(await response.text()).toBe('{}');
     });
+
+    it('should close the iterator and report an error when the serializer throws on the first chunk', async () => {
+        const finalized = vi.fn();
+
+        const original = new Error('serializer boom');
+        const event = createTestEvent('/');
+        const iterator = (async function* gen() {
+            try {
+                yield 'a';
+            } finally {
+                finalized();
+            }
+        }());
+
+        await expect(sendIterable(event, iterator, {
+            serializer: () => {
+                throw original;
+            },
+        })).rejects.toBe(original);
+        expect(finalized).toHaveBeenCalledTimes(1);
+
+        const circular: Record<string, unknown> = {};
+
+        circular.self = circular;
+
+        const app2 = new App();
+
+        app2.get('/', defineCoreHandler(async function* handler() {
+            try {
+                yield circular;
+            } finally {
+                finalized();
+            }
+        }));
+        app2.use(defineErrorHandler(() => new Response('handled', { status: 500 })));
+
+        const res2 = await app2.fetch(createTestRequest('/'));
+
+        expect(res2.status).toBe(500);
+        expect(finalized).toHaveBeenCalledTimes(2);
+    });
+
+    it('should close the iterator and reject the body read when the serializer throws on a later chunk', async () => {
+        const finalized = vi.fn();
+        const app = new App();
+
+        app.get('/', defineCoreHandler(async function* handler() {
+            try {
+                yield 'a';
+                yield 'b';
+                yield 'c';
+            } finally {
+                finalized();
+            }
+        }));
+
+        const event = createTestEvent('/');
+        const res = await sendIterable(event, (async function* gen() {
+            try {
+                yield 'a';
+                yield 'b';
+            } finally {
+                finalized();
+            }
+        }()), {
+            serializer: (value) => {
+                if (value === 'b') {
+                    throw new Error('late boom');
+                }
+
+                return value as string;
+            },
+        });
+
+        await expect(res.text()).rejects.toThrow('late boom');
+        expect(finalized).toHaveBeenCalledTimes(1);
+    });
 });

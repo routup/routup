@@ -99,6 +99,15 @@ export async function createIterableResponse(
 ): Promise<Response> {
     const iterator = toIterator(source);
 
+    // Contained close: neither a throwing nor a rejecting return() escapes.
+    const close = () => {
+        try {
+            Promise.resolve(iterator.return?.()).catch(() => undefined);
+        } catch {
+            // a throwing return() must not escape the abort listener
+        }
+    };
+
     // Resolves the next serialized chunk, skipping values the serializer
     // drops; `undefined` means the source is done.
     const nextChunk = async (): Promise<Uint8Array | undefined> => {
@@ -109,7 +118,16 @@ export async function createIterableResponse(
                 return undefined;
             }
 
-            const chunk = serializer(step.value);
+            let chunk: Uint8Array | string | undefined;
+
+            try {
+                chunk = serializer(step.value);
+            } catch (e) {
+                // the iterator is still suspended here; an error of next() itself needs no close
+                close();
+
+                throw e;
+            }
 
             if (typeof chunk !== 'undefined') {
                 return typeof chunk === 'string' ? encoder.encode(chunk) : chunk;
@@ -120,13 +138,6 @@ export async function createIterableResponse(
     // While the first chunk is pending, an abort of the event's signal
     // (handler timeout, client gone) closes the iterator so its `finally` runs.
     const { signal } = event;
-    const close = () => {
-        try {
-            Promise.resolve(iterator.return?.()).catch(() => undefined);
-        } catch {
-            // a throwing return() must not escape the abort listener
-        }
-    };
 
     if (signal.aborted) {
         close();
