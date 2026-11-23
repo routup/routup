@@ -102,7 +102,7 @@
     "dependencies": {
         "@ebec/core": "^1.3.2",
         "@ebec/http": "^4.3.2",
-        "content-disposition": "^3.0.0",
+        "content-disposition": "^3.1.0",
         "mime-explorer": "^2.0.0",
         "negotiator": "^1.1.0",
         "path-to-regexp": "^9.0.0",
@@ -119,7 +119,7 @@
         "@types/negotiator": "^0.6.5",
         "@types/node": "^26.6.6",
         "@types/proxy-addr": "^2.0.3",
-        "@vitest/coverage-v8": "^5.1.0",
+        "@vitest/coverage-v8": "^5.1.1",
         "autocannon": "^9.0.0",
         "eslint": "^10.15.0",
         "eslint-plugin-vue": "^10.12.0",
