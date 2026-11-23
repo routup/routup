@@ -107,7 +107,7 @@
         "negotiator": "^1.1.0",
         "path-to-regexp": "^9.0.0",
         "proxy-addr": "^2.0.8",
-        "quick-lru": "^7.3.0",
+        "quick-lru": "^8.0.0",
         "smob": "^1.6.2",
         "srvx": "^1.0.8",
         "uncrypto": "^0.1.3"
