@@ -10,7 +10,7 @@
         "@routup/docs-theme": "^0.1.0",
         "routup": "file:..",
         "vitepress": "^1.6.4",
-        "vue": "^3.5.45"
+        "vue": "^3.5.46"
     },
     "devDependencies": {
         "@routup/assets": "^6.0.0",
