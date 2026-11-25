@@ -56,6 +56,8 @@ A named wildcard needs at least one segment, and it keeps a trailing slash:
 
 To also match the bare prefix, make the wildcard optional with `/files{/*path}`. It matches zero or more segments: `/files` and `/files/` run the handler without a `path` param. This applies on every router.
 
+A path can also start with the group: `{/*path}` matches every path, `/` included, and inside an App mounted at `/x` it matches `/x` and everything below it.
+
 ## Optional Parameters
 
 Wrap a segment in braces to make it optional:
