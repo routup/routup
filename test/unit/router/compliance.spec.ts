@@ -344,6 +344,33 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
                     fn: describeEvent,
                 }));
             },
+            'child App at / with get {/*rest}': (app) => {
+                const child = new App();
+
+                child.get('{/*rest}', defineCoreHandler(describeEvent));
+                app.use('/', child);
+            },
+            'child App at /x/ with get {/*rest}': (app) => {
+                const child = new App();
+
+                child.get('{/*rest}', defineCoreHandler(describeEvent));
+                app.use('/x/', child);
+            },
+            'child App at {/*rest} with get /users': (app) => {
+                const child = new App();
+
+                child.get('/users', defineCoreHandler(describeEvent));
+                app.use('{/*rest}', child);
+            },
+            'get {users}': (app) => {
+                app.get('{users}', defineCoreHandler(describeEvent));
+            },
+            'child App at /x with get {users}': (app) => {
+                const child = new App();
+
+                child.get('{users}', defineCoreHandler(describeEvent));
+                app.use('/x', child);
+            },
             'use /files/*path': (app) => {
                 app.use('/files/*path', defineCoreHandler(describeEvent));
             },
@@ -490,6 +517,16 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
             ['child App at /x with get {/*rest}', '/xy', 404],
             ['handler with path {/*rest} at /x', '/x', '{} /x'],
             ['handler with path {/*rest} at /x', '/x/y', '{"rest":"y"} /x/y'],
+            ['child App at / with get {/*rest}', '/a/b', '{"rest":"a/b"} /a/b'],
+            ['child App at /x/ with get {/*rest}', '/x', '{} /x'],
+            ['child App at /x/ with get {/*rest}', '/x/y', '{"rest":"y"} /x/y'],
+            ['child App at {/*rest} with get /users', '/users', '{} /users'],
+            ['child App at {/*rest} with get /users', '/a/users', '{"rest":"a"} /a/users'],
+            // a group without its own slash keeps the prepended one
+            ['get {users}', '/', '{} /'],
+            ['get {users}', '/users', '{} /users'],
+            ['child App at /x with get {users}', '/x/users', '{} /x/users'],
+            ['child App at /x with get {users}', '/xusers', 404],
         ] as const)('%s answers %s with %s', async (setup, path, expected) => {
             const router = new App({ router: factory() });
 

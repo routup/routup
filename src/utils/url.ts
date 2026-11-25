@@ -44,14 +44,15 @@ export function withoutLeadingSlash(input = ''): string {
     return (hasLeadingSlash(input) ? input.substring(1) : input) || '/';
 }
 
-// A path that starts with an optional group (`{/*rest}`) carries its own
-// slash: prepending one would make the group match only `/` and `//…` (#1014).
-function startsWithGroup(input: string): boolean {
-    return input.startsWith('{');
+// A path that starts with a slash-led optional group (`{/*rest}`) carries its
+// own slash: another one in front makes the group match only `/` and `//…`
+// (#1014). A group without one (`{users}`) still needs the slash.
+function startsWithSlashGroup(input: string): boolean {
+    return input.startsWith('{/');
 }
 
 export function withLeadingSlash(input = ''): string {
-    return hasLeadingSlash(input) || startsWithGroup(input) ? input : `/${input}`;
+    return hasLeadingSlash(input) || startsWithSlashGroup(input) ? input : `/${input}`;
 }
 
 export function cleanDoubleSlashes(input = ''): string {
@@ -72,8 +73,8 @@ export function cleanDoubleSlashes(input = ''): string {
  *   `'/'`, distinguishing "match the root exactly" from "no path").
  * - Returns `undefined` when every part is missing — callers
  *   interpret this as "no path" (always-match middleware).
- * - Joins remaining parts with `/`, except a part that starts with an
- *   optional group (`{/*rest}`), which attaches directly; collapses
+ * - Joins remaining parts with `/`, except a part that starts with a
+ *   slash-led optional group (`{/*rest}`), which replaces the slash; collapses
  *   any inner `//`, and trims a trailing slash on results longer than `/`.
  *
  * Used at registration time to fold a handler / router's intrinsic
@@ -98,7 +99,16 @@ export function joinPaths(...parts: Array<string | undefined>): string | undefin
     let joined = '';
 
     for (const part of kept) {
-        joined += startsWithGroup(part) ? part : `/${part}`;
+        if (startsWithSlashGroup(part)) {
+            // drop the separator a mount path like `/` or `/x/` ends with
+            while (joined.endsWith('/')) {
+                joined = joined.slice(0, -1);
+            }
+
+            joined += part;
+        } else {
+            joined += `/${part}`;
+        }
     }
 
     const normalized = cleanDoubleSlashes(joined);
