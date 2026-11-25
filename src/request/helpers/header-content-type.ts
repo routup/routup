@@ -11,7 +11,10 @@ export function matchRequestContentType(event: IAppEvent, contentType: string) :
         return true;
     }
 
-    return header.split(';')[0]!.trim() === getMimeType(contentType);
+    const expected = getMimeType(contentType);
+
+    // media types are case-insensitive (RFC 9110, section 8.3.1)
+    return !!expected && normalizeMediaType(header) === normalizeMediaType(expected);
 }
 
 // RFC 9110 token
