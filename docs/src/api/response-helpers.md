@@ -244,7 +244,7 @@ createContentDisposition('€ rates.pdf', { type: 'inline' });
 
 ### `parseContentDisposition`
 
-Parse a `Content-Disposition` header value into its type and parameters, decoding RFC 5987 / RFC 8187 extended parameters by default. Accepts `null` / `undefined` (as returned by `Headers.get()` when the header is absent) and returns `null` in that case, so callers don't need a separate null-check.
+Parse a `Content-Disposition` header value into its type and parameters, decoding RFC 5987 / RFC 8187 extended parameters by default. Accepts `null` / `undefined` (as returned by `Headers.get()` when the header is absent) and returns `null` in that case, so callers don't need a separate null-check. A decoded extended parameter replaces its raw key (`filename*` becomes `filename`, and wins over a plain `filename` in either order); for duplicate keys differing only in case the first one wins. With `extended: false` the raw `filename*` key is kept.
 
 ```typescript
 declare function parseContentDisposition(
