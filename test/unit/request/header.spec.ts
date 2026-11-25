@@ -146,4 +146,15 @@ describe('src/helpers/request/header', () => {
 
         expect(matchRequestContentType(eventNone, 'json')).toBe(true);
     });
+
+    it('should match request content type case-insensitively', () => {
+        const eventMixed = createTestEvent('/', { headers: { [HeaderName.CONTENT_TYPE]: 'Application/JSON; charset=utf-8' } });
+
+        expect(matchRequestContentType(eventMixed, 'json')).toBe(true);
+        expect(matchRequestContentType(eventMixed, 'application/json')).toBe(true);
+
+        const eventLower = createTestEvent('/', { headers: { [HeaderName.CONTENT_TYPE]: 'application/x-www-form-urlencoded' } });
+
+        expect(matchRequestContentType(eventLower, 'APPLICATION/X-WWW-FORM-URLENCODED')).toBe(true);
+    });
 });

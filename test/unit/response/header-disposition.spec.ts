@@ -149,8 +149,26 @@ describe('src/helpers/response/header-disposition (jshttp/content-disposition pa
                 "attachment; filename=\"? rates.pdf\"; filename*=UTF-8''%E2%82%AC%20rates.pdf",
             );
 
-            expect(parsed.type).toBe('attachment');
-            expect(parsed.parameters.filename).toBe('€ rates.pdf');
+            expect(parsed).toEqual({ type: 'attachment', parameters: { filename: '€ rates.pdf' } });
+        });
+
+        it('should replace the raw extended key with its decoded value', () => {
+            expect(parseContentDisposition("attachment; filename*=UTF-8''%E2%82%AC%20rates.pdf"))
+                .toEqual({ type: 'attachment', parameters: { filename: '€ rates.pdf' } });
+        });
+
+        it('should prefer the extended filename in either order', () => {
+            expect(parseContentDisposition(
+                "attachment; filename*=UTF-8''%E2%82%AC%20rates.pdf; filename=\"? rates.pdf\"",
+            )).toEqual({ type: 'attachment', parameters: { filename: '€ rates.pdf' } });
+        });
+
+        it('should keep the first of duplicate keys differing in case', () => {
+            expect(parseContentDisposition('attachment; FileName="a.pdf"; filename="b.pdf"'))
+                .toEqual({ type: 'attachment', parameters: { filename: 'a.pdf' } });
+
+            expect(parseContentDisposition("attachment; filename*=UTF-8''a.pdf; FILENAME*=UTF-8''b.pdf"))
+                .toEqual({ type: 'attachment', parameters: { filename: 'a.pdf' } });
         });
 
         it('should honour extended: false', () => {

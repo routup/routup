@@ -322,6 +322,55 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
             'get /files{/*path}': (app) => {
                 app.get('/files{/*path}', defineCoreHandler(describeEvent));
             },
+            'get {/*rest}': (app) => {
+                app.get('{/*rest}', defineCoreHandler(describeEvent));
+            },
+            'get {/:id}': (app) => {
+                app.get('{/:id}', defineCoreHandler(describeEvent));
+            },
+            'use {/*rest}': (app) => {
+                app.use('{/*rest}', defineCoreHandler(describeEvent));
+            },
+            'child App at /x with get {/*rest}': (app) => {
+                const child = new App();
+
+                child.get('{/*rest}', defineCoreHandler(describeEvent));
+                app.use('/x', child);
+            },
+            'handler with path {/*rest} at /x': (app) => {
+                app.use('/x', defineCoreHandler({
+                    path: '{/*rest}',
+                    method: 'GET',
+                    fn: describeEvent,
+                }));
+            },
+            'child App at / with get {/*rest}': (app) => {
+                const child = new App();
+
+                child.get('{/*rest}', defineCoreHandler(describeEvent));
+                app.use('/', child);
+            },
+            'child App at /x/ with get {/*rest}': (app) => {
+                const child = new App();
+
+                child.get('{/*rest}', defineCoreHandler(describeEvent));
+                app.use('/x/', child);
+            },
+            'child App at {/*rest} with get /users': (app) => {
+                const child = new App();
+
+                child.get('/users', defineCoreHandler(describeEvent));
+                app.use('{/*rest}', child);
+            },
+            'get {users}': (app) => {
+                app.get('{users}', defineCoreHandler(describeEvent));
+            },
+            'child App at /x with get {users}': (app) => {
+                const child = new App();
+
+                child.get('{users}', defineCoreHandler(describeEvent));
+                app.use('/x', child);
+            },
             'use /files/*path': (app) => {
                 app.use('/files/*path', defineCoreHandler(describeEvent));
             },
@@ -454,6 +503,30 @@ describe.each(Object.entries(resolvers))('resolver compliance: %s', (_name, fact
             ['child App at /api{/:v} with get /items', '/api/v1/items', '{"v":"v1"} /api/v1/items'],
             ['nested child Apps at /x and /files{/*path}', '/x/files', '{} /x/files'],
             ['nested child Apps at /x and /files{/*path}', '/x/files/a/', '{"path":"a/"} /x/files/a/'],
+            // a leading optional group means zero or more segments (#1014)
+            ['get {/*rest}', '/', '{} /'],
+            ['get {/*rest}', '/users', '{"rest":"users"} /users'],
+            ['get {/*rest}', '/a/b/', '{"rest":"a/b/"} /a/b/'],
+            ['get {/:id}', '/', '{} /'],
+            ['get {/:id}', '/1', '{"id":"1"} /1'],
+            ['get {/:id}', '/1/2', 404],
+            ['use {/*rest}', '/', '{} /'],
+            ['use {/*rest}', '/a/b', '{"rest":"a/b"} /a/b'],
+            ['child App at /x with get {/*rest}', '/x', '{} /x'],
+            ['child App at /x with get {/*rest}', '/x/y', '{"rest":"y"} /x/y'],
+            ['child App at /x with get {/*rest}', '/xy', 404],
+            ['handler with path {/*rest} at /x', '/x', '{} /x'],
+            ['handler with path {/*rest} at /x', '/x/y', '{"rest":"y"} /x/y'],
+            ['child App at / with get {/*rest}', '/a/b', '{"rest":"a/b"} /a/b'],
+            ['child App at /x/ with get {/*rest}', '/x', '{} /x'],
+            ['child App at /x/ with get {/*rest}', '/x/y', '{"rest":"y"} /x/y'],
+            ['child App at {/*rest} with get /users', '/users', '{} /users'],
+            ['child App at {/*rest} with get /users', '/a/users', '{"rest":"a"} /a/users'],
+            // a group without its own slash keeps the prepended one
+            ['get {users}', '/', '{} /'],
+            ['get {users}', '/users', '{} /users'],
+            ['child App at /x with get {users}', '/x/users', '{} /x/users'],
+            ['child App at /x with get {users}', '/xusers', 404],
         ] as const)('%s answers %s with %s', async (setup, path, expected) => {
             const router = new App({ router: factory() });
 

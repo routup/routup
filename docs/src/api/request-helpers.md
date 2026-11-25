@@ -21,7 +21,7 @@ const auth = getRequestHeader(event, 'authorization');
 
 ### `matchRequestContentType`
 
-Check whether the request's `Content-Type` matches the given type.
+Check whether the request's `Content-Type` matches the given type (a full media type or an extension such as `'json'`). Parameters are ignored and matching is case-insensitive. Returns `true` when the header is missing.
 
 ```typescript
 declare function matchRequestContentType(
