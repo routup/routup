@@ -13,7 +13,7 @@
         "vue": "^3.5.46"
     },
     "devDependencies": {
-        "@routup/assets": "^6.0.0",
-        "@routup/body": "^4.1.0"
+        "@routup/assets": "^6.1.0",
+        "@routup/body": "^4.2.0"
     }
 }
